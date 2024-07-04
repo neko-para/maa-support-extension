@@ -15,10 +15,12 @@
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.14.9",
+    "@types/source-map-support": "^0.5.10",
     "@types/vscode": "^1.91.0",
     "esbuild": "^0.20.2",
     "jsonc-parser": "^3.3.1",
     "prettier": "^3.3.2",
+    "source-map-support": "^0.5.21",
     "typescript": "^5.5.3"
   }
 }

@@ -9,9 +9,11 @@ export class PipelineRootStatusProvider extends InheritDisposable {
   rootStatusItem: vscode.StatusBarItem
   resourceRoot: ResourceRoot[]
   activateResource: ResourceRoot | null
+  selector: vscode.DocumentFilter[] | null
 
   event: EventEmitter<{
     activateResourceChanged: [resource: ResourceRoot | null]
+    activateSelectorChanged: [selector: vscode.DocumentFilter[] | null]
   }>
 
   constructor(context: vscode.ExtensionContext) {
@@ -22,11 +24,13 @@ export class PipelineRootStatusProvider extends InheritDisposable {
     )
     this.resourceRoot = []
     this.activateResource = null
+    this.selector = null
 
     this.event = new EventEmitter()
 
     this.event.on('activateResourceChanged', () => {
       this.updateRootStatus()
+      this.updateSelector()
     })
 
     this.setupRootStatus()
@@ -67,5 +71,26 @@ export class PipelineRootStatusProvider extends InheritDisposable {
       this.rootStatusItem.text = 'Maa Support - No Root Found'
     }
     this.rootStatusItem.show()
+  }
+
+  jsonPattern() {
+    return this.activateResource
+      ? new vscode.RelativePattern(this.activateResource[0], '**/*.json')
+      : null
+  }
+
+  updateSelector() {
+    if (this.activateResource) {
+      this.selector = [
+        {
+          language: 'json',
+          scheme: 'file',
+          pattern: this.jsonPattern()!
+        }
+      ]
+    } else {
+      this.selector = null
+    }
+    this.event.emit('activateSelectorChanged', this.selector)
   }
 }

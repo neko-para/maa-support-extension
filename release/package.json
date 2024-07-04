@@ -1,0 +1,163 @@
+{
+  "name": "maa-support",
+  "displayName": "Maa Pipeline Support",
+  "publisher": "nekosu",
+  "description": "Maa framework & Maa arknights support",
+  "repository": "https://github.com/neko-para/maa-support",
+  "version": "0.1.2",
+  "icon": "images/logo.png",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "title": "Maa: select resource",
+        "command": "maa.select-resource"
+      },
+      {
+        "title": "Maa: goto task",
+        "command": "maa.goto-task"
+      },
+      {
+        "title": "Maa: Query location (debug)",
+        "command": "maa.debug.query-location"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "json"
+      },
+      {
+        "language": "jsonc"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "maafw",
+        "label": "Maa Framework Debug",
+        "runtime": "node",
+        "program": "./out/debugger.ts",
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "resource",
+              "agent",
+              "task"
+            ],
+            "properties": {
+              "resource": {
+                "type": "string",
+                "description": "path to resource",
+                "default": "${workspaceFolder}"
+              },
+              "agent": {
+                "type": "string",
+                "description": "path to MaaAgentBinary",
+                "default": ""
+              },
+              "task": {
+                "type": "string",
+                "description": "startup task",
+                "default": ""
+              },
+              "param": {
+                "type": "object",
+                "description": "startup task param",
+                "default": {}
+              },
+              "log": {
+                "type": "string",
+                "description": "maa logging path",
+                "default": "${workspaceFolder}"
+              },
+              "controller": {
+                "type": "object",
+                "description": "controller option",
+                "default": "{}",
+                "properties": {
+                  "long": {
+                    "type": "integer"
+                  },
+                  "short": {
+                    "type": "integer"
+                  },
+                  "packageEntry": {
+                    "type": "string"
+                  },
+                  "package": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "maafw",
+            "request": "launch",
+            "name": "Maa Framework Debug",
+            "resource": "${workspaceFolder}",
+            "agent": "",
+            "task": "",
+            "param": {},
+            "log": "${workspaceFolder}",
+            "controller": {
+              "long": 0,
+              "short": 0,
+              "packageEntry": "",
+              "package": ""
+            }
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Maa Framework Debug: Launch",
+            "description": "Configure and debug Maa Framework",
+            "body": {
+              "type": "maafw",
+              "request": "launch",
+              "name": "maa framework debug config",
+              "resource": "^\"\\${workspaceFolder}\"",
+              "agent": "",
+              "task": "",
+              "param": {},
+              "log": "^\"\\${workspaceFolder}\"",
+              "controller": {
+                "long": 0,
+                "short": 0,
+                "packageEntry": "",
+                "package": ""
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "notebooks": [
+      {
+        "type": "maafw-notebook",
+        "displayName": "Maa Framework Notebook",
+        "selector": [
+          {
+            "filenamePattern": "*.maafwbook"
+          }
+        ]
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "**/pipeline/**/*.json",
+        "url": "./schemas/pipeline.schema.json"
+      }
+    ]
+  }
+}

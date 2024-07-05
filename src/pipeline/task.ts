@@ -138,8 +138,11 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
         }
       },
       onSeparator: (character, offset, length, startLine, startCharacter) => {
-        if (typeof path[path.length - 1] === 'number') {
-          ;(path[path.length - 1] as number)++
+        if (character === ',') {
+          if (typeof path[path.length - 1] === 'number') {
+            ;(path[path.length - 1] as number)++
+          }
+        } else if (character === ':') {
         }
       },
       onArrayBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
@@ -234,8 +237,6 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
     this.flushingDirty = true
     const dirtyUriList = this.dirtyUri
     this.dirtyUri = new Map()
-
-    console.log(dirtyUriList)
 
     for (const [path] of dirtyUriList) {
       const tasks = this.fileIndex[path] ?? []

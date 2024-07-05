@@ -28,7 +28,6 @@ export class PipelineDefinitionProvider
           this.provider = null
         }
         if (selector) {
-          console.log(selector)
           this.provider = vscode.languages.registerDefinitionProvider(selector, this)
         }
       }
@@ -49,9 +48,7 @@ export class PipelineDefinitionProvider
       return null
     }
 
-    if (info.type === 'task.prop') {
-      return new vscode.Location(document.uri, info.range)
-    } else if (info.type === 'task.ref') {
+    if (info.type === 'task.ref') {
       const targetInfo = sharedInstance(this.context, PipelineTaskIndexProvider).taskIndex[
         info.target
       ]
@@ -62,7 +59,11 @@ export class PipelineDefinitionProvider
       try {
         await vscode.workspace.fs.stat(info.target)
         return new vscode.Location(info.target, new vscode.Position(0, 0))
-      } catch (_) {}
+      } catch (_) {
+        vscode.window.showErrorMessage(
+          `${sharedInstance(this.context, PipelineRootStatusProvider).relativePath(info.target)} 不存在`
+        )
+      }
     }
 
     return null

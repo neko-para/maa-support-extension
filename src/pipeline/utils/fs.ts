@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 const fs = vscode.workspace.fs
 
-function currentWorkspace() {
+export function currentWorkspace() {
   return vscode.workspace.workspaceFolders?.[0]?.uri ?? null
 }
 

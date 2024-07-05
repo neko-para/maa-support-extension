@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 
 import { InheritDisposable } from '../disposable'
 import { commands } from './command'
-import { ResourceRoot, locateResourceRoot } from './utils/fs'
+import { ResourceRoot, currentWorkspace, locateResourceRoot } from './utils/fs'
 
 export class PipelineRootStatusProvider extends InheritDisposable {
   rootStatusItem: vscode.StatusBarItem
@@ -75,7 +75,13 @@ export class PipelineRootStatusProvider extends InheritDisposable {
 
   jsonPattern() {
     return this.activateResource
-      ? new vscode.RelativePattern(this.activateResource[0], '**/*.json')
+      ? new vscode.RelativePattern(this.activateResource[0], 'pipeline/**/*.json')
+      : null
+  }
+
+  imagePattern() {
+    return this.activateResource
+      ? new vscode.RelativePattern(this.activateResource[0], 'image/**/*.png')
       : null
   }
 
@@ -92,5 +98,21 @@ export class PipelineRootStatusProvider extends InheritDisposable {
       this.selector = null
     }
     this.event.emit('activateSelectorChanged', this.selector)
+  }
+
+  relativePath(uri: vscode.Uri) {
+    return uri.fsPath.replace(currentWorkspace()?.fsPath ?? '', '')
+  }
+
+  relativePathToRoot(uri: vscode.Uri, sub = '') {
+    if (this.activateResource) {
+      let rootUri = this.activateResource[0]
+      if (sub) {
+        rootUri = vscode.Uri.joinPath(rootUri, sub)
+      }
+      return uri.fsPath.replace(rootUri.fsPath, '')
+    } else {
+      return uri.fsPath
+    }
   }
 }

@@ -1,7 +1,9 @@
+import * as maa from '@nekosu/maa-node'
+import { TaskDecl } from '@nekosu/maa-node/dist/task'
 import { JSONPath, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
-import { sharedInstance } from '../data'
+import { Service, sharedInstance } from '../data'
 import { InheritDisposable } from '../disposable'
 import { commands } from './command'
 import { PipelineRootStatusProvider } from './root'
@@ -33,6 +35,8 @@ export type QueryResult =
 
 export type TaskIndexInfo = {
   uri: vscode.Uri
+  taskContent: string
+  taskReferContent: string // whole lines
   taskProp: vscode.Range
   taskBody: vscode.Range
   taskRef: {
@@ -45,8 +49,7 @@ export type TaskIndexInfo = {
   }[]
 }
 
-export class PipelineTaskIndexProvider extends InheritDisposable {
-  context: vscode.ExtensionContext
+export class PipelineTaskIndexProvider extends Service {
   taskIndex: Record<string, TaskIndexInfo>
   fileIndex: Record<string, string[]>
   dirtyUri: Map<string, vscode.Uri>
@@ -54,9 +57,8 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
   watcher: vscode.FileSystemWatcher | null
 
   constructor(context: vscode.ExtensionContext) {
-    super()
+    super(context)
 
-    this.context = context
     this.taskIndex = {}
     this.fileIndex = {}
     this.dirtyUri = new Map()
@@ -110,6 +112,8 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
         if (path.length === 1) {
           this.taskIndex[property] = {
             uri,
+            taskContent: '',
+            taskReferContent: '',
             taskProp: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length)),
             taskBody: new vscode.Range(0, 0, 0, 0),
             taskRef: [],
@@ -130,10 +134,13 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
         path.pop()
 
         if (path.length === 1) {
-          const pos = doc.positionAt(offset)
-          this.taskIndex[path[0]].taskBody = new vscode.Range(
-            this.taskIndex[path[0]].taskBody.start,
-            pos
+          const taskInfo = this.taskIndex[path[0]]
+          const pos = doc.positionAt(offset + 1)
+          const bodyRange = new vscode.Range(taskInfo.taskBody.start, pos)
+          taskInfo.taskBody = bodyRange
+          taskInfo.taskContent = doc.getText(bodyRange)
+          taskInfo.taskReferContent = doc.getText(
+            new vscode.Range(taskInfo.taskProp.start.line, 0, pos.line + 1, 0)
           )
         }
       },
@@ -179,10 +186,7 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
               break
             case 'template':
               if (path.length >= 2 && path.length <= 3) {
-                const root = sharedInstance(
-                  this.context,
-                  PipelineRootStatusProvider
-                ).activateResource
+                const root = this.shared(PipelineRootStatusProvider).activateResource
                 if (root) {
                   const imageUri = vscode.Uri.joinPath(root[0], 'image', value)
                   this.taskIndex[path[0]].imageRef.push({
@@ -220,7 +224,7 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
     }
     if (root) {
       this.watcher = vscode.workspace.createFileSystemWatcher(
-        sharedInstance(this.context, PipelineRootStatusProvider).jsonPattern()!
+        this.shared(PipelineRootStatusProvider).jsonPattern()!
       )
       this.watcher.onDidChange(uri => this.dirtyUri.set(uri.fsPath, uri))
       this.watcher.onDidCreate(uri => this.dirtyUri.set(uri.fsPath, uri))
@@ -290,5 +294,22 @@ export class PipelineTaskIndexProvider extends InheritDisposable {
       }
     }
     return null
+  }
+
+  queryTaskData(task: string): TaskDecl {
+    try {
+      return JSON.parse(this.taskIndex[task]?.taskContent ?? '{}')
+    } catch (_) {
+      return {}
+    }
+  }
+
+  queryTaskDoc(task: string): vscode.MarkdownString {
+    const taskInfo = this.taskIndex[task]
+    if (taskInfo) {
+      return new vscode.MarkdownString(`\`\`\`json\n${taskInfo.taskReferContent}\n\`\`\``)
+    } else {
+      return new vscode.MarkdownString(`Unknown task ${task}`)
+    }
   }
 }

@@ -1,23 +1,16 @@
 import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
-import { sharedInstance } from '../data'
-import { InheritDisposable } from '../disposable'
-import { commands } from './command'
+import { Service, sharedInstance } from '../data'
 import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
-export class PipelineCompletionProvider
-  extends InheritDisposable
-  implements vscode.CompletionItemProvider
-{
-  context: vscode.ExtensionContext
+export class PipelineCompletionProvider extends Service implements vscode.CompletionItemProvider {
   provider: vscode.Disposable | null
 
   constructor(context: vscode.ExtensionContext) {
-    super()
+    super(context)
 
-    this.context = context
     this.provider = null
 
     sharedInstance(context, PipelineRootStatusProvider).event.on(
@@ -40,35 +33,31 @@ export class PipelineCompletionProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
-    const info = await sharedInstance(this.context, PipelineTaskIndexProvider).queryLocation(
-      document.uri,
-      position
-    )
+    const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
 
     if (!info) {
       return null
     }
 
     if (info.type === 'task.ref') {
-      const taskList = Object.keys(
-        sharedInstance(this.context, PipelineTaskIndexProvider).taskIndex
-      )
+      const taskList = Object.keys(this.shared(PipelineTaskIndexProvider).taskIndex)
       return taskList.map(task => {
         const esc = JSON.stringify(task)
         return {
           label: esc,
           kind: vscode.CompletionItemKind.Reference,
           insertText: esc.substring(0, esc.length - 1),
-          range: new vscode.Range(info.range.start, info.range.end.translate(0, -1))
+          range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
+          documentation: this.shared(PipelineTaskIndexProvider).queryTaskDoc(task)
         }
       })
     } else if (info.type === 'image.ref') {
-      const pt = sharedInstance(this.context, PipelineRootStatusProvider).imagePattern()
+      const pt = this.shared(PipelineRootStatusProvider).imagePattern()
       if (!pt) {
         return null
       }
       return (await vscode.workspace.findFiles(pt)).map(uri => {
-        const path = sharedInstance(this.context, PipelineRootStatusProvider)
+        const path = this.shared(PipelineRootStatusProvider)
           .relativePathToRoot(uri, 'image')
           .replace(/^[\\/]/, '')
         const esc = JSON.stringify(path)
@@ -89,6 +78,6 @@ export class PipelineCompletionProvider
     item: vscode.CompletionItem,
     token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.CompletionItem> {
-    throw new Error('Method not implemented.')
+    return item
   }
 }

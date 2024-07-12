@@ -1,11 +1,12 @@
 import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
+import { Service } from '../data'
 import { InheritDisposable } from '../disposable'
 import { commands } from './command'
 import { ResourceRoot, currentWorkspace, locateResourceRoot } from './utils/fs'
 
-export class PipelineRootStatusProvider extends InheritDisposable {
+export class PipelineRootStatusProvider extends Service {
   rootStatusItem: vscode.StatusBarItem
   resourceRoot: ResourceRoot[]
   activateResource: ResourceRoot | null
@@ -17,7 +18,7 @@ export class PipelineRootStatusProvider extends InheritDisposable {
   }>
 
   constructor(context: vscode.ExtensionContext) {
-    super()
+    super(context)
 
     this.defer = this.rootStatusItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left

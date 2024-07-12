@@ -1,23 +1,18 @@
 import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
-import { sharedInstance } from '../data'
+import { Service, sharedInstance } from '../data'
 import { InheritDisposable } from '../disposable'
 import { commands } from './command'
 import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
-export class PipelineDefinitionProvider
-  extends InheritDisposable
-  implements vscode.DefinitionProvider
-{
-  context: vscode.ExtensionContext
+export class PipelineDefinitionProvider extends Service implements vscode.DefinitionProvider {
   provider: vscode.Disposable | null
 
   constructor(context: vscode.ExtensionContext) {
-    super()
+    super(context)
 
-    this.context = context
     this.provider = null
 
     sharedInstance(context, PipelineRootStatusProvider).event.on(
@@ -39,19 +34,14 @@ export class PipelineDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
-    const info = await sharedInstance(this.context, PipelineTaskIndexProvider).queryLocation(
-      document.uri,
-      position
-    )
+    const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
 
     if (!info) {
       return null
     }
 
     if (info.type === 'task.ref') {
-      const targetInfo = sharedInstance(this.context, PipelineTaskIndexProvider).taskIndex[
-        info.target
-      ]
+      const targetInfo = this.shared(PipelineTaskIndexProvider).taskIndex[info.target]
       if (targetInfo) {
         return new vscode.Location(targetInfo.uri, targetInfo.taskProp)
       }
@@ -61,7 +51,7 @@ export class PipelineDefinitionProvider
         return new vscode.Location(info.target, new vscode.Position(0, 0))
       } catch (_) {
         vscode.window.showErrorMessage(
-          `${sharedInstance(this.context, PipelineRootStatusProvider).relativePath(info.target)} 不存在`
+          `${this.shared(PipelineRootStatusProvider).relativePath(info.target)} 不存在`
         )
       }
     }

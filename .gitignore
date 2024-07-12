@@ -2,3 +2,5 @@ node_modules
 out
 
 azure.token
+
+*.vsix

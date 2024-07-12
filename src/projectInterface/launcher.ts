@@ -8,18 +8,96 @@ import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
 
 type RemoveUndefined<T> = T extends undefined ? never : T
 
-type ProgressReporter = vscode.Progress<{
-  message?: string
-  increment?: number
-}>
+async function selectController(data: Interface): Promise<InterfaceConfig['controller'] | null> {
+  const ctrlRes = await vscode.window.showQuickPick(
+    data.controller.map(ctrl => {
+      return {
+        label: ctrl.name
+      } satisfies vscode.QuickPickItem
+    }),
+    {
+      title: 'Select controller'
+    }
+  )
+
+  if (!ctrlRes) {
+    return null
+  }
+
+  const ctrlInfo = data.controller.find(x => x.name === ctrlRes.label)
+
+  if (!ctrlInfo) {
+    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlRes.label}`)
+    return null
+  }
+
+  return {
+    name: ctrlRes.label,
+    type: ctrlInfo.type
+  }
+}
+
+async function configController(
+  data: Interface,
+  ctrlName: string
+): Promise<Pick<InterfaceConfig, 'adb' | 'win32'> | null> {
+  const ctrlInfo = data.controller.find(x => x.name === ctrlName)
+
+  if (!ctrlInfo) {
+    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlName}`)
+    return null
+  }
+
+  if (ctrlInfo.type === 'Adb') {
+    const devices = await maa.AdbController.find()
+
+    if (!devices) {
+      await vscode.window.showErrorMessage('No devices found')
+      return null
+    }
+
+    const devRes = await vscode.window.showQuickPick(
+      devices.map((dev, idx): vscode.QuickPickItem & { index: number } => {
+        return {
+          label: dev.name,
+          description: `${dev.name} - ${dev.adb_serial} - ${dev.adb_path}`,
+          index: idx
+        }
+      }),
+      {
+        title: 'Select device'
+      }
+    )
+
+    if (!devRes) {
+      return null
+    }
+
+    const dev = devices[devRes.index]
+
+    return {
+      adb: {
+        adb_path: dev.adb_path,
+        address: dev.adb_serial,
+        config: JSON.parse(dev.adb_config)
+      }
+    }
+  } else {
+    // TODO:
+  }
+
+  return null
+}
 
 type TaskConfig = RemoveUndefined<InterfaceConfig['task'][number]['option']>
 async function configTask(data: Interface, taskName: string): Promise<TaskConfig | null> {
   const task = data.task.find(x => x.name === taskName)
+
   if (!task) {
     await vscode.window.showErrorMessage(`Cannot find task ${taskName}`)
     return null
   }
+
   const result: TaskConfig = []
   for (const optName of task.option ?? []) {
     const opt = data.option?.[optName]
@@ -53,88 +131,24 @@ async function configTask(data: Interface, taskName: string): Promise<TaskConfig
   return result
 }
 
-export async function initConfig(
-  data: Interface,
-  progress: ProgressReporter
-): Promise<InterfaceConfig | null> {
+export async function initConfig(data: Interface): Promise<InterfaceConfig | null> {
   const newConfig: Partial<InterfaceConfig> = {}
 
-  const ctrlRes = await vscode.window.showQuickPick(
-    data.controller.map(ctrl => {
-      return {
-        label: ctrl.name
-      } satisfies vscode.QuickPickItem
-    }),
-    {
-      title: 'Select controller'
-    }
-  )
+  const ctrlRes = await selectController(data)
 
   if (!ctrlRes) {
     return null
   }
 
-  const ctrlInfo = data.controller.find(x => x.name === ctrlRes.label)
+  newConfig.controller = ctrlRes
 
-  if (!ctrlInfo) {
-    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlRes.label}`)
+  const ctrlCfg = await configController(data, ctrlRes.name)
+
+  if (!ctrlCfg) {
     return null
   }
 
-  newConfig.controller = {
-    name: ctrlRes.label,
-    type: ctrlInfo.type
-  }
-
-  progress.report({
-    message: 'Select controller done',
-    increment: 10
-  })
-
-  if (ctrlInfo.type === 'Adb') {
-    const devices = await maa.AdbController.find()
-
-    if (!devices) {
-      await vscode.window.showErrorMessage('No devices found')
-      return null
-    }
-
-    const devRes = await vscode.window.showQuickPick(
-      devices.map((dev, idx): vscode.QuickPickItem & { index: number } => {
-        return {
-          label: dev.name,
-          description: `${dev.name} - ${dev.adb_serial} - ${dev.adb_path}`,
-          index: idx
-        }
-      }),
-      {
-        title: 'Select device'
-      }
-    )
-
-    if (!devRes) {
-      return null
-    }
-
-    const dev = devices[devRes.index]
-
-    newConfig.adb = {
-      adb_path: dev.adb_path,
-      address: dev.adb_serial,
-      config: JSON.parse(dev.adb_config)
-    }
-
-    progress.report({
-      message: 'Config controller done',
-      increment: 5
-    })
-  } else {
-    ///
-    progress.report({
-      message: 'Config controller done',
-      increment: 5
-    })
-  }
+  Object.assign(newConfig, ctrlCfg)
 
   const resRes = await vscode.window.showQuickPick(
     data.resource.map(res => {
@@ -161,11 +175,6 @@ export async function initConfig(
 
   newConfig.resource = resRes.label
 
-  progress.report({
-    message: 'Select resource done',
-    increment: 15
-  })
-
   newConfig.task = []
 
   const taskRes = await vscode.window.showQuickPick(
@@ -181,11 +190,6 @@ export async function initConfig(
   )
 
   if (taskRes) {
-    progress.report({
-      message: 'Select task done',
-      increment: 10
-    })
-
     const taskCfg = await configTask(data, taskRes.label)
     if (taskCfg) {
       newConfig.task.push({
@@ -193,22 +197,7 @@ export async function initConfig(
         option: taskCfg
       })
     }
-
-    progress.report({
-      message: 'Config task done',
-      increment: 5
-    })
-  } else {
-    progress.report({
-      message: 'Select task done',
-      increment: 15
-    })
   }
-
-  progress.report({
-    message: 'Setup config done',
-    increment: 5
-  })
 
   return newConfig as InterfaceConfig
 }
@@ -374,7 +363,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: 'Maa: Project Interface Launching'
+          title: 'Maa: Project Interface Launching...'
         },
         async progress => {
           const root = currentWorkspace()
@@ -405,60 +394,69 @@ export class ProjectInterfaceLaunchProvider extends Service {
           }
 
           if (!interfaceConfigData) {
-            const newConfig = await initConfig(interfaceData, progress)
+            const newConfig = await initConfig(interfaceData)
             if (!newConfig) {
               return
             }
             await saveConfig(newConfig)
             interfaceConfigData = newConfig
-          } else {
-            progress.report({
-              message: 'Config loaded',
-              increment: 50
-            })
           }
-
-          const action = await vscode.window.showQuickPick(
-            [
+          while (true) {
+            const action = await vscode.window.showQuickPick(
+              ['Switch controller', 'Launch!'].map(x => ({
+                label: x
+              })),
               {
-                label: 'Launch!'
+                title: 'Choose action'
               }
-            ],
-            {
-              title: 'Choose action'
-            }
-          )
-          if (!action) {
-            return
-          }
-
-          if (action.label === 'Launch!') {
-            const runtime = await prepareRuntime(
-              interfaceData,
-              interfaceConfigData,
-              vscode.Uri.joinPath(root, 'assets').fsPath
             )
-
-            progress.report({
-              message: 'Runtime prepared',
-              increment: 25
-            })
-
-            console.log(runtime)
-
-            if (runtime) {
-              this.outputChannel.show(true)
-              try {
-                await launchRuntime(runtime, this.outputChannel)
-              } catch (err) {
-                this.outputChannel.append(`${err}\n`)
-              }
+            if (!action) {
+              return
             }
 
-            progress.report({
-              message: 'Launch finished',
-              increment: 25
-            })
+            switch (action.label) {
+              case 'Switch controller': {
+                const ctrlRes = await selectController(interfaceData)
+
+                if (!ctrlRes) {
+                  return null
+                }
+
+                interfaceConfigData.controller = ctrlRes
+
+                const ctrlCfg = await configController(interfaceData, ctrlRes.name)
+
+                if (!ctrlCfg) {
+                  return null
+                }
+
+                Object.assign(interfaceConfigData, ctrlCfg)
+
+                await saveConfig(interfaceConfigData)
+
+                break
+              }
+              case 'Launch!': {
+                const runtime = await prepareRuntime(
+                  interfaceData,
+                  interfaceConfigData,
+                  vscode.Uri.joinPath(root, 'assets').fsPath
+                )
+
+                console.log(runtime)
+
+                if (runtime) {
+                  this.outputChannel.show(true)
+                  try {
+                    await launchRuntime(runtime, this.outputChannel)
+                  } catch (err) {
+                    this.outputChannel.append(`${err}\n`)
+                  }
+                }
+
+                break
+              }
+            }
           }
         }
       )

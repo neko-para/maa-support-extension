@@ -1,32 +1,14 @@
-import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
-import { Service, sharedInstance } from '../data'
-import { InheritDisposable } from '../disposable'
-import { commands } from './command'
+import { ProviderBase } from './providerBase'
 import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
-export class PipelineDefinitionProvider extends Service implements vscode.DefinitionProvider {
-  provider: vscode.Disposable | null
-
+export class PipelineDefinitionProvider extends ProviderBase implements vscode.DefinitionProvider {
   constructor(context: vscode.ExtensionContext) {
-    super(context)
-
-    this.provider = null
-
-    sharedInstance(context, PipelineRootStatusProvider).event.on(
-      'activateSelectorChanged',
-      async selector => {
-        if (this.provider) {
-          this.provider.dispose()
-          this.provider = null
-        }
-        if (selector) {
-          this.provider = vscode.languages.registerDefinitionProvider(selector, this)
-        }
-      }
-    )
+    super(context, selector => {
+      return vscode.languages.registerDefinitionProvider(selector, this)
+    })
   }
 
   async provideDefinition(

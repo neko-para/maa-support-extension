@@ -14,6 +14,7 @@ export type QueryResult =
       type: 'task.prop'
       task: string
       range: vscode.Range
+      target: string // equal to task
     }
   | {
       type: 'task.ref'
@@ -65,12 +66,9 @@ export class PipelineTaskIndexProvider extends Service {
     this.flushingDirty = false
     this.watcher = null
 
-    sharedInstance(context, PipelineRootStatusProvider).event.on(
-      'activateResourceChanged',
-      root => {
-        this.updateTaskIndex(root)
-      }
-    )
+    this.shared(PipelineRootStatusProvider).event.on('activateResourceChanged', root => {
+      this.updateTaskIndex(root)
+    })
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
       const result = await vscode.window.showQuickPick(Object.keys(this.taskIndex))
@@ -263,7 +261,8 @@ export class PipelineTaskIndexProvider extends Service {
         return {
           type: 'task.prop',
           task: task,
-          range: info.taskProp
+          range: info.taskProp,
+          target: task
         }
       } else if (info.taskBody.contains(pos)) {
         for (const ref of info.taskRef) {

@@ -1,30 +1,17 @@
-import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
-import { Service, sharedInstance } from '../data'
+import { ProviderBase } from './providerBase'
 import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
-export class PipelineCompletionProvider extends Service implements vscode.CompletionItemProvider {
-  provider: vscode.Disposable | null
-
+export class PipelineCompletionProvider
+  extends ProviderBase
+  implements vscode.CompletionItemProvider
+{
   constructor(context: vscode.ExtensionContext) {
-    super(context)
-
-    this.provider = null
-
-    sharedInstance(context, PipelineRootStatusProvider).event.on(
-      'activateSelectorChanged',
-      async selector => {
-        if (this.provider) {
-          this.provider.dispose()
-          this.provider = null
-        }
-        if (selector) {
-          this.provider = vscode.languages.registerCompletionItemProvider(selector, this, '"')
-        }
-      }
-    )
+    super(context, selector => {
+      return vscode.languages.registerCompletionItemProvider(selector, this, '"')
+    })
   }
 
   async provideCompletionItems(

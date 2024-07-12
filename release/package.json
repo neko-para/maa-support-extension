@@ -20,12 +20,20 @@
   "contributes": {
     "commands": [
       {
+        "title": "Maa: open log",
+        "command": "maa.open-log"
+      },
+      {
         "title": "Maa: select resource",
         "command": "maa.select-resource"
       },
       {
         "title": "Maa: goto task",
         "command": "maa.goto-task"
+      },
+      {
+        "title": "Maa: launch interface",
+        "command": "maa.launch-interface"
       },
       {
         "title": "Maa: query location (debug)",

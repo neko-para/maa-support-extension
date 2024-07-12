@@ -4,6 +4,15 @@ export function currentWorkspace() {
   return vscode.workspace.workspaceFolders?.[0]?.uri ?? null
 }
 
+export async function exists(uri: vscode.Uri) {
+  try {
+    await vscode.workspace.fs.stat(uri)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
 export type ResourceRoot = [uri: vscode.Uri, suffix: string]
 
 export async function locateResourceRoot() {

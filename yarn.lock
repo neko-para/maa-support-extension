@@ -272,47 +272,47 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@nekosu/maa-node-darwin-arm64@1.4.1", "@nekosu/maa-node-darwin-arm64@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-darwin-arm64/-/maa-node-darwin-arm64-1.4.1.tgz#78e8a87daefd2ba5c3412fc8197bd48ee2e325a9"
-  integrity sha512-mwZwDPNiEoDG+ah7LYdtLZuWrZr6eAFTcAk0sNsv/qRimYf2yh9YXGOPoOUZxWJH7rgn/2puyhS/UBcfExkQPQ==
+"@nekosu/maa-node-darwin-arm64@1.4.3", "@nekosu/maa-node-darwin-arm64@^1.3.4":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-darwin-arm64/-/maa-node-darwin-arm64-1.4.3.tgz#374f535a282dbeb6e99936f2235fb75e1b672e94"
+  integrity sha512-x/91r/UXuvqyr9FCwAZ6oqQTJ7ASFhDPAG2SwD/kEZieq9luTRUJKO5NuMz7CdJdH/sOe3GKjXQV9MovayLmLA==
 
-"@nekosu/maa-node-darwin-x64@1.4.1", "@nekosu/maa-node-darwin-x64@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-darwin-x64/-/maa-node-darwin-x64-1.4.1.tgz#81b314c078535dee65abf44ae93c489033776eb9"
-  integrity sha512-dBtjV2UabviiH3xkyV/9HmzQb2HDgqYlo+pAUe19W0q01klaqWpQH8yLubjkc70Ft0PyGgN+BM9ThCQxRKvBMg==
+"@nekosu/maa-node-darwin-x64@1.4.3", "@nekosu/maa-node-darwin-x64@^1.3.4":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-darwin-x64/-/maa-node-darwin-x64-1.4.3.tgz#43553163e514619acc0ee8deba6c8724ec9aec4a"
+  integrity sha512-yhxUJap0kez/nrqZTUHX8LjVGY+0lSb7+qQruqwzqOH40ziJUxkP460+y/ymVfO+eSo1CAik8ea6OunuVX4kVQ==
 
-"@nekosu/maa-node-linux-arm64@1.4.1", "@nekosu/maa-node-linux-arm64@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-linux-arm64/-/maa-node-linux-arm64-1.4.1.tgz#262d627ba7f0701a53390bacc5656509b1762434"
-  integrity sha512-CsYlrU7AGxqafKIN2rASlAdMtFB4zEyAr6xAthUOM7oLgcpsYd5Ud+iqO+bsiWJmA6GfcHmDu9amEAEaksZGJQ==
+"@nekosu/maa-node-linux-arm64@1.4.3", "@nekosu/maa-node-linux-arm64@^1.3.4":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-linux-arm64/-/maa-node-linux-arm64-1.4.3.tgz#35b97fbeefb8c192f1922b0678039b642ae59a68"
+  integrity sha512-v/70eRZ/T1v8s18mZ9zgEsWesr1ctecODCrHXEvSBnRk00HF/wMs7TzmObVLEXuXEw7ME8gTnwHlpIWiaN70Ug==
 
-"@nekosu/maa-node-linux-x64@1.4.1", "@nekosu/maa-node-linux-x64@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-linux-x64/-/maa-node-linux-x64-1.4.1.tgz#57ac6e78262b43908cf9f1d0520fe462e0bb07c5"
-  integrity sha512-60nqDE95e/9GlFTQHH4sUNS8WypMZCWXuRHfri5xF35d3ZYqs9FestuVXgaHfgdF/+xIkGvjN8uskMuqqY1UVQ==
+"@nekosu/maa-node-linux-x64@1.4.3", "@nekosu/maa-node-linux-x64@^1.3.4":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-linux-x64/-/maa-node-linux-x64-1.4.3.tgz#21282eb7e54b49044caa96a19c8745919d8114e6"
+  integrity sha512-F4zM5YssbgXEg+lYtmVNUv/aR3B12zcLfBNcExZ6W/9hwSJbP+KJQ31Bn+8rg9NJ1zKnO/ai8pqti6ePBM5b/g==
 
-"@nekosu/maa-node-win32-arm64@1.4.1", "@nekosu/maa-node-win32-arm64@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-win32-arm64/-/maa-node-win32-arm64-1.4.1.tgz#fbfc349d6859ccee1fb396e905b5185a8b074a1d"
-  integrity sha512-D5E3/xr+d9Wzjf7TBqQ4ySAGdX1XhTLU0gtHJTCR02dEB/VRKOZVBzKTYdX/HybcJtk/USqDvZ+8O6p9MS9Yeg==
+"@nekosu/maa-node-win32-arm64@1.4.3", "@nekosu/maa-node-win32-arm64@^1.3.4":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-win32-arm64/-/maa-node-win32-arm64-1.4.3.tgz#f5a49ce4b580af683a5d2f027d40bd644e5c8f1d"
+  integrity sha512-FEA9HGrSmhzAAdoSBSfz1VKvC3ATk7/uJ3YMnWTCYXsA2gjrEsj3Fv7yZ8RAtWQSq+wDBSBhEsw8VEidiTA2Pg==
 
-"@nekosu/maa-node-win32-x64@1.4.1", "@nekosu/maa-node-win32-x64@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-win32-x64/-/maa-node-win32-x64-1.4.1.tgz#c4d07a00808c9b2a2c2c41f1396cdcd5aa82e516"
-  integrity sha512-7ekB9sgZ6Mur0SmQBpWBXm1nV7sBzX+CPZ58GF8wDFnN2upQvb3W5iN0qnI5Nel9t1kULSdMkr3ezJfBqtubBQ==
+"@nekosu/maa-node-win32-x64@1.4.3", "@nekosu/maa-node-win32-x64@^1.3.4":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node-win32-x64/-/maa-node-win32-x64-1.4.3.tgz#445100759ccb9b5de4a135ead740c975df2733d0"
+  integrity sha512-o3NVT7aJ4r8Sq8VRgiIDG2pzByTGPGURRdxYOwNcqbT4AQiEwoN63i/R/SrF7DMm2ibYd+neqt4LW/VO/9fp6g==
 
 "@nekosu/maa-node@^1.3.4":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@nekosu/maa-node/-/maa-node-1.4.1.tgz#f0b389963e25d8f091f76f4475d65b8bef4a698c"
-  integrity sha512-F/e4xOSG+Z7/s1d31npwX08LxSA2oeHD9OSD4wbcATz3uuLk/AsHtSVeradN2NbA5P1AsFweuS9zoDFhtfjBxQ==
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@nekosu/maa-node/-/maa-node-1.4.3.tgz#0f2bf4788e007974651cb3b15417af6d17d33b0a"
+  integrity sha512-jzj72bw91fV81vOHpG4JCyKUjm0RyZEOoVX1YpzKCPDuCPQeryOj2QPzidgqUMHsCafZhy9ZEl/KdoFSf5m4Jw==
   optionalDependencies:
-    "@nekosu/maa-node-darwin-arm64" "1.4.1"
-    "@nekosu/maa-node-darwin-x64" "1.4.1"
-    "@nekosu/maa-node-linux-arm64" "1.4.1"
-    "@nekosu/maa-node-linux-x64" "1.4.1"
-    "@nekosu/maa-node-win32-arm64" "1.4.1"
-    "@nekosu/maa-node-win32-x64" "1.4.1"
+    "@nekosu/maa-node-darwin-arm64" "1.4.3"
+    "@nekosu/maa-node-darwin-x64" "1.4.3"
+    "@nekosu/maa-node-linux-arm64" "1.4.3"
+    "@nekosu/maa-node-linux-x64" "1.4.3"
+    "@nekosu/maa-node-win32-arm64" "1.4.3"
+    "@nekosu/maa-node-win32-x64" "1.4.3"
 
 "@trivago/prettier-plugin-sort-imports@^4.3.0":
   version "4.3.0"

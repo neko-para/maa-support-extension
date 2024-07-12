@@ -1,13 +1,12 @@
 import * as maa from '@nekosu/maa-node'
-import { TaskDecl } from '@nekosu/maa-node/dist/task'
 import { JSONPath, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
+import { commands } from '../command'
 import { Service, sharedInstance } from '../data'
 import { InheritDisposable } from '../disposable'
-import { commands } from './command'
+import { ResourceRoot } from '../utils/fs'
 import { PipelineRootStatusProvider } from './root'
-import { ResourceRoot } from './utils/fs'
 
 export type QueryResult =
   | {
@@ -297,7 +296,7 @@ export class PipelineTaskIndexProvider extends Service {
     return null
   }
 
-  queryTaskData(task: string): TaskDecl {
+  queryTaskData(task: string): maa.TaskDecl {
     try {
       return JSON.parse(this.taskIndex[task]?.taskContent ?? '{}')
     } catch (_) {

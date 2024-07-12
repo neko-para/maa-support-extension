@@ -1,10 +1,10 @@
 import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
+import { commands } from '../command'
 import { Service } from '../data'
 import { InheritDisposable } from '../disposable'
-import { commands } from './command'
-import { ResourceRoot, currentWorkspace, locateResourceRoot } from './utils/fs'
+import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../utils/fs'
 
 export class PipelineRootStatusProvider extends Service {
   rootStatusItem: vscode.StatusBarItem

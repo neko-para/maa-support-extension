@@ -5,6 +5,7 @@ import * as vscode from 'vscode'
 import { loadServices, resetInstance } from './data'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
+import { PipelineHoverProvider } from './pipeline/hover'
 import { PipelineReferenceProvider } from './pipeline/reference'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
@@ -19,7 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
     PipelineTaskIndexProvider,
     PipelineDefinitionProvider,
     PipelineCompletionProvider,
-    PipelineReferenceProvider
+    PipelineReferenceProvider,
+    PipelineHoverProvider
   ])
 }
 

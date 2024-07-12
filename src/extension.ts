@@ -7,6 +7,7 @@ import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
 import { PipelineHoverProvider } from './pipeline/hover'
 import { PipelineReferenceProvider } from './pipeline/reference'
+import { PipelineRenameProvider } from './pipeline/rename'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 
@@ -21,7 +22,8 @@ export function activate(context: vscode.ExtensionContext) {
     PipelineDefinitionProvider,
     PipelineCompletionProvider,
     PipelineReferenceProvider,
-    PipelineHoverProvider
+    PipelineHoverProvider,
+    PipelineRenameProvider
   ])
 }
 

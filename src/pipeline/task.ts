@@ -77,7 +77,9 @@ export class PipelineTaskIndexProvider extends Service {
         const doc = await vscode.workspace.openTextDocument(info.uri)
         if (doc) {
           const editor = await vscode.window.showTextDocument(doc)
-          editor.selection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
+          const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
+          editor.selection = targetSelection
+          editor.revealRange(targetSelection)
         }
       }
     })

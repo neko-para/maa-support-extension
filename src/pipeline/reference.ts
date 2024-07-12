@@ -1,9 +1,6 @@
-import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
-import { Service, sharedInstance } from '../data'
 import { ProviderBase } from './providerBase'
-import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineReferenceProvider extends ProviderBase implements vscode.ReferenceProvider {

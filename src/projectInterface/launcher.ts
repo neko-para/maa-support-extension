@@ -4,132 +4,15 @@ import * as vscode from 'vscode'
 import { commands } from '../command'
 import { Service } from '../data'
 import { currentWorkspace, exists } from '../utils/fs'
+import {
+  configController,
+  configTask,
+  selectController,
+  selectExistTask,
+  selectResource,
+  selectTask
+} from './configure'
 import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
-
-type RemoveUndefined<T> = T extends undefined ? never : T
-
-async function selectController(data: Interface): Promise<InterfaceConfig['controller'] | null> {
-  const ctrlRes = await vscode.window.showQuickPick(
-    data.controller.map(ctrl => {
-      return {
-        label: ctrl.name
-      } satisfies vscode.QuickPickItem
-    }),
-    {
-      title: 'Select controller'
-    }
-  )
-
-  if (!ctrlRes) {
-    return null
-  }
-
-  const ctrlInfo = data.controller.find(x => x.name === ctrlRes.label)
-
-  if (!ctrlInfo) {
-    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlRes.label}`)
-    return null
-  }
-
-  return {
-    name: ctrlRes.label,
-    type: ctrlInfo.type
-  }
-}
-
-async function configController(
-  data: Interface,
-  ctrlName: string
-): Promise<Pick<InterfaceConfig, 'adb' | 'win32'> | null> {
-  const ctrlInfo = data.controller.find(x => x.name === ctrlName)
-
-  if (!ctrlInfo) {
-    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlName}`)
-    return null
-  }
-
-  if (ctrlInfo.type === 'Adb') {
-    const devices = await maa.AdbController.find()
-
-    if (!devices) {
-      await vscode.window.showErrorMessage('No devices found')
-      return null
-    }
-
-    const devRes = await vscode.window.showQuickPick(
-      devices.map((dev, idx): vscode.QuickPickItem & { index: number } => {
-        return {
-          label: dev.name,
-          description: `${dev.name} - ${dev.adb_serial} - ${dev.adb_path}`,
-          index: idx
-        }
-      }),
-      {
-        title: 'Select device'
-      }
-    )
-
-    if (!devRes) {
-      return null
-    }
-
-    const dev = devices[devRes.index]
-
-    return {
-      adb: {
-        adb_path: dev.adb_path,
-        address: dev.adb_serial,
-        config: JSON.parse(dev.adb_config)
-      }
-    }
-  } else {
-    // TODO:
-  }
-
-  return null
-}
-
-type TaskConfig = RemoveUndefined<InterfaceConfig['task'][number]['option']>
-async function configTask(data: Interface, taskName: string): Promise<TaskConfig | null> {
-  const task = data.task.find(x => x.name === taskName)
-
-  if (!task) {
-    await vscode.window.showErrorMessage(`Cannot find task ${taskName}`)
-    return null
-  }
-
-  const result: TaskConfig = []
-  for (const optName of task.option ?? []) {
-    const opt = data.option?.[optName]
-    if (!opt) {
-      await vscode.window.showErrorMessage(`Cannot find option ${optName}`)
-      return null
-    }
-
-    const optRes = await vscode.window.showQuickPick(
-      opt.cases.map(cs => {
-        return {
-          label: cs.name,
-          description: opt.default_case === cs.name ? 'default' : undefined
-        } satisfies vscode.QuickPickItem
-      }),
-      {
-        title: `Select option ${optName}`
-      }
-    )
-
-    if (!optRes) {
-      return null
-    }
-
-    result.push({
-      name: optName,
-      value: optRes.label
-    })
-  }
-
-  return result
-}
 
 export async function initConfig(data: Interface): Promise<InterfaceConfig | null> {
   const newConfig: Partial<InterfaceConfig> = {}
@@ -150,50 +33,23 @@ export async function initConfig(data: Interface): Promise<InterfaceConfig | nul
 
   Object.assign(newConfig, ctrlCfg)
 
-  const resRes = await vscode.window.showQuickPick(
-    data.resource.map(res => {
-      return {
-        label: res.name,
-        description: res.path.join('; ')
-      } satisfies vscode.QuickPickItem
-    }),
-    {
-      title: 'Select resource'
-    }
-  )
+  const resRes = await selectResource(data)
 
   if (!resRes) {
     return null
   }
 
-  const resInfo = data.resource.find(x => x.name === resRes.label)
-
-  if (!resInfo) {
-    await vscode.window.showErrorMessage(`Cannot find resource ${resRes.label}`)
-    return null
-  }
-
-  newConfig.resource = resRes.label
+  newConfig.resource = resRes
 
   newConfig.task = []
 
-  const taskRes = await vscode.window.showQuickPick(
-    data.task.map(task => {
-      return {
-        label: task.name,
-        description: task.entry
-      } satisfies vscode.QuickPickItem
-    }),
-    {
-      title: 'Select task'
-    }
-  )
+  const taskRes = await selectTask(data)
 
   if (taskRes) {
-    const taskCfg = await configTask(data, taskRes.label)
+    const taskCfg = await configTask(data, taskRes)
     if (taskCfg) {
       newConfig.task.push({
-        name: taskRes.label,
+        name: taskRes,
         option: taskCfg
       })
     }
@@ -202,7 +58,7 @@ export async function initConfig(data: Interface): Promise<InterfaceConfig | nul
   return newConfig as InterfaceConfig
 }
 
-function overwriteConfig(
+function overwriteTKSConfig(
   base: number,
   touch: number | null,
   key: number | null,
@@ -241,7 +97,7 @@ export async function prepareRuntime(
       adb_path: config.adb.adb_path,
       adb_serial: config.adb.address,
       adb_config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
-      adb_controller_type: overwriteConfig(
+      adb_controller_type: overwriteTKSConfig(
         maa.AdbControllerType.Input_Preset_AutoDetect |
           maa.AdbControllerType.Screencap_FastestLosslessWay,
         ctrlInfo.adb?.touch ?? null,
@@ -382,7 +238,9 @@ export class ProjectInterfaceLaunchProvider extends Service {
             (await vscode.workspace.fs.readFile(interfaceUri)).toString()
           )
           let interfaceConfigData = (await exists(interfaceConfigUri))
-            ? JSON.parse((await vscode.workspace.fs.readFile(interfaceConfigUri)).toString())
+            ? (JSON.parse(
+                (await vscode.workspace.fs.readFile(interfaceConfigUri)).toString()
+              ) as InterfaceConfig)
             : null
 
           const saveConfig = async (cfg: InterfaceConfig) => {
@@ -401,61 +259,157 @@ export class ProjectInterfaceLaunchProvider extends Service {
             await saveConfig(newConfig)
             interfaceConfigData = newConfig
           }
-          while (true) {
-            const action = await vscode.window.showQuickPick(
-              ['Switch controller', 'Launch!'].map(x => ({
-                label: x
-              })),
+          while (interfaceConfigData) {
+            const actions: {
+              label: string
+              action: () => Promise<boolean>
+            }[] = [
               {
-                title: 'Choose action'
+                label: 'Switch controller',
+                action: async () => {
+                  const ctrlRes = await selectController(interfaceData)
+
+                  if (!ctrlRes) {
+                    return false
+                  }
+
+                  interfaceConfigData.controller = ctrlRes
+
+                  const ctrlCfg = await configController(interfaceData, ctrlRes.name)
+
+                  if (!ctrlCfg) {
+                    return false
+                  }
+
+                  Object.assign(interfaceConfigData, ctrlCfg)
+
+                  await saveConfig(interfaceConfigData)
+                  return true
+                }
+              },
+              {
+                label: 'Switch resource',
+                action: async () => {
+                  const resRes = await selectResource(interfaceData)
+
+                  if (!resRes) {
+                    return false
+                  }
+
+                  interfaceConfigData.resource = resRes
+
+                  await saveConfig(interfaceConfigData)
+                  return true
+                }
+              },
+              {
+                label: 'Add task',
+                action: async () => {
+                  const taskRes = await selectTask(interfaceData)
+
+                  if (!taskRes) {
+                    return false
+                  }
+
+                  const taskCfg = await configTask(interfaceData, taskRes)
+
+                  if (!taskCfg) {
+                    return false
+                  }
+
+                  interfaceConfigData.task.push({
+                    name: taskRes,
+                    option: taskCfg
+                  })
+
+                  await saveConfig(interfaceConfigData)
+                  return true
+                }
+              },
+              {
+                label: 'Move task',
+                action: async () => {
+                  const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
+
+                  if (taskRes === null) {
+                    return false
+                  }
+
+                  const removedTask = interfaceConfigData.task.splice(taskRes, 1)
+
+                  const newTaskRes = await vscode.window.showQuickPick(
+                    interfaceConfigData.task
+                      .map((x, i) => ({
+                        label: `Before ${i}. ${x.name}`,
+                        index: i
+                      }))
+                      .concat({
+                        label: 'After last task',
+                        index: interfaceConfigData.task.length
+                      })
+                  )
+
+                  if (!newTaskRes) {
+                    interfaceConfigData.task.splice(taskRes, 0, ...removedTask)
+                    return false
+                  }
+
+                  interfaceConfigData.task.splice(newTaskRes.index, 0, ...removedTask)
+
+                  await saveConfig(interfaceConfigData)
+                  return true
+                }
+              },
+              {
+                label: 'Remove task',
+                action: async () => {
+                  const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
+
+                  if (taskRes === null) {
+                    return false
+                  }
+
+                  interfaceConfigData.task.splice(taskRes, 1)
+
+                  await saveConfig(interfaceConfigData)
+                  return true
+                }
+              },
+              {
+                label: 'Launch!',
+                action: async () => {
+                  const runtime = await prepareRuntime(
+                    interfaceData,
+                    interfaceConfigData,
+                    vscode.Uri.joinPath(root, 'assets').fsPath
+                  )
+
+                  console.log(runtime)
+
+                  if (runtime) {
+                    this.outputChannel.show(true)
+                    try {
+                      await launchRuntime(runtime, this.outputChannel)
+                    } catch (err) {
+                      this.outputChannel.append(`${err}\n`)
+                    }
+                  }
+
+                  return true
+                }
               }
-            )
+            ]
+
+            const action = await vscode.window.showQuickPick(actions, {
+              title: 'Choose action'
+            })
+
             if (!action) {
               return
             }
 
-            switch (action.label) {
-              case 'Switch controller': {
-                const ctrlRes = await selectController(interfaceData)
-
-                if (!ctrlRes) {
-                  return null
-                }
-
-                interfaceConfigData.controller = ctrlRes
-
-                const ctrlCfg = await configController(interfaceData, ctrlRes.name)
-
-                if (!ctrlCfg) {
-                  return null
-                }
-
-                Object.assign(interfaceConfigData, ctrlCfg)
-
-                await saveConfig(interfaceConfigData)
-
-                break
-              }
-              case 'Launch!': {
-                const runtime = await prepareRuntime(
-                  interfaceData,
-                  interfaceConfigData,
-                  vscode.Uri.joinPath(root, 'assets').fsPath
-                )
-
-                console.log(runtime)
-
-                if (runtime) {
-                  this.outputChannel.show(true)
-                  try {
-                    await launchRuntime(runtime, this.outputChannel)
-                  } catch (err) {
-                    this.outputChannel.append(`${err}\n`)
-                  }
-                }
-
-                break
-              }
+            if (!(await action.action())) {
+              return null
             }
           }
         }

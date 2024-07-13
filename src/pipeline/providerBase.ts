@@ -3,12 +3,12 @@ import * as vscode from 'vscode'
 import { Service } from '../data'
 import { PipelineRootStatusProvider } from './root'
 
-export class ProviderBase extends Service {
-  provider: vscode.Disposable | null
+export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> extends Service {
+  provider: T | null
 
   constructor(
     context: vscode.ExtensionContext,
-    setupProvider: (selector: vscode.DocumentFilter[]) => vscode.Disposable
+    setupProvider: (selector: vscode.DocumentFilter[]) => T
   ) {
     super(context)
 

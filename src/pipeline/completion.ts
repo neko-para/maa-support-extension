@@ -28,16 +28,18 @@ export class PipelineCompletionProvider
 
     if (info.type === 'task.ref') {
       const taskList = Object.keys(this.shared(PipelineTaskIndexProvider).taskIndex)
-      return taskList.map(task => {
-        const esc = JSON.stringify(task)
-        return {
-          label: esc,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(0, esc.length - 1),
-          range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
-          documentation: this.shared(PipelineTaskIndexProvider).queryTaskDoc(task)
-        }
-      })
+      return await Promise.all(
+        taskList.map(async task => {
+          const esc = JSON.stringify(task)
+          return {
+            label: esc,
+            kind: vscode.CompletionItemKind.Reference,
+            insertText: esc.substring(0, esc.length - 1),
+            range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
+            documentation: await this.shared(PipelineTaskIndexProvider).queryTaskDoc(task)
+          }
+        })
+      )
     } else if (info.type === 'image.ref') {
       const pt = this.shared(PipelineRootStatusProvider).imagePattern()
       if (!pt) {

@@ -3,9 +3,8 @@ import { JSONPath, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
 import { commands } from '../command'
-import { Service, sharedInstance } from '../data'
-import { InheritDisposable } from '../disposable'
-import { ResourceRoot } from '../utils/fs'
+import { Service } from '../data'
+import { ResourceRoot, exists } from '../utils/fs'
 import { PipelineRootStatusProvider } from './root'
 
 export type QueryResult =
@@ -52,6 +51,7 @@ export type TaskIndexInfo = {
 export class PipelineTaskIndexProvider extends Service {
   taskIndex: Record<string, TaskIndexInfo>
   fileIndex: Record<string, string[]>
+  diagnostic: vscode.DiagnosticCollection
   dirtyUri: Map<string, vscode.Uri>
   flushingDirty: boolean
   watcher: vscode.FileSystemWatcher | null
@@ -61,6 +61,7 @@ export class PipelineTaskIndexProvider extends Service {
 
     this.taskIndex = {}
     this.fileIndex = {}
+    this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
     this.dirtyUri = new Map()
     this.flushingDirty = false
     this.watcher = null
@@ -107,8 +108,16 @@ export class PipelineTaskIndexProvider extends Service {
     visit(content, {
       onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
         path[path.length - 1] = property
-
         if (path.length === 1) {
+          if (property in this.taskIndex) {
+            for (let i = 1; ; i++) {
+              const newProp = `${property}@VSCEXT_CONFLICT,${i}`
+              if (!(newProp in this.taskIndex)) {
+                property = newProp
+                break
+              }
+            }
+          }
           this.taskIndex[property] = {
             uri,
             taskContent: '',
@@ -232,6 +241,55 @@ export class PipelineTaskIndexProvider extends Service {
     }
   }
 
+  async updateDiagnostic() {
+    const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
+    for (const [task, taskInfo] of Object.entries(this.taskIndex)) {
+      // check conflict task
+      const m = /(.+)@VSCEXT_CONFLICT,\d+/.exec(task)
+      if (m) {
+        result.push([
+          taskInfo.uri,
+          new vscode.Diagnostic(
+            taskInfo.taskProp,
+            `Maa: Conflict task ${m[1]}, previous defined in ${this.shared(
+              PipelineRootStatusProvider
+            ).relativePathToRoot(this.taskIndex[m[1]].uri)}`,
+            vscode.DiagnosticSeverity.Error
+          )
+        ])
+      }
+
+      // check missing task
+      for (const ref of taskInfo.taskRef) {
+        if (!(ref.task in this.taskIndex)) {
+          result.push([
+            taskInfo.uri,
+            new vscode.Diagnostic(
+              ref.range,
+              `Maa: Unknown task ${ref.task}`,
+              vscode.DiagnosticSeverity.Error
+            )
+          ])
+        }
+      }
+
+      // check missing image
+      for (const ref of taskInfo.imageRef) {
+        if (!(await exists(ref.uri))) {
+          result.push([
+            taskInfo.uri,
+            new vscode.Diagnostic(
+              ref.range,
+              `Maa: Unknown image ${this.shared(PipelineRootStatusProvider).relativePathToRoot(ref.uri)}`,
+              vscode.DiagnosticSeverity.Error
+            )
+          ])
+        }
+      }
+    }
+    this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
+  }
+
   async flushDirty() {
     if (this.flushingDirty) {
       return
@@ -251,6 +309,8 @@ export class PipelineTaskIndexProvider extends Service {
 
     await Promise.all([...dirtyUriList].map(([path, uri]) => this.loadJson(uri)))
 
+    await this.updateDiagnostic()
+
     this.flushingDirty = false
   }
 
@@ -263,7 +323,7 @@ export class PipelineTaskIndexProvider extends Service {
           type: 'task.prop',
           task: task,
           range: info.taskProp,
-          target: task
+          target: task.replace(/@VSCEXT.+$/, '')
         }
       } else if (info.taskBody.contains(pos)) {
         for (const ref of info.taskRef) {
@@ -296,7 +356,8 @@ export class PipelineTaskIndexProvider extends Service {
     return null
   }
 
-  queryTaskData(task: string): maa.TaskDecl {
+  async queryTaskData(task: string): Promise<maa.TaskDecl> {
+    await this.flushDirty()
     try {
       return JSON.parse(this.taskIndex[task]?.taskContent ?? '{}')
     } catch (_) {
@@ -304,7 +365,8 @@ export class PipelineTaskIndexProvider extends Service {
     }
   }
 
-  queryTaskDoc(task: string): vscode.MarkdownString {
+  async queryTaskDoc(task: string): Promise<vscode.MarkdownString> {
+    await this.flushDirty()
     const taskInfo = this.taskIndex[task]
     if (taskInfo) {
       return new vscode.MarkdownString(`\`\`\`json\n${taskInfo.taskReferContent}\n\`\`\``)

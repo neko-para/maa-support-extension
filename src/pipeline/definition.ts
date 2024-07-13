@@ -22,7 +22,7 @@ export class PipelineDefinitionProvider extends ProviderBase implements vscode.D
       return null
     }
 
-    if (info.type === 'task.ref') {
+    if (info.type === 'task.ref' || info.type === 'task.prop') {
       const targetInfo = this.shared(PipelineTaskIndexProvider).taskIndex[info.target]
       if (targetInfo) {
         return new vscode.Location(targetInfo.uri, targetInfo.taskProp)

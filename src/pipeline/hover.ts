@@ -22,8 +22,10 @@ export class PipelineHoverProvider extends ProviderBase implements vscode.HoverP
       return null
     }
 
-    if (info.type === 'task.ref') {
-      return new vscode.Hover(this.shared(PipelineTaskIndexProvider).queryTaskDoc(info.target))
+    if (info.type === 'task.ref' || info.type === 'task.prop') {
+      return new vscode.Hover(
+        await this.shared(PipelineTaskIndexProvider).queryTaskDoc(info.target)
+      )
     } else if (info.type === 'image.ref') {
       try {
         await vscode.workspace.fs.stat(info.target)
@@ -31,7 +33,7 @@ export class PipelineHoverProvider extends ProviderBase implements vscode.HoverP
       } catch (_) {
         return new vscode.Hover(
           new vscode.MarkdownString(
-            `${this.shared(PipelineRootStatusProvider).relativePath(info.target)} 不存在Z`
+            `${this.shared(PipelineRootStatusProvider).relativePath(info.target)} not exists`
           )
         )
       }

@@ -84,8 +84,61 @@ export async function configController(
         config: JSON.parse(dev.adb_config)
       }
     }
-  } else {
-    // TODO:
+  } else if (ctrlInfo.type === 'Win32') {
+    if (!ctrlInfo.win32) {
+      await vscode.window.showErrorMessage('No win32 config provided')
+      return null
+    }
+
+    let hwnds: maa.Win32Hwnd[]
+    switch (ctrlInfo.win32.method) {
+      case 'Find':
+        hwnds = maa.Win32Controller.find(
+          'find',
+          ctrlInfo.win32.class_name ?? '',
+          ctrlInfo.win32.window_name ?? ''
+        )
+        break
+      case 'Search':
+        hwnds = maa.Win32Controller.find(
+          'search',
+          ctrlInfo.win32.class_name ?? '',
+          ctrlInfo.win32.window_name ?? ''
+        )
+        break
+      case 'Cursor':
+        hwnds = [maa.Win32Controller.get('cursor')]
+        break
+      case 'Desktop':
+        hwnds = [maa.Win32Controller.get('desktop')]
+        break
+      case 'Foreground':
+        hwnds = [maa.Win32Controller.get('foreground')]
+        break
+    }
+
+    const hwndRes = await vscode.window.showQuickPick(
+      hwnds.map(hwnd => {
+        const info = maa.Win32Controller.info(hwnd)
+        return {
+          label: `${maa.get_window_hwnd(hwnd)} - ${info.class_name} - ${info.window_name}`,
+          hwnd: hwnd
+        }
+      }),
+      {
+        title: 'Select window'
+      }
+    )
+
+    if (!hwndRes) {
+      return null
+    }
+
+    return {
+      win32: {
+        hwnd: hwndRes.hwnd
+      }
+    }
   }
 
   return null

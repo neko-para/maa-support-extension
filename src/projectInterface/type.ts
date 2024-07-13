@@ -67,7 +67,9 @@ export type InterfaceConfig = {
     address: string
     config: unknown
   }
-  win32?: {}
+  win32?: {
+    hwnd?: maa.Win32Hwnd
+  }
   resource: string
   task: {
     name: string

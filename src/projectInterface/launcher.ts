@@ -105,8 +105,33 @@ export async function prepareRuntime(
         ctrlInfo.adb?.screencap ?? null
       )
     }
-  } else {
-    return null
+  } else if (ctrlInfo.type === 'Win32') {
+    if (!config.win32) {
+      await vscode.window.showErrorMessage(
+        `Cannot find win32 config for controller ${config.controller.name}`
+      )
+      return null
+    }
+
+    if (!config.win32.hwnd) {
+      await vscode.window.showErrorMessage(
+        `Cannot find hwnd in win32 config for controller ${config.controller.name}, please reconfigure the controller`
+      )
+      return null
+    }
+
+    result.controller_param = {
+      ctype: 'win32',
+      hwnd: config.win32.hwnd,
+      controller_type: overwriteTKSConfig(
+        maa.Win32ControllerType.Touch_Seize |
+          maa.Win32ControllerType.Key_Seize |
+          maa.Win32ControllerType.Screencap_DXGI_DesktopDup,
+        ctrlInfo.win32?.touch ?? null,
+        ctrlInfo.win32?.key ?? null,
+        ctrlInfo.win32?.screencap ?? null
+      )
+    }
   }
 
   const resInfo = data.resource.find(x => x.name === config.resource)
@@ -166,6 +191,11 @@ export async function launchRuntime(runtime: InterfaceRuntime, output: vscode.Ou
 
   if (runtime.controller_param.ctype === 'adb') {
     controller = new maa.AdbController(runtime.controller_param)
+  } else if (runtime.controller_param.ctype === 'win32') {
+    controller = new maa.Win32Controller(
+      runtime.controller_param.hwnd,
+      runtime.controller_param.controller_type
+    )
   } else {
     return
   }
@@ -216,204 +246,207 @@ export class ProjectInterfaceLaunchProvider extends Service {
     this.outputChannel = vscode.window.createOutputChannel('Maa')
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
-      vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: 'Maa: Project Interface Launching...'
-        },
-        async progress => {
-          const root = currentWorkspace()
-          if (!root) {
-            return
-          }
+      const root = currentWorkspace()
+      if (!root) {
+        return
+      }
 
-          const interfaceUri = vscode.Uri.joinPath(root, 'assets/interface.json')
-          const interfaceConfigUri = vscode.Uri.joinPath(root, 'install/config/maa_pi_config.json')
+      const interfaceUri = vscode.Uri.joinPath(root, 'assets/interface.json')
+      const interfaceConfigUri = vscode.Uri.joinPath(root, 'install/config/maa_pi_config.json')
 
-          if (!(await exists(interfaceUri))) {
-            return
-          }
+      if (!(await exists(interfaceUri))) {
+        return
+      }
 
-          const interfaceData = JSON.parse(
-            (await vscode.workspace.fs.readFile(interfaceUri)).toString()
-          )
-          let interfaceConfigData = (await exists(interfaceConfigUri))
-            ? (JSON.parse(
-                (await vscode.workspace.fs.readFile(interfaceConfigUri)).toString()
-              ) as InterfaceConfig)
-            : null
+      const interfaceData = JSON.parse(
+        (await vscode.workspace.fs.readFile(interfaceUri)).toString()
+      )
+      let interfaceConfigData = (await exists(interfaceConfigUri))
+        ? (JSON.parse(
+            (await vscode.workspace.fs.readFile(interfaceConfigUri)).toString()
+          ) as InterfaceConfig)
+        : null
 
-          const saveConfig = async (cfg: InterfaceConfig) => {
-            await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, 'install/config'))
-            await vscode.workspace.fs.writeFile(
-              interfaceConfigUri,
-              Buffer.from(JSON.stringify(cfg, null, 4))
+      const saveConfig = async (cfg: InterfaceConfig) => {
+        await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, 'install/config'))
+        await vscode.workspace.fs.writeFile(
+          interfaceConfigUri,
+          Buffer.from(
+            JSON.stringify(
+              cfg,
+              (key, value) => {
+                if (key === 'hwnd') {
+                  return undefined
+                }
+                return value
+              },
+              4
             )
-          }
+          )
+        )
+      }
 
-          if (!interfaceConfigData) {
-            const newConfig = await initConfig(interfaceData)
-            if (!newConfig) {
-              return
+      if (!interfaceConfigData) {
+        const newConfig = await initConfig(interfaceData)
+        if (!newConfig) {
+          return
+        }
+        await saveConfig(newConfig)
+        interfaceConfigData = newConfig
+      }
+      while (interfaceConfigData) {
+        const actions: {
+          label: string
+          action: () => Promise<boolean>
+        }[] = [
+          {
+            label: 'Switch controller',
+            action: async () => {
+              const ctrlRes = await selectController(interfaceData)
+
+              if (!ctrlRes) {
+                return false
+              }
+
+              interfaceConfigData.controller = ctrlRes
+
+              const ctrlCfg = await configController(interfaceData, ctrlRes.name)
+
+              if (!ctrlCfg) {
+                return false
+              }
+
+              Object.assign(interfaceConfigData, ctrlCfg)
+
+              await saveConfig(interfaceConfigData)
+              return true
             }
-            await saveConfig(newConfig)
-            interfaceConfigData = newConfig
-          }
-          while (interfaceConfigData) {
-            const actions: {
-              label: string
-              action: () => Promise<boolean>
-            }[] = [
-              {
-                label: 'Switch controller',
-                action: async () => {
-                  const ctrlRes = await selectController(interfaceData)
+          },
+          {
+            label: 'Switch resource',
+            action: async () => {
+              const resRes = await selectResource(interfaceData)
 
-                  if (!ctrlRes) {
-                    return false
-                  }
+              if (!resRes) {
+                return false
+              }
 
-                  interfaceConfigData.controller = ctrlRes
+              interfaceConfigData.resource = resRes
 
-                  const ctrlCfg = await configController(interfaceData, ctrlRes.name)
+              await saveConfig(interfaceConfigData)
+              return true
+            }
+          },
+          {
+            label: 'Add task',
+            action: async () => {
+              const taskRes = await selectTask(interfaceData)
 
-                  if (!ctrlCfg) {
-                    return false
-                  }
+              if (!taskRes) {
+                return false
+              }
 
-                  Object.assign(interfaceConfigData, ctrlCfg)
+              const taskCfg = await configTask(interfaceData, taskRes)
 
-                  await saveConfig(interfaceConfigData)
-                  return true
-                }
-              },
-              {
-                label: 'Switch resource',
-                action: async () => {
-                  const resRes = await selectResource(interfaceData)
+              if (!taskCfg) {
+                return false
+              }
 
-                  if (!resRes) {
-                    return false
-                  }
+              interfaceConfigData.task.push({
+                name: taskRes,
+                option: taskCfg
+              })
 
-                  interfaceConfigData.resource = resRes
+              await saveConfig(interfaceConfigData)
+              return true
+            }
+          },
+          {
+            label: 'Move task',
+            action: async () => {
+              const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
 
-                  await saveConfig(interfaceConfigData)
-                  return true
-                }
-              },
-              {
-                label: 'Add task',
-                action: async () => {
-                  const taskRes = await selectTask(interfaceData)
+              if (taskRes === null) {
+                return false
+              }
 
-                  if (!taskRes) {
-                    return false
-                  }
+              const removedTask = interfaceConfigData.task.splice(taskRes, 1)
 
-                  const taskCfg = await configTask(interfaceData, taskRes)
-
-                  if (!taskCfg) {
-                    return false
-                  }
-
-                  interfaceConfigData.task.push({
-                    name: taskRes,
-                    option: taskCfg
+              const newTaskRes = await vscode.window.showQuickPick(
+                interfaceConfigData.task
+                  .map((x, i) => ({
+                    label: `Before ${i}. ${x.name}`,
+                    index: i
+                  }))
+                  .concat({
+                    label: 'After last task',
+                    index: interfaceConfigData.task.length
                   })
+              )
 
-                  await saveConfig(interfaceConfigData)
-                  return true
-                }
-              },
-              {
-                label: 'Move task',
-                action: async () => {
-                  const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
+              if (!newTaskRes) {
+                interfaceConfigData.task.splice(taskRes, 0, ...removedTask)
+                return false
+              }
 
-                  if (taskRes === null) {
-                    return false
-                  }
+              interfaceConfigData.task.splice(newTaskRes.index, 0, ...removedTask)
 
-                  const removedTask = interfaceConfigData.task.splice(taskRes, 1)
+              await saveConfig(interfaceConfigData)
+              return true
+            }
+          },
+          {
+            label: 'Remove task',
+            action: async () => {
+              const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
 
-                  const newTaskRes = await vscode.window.showQuickPick(
-                    interfaceConfigData.task
-                      .map((x, i) => ({
-                        label: `Before ${i}. ${x.name}`,
-                        index: i
-                      }))
-                      .concat({
-                        label: 'After last task',
-                        index: interfaceConfigData.task.length
-                      })
-                  )
+              if (taskRes === null) {
+                return false
+              }
 
-                  if (!newTaskRes) {
-                    interfaceConfigData.task.splice(taskRes, 0, ...removedTask)
-                    return false
-                  }
+              interfaceConfigData.task.splice(taskRes, 1)
 
-                  interfaceConfigData.task.splice(newTaskRes.index, 0, ...removedTask)
+              await saveConfig(interfaceConfigData)
+              return true
+            }
+          },
+          {
+            label: 'Launch!',
+            action: async () => {
+              const runtime = await prepareRuntime(
+                interfaceData,
+                interfaceConfigData,
+                vscode.Uri.joinPath(root, 'assets').fsPath
+              )
 
-                  await saveConfig(interfaceConfigData)
-                  return true
-                }
-              },
-              {
-                label: 'Remove task',
-                action: async () => {
-                  const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
+              console.log(runtime)
 
-                  if (taskRes === null) {
-                    return false
-                  }
-
-                  interfaceConfigData.task.splice(taskRes, 1)
-
-                  await saveConfig(interfaceConfigData)
-                  return true
-                }
-              },
-              {
-                label: 'Launch!',
-                action: async () => {
-                  const runtime = await prepareRuntime(
-                    interfaceData,
-                    interfaceConfigData,
-                    vscode.Uri.joinPath(root, 'assets').fsPath
-                  )
-
-                  console.log(runtime)
-
-                  if (runtime) {
-                    this.outputChannel.show(true)
-                    try {
-                      await launchRuntime(runtime, this.outputChannel)
-                    } catch (err) {
-                      this.outputChannel.append(`${err}\n`)
-                    }
-                  }
-
-                  return true
+              if (runtime) {
+                this.outputChannel.show(true)
+                try {
+                  await launchRuntime(runtime, this.outputChannel)
+                } catch (err) {
+                  this.outputChannel.append(`${err}\n`)
                 }
               }
-            ]
 
-            const action = await vscode.window.showQuickPick(actions, {
-              title: 'Choose action'
-            })
-
-            if (!action) {
-              return
-            }
-
-            if (!(await action.action())) {
-              return null
+              return true
             }
           }
+        ]
+
+        const action = await vscode.window.showQuickPick(actions, {
+          title: 'Choose action'
+        })
+
+        if (!action) {
+          return
         }
-      )
+
+        if (!(await action.action())) {
+          return null
+        }
+      }
     })
   }
 }

@@ -6,14 +6,18 @@ export function currentWorkspace() {
 
 export async function exists(uri: vscode.Uri) {
   try {
-    await vscode.workspace.fs.stat(uri)
-    return true
+    return await vscode.workspace.fs.stat(uri)
   } catch (_) {
-    return false
+    return null
   }
 }
 
-export type ResourceRoot = [uri: vscode.Uri, suffix: string]
+export type ResourceRoot = {
+  dirUri: vscode.Uri
+  dirRelative: string
+  interfaceUri: vscode.Uri
+  configUri: vscode.Uri
+}
 
 export async function locateResourceRoot() {
   const root = currentWorkspace()
@@ -26,11 +30,16 @@ export async function locateResourceRoot() {
   const travel = async (current: vscode.Uri) => {
     const childs = await vscode.workspace.fs.readDirectory(current)
     for (const [name, type] of childs) {
-      if (['.git', 'node_modules'].includes(name)) {
+      if (['node_modules'].includes(name) || name.startsWith('.')) {
         continue
       }
-      if (name === 'pipeline' && type === vscode.FileType.Directory) {
-        result.push([current, current.fsPath.replace(root.fsPath, '')])
+      if (name === 'interface.json' && type === vscode.FileType.File) {
+        result.push({
+          dirUri: current,
+          dirRelative: current.fsPath.replace(root.fsPath, ''),
+          interfaceUri: vscode.Uri.joinPath(current, 'interface.json'),
+          configUri: vscode.Uri.joinPath(current, 'config/maa_pi_config.json')
+        })
       }
       if (type === vscode.FileType.Directory) {
         await travel(vscode.Uri.joinPath(current, name))

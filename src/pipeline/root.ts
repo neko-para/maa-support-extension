@@ -3,7 +3,6 @@ import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { InheritDisposable } from '../disposable'
 import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../utils/fs'
 
 export class PipelineRootStatusProvider extends Service {
@@ -13,7 +12,7 @@ export class PipelineRootStatusProvider extends Service {
   selector: vscode.DocumentFilter[] | null
 
   event: EventEmitter<{
-    activateResourceChanged: [resource: ResourceRoot | null]
+    activateRootChanged: []
     activateSelectorChanged: [selector: vscode.DocumentFilter[] | null]
   }>
 
@@ -29,7 +28,7 @@ export class PipelineRootStatusProvider extends Service {
 
     this.event = new EventEmitter()
 
-    this.event.on('activateResourceChanged', () => {
+    this.event.on('activateRootChanged', () => {
       this.updateRootStatus()
       this.updateSelector()
     })
@@ -41,14 +40,14 @@ export class PipelineRootStatusProvider extends Service {
     this.defer = vscode.commands.registerCommand(commands.SelectResource, async () => {
       const result = await vscode.window.showQuickPick(
         this.resourceRoot.map((x, index): vscode.QuickPickItem & { index: number } => ({
-          label: x[1],
-          detail: x[0].fsPath,
+          label: x.dirRelative,
+          detail: x.dirUri.fsPath,
           index
         }))
       )
       if (result) {
         this.activateResource = this.resourceRoot[result.index]
-        this.event.emit('activateResourceChanged', this.activateResource)
+        this.event.emit('activateRootChanged')
       }
     })
   }
@@ -60,13 +59,13 @@ export class PipelineRootStatusProvider extends Service {
     } else {
       this.activateResource = null
     }
-    this.event.emit('activateResourceChanged', this.activateResource)
+    this.event.emit('activateRootChanged')
   }
 
   updateRootStatus() {
     if (this.activateResource) {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.background')
-      this.rootStatusItem.text = 'Maa Support - ' + this.activateResource[1]
+      this.rootStatusItem.text = 'Maa Support - ' + this.activateResource.dirRelative
     } else {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
       this.rootStatusItem.text = 'Maa Support - No Root Found'
@@ -76,13 +75,13 @@ export class PipelineRootStatusProvider extends Service {
 
   jsonPattern() {
     return this.activateResource
-      ? new vscode.RelativePattern(this.activateResource[0], 'pipeline/**/*.json')
+      ? new vscode.RelativePattern(this.activateResource.dirUri, 'pipeline/**/*.json')
       : null
   }
 
   imagePattern() {
     return this.activateResource
-      ? new vscode.RelativePattern(this.activateResource[0], 'image/**/*.png')
+      ? new vscode.RelativePattern(this.activateResource.dirUri, 'image/**/*.png')
       : null
   }
 
@@ -107,7 +106,7 @@ export class PipelineRootStatusProvider extends Service {
 
   relativePathToRoot(uri: vscode.Uri, sub = '') {
     if (this.activateResource) {
-      let rootUri = this.activateResource[0]
+      let rootUri = this.activateResource.dirUri
       if (sub) {
         rootUri = vscode.Uri.joinPath(rootUri, sub)
       }

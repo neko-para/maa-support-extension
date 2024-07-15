@@ -24,6 +24,7 @@
   "maa.pi.error.cannot-find-case-for-option": "Cannot find case {0} for option {1}",
   "maa.pi.error.no-devices-found": "No devices found",
   "maa.pi.error.no-win32-config-provided": "No win32 config provided",
+  "maa.pi.error.load-interface-failed": "Failed to load interface",
 
   "maa.pipeline.codelens.launch": "launch {0}",
 

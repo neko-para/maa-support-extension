@@ -49,7 +49,7 @@ export type TaskIndexInfo = {
 }
 
 export class PipelineTaskIndexProvider extends Service {
-  taskIndex: Record<string, TaskIndexInfo>
+  taskIndex: Record<string, TaskIndexInfo[]>
   fileIndex: Record<string, string[]>
   diagnostic: vscode.DiagnosticCollection
   dirtyUri: Map<string, vscode.Uri>
@@ -66,7 +66,7 @@ export class PipelineTaskIndexProvider extends Service {
     this.flushingDirty = false
     this.watcher = null
 
-    this.shared(PipelineRootStatusProvider).event.on('activateResourceChanged', root => {
+    this.shared(PipelineRootStatusProvider).event.on('activateRootChanged', root => {
       this.updateTaskIndex(root)
     })
 

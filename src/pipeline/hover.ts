@@ -33,7 +33,10 @@ export class PipelineHoverProvider extends ProviderBase implements vscode.HoverP
       } catch (_) {
         return new vscode.Hover(
           new vscode.MarkdownString(
-            `${this.shared(PipelineRootStatusProvider).relativePath(info.target)} not exists`
+            vscode.l10n.t(
+              'maa.pipeline.error.not-exists',
+              this.shared(PipelineRootStatusProvider).relativePath(info.target)
+            )
           )
         )
       }

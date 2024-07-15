@@ -33,7 +33,10 @@ export class PipelineDefinitionProvider extends ProviderBase implements vscode.D
         return new vscode.Location(info.target, new vscode.Position(0, 0))
       } catch (_) {
         vscode.window.showErrorMessage(
-          `${this.shared(PipelineRootStatusProvider).relativePath(info.target)} 不存在`
+          vscode.l10n.t(
+            'maa.pipeline.error.not-exists',
+            this.shared(PipelineRootStatusProvider).relativePath(info.target)
+          )
         )
       }
     }

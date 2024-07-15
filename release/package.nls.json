@@ -1,0 +1,6 @@
+{
+  "maa.command.open-log": "Maa: open log",
+  "maa.command.select-resource": "Maa: select resource",
+  "maa.command.goto-task": "Maa: goto task",
+  "maa.command.launch-interface": "Maa: launch interface"
+}

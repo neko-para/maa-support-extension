@@ -371,7 +371,7 @@ export class PipelineTaskIndexProvider extends Service {
     if (taskInfo) {
       return new vscode.MarkdownString(`\`\`\`json\n${taskInfo.taskReferContent}\n\`\`\``)
     } else {
-      return new vscode.MarkdownString(`Unknown task ${task}`)
+      return new vscode.MarkdownString(vscode.l10n.t('maa.pipeline.error.unknown-task', task))
     }
   }
 }

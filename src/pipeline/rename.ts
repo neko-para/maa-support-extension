@@ -19,11 +19,11 @@ export class PipelineRenameProvider extends ProviderBase implements vscode.Renam
     const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
 
     if (!info) {
-      throw 'Not allowed'
+      throw vscode.l10n.t('maa.pipeline.error.rename-not-allowed')
     }
 
     if (newName in this.shared(PipelineTaskIndexProvider).taskIndex) {
-      throw 'Already exists'
+      throw vscode.l10n.t('maa.pipeline.error.rename-already-exists')
     }
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
@@ -43,7 +43,7 @@ export class PipelineRenameProvider extends ProviderBase implements vscode.Renam
       return edit
     }
 
-    throw 'Not allowed'
+    throw vscode.l10n.t('maa.pipeline.error.rename-not-allowed')
   }
 
   async prepareRename?(
@@ -54,7 +54,7 @@ export class PipelineRenameProvider extends ProviderBase implements vscode.Renam
     const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
 
     if (!info) {
-      throw 'Not allowed'
+      throw vscode.l10n.t('maa.pipeline.error.rename-not-allowed')
     }
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
@@ -64,6 +64,6 @@ export class PipelineRenameProvider extends ProviderBase implements vscode.Renam
       }
     }
 
-    throw 'Not allowed'
+    throw vscode.l10n.t('maa.pipeline.error.rename-not-allowed')
   }
 }

@@ -4,9 +4,10 @@
   "publisher": "nekosu",
   "description": "Maa framework support",
   "repository": "https://github.com/neko-para/maa-support-extension",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "license": "MIT",
   "icon": "images/logo.png",
+  "l10n": "./l10n",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -20,19 +21,19 @@
   "contributes": {
     "commands": [
       {
-        "title": "Maa: open log",
+        "title": "%maa.command.open-log%",
         "command": "maa.open-log"
       },
       {
-        "title": "Maa: select resource",
+        "title": "%maa.command.select-resource%",
         "command": "maa.select-resource"
       },
       {
-        "title": "Maa: goto task",
+        "title": "%maa.command.goto-task%",
         "command": "maa.goto-task"
       },
       {
-        "title": "Maa: launch interface",
+        "title": "%maa.command.launch-interface%",
         "command": "maa.launch-interface"
       },
       {

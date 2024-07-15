@@ -1,9 +1,6 @@
 import * as maa from '@nekosu/maa-node'
 import * as vscode from 'vscode'
 
-import { commands } from '../command'
-import { Service } from '../data'
-import { currentWorkspace, exists } from '../utils/fs'
 import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
 
 type RemoveUndefined<T> = T extends undefined ? never : T
@@ -18,7 +15,7 @@ export async function selectController(
       } satisfies vscode.QuickPickItem
     }),
     {
-      title: 'Select controller'
+      title: vscode.l10n.t('maa.pi.title.select-controller')
     }
   )
 
@@ -29,7 +26,9 @@ export async function selectController(
   const ctrlInfo = data.controller.find(x => x.name === ctrlRes.label)
 
   if (!ctrlInfo) {
-    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlRes.label}`)
+    await vscode.window.showErrorMessage(
+      vscode.l10n.t('maa.pi.error.cannot-find-controller', ctrlRes.label)
+    )
     return null
   }
 
@@ -46,7 +45,9 @@ export async function configController(
   const ctrlInfo = data.controller.find(x => x.name === ctrlName)
 
   if (!ctrlInfo) {
-    await vscode.window.showErrorMessage(`Cannot find controller ${ctrlName}`)
+    await vscode.window.showErrorMessage(
+      vscode.l10n.t('maa.pi.error.cannot-find-controller', ctrlName)
+    )
     return null
   }
 
@@ -54,7 +55,7 @@ export async function configController(
     const devices = await maa.AdbController.find()
 
     if (!devices) {
-      await vscode.window.showErrorMessage('No devices found')
+      await vscode.window.showErrorMessage(vscode.l10n.t('maa.pi.error.no-devices-found'))
       return null
     }
 
@@ -67,7 +68,7 @@ export async function configController(
         }
       }),
       {
-        title: 'Select device'
+        title: vscode.l10n.t('maa.pi.title.select-device')
       }
     )
 
@@ -86,7 +87,7 @@ export async function configController(
     }
   } else if (ctrlInfo.type === 'Win32') {
     if (!ctrlInfo.win32) {
-      await vscode.window.showErrorMessage('No win32 config provided')
+      await vscode.window.showErrorMessage(vscode.l10n.t('maa.pi.error.no-win32-config-provided'))
       return null
     }
 
@@ -126,7 +127,7 @@ export async function configController(
         }
       }),
       {
-        title: 'Select window'
+        title: vscode.l10n.t('maa.pi.title.select-window')
       }
     )
 
@@ -152,7 +153,7 @@ export async function selectResource(data: Interface): Promise<InterfaceConfig['
       } satisfies vscode.QuickPickItem
     }),
     {
-      title: 'Select resource'
+      title: vscode.l10n.t('maa.pi.title.select-resource')
     }
   )
 
@@ -163,7 +164,9 @@ export async function selectResource(data: Interface): Promise<InterfaceConfig['
   const resInfo = data.resource.find(x => x.name === resRes.label)
 
   if (!resInfo) {
-    await vscode.window.showErrorMessage(`Cannot find resource ${resRes.label}`)
+    await vscode.window.showErrorMessage(
+      vscode.l10n.t('maa.pi.error.cannot-find-resource', resRes.label)
+    )
     return null
   }
 
@@ -179,7 +182,7 @@ export async function selectTask(data: Interface): Promise<string | null> {
       } satisfies vscode.QuickPickItem
     }),
     {
-      title: 'Select task'
+      title: vscode.l10n.t('maa.pi.title.select-task')
     }
   )
 
@@ -209,7 +212,7 @@ export async function configTask(data: Interface, taskName: string): Promise<Tas
   const task = data.task.find(x => x.name === taskName)
 
   if (!task) {
-    await vscode.window.showErrorMessage(`Cannot find task ${taskName}`)
+    await vscode.window.showErrorMessage(vscode.l10n.t('maa.pi.error.cannot-find-task', taskName))
     return null
   }
 
@@ -217,7 +220,9 @@ export async function configTask(data: Interface, taskName: string): Promise<Tas
   for (const optName of task.option ?? []) {
     const opt = data.option?.[optName]
     if (!opt) {
-      await vscode.window.showErrorMessage(`Cannot find option ${optName}`)
+      await vscode.window.showErrorMessage(
+        vscode.l10n.t('maa.pi.error.cannot-find-option', optName)
+      )
       return null
     }
 
@@ -229,7 +234,7 @@ export async function configTask(data: Interface, taskName: string): Promise<Tas
         } satisfies vscode.QuickPickItem
       }),
       {
-        title: `Select option ${optName}`
+        title: vscode.l10n.t('maa.pi.title.select-option', optName)
       }
     )
 

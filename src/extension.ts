@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 
 import { commands } from './command'
 import { loadServices, resetInstance } from './data'
+import { PipelineCodeLensProvider } from './pipeline/codeLens'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
 import { PipelineHoverProvider } from './pipeline/hover'
@@ -36,6 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
     PipelineReferenceProvider,
     PipelineHoverProvider,
     PipelineRenameProvider,
+    PipelineCodeLensProvider,
 
     ProjectInterfaceLaunchProvider
   ])

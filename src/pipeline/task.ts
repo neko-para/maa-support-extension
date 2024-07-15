@@ -251,9 +251,9 @@ export class PipelineTaskIndexProvider extends Service {
           taskInfo.uri,
           new vscode.Diagnostic(
             taskInfo.taskProp,
-            `Maa: Conflict task ${m[1]}, previous defined in ${this.shared(
+            vscode.l10n.t('maa.pipeline.error.conflict-task', m[1], this.shared(
               PipelineRootStatusProvider
-            ).relativePathToRoot(this.taskIndex[m[1]].uri)}`,
+            ).relativePathToRoot(this.taskIndex[m[1]].uri),
             vscode.DiagnosticSeverity.Error
           )
         ])
@@ -266,7 +266,7 @@ export class PipelineTaskIndexProvider extends Service {
             taskInfo.uri,
             new vscode.Diagnostic(
               ref.range,
-              `Maa: Unknown task ${ref.task}`,
+              vscode.l10n.t('maa.pipeline.error.unknown-task', ref.task),
               vscode.DiagnosticSeverity.Error
             )
           ])
@@ -280,7 +280,10 @@ export class PipelineTaskIndexProvider extends Service {
             taskInfo.uri,
             new vscode.Diagnostic(
               ref.range,
-              `Maa: Unknown image ${this.shared(PipelineRootStatusProvider).relativePathToRoot(ref.uri)}`,
+              vscode.l10n.t(
+                'maa.pipeline.error.unknown-image',
+                this.shared(PipelineRootStatusProvider).relativePathToRoot(ref.uri)
+              ),
               vscode.DiagnosticSeverity.Error
             )
           ])

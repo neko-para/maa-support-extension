@@ -25,8 +25,12 @@
   "maa.pi.error.no-devices-found": "No devices found",
   "maa.pi.error.no-win32-config-provided": "No win32 config provided",
 
+  "maa.pipeline.codelens.launch": "launch {0}",
+
   "maa.pipeline.error.not-exists": "{0} not exists",
+  "maa.pipeline.error.conflict-task": "Conflict task {0}, previous defined in {1}",
   "maa.pipeline.error.unknown-task": "Unknown task {0}",
+  "maa.pipeline.error.unknown-image": "Unknown image {0}",
   "maa.pipeline.error.rename-not-allowed": "Rename: not allowed",
   "maa.pipeline.error.rename-already-exists": "Rename: already exists"
 }

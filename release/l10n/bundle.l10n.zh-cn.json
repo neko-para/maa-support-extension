@@ -25,8 +25,12 @@
   "maa.pi.error.no-devices-found": "未找到设备",
   "maa.pi.error.no-win32-config-provided": "未提供 Win32 配置",
 
+  "maa.pipeline.codelens.launch": "执行 {0}",
+
   "maa.pipeline.error.not-exists": "{0} 不存在",
+  "maa.pipeline.error.conflict-task": "冲突任务 {0}, 上一个定义在 {1}",
   "maa.pipeline.error.unknown-task": "未知任务 {0}",
+  "maa.pipeline.error.unknown-image": "未知图片 {0}",
   "maa.pipeline.error.rename-not-allowed": "重命名: 无效",
   "maa.pipeline.error.rename-already-exists": "重命名: 已存在"
 }

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 
+import { commands } from '../command'
 import { ProviderBase } from './providerBase'
 import { PipelineTaskIndexProvider } from './task'
 

@@ -3,6 +3,7 @@ export const commands = {
 
   SelectResource: 'maa.select-resource',
   GotoTask: 'maa.goto-task',
+  LaunchTask: 'maa.launch-task',
 
   LaunchInterface: 'maa.launch-interface',
 

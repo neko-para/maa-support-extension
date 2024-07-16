@@ -24,6 +24,8 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
+    return null
+    /*
     const result: vscode.CodeLens[] = []
     for (const taskName of this.shared(PipelineTaskIndexProvider).fileIndex[document.uri.fsPath]) {
       result.push(
@@ -35,6 +37,7 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
       )
     }
     return result
+    */
   }
 
   resolveCodeLens?(

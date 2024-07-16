@@ -270,11 +270,16 @@ export class PipelineTaskIndexProvider extends Service {
   layers: PipelineTaskIndexLayer[]
   diagnostic: vscode.DiagnosticCollection
 
+  updateingDiag: boolean
+  needReupdate: boolean
+
   constructor(context: vscode.ExtensionContext) {
     super(context)
 
     this.layers = []
     this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
+    this.updateingDiag = false
+    this.needReupdate = false
 
     this.shared(PipelineProjectInterfaceProvider).event.on('activateResourceChanged', resource => {
       for (const layer of this.layers) {
@@ -284,34 +289,35 @@ export class PipelineTaskIndexProvider extends Service {
     })
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
-      // const result = await vscode.window.showQuickPick(Object.keys(this.taskIndex))
-      // if (result) {
-      //   const infos = this.taskIndex[result]
-      //   let info: TaskIndexInfo
-      //   if (infos.length > 1) {
-      //     const res = await vscode.window.showQuickPick(
-      //       infos.map((info, index) => ({
-      //         label: this.shared(PipelineRootStatusProvider).relativePath(info.uri),
-      //         index: index
-      //       }))
-      //     )
-      //     if (!res) {
-      //       return
-      //     }
-      //     info = infos[res.index]
-      //   } else if (infos.length === 1) {
-      //     info = infos[0]
-      //   } else {
-      //     return
-      //   }
-      //   const doc = await vscode.workspace.openTextDocument(info.uri)
-      //   if (doc) {
-      //     const editor = await vscode.window.showTextDocument(doc)
-      //     const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
-      //     editor.selection = targetSelection
-      //     editor.revealRange(targetSelection)
-      //   }
-      // }
+      const taskList = await this.queryTaskList()
+      const result = await vscode.window.showQuickPick(taskList)
+      if (result) {
+        const infos = await this.queryTask(result)
+        let info: TaskIndexInfo
+        if (infos.length > 1) {
+          const res = await vscode.window.showQuickPick(
+            infos.map((info, index) => ({
+              label: this.shared(PipelineRootStatusProvider).relativePath(info.info.uri),
+              index: index
+            }))
+          )
+          if (!res) {
+            return
+          }
+          info = infos[res.index].info
+        } else if (infos.length === 1) {
+          info = infos[0].info
+        } else {
+          return
+        }
+        const doc = await vscode.workspace.openTextDocument(info.uri)
+        if (doc) {
+          const editor = await vscode.window.showTextDocument(doc)
+          const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
+          editor.selection = targetSelection
+          editor.revealRange(targetSelection)
+        }
+      }
     })
 
     this.defer = vscode.commands.registerCommand(commands.DebugQueryLocation, async () => {
@@ -323,6 +329,12 @@ export class PipelineTaskIndexProvider extends Service {
   }
 
   async updateDiagnostic() {
+    if (this.updateingDiag) {
+      this.needReupdate = true
+      return
+    }
+    this.updateingDiag = true
+
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
     for (const layer of this.layers) {
       for (const [task, taskInfo] of Object.entries(layer.taskIndex)) {
@@ -359,27 +371,28 @@ export class PipelineTaskIndexProvider extends Service {
           }
         }
 
-        /*
         // check missing image
         for (const ref of taskInfo.imageRef) {
-          if (!(await exists(ref.uri))) {
+          const imageRes = await this.queryImage(ref.path, layer.level + 1)
+          if (imageRes.length === 0) {
             result.push([
               taskInfo.uri,
               new vscode.Diagnostic(
                 ref.range,
-                vscode.l10n.t(
-                  'maa.pipeline.error.unknown-image',
-                  this.shared(PipelineRootStatusProvider).relativePathToRoot(ref.uri)
-                ),
+                vscode.l10n.t('maa.pipeline.error.unknown-image', ref.path),
                 vscode.DiagnosticSeverity.Error
               )
             ])
           }
         }
-        */
       }
     }
     this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
+
+    this.updateingDiag = false
+    if (this.needReupdate) {
+      this.updateDiagnostic()
+    }
   }
 
   async flushDirty() {

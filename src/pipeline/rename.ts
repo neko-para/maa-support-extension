@@ -23,20 +23,25 @@ export class PipelineRenameProvider extends ProviderBase implements vscode.Renam
       throw vscode.l10n.t('maa.pipeline.error.rename-not-allowed')
     }
 
-    if (newName in this.shared(PipelineTaskIndexProvider).taskIndex) {
+    if ((await this.shared(PipelineTaskIndexProvider).queryTask(newName)).length > 0) {
       throw vscode.l10n.t('maa.pipeline.error.rename-already-exists')
     }
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       const edit = new vscode.WorkspaceEdit()
 
-      const targetInfo = this.shared(PipelineTaskIndexProvider).taskIndex[info.target]
-      edit.replace(targetInfo.uri, targetInfo.taskProp, JSON.stringify(newName))
+      for (const targetInfo of await this.shared(PipelineTaskIndexProvider).queryTask(
+        info.target
+      )) {
+        edit.replace(targetInfo.info.uri, targetInfo.info.taskProp, JSON.stringify(newName))
+      }
 
-      for (const taskInfo of Object.values(this.shared(PipelineTaskIndexProvider).taskIndex)) {
-        for (const refInfo of taskInfo.taskRef) {
-          if (refInfo.task === info.target) {
-            edit.replace(taskInfo.uri, refInfo.range, JSON.stringify(newName))
+      for (const layer of this.shared(PipelineTaskIndexProvider).layers) {
+        for (const taskInfo of Object.values(layer.taskIndex)) {
+          for (const refInfo of taskInfo.taskRef) {
+            if (refInfo.task === info.target) {
+              edit.replace(taskInfo.uri, refInfo.range, JSON.stringify(newName))
+            }
           }
         }
       }

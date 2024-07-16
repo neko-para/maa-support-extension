@@ -27,19 +27,9 @@ export class PipelineHoverProvider extends ProviderBase implements vscode.HoverP
         await this.shared(PipelineTaskIndexProvider).queryTaskDoc(info.target)
       )
     } else if (info.type === 'image.ref') {
-      try {
-        await vscode.workspace.fs.stat(info.target)
-        return new vscode.Hover(new vscode.MarkdownString(`![](${info.target})`))
-      } catch (_) {
-        return new vscode.Hover(
-          new vscode.MarkdownString(
-            vscode.l10n.t(
-              'maa.pipeline.error.not-exists',
-              this.shared(PipelineRootStatusProvider).relativePath(info.target)
-            )
-          )
-        )
-      }
+      return new vscode.Hover(
+        await this.shared(PipelineTaskIndexProvider).queryImageDoc(info.target)
+      )
     }
 
     return null

@@ -24,10 +24,12 @@ export class PipelineReferenceProvider extends ProviderBase implements vscode.Re
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       const result: vscode.Location[] = []
-      for (const taskInfo of Object.values(this.shared(PipelineTaskIndexProvider).taskIndex)) {
-        for (const refInfo of taskInfo.taskRef) {
-          if (refInfo.task === info.target) {
-            result.push(new vscode.Location(taskInfo.uri, refInfo.range))
+      for (const layer of this.shared(PipelineTaskIndexProvider).layers) {
+        for (const taskInfo of Object.values(layer.taskIndex)) {
+          for (const refInfo of taskInfo.taskRef) {
+            if (refInfo.task === info.target) {
+              result.push(new vscode.Location(taskInfo.uri, refInfo.range))
+            }
           }
         }
       }

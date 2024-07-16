@@ -23,22 +23,11 @@ export class PipelineDefinitionProvider extends ProviderBase implements vscode.D
     }
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
-      const targetInfo = this.shared(PipelineTaskIndexProvider).taskIndex[info.target]
-      if (targetInfo) {
-        return new vscode.Location(targetInfo.uri, targetInfo.taskProp)
-      }
+      const taskInfo = await this.shared(PipelineTaskIndexProvider).queryTask(info.target)
+      return taskInfo.map(x => new vscode.Location(x.info.uri, x.info.taskProp))
     } else if (info.type === 'image.ref') {
-      try {
-        await vscode.workspace.fs.stat(info.target)
-        return new vscode.Location(info.target, new vscode.Position(0, 0))
-      } catch (_) {
-        vscode.window.showErrorMessage(
-          vscode.l10n.t(
-            'maa.pipeline.error.not-exists',
-            this.shared(PipelineRootStatusProvider).relativePath(info.target)
-          )
-        )
-      }
+      const imageInfo = await this.shared(PipelineTaskIndexProvider).queryImage(info.target)
+      return imageInfo.map(x => new vscode.Location(x.info.uri, new vscode.Position(0, 0)))
     }
 
     return null

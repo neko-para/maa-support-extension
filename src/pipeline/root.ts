@@ -13,7 +13,6 @@ export class PipelineRootStatusProvider extends Service {
 
   event: EventEmitter<{
     activateRootChanged: []
-    activateSelectorChanged: [selector: vscode.DocumentFilter[] | null]
   }>
 
   constructor(context: vscode.ExtensionContext) {
@@ -30,7 +29,6 @@ export class PipelineRootStatusProvider extends Service {
 
     this.event.on('activateRootChanged', () => {
       this.updateRootStatus()
-      this.updateSelector()
     })
 
     this.setupRootStatus()
@@ -71,33 +69,6 @@ export class PipelineRootStatusProvider extends Service {
       this.rootStatusItem.text = 'Maa Support - No Root Found'
     }
     this.rootStatusItem.show()
-  }
-
-  jsonPattern() {
-    return this.activateResource
-      ? new vscode.RelativePattern(this.activateResource.dirUri, 'pipeline/**/*.json')
-      : null
-  }
-
-  imagePattern() {
-    return this.activateResource
-      ? new vscode.RelativePattern(this.activateResource.dirUri, 'image/**/*.png')
-      : null
-  }
-
-  updateSelector() {
-    if (this.activateResource) {
-      this.selector = [
-        {
-          language: 'json',
-          scheme: 'file',
-          pattern: this.jsonPattern()!
-        }
-      ]
-    } else {
-      this.selector = null
-    }
-    this.event.emit('activateSelectorChanged', this.selector)
   }
 
   relativePath(uri: vscode.Uri) {

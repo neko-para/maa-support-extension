@@ -4,7 +4,9 @@ import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
+import { InheritDisposable } from '../disposable'
 import { ResourceRoot, exists } from '../utils/fs'
+import { PipelineProjectInterfaceProvider } from './pi'
 import { PipelineRootStatusProvider } from './root'
 
 export type QueryResult =
@@ -24,7 +26,7 @@ export type QueryResult =
       type: 'image.ref'
       task: string
       range: vscode.Range
-      target: vscode.Uri
+      target: string
     }
   | {
       type: 'task.body'
@@ -43,57 +45,49 @@ export type TaskIndexInfo = {
     range: vscode.Range
   }[]
   imageRef: {
-    uri: vscode.Uri
+    path: string
     range: vscode.Range
   }[]
 }
 
-export class PipelineTaskIndexProvider extends Service {
-  taskIndex: Record<string, TaskIndexInfo[]>
-  fileIndex: Record<string, string[]>
-  diagnostic: vscode.DiagnosticCollection
-  dirtyUri: Map<string, vscode.Uri>
-  flushingDirty: boolean
-  watcher: vscode.FileSystemWatcher | null
+class PipelineTaskIndexLayer extends Service {
+  uri: vscode.Uri
+  taskIndex: Record<string, TaskIndexInfo>
 
-  constructor(context: vscode.ExtensionContext) {
+  watcher: vscode.FileSystemWatcher
+  dirtyUri: Set<string>
+
+  flushing: boolean
+  needReflush: boolean
+
+  constructor(context: vscode.ExtensionContext, uri: vscode.Uri) {
     super(context)
 
+    this.uri = uri
     this.taskIndex = {}
-    this.fileIndex = {}
-    this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
-    this.dirtyUri = new Map()
-    this.flushingDirty = false
-    this.watcher = null
-
-    this.shared(PipelineRootStatusProvider).event.on('activateRootChanged', root => {
-      this.updateTaskIndex(root)
-    })
-
-    this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
-      const result = await vscode.window.showQuickPick(Object.keys(this.taskIndex))
-      if (result) {
-        const info = this.taskIndex[result]
-        const doc = await vscode.workspace.openTextDocument(info.uri)
-        if (doc) {
-          const editor = await vscode.window.showTextDocument(doc)
-          const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
-          editor.selection = targetSelection
-          editor.revealRange(targetSelection)
-        }
-      }
-    })
-
-    this.defer = vscode.commands.registerCommand(commands.DebugQueryLocation, async () => {
-      const editor = vscode.window.activeTextEditor
-      if (editor) {
-        console.log(this.queryLocation(editor.document.uri, editor.selection.active))
-      }
-    })
+    this.defer = this.watcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(this.uri, '**/*.json')
+    )
+    this.dirtyUri = new Set()
+    this.flushing = false
+    this.needReflush = false
 
     vscode.workspace.onDidChangeTextDocument(event => {
-      this.dirtyUri.set(event.document.uri.fsPath, event.document.uri)
+      if (event.document.uri.fsPath.startsWith(this.uri.fsPath)) {
+        this.dirtyUri.add(event.document.uri.fsPath)
+      }
     })
+    this.watcher.onDidCreate(event => {
+      this.dirtyUri.add(event.fsPath)
+    })
+    this.watcher.onDidDelete(event => {
+      this.dirtyUri.add(event.fsPath)
+    })
+    this.watcher.onDidChange(event => {
+      this.dirtyUri.add(event.fsPath)
+    })
+
+    this.loadTask(this.uri)
   }
 
   async loadJson(uri: vscode.Uri) {
@@ -103,22 +97,14 @@ export class PipelineTaskIndexProvider extends Service {
     }
     const content = doc.getText()
     const path: JSONPath = []
-    this.fileIndex[uri.fsPath] = []
-    const fileIndexArr = this.fileIndex[uri.fsPath]
+
+    let taskInfo: TaskIndexInfo | null = null
+
     visit(content, {
       onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
         path[path.length - 1] = property
         if (path.length === 1) {
-          if (property in this.taskIndex) {
-            for (let i = 1; ; i++) {
-              const newProp = `${property}@VSCEXT_CONFLICT,${i}`
-              if (!(newProp in this.taskIndex)) {
-                property = newProp
-                break
-              }
-            }
-          }
-          this.taskIndex[property] = {
+          taskInfo = {
             uri,
             taskContent: '',
             taskReferContent: '',
@@ -127,13 +113,16 @@ export class PipelineTaskIndexProvider extends Service {
             taskRef: [],
             imageRef: []
           }
-          fileIndexArr.push(property)
         }
       },
       onObjectBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
         if (path.length === 1) {
+          if (!taskInfo) {
+            return
+          }
+
           const pos = doc.positionAt(offset)
-          this.taskIndex[path[0]].taskBody = new vscode.Range(pos, pos)
+          taskInfo.taskBody = new vscode.Range(pos, pos)
         }
 
         path.push('')
@@ -142,7 +131,9 @@ export class PipelineTaskIndexProvider extends Service {
         path.pop()
 
         if (path.length === 1) {
-          const taskInfo = this.taskIndex[path[0]]
+          if (!taskInfo) {
+            return
+          }
           const pos = doc.positionAt(offset + 1)
           const bodyRange = new vscode.Range(taskInfo.taskBody.start, pos)
           taskInfo.taskBody = bodyRange
@@ -150,6 +141,21 @@ export class PipelineTaskIndexProvider extends Service {
           taskInfo.taskReferContent = doc.getText(
             new vscode.Range(taskInfo.taskProp.start.line, 0, pos.line + 1, 0)
           )
+
+          let name = path[0]
+
+          if (name in this.taskIndex) {
+            for (let i = 1; ; i++) {
+              const newProp = `${name}@VSCEXT_CONFLICT,${i}`
+              if (!(newProp in this.taskIndex)) {
+                name = newProp
+                break
+              }
+            }
+          }
+
+          this.taskIndex[name] = taskInfo
+          taskInfo = null
         }
       },
       onSeparator: (character, offset, length, startLine, startCharacter) => {
@@ -171,12 +177,16 @@ export class PipelineTaskIndexProvider extends Service {
           return
         }
         if (typeof value === 'string') {
+          if (!taskInfo) {
+            return
+          }
+
           switch (path[1]) {
             case 'next':
             case 'timeout_next':
             case 'runout_next':
               if (path.length >= 2 && path.length <= 3) {
-                this.taskIndex[path[0]].taskRef.push({
+                taskInfo.taskRef.push({
                   task: value,
                   range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
                 })
@@ -186,7 +196,7 @@ export class PipelineTaskIndexProvider extends Service {
             case 'begin':
             case 'end':
               if (path.length === 2) {
-                this.taskIndex[path[0]].taskRef.push({
+                taskInfo.taskRef.push({
                   task: value,
                   range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
                 })
@@ -194,15 +204,12 @@ export class PipelineTaskIndexProvider extends Service {
               break
             case 'template':
               if (path.length >= 2 && path.length <= 3) {
-                const root = this.shared(PipelineRootStatusProvider).activateResource
-                if (root) {
-                  const imageUri = vscode.Uri.joinPath(root[0], 'image', value)
-                  this.taskIndex[path[0]].imageRef.push({
-                    uri: imageUri,
-                    range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
-                  })
-                }
+                taskInfo.imageRef.push({
+                  path: value,
+                  range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
+                })
               }
+
               break
           }
         }
@@ -223,104 +230,182 @@ export class PipelineTaskIndexProvider extends Service {
     }
   }
 
-  async updateTaskIndex(root: ResourceRoot | null) {
-    this.taskIndex = {}
-    this.fileIndex = {}
-    if (this.watcher) {
-      this.watcher.dispose()
-      this.watcher = null
+  async flushDirty() {
+    if (this.flushing) {
+      this.needReflush = true
+      return
     }
-    if (root) {
-      this.watcher = vscode.workspace.createFileSystemWatcher(
-        this.shared(PipelineRootStatusProvider).jsonPattern()!
-      )
-      this.watcher.onDidChange(uri => this.dirtyUri.set(uri.fsPath, uri))
-      this.watcher.onDidCreate(uri => this.dirtyUri.set(uri.fsPath, uri))
-      this.watcher.onDidDelete(uri => this.dirtyUri.set(uri.fsPath, uri))
-      await this.loadTask(vscode.Uri.joinPath(root[0], 'pipeline'))
+    this.flushing = true
+
+    const dirtyList = this.dirtyUri
+    this.dirtyUri = new Set()
+
+    const newTaskIndex: Record<string, TaskIndexInfo> = {}
+    for (const [task, info] of Object.entries(this.taskIndex)) {
+      if (!dirtyList.has(info.uri.fsPath)) {
+        newTaskIndex[task] = info
+      }
     }
+
+    this.taskIndex = newTaskIndex
+
+    for (const path of dirtyList) {
+      // 有可能是delete
+      if (await exists(vscode.Uri.file(path))) {
+        await this.loadJson(vscode.Uri.file(path))
+      }
+    }
+
+    this.flushing = false
+    if (this.needReflush) {
+      this.needReflush = false
+      this.flushDirty()
+    }
+  }
+}
+
+export class PipelineTaskIndexProvider extends Service {
+  layers: PipelineTaskIndexLayer[]
+  diagnostic: vscode.DiagnosticCollection
+
+  constructor(context: vscode.ExtensionContext) {
+    super(context)
+
+    this.layers = []
+    this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
+
+    this.shared(PipelineProjectInterfaceProvider).event.on('activateResourceChanged', resource => {
+      for (const layer of this.layers) {
+        layer.dispose()
+      }
+      this.layers = resource.map(x => new PipelineTaskIndexLayer(this.__context, x))
+    })
+
+    this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
+      // const result = await vscode.window.showQuickPick(Object.keys(this.taskIndex))
+      // if (result) {
+      //   const infos = this.taskIndex[result]
+      //   let info: TaskIndexInfo
+      //   if (infos.length > 1) {
+      //     const res = await vscode.window.showQuickPick(
+      //       infos.map((info, index) => ({
+      //         label: this.shared(PipelineRootStatusProvider).relativePath(info.uri),
+      //         index: index
+      //       }))
+      //     )
+      //     if (!res) {
+      //       return
+      //     }
+      //     info = infos[res.index]
+      //   } else if (infos.length === 1) {
+      //     info = infos[0]
+      //   } else {
+      //     return
+      //   }
+      //   const doc = await vscode.workspace.openTextDocument(info.uri)
+      //   if (doc) {
+      //     const editor = await vscode.window.showTextDocument(doc)
+      //     const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
+      //     editor.selection = targetSelection
+      //     editor.revealRange(targetSelection)
+      //   }
+      // }
+    })
+
+    this.defer = vscode.commands.registerCommand(commands.DebugQueryLocation, async () => {
+      const editor = vscode.window.activeTextEditor
+      if (editor) {
+        console.log(this.queryLocation(editor.document.uri, editor.selection.active))
+      }
+    })
   }
 
   async updateDiagnostic() {
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
-    for (const [task, taskInfo] of Object.entries(this.taskIndex)) {
-      // check conflict task
-      const m = /(.+)@VSCEXT_CONFLICT,\d+/.exec(task)
-      if (m) {
-        result.push([
-          taskInfo.uri,
-          new vscode.Diagnostic(
-            taskInfo.taskProp,
-            vscode.l10n.t('maa.pipeline.error.conflict-task', m[1], this.shared(
-              PipelineRootStatusProvider
-            ).relativePathToRoot(this.taskIndex[m[1]].uri),
-            vscode.DiagnosticSeverity.Error
-          )
-        ])
-      }
-
-      // check missing task
-      for (const ref of taskInfo.taskRef) {
-        if (!(ref.task in this.taskIndex)) {
+    for (const layer of this.layers) {
+      for (const [task, taskInfo] of Object.entries(layer.taskIndex)) {
+        // check conflict task
+        const m = /(.+)@VSCEXT_CONFLICT,\d+/.exec(task)
+        if (m) {
           result.push([
             taskInfo.uri,
             new vscode.Diagnostic(
-              ref.range,
-              vscode.l10n.t('maa.pipeline.error.unknown-task', ref.task),
-              vscode.DiagnosticSeverity.Error
-            )
-          ])
-        }
-      }
-
-      // check missing image
-      for (const ref of taskInfo.imageRef) {
-        if (!(await exists(ref.uri))) {
-          result.push([
-            taskInfo.uri,
-            new vscode.Diagnostic(
-              ref.range,
+              taskInfo.taskProp,
               vscode.l10n.t(
-                'maa.pipeline.error.unknown-image',
-                this.shared(PipelineRootStatusProvider).relativePathToRoot(ref.uri)
+                'maa.pipeline.error.conflict-task',
+                m[1],
+                this.shared(PipelineRootStatusProvider).relativePathToRoot(
+                  layer.taskIndex[m[1]].uri
+                )
               ),
               vscode.DiagnosticSeverity.Error
             )
           ])
         }
+
+        // check missing task
+        for (const ref of taskInfo.taskRef) {
+          if (!(ref.task in layer.taskIndex)) {
+            result.push([
+              taskInfo.uri,
+              new vscode.Diagnostic(
+                ref.range,
+                vscode.l10n.t('maa.pipeline.error.unknown-task', ref.task),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        }
+
+        /*
+        // check missing image
+        for (const ref of taskInfo.imageRef) {
+          if (!(await exists(ref.uri))) {
+            result.push([
+              taskInfo.uri,
+              new vscode.Diagnostic(
+                ref.range,
+                vscode.l10n.t(
+                  'maa.pipeline.error.unknown-image',
+                  this.shared(PipelineRootStatusProvider).relativePathToRoot(ref.uri)
+                ),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        }
+        */
       }
     }
     this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
   }
 
   async flushDirty() {
-    if (this.flushingDirty) {
-      return
+    for (const layer of this.layers) {
+      await layer.flushDirty()
     }
+    await this.updateDiagnostic()
+  }
 
-    this.flushingDirty = true
-    const dirtyUriList = this.dirtyUri
-    this.dirtyUri = new Map()
-
-    for (const [path] of dirtyUriList) {
-      const tasks = this.fileIndex[path] ?? []
-      delete this.fileIndex[path]
-      for (const task of tasks) {
-        delete this.taskIndex[task]
+  getLayer(uri: vscode.Uri) {
+    for (const layer of this.layers) {
+      if (uri.fsPath.startsWith(layer.uri.fsPath)) {
+        return layer
       }
     }
-
-    await Promise.all([...dirtyUriList].map(([path, uri]) => this.loadJson(uri)))
-
-    await this.updateDiagnostic()
-
-    this.flushingDirty = false
+    return null
   }
 
   async queryLocation(uri: vscode.Uri, pos: vscode.Position): Promise<QueryResult | null> {
     await this.flushDirty()
-    for (const task of this.fileIndex[uri.fsPath] ?? []) {
-      const info = this.taskIndex[task]
+    const layer = this.getLayer(uri)
+    if (!layer) {
+      return null
+    }
+    for (const [task, info] of Object.entries(layer.taskIndex)) {
+      if (info.uri.fsPath !== uri.fsPath) {
+        continue
+      }
       if (info.taskProp.contains(pos)) {
         return {
           type: 'task.prop',
@@ -345,7 +430,7 @@ export class PipelineTaskIndexProvider extends Service {
               type: 'image.ref',
               task: task,
               range: ref.range,
-              target: ref.uri
+              target: ref.path
             }
           }
         }
@@ -359,22 +444,78 @@ export class PipelineTaskIndexProvider extends Service {
     return null
   }
 
-  async queryTaskData(task: string): Promise<maa.TaskDecl> {
+  async queryTask(task: string) {
     await this.flushDirty()
+    const result: {
+      uri: vscode.Uri
+      info: TaskIndexInfo
+    }[] = []
     try {
-      return JSON.parse(this.taskIndex[task]?.taskContent ?? '{}')
-    } catch (_) {
-      return {}
-    }
+      for (const layer of this.layers) {
+        if (task in layer.taskIndex) {
+          result.push({
+            uri: layer.uri,
+            info: layer.taskIndex[task]
+          })
+        }
+      }
+    } catch (_) {}
+    return result
+  }
+
+  async queryImage(image: string) {
+    await this.flushDirty()
+    const result: {
+      uri: vscode.Uri
+      info: {
+        uri: vscode.Uri
+      }
+    }[] = []
+    try {
+      for (const layer of this.layers) {
+        const iu = vscode.Uri.joinPath(layer.uri, 'image', image)
+        if (await exists(iu)) {
+          result.push({
+            uri: layer.uri,
+            info: {
+              uri: iu
+            }
+          })
+        }
+      }
+    } catch (_) {}
+    return result
   }
 
   async queryTaskDoc(task: string): Promise<vscode.MarkdownString> {
-    await this.flushDirty()
-    const taskInfo = this.taskIndex[task]
-    if (taskInfo) {
-      return new vscode.MarkdownString(`\`\`\`json\n${taskInfo.taskReferContent}\n\`\`\``)
+    const result = await this.queryTask(task)
+    if (result.length > 0) {
+      return new vscode.MarkdownString(
+        result
+          .map(
+            x =>
+              `${this.shared(PipelineRootStatusProvider).relativePathToRoot(x.uri)}\n\n\`\`\`json\n${x.info.taskReferContent}\n\`\`\``
+          )
+          .join('\n\n')
+      )
     } else {
       return new vscode.MarkdownString(vscode.l10n.t('maa.pipeline.error.unknown-task', task))
+    }
+  }
+
+  async queryImageDoc(image: string): Promise<vscode.MarkdownString> {
+    const result = await this.queryImage(image)
+    if (result.length > 0) {
+      return new vscode.MarkdownString(
+        result
+          .map(
+            x =>
+              `${this.shared(PipelineRootStatusProvider).relativePathToRoot(x.uri)}\n\n![](${x.info.uri})`
+          )
+          .join('\n\n')
+      )
+    } else {
+      return new vscode.MarkdownString(vscode.l10n.t('maa.pipeline.error.unknown-image', image))
     }
   }
 }

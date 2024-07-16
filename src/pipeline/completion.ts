@@ -26,8 +26,14 @@ export class PipelineCompletionProvider
       return null
     }
 
+    const layer = this.shared(PipelineTaskIndexProvider).getLayer(document.uri)
+    if (!layer) {
+      return null
+    }
+
     if (info.type === 'task.ref') {
-      const taskList = Object.keys(this.shared(PipelineTaskIndexProvider).taskIndex)
+      const taskList = await this.shared(PipelineTaskIndexProvider).queryTaskList(layer.level + 1)
+
       return await Promise.all(
         taskList.map(async task => {
           const esc = JSON.stringify(task)
@@ -41,23 +47,20 @@ export class PipelineCompletionProvider
         })
       )
     } else if (info.type === 'image.ref') {
-      const pt = this.shared(PipelineRootStatusProvider).imagePattern()
-      if (!pt) {
-        return null
-      }
-      return (await vscode.workspace.findFiles(pt)).map(uri => {
-        const path = this.shared(PipelineRootStatusProvider)
-          .relativePathToRoot(uri, 'image')
-          .replace(/^[\\/]/, '')
-        const esc = JSON.stringify(path)
-        return {
-          label: esc,
-          kind: vscode.CompletionItemKind.File,
-          insertText: esc.substring(0, esc.length - 1),
-          range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
-          documentation: new vscode.MarkdownString(`![](${uri})`)
-        }
-      })
+      const imageList = await this.shared(PipelineTaskIndexProvider).queryImageList(layer.level + 1)
+
+      return await Promise.all(
+        imageList.map(async path => {
+          const esc = JSON.stringify(path)
+          return {
+            label: esc,
+            kind: vscode.CompletionItemKind.File,
+            insertText: esc.substring(0, esc.length - 1),
+            range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
+            documentation: await this.shared(PipelineTaskIndexProvider).queryImageDoc(path)
+          }
+        })
+      )
     }
 
     return null

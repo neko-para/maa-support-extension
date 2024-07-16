@@ -52,6 +52,7 @@ export type TaskIndexInfo = {
 
 class PipelineTaskIndexLayer extends Service {
   uri: vscode.Uri
+  level: number
   taskIndex: Record<string, TaskIndexInfo>
 
   watcher: vscode.FileSystemWatcher
@@ -60,13 +61,14 @@ class PipelineTaskIndexLayer extends Service {
   flushing: boolean
   needReflush: boolean
 
-  constructor(context: vscode.ExtensionContext, uri: vscode.Uri) {
+  constructor(context: vscode.ExtensionContext, uri: vscode.Uri, level: number) {
     super(context)
 
     this.uri = uri
+    this.level = level
     this.taskIndex = {}
     this.defer = this.watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(this.uri, '**/*.json')
+      new vscode.RelativePattern(this.uri, 'pipeline/**/*.json')
     )
     this.dirtyUri = new Set()
     this.flushing = false
@@ -278,7 +280,7 @@ export class PipelineTaskIndexProvider extends Service {
       for (const layer of this.layers) {
         layer.dispose()
       }
-      this.layers = resource.map(x => new PipelineTaskIndexLayer(this.__context, x))
+      this.layers = resource.map((x, i) => new PipelineTaskIndexLayer(this.__context, x, i))
     })
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
@@ -444,14 +446,17 @@ export class PipelineTaskIndexProvider extends Service {
     return null
   }
 
-  async queryTask(task: string) {
+  async queryTask(task: string, level?: number) {
     await this.flushDirty()
+    if (level === undefined) {
+      level = this.layers.length
+    }
     const result: {
       uri: vscode.Uri
       info: TaskIndexInfo
     }[] = []
     try {
-      for (const layer of this.layers) {
+      for (const layer of this.layers.slice(0, level)) {
         if (task in layer.taskIndex) {
           result.push({
             uri: layer.uri,
@@ -463,8 +468,11 @@ export class PipelineTaskIndexProvider extends Service {
     return result
   }
 
-  async queryImage(image: string) {
+  async queryImage(image: string, level?: number) {
     await this.flushDirty()
+    if (level === undefined) {
+      level = this.layers.length
+    }
     const result: {
       uri: vscode.Uri
       info: {
@@ -472,7 +480,7 @@ export class PipelineTaskIndexProvider extends Service {
       }
     }[] = []
     try {
-      for (const layer of this.layers) {
+      for (const layer of this.layers.slice(0, level)) {
         const iu = vscode.Uri.joinPath(layer.uri, 'image', image)
         if (await exists(iu)) {
           result.push({
@@ -517,5 +525,36 @@ export class PipelineTaskIndexProvider extends Service {
     } else {
       return new vscode.MarkdownString(vscode.l10n.t('maa.pipeline.error.unknown-image', image))
     }
+  }
+
+  async queryTaskList(level?: number) {
+    await this.flushDirty()
+    if (level === undefined) {
+      level = this.layers.length
+    }
+    const result: string[] = []
+    for (const layer of this.layers.slice(0, level)) {
+      result.push(...Object.keys(layer.taskIndex))
+    }
+    return [...new Set<string>(result)]
+  }
+
+  async queryImageList(level?: number) {
+    await this.flushDirty()
+    if (level === undefined) {
+      level = this.layers.length
+    }
+    const result: string[] = []
+    for (const layer of this.layers.slice(0, level)) {
+      const pattern = new vscode.RelativePattern(layer.uri, 'image/**/*.png')
+      result.push(
+        ...(await vscode.workspace.findFiles(pattern)).map(uri =>
+          this.shared(PipelineRootStatusProvider)
+            .relativePathToRoot(uri, 'image', layer.uri)
+            .replace(/^[\\/]/, '')
+        )
+      )
+    }
+    return [...new Set<string>(result)]
   }
 }

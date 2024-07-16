@@ -75,13 +75,15 @@ export class PipelineRootStatusProvider extends Service {
     return uri.fsPath.replace(currentWorkspace()?.fsPath ?? '', '')
   }
 
-  relativePathToRoot(uri: vscode.Uri, sub = '') {
+  relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {
     if (this.activateResource) {
-      let rootUri = this.activateResource.dirUri
-      if (sub) {
-        rootUri = vscode.Uri.joinPath(rootUri, sub)
+      if (!root) {
+        root = this.activateResource.dirUri
       }
-      return uri.fsPath.replace(rootUri.fsPath, '')
+      if (sub) {
+        root = vscode.Uri.joinPath(root, sub)
+      }
+      return uri.fsPath.replace(root.fsPath, '')
     } else {
       return uri.fsPath
     }

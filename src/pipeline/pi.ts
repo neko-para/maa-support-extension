@@ -3,6 +3,7 @@ import path from 'path'
 import { config, emit } from 'process'
 import * as vscode from 'vscode'
 
+import { commands } from '../command'
 import { Service } from '../data'
 import { Interface, InterfaceConfig } from '../projectInterface/type'
 import { ResourceRoot } from '../utils/fs'
@@ -30,7 +31,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     this.event = new EventEmitter()
 
     this.shared(PipelineRootStatusProvider).event.on('activateRootChanged', async () => {
-      await this.loadInterface(this.shared(PipelineRootStatusProvider).activateResource)
+      await this.loadInterface()
     })
 
     vscode.workspace.onDidChangeTextDocument(e => {
@@ -53,7 +54,9 @@ export class PipelineProjectInterfaceProvider extends Service {
     })
   }
 
-  async loadInterface(root: ResourceRoot | null) {
+  async loadInterface() {
+    const root = this.shared(PipelineRootStatusProvider).activateResource
+
     this.interfaceDoc = null
     this.interfaceConfigDoc = null
     this.interfaceJson = null
@@ -65,14 +68,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     try {
       this.interfaceConfigDoc = await vscode.workspace.openTextDocument(root.configUri)
     } catch (_) {}
-    if (!this.interfaceConfigDoc) {
-      await vscode.workspace.fs.createDirectory(
-        vscode.Uri.file(path.dirname(root.configUri.fsPath))
-      )
-      await vscode.workspace.fs.writeFile(root.configUri, Buffer.from('{}'))
-      this.interfaceConfigDoc = await vscode.workspace.openTextDocument(root.configUri)
-    }
-    if (!this.interfaceDoc || !this.interfaceConfigDoc) {
+    if (!this.interfaceDoc) {
       return
     }
     try {
@@ -82,14 +78,24 @@ export class PipelineProjectInterfaceProvider extends Service {
       return
     }
     try {
-      this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText())
-      this.event.emit('activateResourceChanged', this.resourcePaths())
+      if (!this.interfaceConfigDoc) {
+        await vscode.commands.executeCommand(commands.LaunchInterface)
+      }
+      if (this.interfaceConfigDoc) {
+        this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText())
+        this.event.emit('activateResourceChanged', this.resourcePaths())
+      }
     } catch (_) {
       return
     }
   }
 
   async saveInterface() {
+    const root = this.shared(PipelineRootStatusProvider).activateResource
+    if (!root) {
+      return
+    }
+
     if (this.interfaceConfigJson) {
       const data = JSON.stringify(
         this.interfaceConfigJson,
@@ -111,6 +117,12 @@ export class PipelineProjectInterfaceProvider extends Service {
         )
         vscode.workspace.applyEdit(edit)
         await this.interfaceConfigDoc.save()
+      } else {
+        await vscode.workspace.fs.createDirectory(
+          vscode.Uri.file(path.dirname(root.configUri.fsPath))
+        )
+        await vscode.workspace.fs.writeFile(root.configUri, Buffer.from(data))
+        this.interfaceConfigDoc = await vscode.workspace.openTextDocument(root.configUri)
       }
     }
   }

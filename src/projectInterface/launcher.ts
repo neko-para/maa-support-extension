@@ -3,6 +3,8 @@ import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
+import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
+import { PipelineRootStatusProvider } from '../pipeline/root'
 import { currentWorkspace, exists } from '../utils/fs'
 import {
   configController,
@@ -256,55 +258,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
     this.outputChannel = vscode.window.createOutputChannel('Maa')
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
-      const root = currentWorkspace()
-      if (!root) {
+      const pip = this.shared(PipelineProjectInterfaceProvider)
+
+      if (!pip.interfaceJson) {
         return
       }
 
-      const interfaceUri = vscode.Uri.joinPath(root, 'assets/interface.json')
-      const interfaceConfigUri = vscode.Uri.joinPath(root, 'install/config/maa_pi_config.json')
-
-      if (!(await exists(interfaceUri))) {
-        return
-      }
-
-      const interfaceData = JSON.parse(
-        (await vscode.workspace.fs.readFile(interfaceUri)).toString()
-      )
-      let interfaceConfigData = (await exists(interfaceConfigUri))
-        ? (JSON.parse(
-            (await vscode.workspace.fs.readFile(interfaceConfigUri)).toString()
-          ) as InterfaceConfig)
-        : null
-
-      const saveConfig = async (cfg: InterfaceConfig) => {
-        await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(root, 'install/config'))
-        await vscode.workspace.fs.writeFile(
-          interfaceConfigUri,
-          Buffer.from(
-            JSON.stringify(
-              cfg,
-              (key, value) => {
-                if (key === 'hwnd') {
-                  return undefined
-                }
-                return value
-              },
-              4
-            )
-          )
-        )
-      }
-
-      if (!interfaceConfigData) {
-        const newConfig = await initConfig(interfaceData)
+      if (!pip.interfaceConfigJson) {
+        const newConfig = await initConfig(pip.interfaceJson)
         if (!newConfig) {
           return
         }
-        await saveConfig(newConfig)
-        interfaceConfigData = newConfig
+        pip.interfaceConfigJson = newConfig
+        await pip.saveInterface()
       }
-      while (interfaceConfigData) {
+      while (pip.interfaceJson && pip.interfaceConfigJson) {
         const actions: {
           label: string
           action: () => Promise<boolean>
@@ -312,111 +280,111 @@ export class ProjectInterfaceLaunchProvider extends Service {
           {
             label: vscode.l10n.t('maa.pi.entry.switch-controller'),
             action: async () => {
-              const ctrlRes = await selectController(interfaceData)
+              const ctrlRes = await selectController(pip.interfaceJson!)
 
               if (!ctrlRes) {
                 return false
               }
 
-              interfaceConfigData.controller = ctrlRes
+              pip.interfaceConfigJson!.controller = ctrlRes
 
-              const ctrlCfg = await configController(interfaceData, ctrlRes.name)
+              const ctrlCfg = await configController(pip.interfaceJson!, ctrlRes.name)
 
               if (!ctrlCfg) {
                 return false
               }
 
-              Object.assign(interfaceConfigData, ctrlCfg)
+              Object.assign(pip.interfaceConfigJson!, ctrlCfg)
 
-              await saveConfig(interfaceConfigData)
+              await pip.saveInterface()
               return true
             }
           },
           {
             label: vscode.l10n.t('maa.pi.entry.switch-resource'),
             action: async () => {
-              const resRes = await selectResource(interfaceData)
+              const resRes = await selectResource(pip.interfaceJson!)
 
               if (!resRes) {
                 return false
               }
 
-              interfaceConfigData.resource = resRes
+              pip.interfaceConfigJson!.resource = resRes
 
-              await saveConfig(interfaceConfigData)
+              await pip.saveInterface()
               return true
             }
           },
           {
             label: vscode.l10n.t('maa.pi.entry.add-task'),
             action: async () => {
-              const taskRes = await selectTask(interfaceData)
+              const taskRes = await selectTask(pip.interfaceJson!)
 
               if (!taskRes) {
                 return false
               }
 
-              const taskCfg = await configTask(interfaceData, taskRes)
+              const taskCfg = await configTask(pip.interfaceJson!, taskRes)
 
               if (!taskCfg) {
                 return false
               }
 
-              interfaceConfigData.task.push({
+              pip.interfaceConfigJson!.task.push({
                 name: taskRes,
                 option: taskCfg
               })
 
-              await saveConfig(interfaceConfigData)
+              await pip.saveInterface()
               return true
             }
           },
           {
             label: vscode.l10n.t('maa.pi.entry.move-task'),
             action: async () => {
-              const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
+              const taskRes = await selectExistTask(pip.interfaceJson!, pip.interfaceConfigJson!)
 
               if (taskRes === null) {
                 return false
               }
 
-              const removedTask = interfaceConfigData.task.splice(taskRes, 1)
+              const removedTask = pip.interfaceConfigJson!.task.splice(taskRes, 1)
 
               const newTaskRes = await vscode.window.showQuickPick(
-                interfaceConfigData.task
-                  .map((x, i) => ({
+                pip
+                  .interfaceConfigJson!.task.map((x, i) => ({
                     label: `Before ${i}. ${x.name}`,
                     index: i
                   }))
                   .concat({
                     label: 'After last task',
-                    index: interfaceConfigData.task.length
+                    index: pip.interfaceConfigJson!.task.length
                   })
               )
 
               if (!newTaskRes) {
-                interfaceConfigData.task.splice(taskRes, 0, ...removedTask)
+                pip.interfaceConfigJson!.task.splice(taskRes, 0, ...removedTask)
                 return false
               }
 
-              interfaceConfigData.task.splice(newTaskRes.index, 0, ...removedTask)
+              pip.interfaceConfigJson!.task.splice(newTaskRes.index, 0, ...removedTask)
 
-              await saveConfig(interfaceConfigData)
+              await pip.saveInterface()
               return true
             }
           },
           {
             label: vscode.l10n.t('maa.pi.entry.remove-task'),
             action: async () => {
-              const taskRes = await selectExistTask(interfaceData, interfaceConfigData)
+              const taskRes = await selectExistTask(pip.interfaceJson!, pip.interfaceConfigJson!)
 
               if (taskRes === null) {
                 return false
               }
 
-              interfaceConfigData.task.splice(taskRes, 1)
+              pip.interfaceConfigJson!.task.splice(taskRes, 1)
 
-              await saveConfig(interfaceConfigData)
+              await pip.saveInterface()
               return true
             }
           },
@@ -424,9 +392,9 @@ export class ProjectInterfaceLaunchProvider extends Service {
             label: vscode.l10n.t('maa.pi.entry.launch'),
             action: async () => {
               const runtime = await prepareRuntime(
-                interfaceData,
-                interfaceConfigData,
-                vscode.Uri.joinPath(root, 'assets').fsPath
+                pip.interfaceJson!,
+                pip.interfaceConfigJson!,
+                this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
               )
 
               console.log(runtime)

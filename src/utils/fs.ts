@@ -16,6 +16,7 @@ export type ResourceRoot = {
   dirUri: vscode.Uri
   dirRelative: string
   interfaceUri: vscode.Uri
+  interfaceRelative: string
   configUri: vscode.Uri
 }
 
@@ -38,6 +39,10 @@ export async function locateResourceRoot() {
           dirUri: current,
           dirRelative: current.fsPath.replace(root.fsPath, ''),
           interfaceUri: vscode.Uri.joinPath(current, 'interface.json'),
+          interfaceRelative: vscode.Uri.joinPath(current, 'interface.json').fsPath.replace(
+            root.fsPath,
+            ''
+          ),
           configUri: vscode.Uri.joinPath(current, 'config/maa_pi_config.json')
         })
       }

@@ -38,8 +38,8 @@ export class PipelineRootStatusProvider extends Service {
     this.defer = vscode.commands.registerCommand(commands.SelectResource, async () => {
       const result = await vscode.window.showQuickPick(
         this.resourceRoot.map((x, index): vscode.QuickPickItem & { index: number } => ({
-          label: x.dirRelative,
-          detail: x.dirUri.fsPath,
+          label: x.interfaceRelative,
+          detail: x.interfaceUri.fsPath,
           index
         }))
       )
@@ -63,7 +63,7 @@ export class PipelineRootStatusProvider extends Service {
   updateRootStatus() {
     if (this.activateResource) {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.background')
-      this.rootStatusItem.text = 'Maa Support - ' + this.activateResource.dirRelative
+      this.rootStatusItem.text = 'Maa Support - ' + this.activateResource.interfaceRelative
     } else {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
       this.rootStatusItem.text = 'Maa Support - No Root Found'

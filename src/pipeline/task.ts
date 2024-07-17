@@ -5,6 +5,7 @@ import * as vscode from 'vscode'
 import { commands } from '../command'
 import { Service } from '../data'
 import { InheritDisposable } from '../disposable'
+import { t } from '../locale'
 import { ResourceRoot, exists } from '../utils/fs'
 import { PipelineProjectInterfaceProvider } from './pi'
 import { PipelineRootStatusProvider } from './root'
@@ -345,7 +346,7 @@ export class PipelineTaskIndexProvider extends Service {
             taskInfo.uri,
             new vscode.Diagnostic(
               taskInfo.taskProp,
-              vscode.l10n.t(
+              t(
                 'maa.pipeline.error.conflict-task',
                 m[1],
                 this.shared(PipelineRootStatusProvider).relativePathToRoot(
@@ -364,7 +365,7 @@ export class PipelineTaskIndexProvider extends Service {
               taskInfo.uri,
               new vscode.Diagnostic(
                 ref.range,
-                vscode.l10n.t('maa.pipeline.error.unknown-task', ref.task),
+                t('maa.pipeline.error.unknown-task', ref.task),
                 vscode.DiagnosticSeverity.Error
               )
             ])
@@ -379,7 +380,7 @@ export class PipelineTaskIndexProvider extends Service {
               taskInfo.uri,
               new vscode.Diagnostic(
                 ref.range,
-                vscode.l10n.t('maa.pipeline.error.unknown-image', ref.path),
+                t('maa.pipeline.error.unknown-image', ref.path),
                 vscode.DiagnosticSeverity.Error
               )
             ])
@@ -520,7 +521,7 @@ export class PipelineTaskIndexProvider extends Service {
           .join('\n\n')
       )
     } else {
-      return new vscode.MarkdownString(vscode.l10n.t('maa.pipeline.error.unknown-task', task))
+      return new vscode.MarkdownString(t('maa.pipeline.error.unknown-task', task))
     }
   }
 
@@ -536,7 +537,7 @@ export class PipelineTaskIndexProvider extends Service {
           .join('\n\n')
       )
     } else {
-      return new vscode.MarkdownString(vscode.l10n.t('maa.pipeline.error.unknown-image', image))
+      return new vscode.MarkdownString(t('maa.pipeline.error.unknown-image', image))
     }
   }
 

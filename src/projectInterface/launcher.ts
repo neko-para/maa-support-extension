@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
+import { t } from '../locale'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import {
@@ -100,7 +101,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
           action: () => Promise<boolean>
         }[] = [
           {
-            label: vscode.l10n.t('maa.pi.entry.switch-controller'),
+            label: t('maa.pi.entry.switch-controller'),
             action: async () => {
               const ctrlRes = await selectController(pip.interfaceJson!)
 
@@ -123,7 +124,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
             }
           },
           {
-            label: vscode.l10n.t('maa.pi.entry.switch-resource'),
+            label: t('maa.pi.entry.switch-resource'),
             action: async () => {
               const resRes = await selectResource(pip.interfaceJson!)
 
@@ -138,7 +139,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
             }
           },
           {
-            label: vscode.l10n.t('maa.pi.entry.add-task'),
+            label: t('maa.pi.entry.add-task'),
             action: async () => {
               const taskRes = await selectTask(pip.interfaceJson!)
 
@@ -162,7 +163,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
             }
           },
           {
-            label: vscode.l10n.t('maa.pi.entry.move-task'),
+            label: t('maa.pi.entry.move-task'),
             action: async () => {
               const taskRes = await selectExistTask(pip.interfaceJson!, pip.interfaceConfigJson!)
 
@@ -196,7 +197,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
             }
           },
           {
-            label: vscode.l10n.t('maa.pi.entry.remove-task'),
+            label: t('maa.pi.entry.remove-task'),
             action: async () => {
               const taskRes = await selectExistTask(pip.interfaceJson!, pip.interfaceConfigJson!)
 
@@ -211,7 +212,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
             }
           },
           {
-            label: vscode.l10n.t('maa.pi.entry.launch'),
+            label: t('maa.pi.entry.launch'),
             action: async () => {
               const runtime = await this.prepareRuntime(
                 this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
@@ -234,7 +235,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
         ]
 
         const action = await vscode.window.showQuickPick(actions, {
-          title: vscode.l10n.t('maa.pi.title.choose-action')
+          title: t('maa.pi.title.choose-action')
         })
 
         if (!action) {
@@ -265,7 +266,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     if (!ctrlInfo) {
       await vscode.window.showErrorMessage(
-        vscode.l10n.t('maa.pi.error.cannot-find-controller', config.controller.name)
+        t('maa.pi.error.cannot-find-controller', config.controller.name)
       )
       return null
     }
@@ -273,7 +274,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
         await vscode.window.showErrorMessage(
-          vscode.l10n.t('maa.pi.error.cannot-find-adb-for-controller', config.controller.name)
+          t('maa.pi.error.cannot-find-adb-for-controller', config.controller.name)
         )
         return null
       }
@@ -294,14 +295,14 @@ export class ProjectInterfaceLaunchProvider extends Service {
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
         await vscode.window.showErrorMessage(
-          vscode.l10n.t('maa.pi.error.cannot-find-win32-for-controller', config.controller.name)
+          t('maa.pi.error.cannot-find-win32-for-controller', config.controller.name)
         )
         return null
       }
 
       if (!config.win32.hwnd) {
         await vscode.window.showErrorMessage(
-          vscode.l10n.t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller.name)
+          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller.name)
         )
         return null
       }
@@ -323,9 +324,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const resInfo = data.resource.find(x => x.name === config.resource)
 
     if (!resInfo) {
-      await vscode.window.showErrorMessage(
-        vscode.l10n.t('maa.pi.error.cannot-find-resource', config.resource)
-      )
+      await vscode.window.showErrorMessage(t('maa.pi.error.cannot-find-resource', config.resource))
       return null
     }
 
@@ -336,9 +335,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
       const taskInfo = data.task.find(x => x.name === task.name)
 
       if (!taskInfo) {
-        await vscode.window.showErrorMessage(
-          vscode.l10n.t('maa.pi.error.cannot-find-task', task.name)
-        )
+        await vscode.window.showErrorMessage(t('maa.pi.error.cannot-find-task', task.name))
         return null
       }
 
@@ -349,9 +346,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
         const optInfo = data.option?.[opt.name]
 
         if (!optInfo) {
-          await vscode.window.showErrorMessage(
-            vscode.l10n.t('maa.pi.error.cannot-find-option', opt.name)
-          )
+          await vscode.window.showErrorMessage(t('maa.pi.error.cannot-find-option', opt.name))
           return null
         }
 
@@ -359,7 +354,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
         if (!csInfo) {
           await vscode.window.showErrorMessage(
-            vscode.l10n.t('maa.pi.error.cannot-find-case-for-option', opt.value, opt.name)
+            t('maa.pi.error.cannot-find-case-for-option', opt.value, opt.name)
           )
           return null
         }

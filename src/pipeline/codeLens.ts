@@ -30,7 +30,7 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
     for (const taskName of this.shared(PipelineTaskIndexProvider).fileIndex[document.uri.fsPath]) {
       result.push(
         new vscode.CodeLens(this.shared(PipelineTaskIndexProvider).taskIndex[taskName].taskProp, {
-          title: vscode.l10n.t('maa.pipeline.codelens.launch', taskName),
+          title: t('maa.pipeline.codelens.launch', taskName),
           command: commands.LaunchTask,
           arguments: [taskName]
         })

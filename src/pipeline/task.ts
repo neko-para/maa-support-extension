@@ -360,7 +360,8 @@ export class PipelineTaskIndexProvider extends Service {
 
         // check missing task
         for (const ref of taskInfo.taskRef) {
-          if (!(ref.task in layer.taskIndex)) {
+          const taskRes = await this.queryTask(ref.task, layer.level + 1)
+          if (taskRes.length === 0) {
             result.push([
               taskInfo.uri,
               new vscode.Diagnostic(

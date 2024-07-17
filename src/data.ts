@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 import { InheritDisposable } from './disposable'
 
-const sharedInstanceMap = new Map<vscode.ExtensionContext, Map<string, unknown>>()
+const sharedInstanceMap = new Map<vscode.ExtensionContext, Map<string, Service>>()
 
 type ServiceConstructor<T extends Service> = (new (context: vscode.ExtensionContext) => T) & {
   name: string
@@ -27,6 +27,11 @@ export function sharedInstance<T extends Service>(
 }
 
 export function resetInstance() {
+  for (const [, subMap] of sharedInstanceMap) {
+    for (const [, inst] of subMap) {
+      inst.dispose()
+    }
+  }
   sharedInstanceMap.clear()
 }
 

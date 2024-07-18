@@ -13,11 +13,13 @@ import { PipelineRenameProvider } from './pipeline/rename'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
+import { ProjectInterfaceWebProvider } from './projectInterface/web'
 
 sms.install()
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(maa.version())
+  maa.set_global_option('DebugMessage', true)
   const logPath = context.storageUri
   if (logPath) {
     maa.set_global_option('LogDir', logPath.fsPath)
@@ -39,7 +41,8 @@ export function activate(context: vscode.ExtensionContext) {
     PipelineRenameProvider,
     PipelineCodeLensProvider,
 
-    ProjectInterfaceLaunchProvider
+    ProjectInterfaceLaunchProvider,
+    ProjectInterfaceWebProvider
   ])
 }
 

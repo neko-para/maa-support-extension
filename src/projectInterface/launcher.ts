@@ -16,6 +16,7 @@ import {
   selectTask
 } from './configure'
 import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
+import { ProjectInterfaceWebProvider } from './web'
 
 export async function initConfig(data: Interface): Promise<InterfaceConfig | null> {
   const newConfig: Partial<InterfaceConfig> = {}
@@ -492,6 +493,22 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return
     }
 
+    const piwp = this.shared(ProjectInterfaceWebProvider)
+    ;(await piwp.acquire()).reveal(vscode.ViewColumn.Two, false)
+    piwp.post({
+      cmd: 'launch.setup'
+    })
+
+    const oldNotify = insts.instance.notify
+    insts.instance.notify = async (msg, details) => {
+      await oldNotify(msg, details)
+      piwp.post({
+        cmd: 'launch.notify',
+        msg,
+        details
+      })
+    }
+
     await insts.instance.post_task(task).wait()
   }
 
@@ -499,6 +516,22 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const insts = await this.setupInstance(runtime)
     if (!insts) {
       return
+    }
+
+    const piwp = this.shared(ProjectInterfaceWebProvider)
+    ;(await piwp.acquire()).reveal(vscode.ViewColumn.Two, false)
+    piwp.post({
+      cmd: 'launch.setup'
+    })
+
+    const oldNotify = insts.instance.notify
+    insts.instance.notify = async (msg, details) => {
+      await oldNotify(msg, details)
+      piwp.post({
+        cmd: 'launch.notify',
+        msg,
+        details
+      })
     }
 
     for (const task of runtime.task) {

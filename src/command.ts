@@ -6,6 +6,7 @@ export const commands = {
   LaunchTask: 'maa.launch-task',
 
   LaunchInterface: 'maa.launch-interface',
+  OpenWeb: 'maa.open-web',
 
   DebugQueryLocation: 'maa.debug.query-location'
 }

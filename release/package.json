@@ -40,9 +40,15 @@
         "command": "maa.launch-interface"
       },
       {
+        "title": "%maa.command.open-web%",
+        "command": "maa.open-web"
+      },
+      {
         "title": "Maa: query location (debug)",
         "command": "maa.debug.query-location"
       }
-    ]
+    ],
+    "views": {
+    }
   }
 }

@@ -52,7 +52,9 @@
         "command": "maa.debug.query-location"
       }
     ],
-    "views": {
-    }
+    "views": {}
+  },
+  "devDependencies": {
+    "highlight.js": "^11.10.0"
   }
 }

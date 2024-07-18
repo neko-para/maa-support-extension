@@ -58,6 +58,7 @@ export class ProjectInterfaceWebProvider extends Service {
             if (!detailInfo) {
               return
             }
+            detailInfo.detail_json = JSON.stringify(JSON.parse(detailInfo.detail_json), null, 4)
             this.post({
               cmd: 'show.reco',
               raw: toPngDataUrl(raw.encoded),

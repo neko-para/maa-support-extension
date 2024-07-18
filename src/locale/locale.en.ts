@@ -29,6 +29,7 @@ export default {
 
   'maa.pipeline.codelens.launch': 'Launch',
 
+  'maa.pipeline.error.no-interface-found': 'No interface found',
   'maa.pipeline.error.not-exists': '{0} not exists',
   'maa.pipeline.error.conflict-task': 'Conflict task {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',

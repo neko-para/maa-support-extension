@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
+import { t } from '../locale'
 import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../utils/fs'
 
 export class PipelineRootStatusProvider extends Service {
@@ -31,11 +32,17 @@ export class PipelineRootStatusProvider extends Service {
       this.updateRootStatus()
     })
 
-    this.setupRootStatus()
+    this.syncRootInfo()
 
     this.rootStatusItem.command = commands.SelectResource
 
     this.defer = vscode.commands.registerCommand(commands.SelectResource, async () => {
+      await this.syncRootInfo()
+      if (this.resourceRoot.length === 0) {
+        await vscode.window.showErrorMessage(t('maa.pipeline.error.no-interface-found'))
+        return
+      }
+
       const result = await vscode.window.showQuickPick(
         this.resourceRoot.map((x, index): vscode.QuickPickItem & { index: number } => ({
           label: x.interfaceRelative,
@@ -50,7 +57,7 @@ export class PipelineRootStatusProvider extends Service {
     })
   }
 
-  async setupRootStatus() {
+  async syncRootInfo() {
     this.resourceRoot = await locateResourceRoot()
     if (this.resourceRoot.length > 0) {
       this.activateResource = this.resourceRoot[0]
@@ -66,7 +73,7 @@ export class PipelineRootStatusProvider extends Service {
       this.rootStatusItem.text = 'Maa Support - ' + this.activateResource.interfaceRelative
     } else {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
-      this.rootStatusItem.text = 'Maa Support - No Root Found'
+      this.rootStatusItem.text = 'Maa Support - No Interface Found'
     }
     this.rootStatusItem.show()
   }

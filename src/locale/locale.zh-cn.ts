@@ -29,6 +29,7 @@ export default {
 
   'maa.pipeline.codelens.launch': '执行',
 
+  'maa.pipeline.error.no-interface-found': '未找到interface',
   'maa.pipeline.error.not-exists': '{0} 不存在',
   'maa.pipeline.error.conflict-task': '冲突任务 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-task': '未知任务 {0}',

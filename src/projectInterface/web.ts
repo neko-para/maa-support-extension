@@ -1,8 +1,13 @@
+import * as maa from '@nekosu/maa-node'
 import * as vscode from 'vscode'
 
-import type { ExtToWeb } from '../../types/ipc'
+import type { ExtToWeb, WebToExt } from '../../types/ipc'
 import { commands } from '../command'
 import { Service } from '../data'
+
+function toPngDataUrl(buffer: ArrayBuffer) {
+  return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
+}
 
 export class ProjectInterfaceWebProvider extends Service {
   panel: vscode.WebviewPanel | null
@@ -42,6 +47,28 @@ export class ProjectInterfaceWebProvider extends Service {
         .toString()
         .replaceAll('/@ROOT@', this.panel.webview.asWebviewUri(rootUri).toString())
       this.panel.webview.html = content
+
+      this.panel.webview.onDidReceiveMessage((data: WebToExt) => {
+        switch (data.cmd) {
+          case 'launch.reco':
+            const info = new maa.RecoInfo(data.reco as maa.RecoId)
+            const raw = new maa.ImageBuffer()
+            const draws = new maa.ImageListBuffer()
+            const detailInfo = info.detail(raw, draws)
+            if (!detailInfo) {
+              return
+            }
+            this.post({
+              cmd: 'show.reco',
+              raw: toPngDataUrl(raw.encoded),
+              draws: Array.from({ length: draws.size }, (_, i) =>
+                toPngDataUrl(draws.at(i).encoded)
+              ),
+              info: detailInfo
+            })
+            return
+        }
+      })
     }
     return this.panel
   }

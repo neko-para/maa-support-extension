@@ -1,16 +1,50 @@
 <script setup lang="ts">
-import { NButton } from 'naive-ui'
+import { NButton, NCode, NModal } from 'naive-ui'
 
+import { send } from './ipc'
+import { recoInfo, showRecoInfo } from './reco'
 import { taskList } from './task'
+
+function requestReco(id?: number) {
+  if (typeof id !== 'number') {
+    return
+  }
+  send({
+    cmd: 'launch.reco',
+    reco: id
+  })
+}
 </script>
 
 <template>
+  <NModal v-model:show="showRecoInfo">
+    <n-card
+      style="max-width: 90vw; margin-top: 5vh; max-height: 90vh; overflow-y: auto"
+      role="dialog"
+      v-if="recoInfo"
+    >
+      <div class="maa-form">
+        <span> Hit </span>
+        <span> {{ recoInfo.info.hit }} </span>
+        <span> Box </span>
+        <span> {{ recoInfo.info.hit_box }} </span>
+        <span> Detail </span>
+        <n-code :code="recoInfo.info.detail_json" language="json"></n-code>
+        <span> Images </span>
+        <div class="flex flex-col gap-2">
+          <img :src="recoInfo.raw" />
+          <img v-for="(img, idx) in recoInfo.draws" :key="idx" :src="img" />
+        </div>
+      </div>
+    </n-card>
+  </NModal>
+
   <div class="flex flex-wrap gap-2">
     <div v-for="(node, idx) in taskList.node" :key="idx" class="flex flex-col">
       <div class="flex flex-col gap-2 border p-2">
         <span class="font-bold self-center"> {{ node.pre_hit_task }} </span>
         <template v-for="(reco, ridx) in node.reco_list" :key="ridx">
-          <n-button>
+          <n-button @click="requestReco(reco.reco_id)">
             <span v-if="reco.status === 'pending'" class="text-slate-500">
               {{ reco.task }} {{ reco.reco_id ?? '' }}
             </span>
@@ -70,5 +104,12 @@ import { taskList } from './task'
 
 .text-red-500 {
   color: rgb(239 68 68) /* #ef4444 */;
+}
+
+.maa-form {
+  display: grid;
+  grid-template-columns: max-content auto;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>

@@ -35,3 +35,7 @@
   * 基于interface配置创建实例, 然后执行任务.
 * Maa: 执行interface
   * 以等价于MaaPiCli的效果执行interface.
+* Maa: 停止执行
+  * 终止执行任务/执行interface
+* Maa: 打开Webview
+  * 打开显示执行信息的Webview

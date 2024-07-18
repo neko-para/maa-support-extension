@@ -32,6 +32,10 @@
         "command": "maa.goto-task"
       },
       {
+        "title": "%maa.command.launch-task%",
+        "command": "maa.launch-task"
+      },
+      {
         "title": "%maa.command.launch-interface%",
         "command": "maa.launch-interface"
       },

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 
 import { commands } from '../command'
+import { t } from '../locale'
 import { ProviderBase } from './providerBase'
-import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineCodeLensProvider extends ProviderBase implements vscode.CodeLensProvider {
@@ -10,34 +10,31 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
     super(context, selector => {
       return vscode.languages.registerCodeLensProvider(selector, this)
     })
-
-    this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
-      if (!task) {
-        // select task
-        return
-      }
-      console.log(task)
-    })
   }
 
   async provideCodeLenses(
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
-    return null
-    /*
+    const layer = this.shared(PipelineTaskIndexProvider).getLayer(document.uri)
+    if (!layer) {
+      return []
+    }
+
     const result: vscode.CodeLens[] = []
-    for (const taskName of this.shared(PipelineTaskIndexProvider).fileIndex[document.uri.fsPath]) {
+    for (const [taskName, taskInfo] of Object.entries(layer.taskIndex)) {
+      if (taskInfo.uri.fsPath !== document.uri.fsPath) {
+        continue
+      }
       result.push(
-        new vscode.CodeLens(this.shared(PipelineTaskIndexProvider).taskIndex[taskName].taskProp, {
-          title: t('maa.pipeline.codelens.launch', taskName),
+        new vscode.CodeLens(taskInfo.taskProp, {
+          title: t('maa.pipeline.codelens.launch'),
           command: commands.LaunchTask,
           arguments: [taskName]
         })
       )
     }
     return result
-    */
   }
 
   resolveCodeLens?(

@@ -27,7 +27,7 @@ export default {
   'maa.pi.error.no-win32-config-provided': '未提供 Win32 配置',
   'maa.pi.error.load-interface-failed': '无法加载interface',
 
-  'maa.pipeline.codelens.launch': '执行 {0}',
+  'maa.pipeline.codelens.launch': '执行',
 
   'maa.pipeline.error.not-exists': '{0} 不存在',
   'maa.pipeline.error.conflict-task': '冲突任务 {0}, 上一个定义在 {1}',

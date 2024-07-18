@@ -27,7 +27,7 @@ export default {
   'maa.pi.error.no-win32-config-provided': 'No win32 config provided',
   'maa.pi.error.load-interface-failed': 'Failed to load interface',
 
-  'maa.pipeline.codelens.launch': 'launch {0}',
+  'maa.pipeline.codelens.launch': 'Launch',
 
   'maa.pipeline.error.not-exists': '{0} not exists',
   'maa.pipeline.error.conflict-task': 'Conflict task {0}, previous defined in {1}',

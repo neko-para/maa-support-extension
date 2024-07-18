@@ -6,6 +6,7 @@ import { Service } from '../data'
 import { t } from '../locale'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
+import { PipelineTaskIndexProvider } from '../pipeline/task'
 import {
   configController,
   configTask,
@@ -247,6 +248,38 @@ export class ProjectInterfaceLaunchProvider extends Service {
         }
       }
     })
+
+    this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
+      if (!task) {
+        const taskRes = await vscode.window.showQuickPick(
+          await this.shared(PipelineTaskIndexProvider).queryTaskList(),
+          {
+            title: t('maa.pi.title.select-task')
+          }
+        )
+        if (!taskRes) {
+          return
+        }
+        task = taskRes
+      }
+
+      const runtime = await this.prepareRuntime(
+        this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
+      )
+
+      console.log(runtime)
+
+      if (runtime) {
+        this.outputChannel.show(true)
+        try {
+          await this.launchTask(runtime, task)
+        } catch (err) {
+          this.outputChannel.append(`${err}\n`)
+        }
+      }
+
+      return true
+    })
   }
 
   async prepareRuntime(
@@ -378,7 +411,11 @@ export class ProjectInterfaceLaunchProvider extends Service {
     return result as InterfaceRuntime
   }
 
-  async launchRuntime(runtime: InterfaceRuntime) {
+  async setupInstance(runtime: InterfaceRuntime): Promise<{
+    instance: maa.InstanceBase
+    resource: maa.ResourceBase
+    controller: maa.ControllerBase
+  } | null> {
     let controller: maa.ControllerBase
 
     if (runtime.controller_param.ctype === 'adb') {
@@ -389,7 +426,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
         runtime.controller_param.controller_type
       )
     } else {
-      return
+      return null
     }
 
     controller.notify = (msg, detail) => {
@@ -439,11 +476,33 @@ export class ProjectInterfaceLaunchProvider extends Service {
       instance.destroy()
       controller.destroy()
       resource.destroy()
+      return null
+    }
+
+    return {
+      instance,
+      controller,
+      resource
+    }
+  }
+
+  async launchTask(runtime: InterfaceRuntime, task: string) {
+    const insts = await this.setupInstance(runtime)
+    if (!insts) {
+      return
+    }
+
+    await insts.instance.post_task(task).wait()
+  }
+
+  async launchRuntime(runtime: InterfaceRuntime) {
+    const insts = await this.setupInstance(runtime)
+    if (!insts) {
       return
     }
 
     for (const task of runtime.task) {
-      await instance.post_task(task.entry, task.param as unknown as maa.PipelineDecl).wait()
+      await insts.instance.post_task(task.entry, task.param as unknown as maa.PipelineDecl).wait()
     }
   }
 }

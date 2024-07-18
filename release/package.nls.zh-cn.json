@@ -2,5 +2,6 @@
   "maa.command.open-log": "Maa: 打开日志",
   "maa.command.select-resource": "Maa: 选择资源",
   "maa.command.goto-task": "Maa: 跳转到任务",
+  "maa.command.launch-task": "Maa: 执行任务",
   "maa.command.launch-interface": "Maa: 执行interface"
 }

@@ -36,6 +36,10 @@
         "command": "maa.launch-task"
       },
       {
+        "title": "%maa.command.stop-launch%",
+        "command": "maa.stop-launch"
+      },
+      {
         "title": "%maa.command.launch-interface%",
         "command": "maa.launch-interface"
       },

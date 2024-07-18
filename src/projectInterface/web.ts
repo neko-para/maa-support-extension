@@ -17,8 +17,11 @@ export class ProjectInterfaceWebProvider extends Service {
     })
   }
 
-  async acquire() {
-    if (!this.panel) {
+  acquire(create?: true): Promise<vscode.WebviewPanel>
+  acquire(create: false): Promise<vscode.WebviewPanel | null>
+  acquire(create: boolean): Promise<vscode.WebviewPanel | null>
+  async acquire(create = true) {
+    if (!this.panel && create) {
       const rootUri = vscode.Uri.file(this.__context.asAbsolutePath('web'))
 
       this.panel = vscode.window.createWebviewPanel(
@@ -43,7 +46,7 @@ export class ProjectInterfaceWebProvider extends Service {
     return this.panel
   }
 
-  async post(msg: ExtToWeb) {
-    return await (await this.acquire()).webview.postMessage(msg)
+  async post(msg: ExtToWeb, create = true) {
+    return await (await this.acquire(create))?.webview.postMessage(msg)
   }
 }

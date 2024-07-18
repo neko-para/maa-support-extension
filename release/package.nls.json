@@ -3,6 +3,7 @@
   "maa.command.select-resource": "Maa: select resource",
   "maa.command.goto-task": "Maa: goto task",
   "maa.command.launch-task": "Maa: launch task",
+  "maa.command.stop-launch": "Maa: stop launch",
   "maa.command.open-web": "Maa: open webview",
   "maa.command.launch-interface": "Maa: launch interface"
 }

@@ -76,11 +76,17 @@ function overwriteTKSConfig(
 
 export class ProjectInterfaceLaunchProvider extends Service {
   outputChannel: vscode.OutputChannel
+  instance: maa.Instance | null
 
   constructor(context: vscode.ExtensionContext) {
     super(context)
 
     this.outputChannel = vscode.window.createOutputChannel('Maa')
+    this.instance = null
+
+    this.defer = vscode.commands.registerCommand(commands.StopLaunch, async () => {
+      this.instance?.post_stop()
+    })
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
       const pip = this.shared(PipelineProjectInterfaceProvider)
@@ -502,12 +508,17 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const oldNotify = insts.instance.notify
     insts.instance.notify = async (msg, details) => {
       await oldNotify(msg, details)
-      piwp.post({
-        cmd: 'launch.notify',
-        msg,
-        details
-      })
+      piwp.post(
+        {
+          cmd: 'launch.notify',
+          msg,
+          details
+        },
+        false
+      )
     }
+
+    this.instance = insts.instance
 
     await insts.instance.post_task(task).wait()
   }
@@ -527,15 +538,22 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const oldNotify = insts.instance.notify
     insts.instance.notify = async (msg, details) => {
       await oldNotify(msg, details)
-      piwp.post({
-        cmd: 'launch.notify',
-        msg,
-        details
-      })
+      piwp.post(
+        {
+          cmd: 'launch.notify',
+          msg,
+          details
+        },
+        false
+      )
     }
 
+    this.instance = insts.instance
+
+    let last: Promise<maa.Status> = Promise.resolve(maa.Status.Failed)
     for (const task of runtime.task) {
-      await insts.instance.post_task(task.entry, task.param as unknown as maa.PipelineDecl).wait()
+      last = insts.instance.post_task(task.entry, task.param as unknown as maa.PipelineDecl).wait()
     }
+    await last
   }
 }

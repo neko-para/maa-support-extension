@@ -94,4 +94,18 @@ export type InterfaceRuntime = {
     entry: string
     param: unknown
   }[]
+  recognizer: Record<
+    string,
+    {
+      exec_path: string
+      exec_param?: string[]
+    }
+  >
+  action: Record<
+    string,
+    {
+      exec_path: string
+      exec_param?: string[]
+    }
+  >
 }

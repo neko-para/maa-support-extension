@@ -372,6 +372,9 @@ export class ProjectInterfaceLaunchProvider extends Service {
       })
     }
 
+    result.recognizer = pip.interfaceJson?.recognizer ?? {}
+    result.action = pip.interfaceJson?.action ?? {}
+
     return result as InterfaceRuntime
   }
 
@@ -413,6 +416,24 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     instance.bind(controller)
     instance.bind(resource)
+
+    for (const [name, reco] of Object.entries(runtime.recognizer)) {
+      maa.register_custom_recognizer_executor(
+        instance.handle,
+        name,
+        reco.exec_path,
+        reco.exec_param ?? []
+      )
+    }
+
+    for (const [name, act] of Object.entries(runtime.action)) {
+      maa.register_custom_action_executor(
+        instance.handle,
+        name,
+        act.exec_path,
+        act.exec_param ?? []
+      )
+    }
 
     if (!instance.inited) {
       instance.destroy()

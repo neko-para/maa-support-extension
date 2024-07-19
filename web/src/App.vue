@@ -69,50 +69,6 @@ function requestReco(id?: number) {
 </template>
 
 <style scoped>
-.flex {
-  display: flex;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.border {
-  border: solid black 1px;
-}
-
-.p-2 {
-  padding: 0.5rem;
-}
-
-.font-bold {
-  font: bold;
-}
-
-.self-center {
-  align-self: center;
-}
-
-.text-slate-500 {
-  color: rgb(100 116 139) /* #64748b */;
-}
-
-.text-green-500 {
-  color: rgb(34 197 94) /* #22c55e */;
-}
-
-.text-red-500 {
-  color: rgb(239 68 68) /* #ef4444 */;
-}
-
 .maa-form {
   display: grid;
   grid-template-columns: max-content auto;

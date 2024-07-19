@@ -47,9 +47,7 @@ jobs:
       - name: Install maa.node
         shell: bash
         run: |
-          ver=`npm pkg get devDependencies.@nekosu/maa-node`
-          ver=${ver#\"}
-          ver=${ver%\"}
+          ver=`npm pkg get devDependencies.@nekosu/maa-node | jq -r`
           echo "maa-node version ${ver}"
           npm i -g yarn
           cd release

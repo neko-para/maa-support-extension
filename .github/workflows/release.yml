@@ -50,8 +50,9 @@ jobs:
           npm i -g yarn
           cd release
           ver=`npm pkg get devDependencies.@nekosu/maa-node`
-          for os in win32, linux, darwin; do
-            for cpu in x64, arm64; do
+          echo "maa-node version ${ver}"
+          for os in win32 linux darwin; do
+            for cpu in x64 arm64; do
               yarn add @nekosu/maa-node-${os}-${cpu}@${ver} --ignore-platform
             done
           done

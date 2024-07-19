@@ -14,6 +14,7 @@ export default defineConfig({
   },
   build: {
     outDir: '../release/web',
+    emptyOutDir: true,
     sourcemap: true
   },
   resolve: {

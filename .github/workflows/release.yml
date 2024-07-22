@@ -91,4 +91,4 @@ jobs:
 
       - name: Publish
         run: |
-          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath assets/*.vsix
+          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath assets/maa-support-extension/*.vsix

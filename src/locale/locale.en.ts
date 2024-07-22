@@ -13,6 +13,7 @@ export default {
   'maa.pi.title.select-resource': 'Select resource',
   'maa.pi.title.select-task': 'Select task',
   'maa.pi.title.select-option': 'Select option {0}',
+  'maa.pi.title.input-image': 'Input image name',
 
   'maa.pi.error.cannot-find-controller': 'Cannot find controller {0}',
   'maa.pi.error.cannot-find-adb-for-controller': 'Cannot find adb config for controller {0}',

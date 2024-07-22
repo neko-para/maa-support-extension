@@ -4,6 +4,10 @@ import * as vscode from 'vscode'
 import type { ExtToWeb, WebToExt } from '../../types/ipc'
 import { commands } from '../command'
 import { Service } from '../data'
+import { t } from '../locale'
+import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
+import { PipelineRootStatusProvider } from '../pipeline/root'
+import { ProjectInterfaceLaunchProvider } from './launcher'
 
 function toPngDataUrl(buffer: ArrayBuffer) {
   return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
@@ -35,7 +39,8 @@ export class ProjectInterfaceWebProvider extends Service {
         vscode.ViewColumn.Active,
         {
           enableScripts: true,
-          localResourceRoots: [rootUri]
+          localResourceRoots: [rootUri],
+          retainContextWhenHidden: true
         }
       )
       this.panel.onDidDispose(() => {
@@ -48,7 +53,7 @@ export class ProjectInterfaceWebProvider extends Service {
         .replaceAll('/@ROOT@', this.panel.webview.asWebviewUri(rootUri).toString())
       this.panel.webview.html = content
 
-      this.panel.webview.onDidReceiveMessage((data: WebToExt) => {
+      this.panel.webview.onDidReceiveMessage(async (data: WebToExt) => {
         switch (data.cmd) {
           case 'launch.reco':
             const info = new maa.RecoInfo(data.reco as maa.RecoId)
@@ -68,6 +73,51 @@ export class ProjectInterfaceWebProvider extends Service {
               info: detailInfo
             })
             return
+          case 'crop.screencap':
+            if (!this.shared(PipelineRootStatusProvider).activateResource) {
+              return
+            }
+            const pilp = this.shared(ProjectInterfaceLaunchProvider)
+            const runtime = await pilp.prepareRuntime(
+              this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
+            )
+            if (!runtime) {
+              return
+            }
+            if (!(await pilp.setupInstance(runtime)) || !pilp.instance) {
+              return
+            }
+            await maa.controller_wait(
+              pilp.instance.controller.handle,
+              maa.controller_post_screencap(pilp.instance.controller.handle)
+            )
+            const image = new maa.ImageBuffer()
+            if (!maa.controller_get_image(pilp.instance.controller.handle, image.handle)) {
+              return
+            }
+            this.post({
+              cmd: 'crop.image',
+              image: toPngDataUrl(image.encoded)
+            })
+            break
+          case 'crop.download':
+            const root = this.shared(PipelineProjectInterfaceProvider).suggestResource()
+            if (!root) {
+              return
+            }
+            const imageRoot = vscode.Uri.joinPath(root, 'image')
+            const name = await vscode.window.showInputBox({
+              title: t('maa.pi.title.input-image')
+            })
+            if (!name) {
+              return
+            }
+            const resultPath = vscode.Uri.joinPath(
+              imageRoot,
+              `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
+            )
+            await vscode.workspace.fs.writeFile(resultPath, Buffer.from(data.image, 'base64'))
+            break
         }
       })
     }

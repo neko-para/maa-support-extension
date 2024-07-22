@@ -1,6 +1,8 @@
 import type { ExtToWeb, WebToExt } from '../../types/ipc'
-import { recoInfo, showRecoInfo } from './reco'
-import { TaskList, taskList } from './task'
+import { fulfillImage } from './crop/crop'
+import { activePage } from './data'
+import { recoInfo, showRecoInfo } from './launch/reco'
+import { TaskList, taskList } from './launch/task'
 
 const vscode = acquireVsCodeApi()
 
@@ -14,6 +16,7 @@ window.addEventListener('message', event => {
   switch (data.cmd) {
     case 'launch.setup':
       taskList.value = new TaskList()
+      activePage.value = 'launch'
       break
     case 'launch.notify':
       taskList.value.push(data.msg as any, JSON.parse(data.details))
@@ -21,6 +24,12 @@ window.addEventListener('message', event => {
     case 'show.reco':
       recoInfo.value = data
       showRecoInfo.value = true
+      break
+    case 'crop.setup':
+      activePage.value = 'crop'
+      break
+    case 'crop.image':
+      fulfillImage(data.image)
       break
   }
 })

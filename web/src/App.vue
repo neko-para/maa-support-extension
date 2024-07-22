@@ -1,23 +1,16 @@
 <script setup lang="ts">
 import hljs from 'highlight.js/lib/core'
 import hljsJson from 'highlight.js/lib/languages/json'
-import { NButton, NCard, NCode, NConfigProvider, NModal } from 'naive-ui'
+import { NButton, NCard, NCode, NConfigProvider, NModal, NTabPane, NTabs } from 'naive-ui'
 
+import MCrop from '@/crop/MCrop.vue'
+import MLaunch from '@/launch/MLaunch.vue'
+
+import { activePage } from './data'
 import { send } from './ipc'
-import { recoInfo, showRecoInfo } from './reco'
-import { taskList } from './task'
+import { recoInfo, showRecoInfo } from './launch/reco'
 
 hljs.registerLanguage('json', hljsJson)
-
-function requestReco(id?: number) {
-  if (typeof id !== 'number') {
-    return
-  }
-  send({
-    cmd: 'launch.reco',
-    reco: id
-  })
-}
 </script>
 
 <template>
@@ -45,25 +38,17 @@ function requestReco(id?: number) {
       </n-card>
     </n-modal>
 
-    <div class="flex flex-wrap gap-2">
-      <div v-for="(node, idx) in taskList.node" :key="idx" class="flex flex-col">
-        <div class="flex flex-col gap-2 border p-2">
-          <span class="font-bold self-center"> {{ node.pre_hit_task }} </span>
-          <template v-for="(reco, ridx) in node.reco_list" :key="ridx">
-            <n-button @click="requestReco(reco.reco_id)">
-              <span v-if="reco.status === 'pending'" class="text-slate-500">
-                {{ reco.task }} {{ reco.reco_id ?? '' }}
-              </span>
-              <span v-else-if="reco.status === 'success'" class="text-green-500">
-                {{ reco.task }} {{ reco.reco_id ?? '' }}
-              </span>
-              <span v-else-if="reco.status === 'failed'" class="text-red-500">
-                {{ reco.task }} {{ reco.reco_id ?? '' }}
-              </span>
-            </n-button>
-          </template>
-        </div>
-      </div>
+    <div class="flex flex-col gap-2 w-screen h-screen p-2">
+      <n-tabs v-model:value="activePage">
+        <n-tab-pane name="launch"></n-tab-pane>
+        <n-tab-pane name="crop"></n-tab-pane>
+      </n-tabs>
+      <template v-if="activePage === 'launch'">
+        <m-launch></m-launch>
+      </template>
+      <template v-else-if="activePage === 'crop'">
+        <m-crop></m-crop>
+      </template>
     </div>
   </n-config-provider>
 </template>

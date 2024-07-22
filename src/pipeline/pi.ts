@@ -143,4 +143,9 @@ export class PipelineProjectInterfaceProvider extends Service {
     }
     return resInfo.path.map(x => x.replace('{PROJECT_DIR}', rootPath)).map(x => vscode.Uri.file(x))
   }
+
+  suggestResource() {
+    const res = this.resourcePaths()
+    return res.length > 0 ? res[res.length - 1] : null
+  }
 }

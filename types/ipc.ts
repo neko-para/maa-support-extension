@@ -23,8 +23,25 @@ export type ExtToWeb =
   | ({
       cmd: 'show.reco'
     } & RecoInfo)
+  | {
+      cmd: 'crop.setup'
+    }
+  | {
+      cmd: 'crop.image'
+      image: string
+    }
 
-export type WebToExt = {
-  cmd: 'launch.reco'
-  reco: number
-}
+export type WebToExt =
+  | {
+      cmd: 'launch.reco'
+      reco: number
+    }
+  | {
+      cmd: 'crop.screencap'
+    }
+  | {
+      cmd: 'crop.download'
+      image: string
+      roi: maa.FlatRect
+      expandRoi: maa.FlatRect
+    }

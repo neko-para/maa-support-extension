@@ -18,6 +18,21 @@ import {
 import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
 import { ProjectInterfaceWebProvider } from './web'
 
+type InstanceCache = {
+  instance: maa.InstanceBase
+  resource: maa.ResourceBase
+  controller: maa.ControllerBase
+}
+
+function serializeRuntime(runtime: InterfaceRuntime) {
+  return JSON.stringify(runtime, (key, value) => {
+    if (key === 'hwnd') {
+      return maa.get_window_hwnd(value)
+    }
+    return value
+  })
+}
+
 export async function initConfig(data: Interface): Promise<InterfaceConfig | null> {
   const newConfig: Partial<InterfaceConfig> = {}
 
@@ -76,16 +91,18 @@ function overwriteTKSConfig(
 
 export class ProjectInterfaceLaunchProvider extends Service {
   outputChannel: vscode.OutputChannel
-  instance: maa.Instance | null
+  instance: InstanceCache | null
+  instanceConfig: string | null
 
   constructor(context: vscode.ExtensionContext) {
     super(context)
 
     this.outputChannel = vscode.window.createOutputChannel('Maa')
     this.instance = null
+    this.instanceConfig = null
 
     this.defer = vscode.commands.registerCommand(commands.StopLaunch, async () => {
-      this.instance?.post_stop()
+      this.instance?.instance?.post_stop()
     })
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
@@ -418,11 +435,15 @@ export class ProjectInterfaceLaunchProvider extends Service {
     return result as InterfaceRuntime
   }
 
-  async setupInstance(runtime: InterfaceRuntime): Promise<{
-    instance: maa.InstanceBase
-    resource: maa.ResourceBase
-    controller: maa.ControllerBase
-  } | null> {
+  async setupInstance(runtime: InterfaceRuntime): Promise<boolean> {
+    const key = serializeRuntime(runtime)
+    if (key === this.instanceConfig) {
+      return true
+    }
+
+    this.instance = null
+    this.instanceConfig = null
+
     let controller: maa.ControllerBase
 
     if (runtime.controller_param.ctype === 'adb') {
@@ -433,7 +454,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
         runtime.controller_param.controller_type
       )
     } else {
-      return null
+      return false
     }
 
     controller.notify = (msg, detail) => {
@@ -483,19 +504,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
       instance.destroy()
       controller.destroy()
       resource.destroy()
-      return null
+      return false
     }
 
-    return {
+    this.instance = {
       instance,
       controller,
       resource
     }
+    this.instanceConfig = key
+
+    return true
   }
 
   async launchTask(runtime: InterfaceRuntime, task: string) {
-    const insts = await this.setupInstance(runtime)
-    if (!insts) {
+    if (!(await this.setupInstance(runtime)) || !this.instance) {
       return
     }
 
@@ -505,8 +528,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
       cmd: 'launch.setup'
     })
 
-    const oldNotify = insts.instance.notify
-    insts.instance.notify = async (msg, details) => {
+    const oldNotify = this.instance.instance.notify
+    this.instance.instance.notify = async (msg, details) => {
       await oldNotify(msg, details)
       piwp.post(
         {
@@ -518,14 +541,11 @@ export class ProjectInterfaceLaunchProvider extends Service {
       )
     }
 
-    this.instance = insts.instance
-
-    await insts.instance.post_task(task).wait()
+    await this.instance.instance.post_task(task).wait()
   }
 
   async launchRuntime(runtime: InterfaceRuntime) {
-    const insts = await this.setupInstance(runtime)
-    if (!insts) {
+    if (!(await this.setupInstance(runtime)) || !this.instance) {
       return
     }
 
@@ -535,8 +555,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
       cmd: 'launch.setup'
     })
 
-    const oldNotify = insts.instance.notify
-    insts.instance.notify = async (msg, details) => {
+    const oldNotify = this.instance.instance.notify
+    this.instance.instance.notify = async (msg, details) => {
       await oldNotify(msg, details)
       piwp.post(
         {
@@ -548,11 +568,11 @@ export class ProjectInterfaceLaunchProvider extends Service {
       )
     }
 
-    this.instance = insts.instance
-
     let last: Promise<maa.Status> = Promise.resolve(maa.Status.Failed)
     for (const task of runtime.task) {
-      last = insts.instance.post_task(task.entry, task.param as unknown as maa.PipelineDecl).wait()
+      last = this.instance.instance
+        .post_task(task.entry, task.param as unknown as maa.PipelineDecl)
+        .wait()
     }
     await last
   }

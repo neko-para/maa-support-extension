@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-import { type DebugMessageDetail, Message } from './msg'
+import { type DebugMessageDetail, Message } from '../msg'
 
 type TaskNode = {
   task_id: number

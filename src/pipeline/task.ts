@@ -1,12 +1,10 @@
-import * as maa from '@nekosu/maa-node'
-import { JSONPath, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { InheritDisposable } from '../disposable'
 import { t } from '../locale'
-import { ResourceRoot, exists } from '../utils/fs'
+import { exists } from '../utils/fs'
+import { visitJsonDocument } from '../utils/json'
 import { PipelineProjectInterfaceProvider } from './pi'
 import { PipelineRootStatusProvider } from './root'
 
@@ -98,51 +96,32 @@ class PipelineTaskIndexLayer extends Service {
     if (!doc) {
       return
     }
-    const content = doc.getText()
-    const path: JSONPath = []
 
     let taskInfo: TaskIndexInfo | null = null
 
-    visit(content, {
-      onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
-        path[path.length - 1] = property
+    visitJsonDocument(doc, {
+      onObjectProp: (prop, range, path) => {
         if (path.length === 1) {
           taskInfo = {
             uri,
             taskContent: '',
             taskReferContent: '',
-            taskProp: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length)),
+            taskProp: range,
             taskBody: new vscode.Range(0, 0, 0, 0),
             taskRef: [],
             imageRef: []
           }
         }
       },
-      onObjectBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+      onObjectEnd: (range, path) => {
         if (path.length === 1) {
           if (!taskInfo) {
             return
           }
-
-          const pos = doc.positionAt(offset)
-          taskInfo.taskBody = new vscode.Range(pos, pos)
-        }
-
-        path.push('')
-      },
-      onObjectEnd: (offset, length, startLine, startCharacter) => {
-        path.pop()
-
-        if (path.length === 1) {
-          if (!taskInfo) {
-            return
-          }
-          const pos = doc.positionAt(offset + 1)
-          const bodyRange = new vscode.Range(taskInfo.taskBody.start, pos)
-          taskInfo.taskBody = bodyRange
-          taskInfo.taskContent = doc.getText(bodyRange)
+          taskInfo.taskBody = range
+          taskInfo.taskContent = doc.getText(range)
           taskInfo.taskReferContent = doc.getText(
-            new vscode.Range(taskInfo.taskProp.start.line, 0, pos.line + 1, 0)
+            new vscode.Range(taskInfo.taskProp.start.line, 0, range.end.line + 1, 0)
           )
 
           let name = path[0]
@@ -161,21 +140,7 @@ class PipelineTaskIndexLayer extends Service {
           taskInfo = null
         }
       },
-      onSeparator: (character, offset, length, startLine, startCharacter) => {
-        if (character === ',') {
-          if (typeof path[path.length - 1] === 'number') {
-            ;(path[path.length - 1] as number)++
-          }
-        } else if (character === ':') {
-        }
-      },
-      onArrayBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
-        path.push(0)
-      },
-      onArrayEnd: (offset, length, startLine, startCharacter) => {
-        path.pop()
-      },
-      onLiteralValue: (value, offset, length, startLine, startCharacter, pathSupplier) => {
+      onLiteral: (value, range, path) => {
         if (typeof path[1] !== 'string') {
           return
         }
@@ -191,7 +156,7 @@ class PipelineTaskIndexLayer extends Service {
               if (path.length >= 2 && path.length <= 3) {
                 taskInfo.taskRef.push({
                   task: value,
-                  range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
+                  range: range
                 })
               }
               break
@@ -201,7 +166,7 @@ class PipelineTaskIndexLayer extends Service {
               if (path.length === 2) {
                 taskInfo.taskRef.push({
                   task: value,
-                  range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
+                  range: range
                 })
               }
               break
@@ -209,7 +174,7 @@ class PipelineTaskIndexLayer extends Service {
               if (path.length >= 2 && path.length <= 3) {
                 taskInfo.imageRef.push({
                   path: value,
-                  range: new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length))
+                  range: range
                 })
               }
 
@@ -272,7 +237,6 @@ export class PipelineTaskIndexProvider extends Service {
   diagnostic: vscode.DiagnosticCollection
 
   updateingDiag: boolean
-  needReupdate: boolean
 
   constructor(context: vscode.ExtensionContext) {
     super(context)
@@ -280,7 +244,6 @@ export class PipelineTaskIndexProvider extends Service {
     this.layers = []
     this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
     this.updateingDiag = false
-    this.needReupdate = false
 
     this.shared(PipelineProjectInterfaceProvider).event.on('activateResourceChanged', resource => {
       for (const layer of this.layers) {
@@ -288,6 +251,17 @@ export class PipelineTaskIndexProvider extends Service {
       }
       this.layers = resource.map((x, i) => new PipelineTaskIndexLayer(this.__context, x, i))
     })
+
+    this.defer = (() => {
+      const timer = setInterval(() => {
+        this.updateDiagnostic()
+      }, 500)
+      return {
+        dispose: () => {
+          clearInterval(timer)
+        }
+      }
+    })()
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
       const taskList = await this.queryTaskList()
@@ -331,7 +305,6 @@ export class PipelineTaskIndexProvider extends Service {
 
   async updateDiagnostic() {
     if (this.updateingDiag) {
-      this.needReupdate = true
       return
     }
     this.updateingDiag = true
@@ -392,16 +365,12 @@ export class PipelineTaskIndexProvider extends Service {
     this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
 
     this.updateingDiag = false
-    if (this.needReupdate) {
-      this.updateDiagnostic()
-    }
   }
 
   async flushDirty() {
     for (const layer of this.layers) {
       await layer.flushDirty()
     }
-    await this.updateDiagnostic()
   }
 
   getLayer(uri: vscode.Uri) {

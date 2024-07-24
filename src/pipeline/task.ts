@@ -1,5 +1,6 @@
 import * as maa from '@nekosu/maa-node'
-import { JSONPath, visit } from 'jsonc-parser'
+import jsm from 'json-source-map'
+import { JSONPath, ParseError, ParseErrorCode, parse, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
 import { commands } from '../command'
@@ -9,6 +10,7 @@ import { t } from '../locale'
 import { ResourceRoot, exists } from '../utils/fs'
 import { PipelineProjectInterfaceProvider } from './pi'
 import { PipelineRootStatusProvider } from './root'
+import { validateJson } from './schema/validator'
 
 export type QueryResult =
   | {
@@ -55,6 +57,7 @@ class PipelineTaskIndexLayer extends Service {
   uri: vscode.Uri
   level: number
   taskIndex: Record<string, TaskIndexInfo>
+  diagIndex: Record<string, vscode.Diagnostic[]> // file - diags
 
   watcher: vscode.FileSystemWatcher
   dirtyUri: Set<string>
@@ -68,6 +71,7 @@ class PipelineTaskIndexLayer extends Service {
     this.uri = uri
     this.level = level
     this.taskIndex = {}
+    this.diagIndex = {}
     this.defer = this.watcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(this.uri, 'pipeline/**/*.json')
     )
@@ -102,6 +106,56 @@ class PipelineTaskIndexLayer extends Service {
     const path: JSONPath = []
 
     let taskInfo: TaskIndexInfo | null = null
+
+    const parseErrors: ParseError[] = []
+    const parsedObj = parse(content, parseErrors)
+    if (parseErrors.length > 0) {
+      this.diagIndex[uri.fsPath] = parseErrors.map(err => {
+        const errorId = {
+          1: 'InvalidSymbol',
+          2: 'InvalidNumberFormat',
+          3: 'PropertyNameExpected',
+          4: 'ValueExpected',
+          5: 'ColonExpected',
+          6: 'CommaExpected',
+          7: 'CloseBraceExpected',
+          8: 'CloseBracketExpected',
+          9: 'EndOfFileExpected',
+          10: 'InvalidCommentToken',
+          11: 'UnexpectedEndOfComment',
+          12: 'UnexpectedEndOfString',
+          13: 'UnexpectedEndOfNumber',
+          14: 'InvalidUnicode',
+          15: 'InvalidEscapeCharacter',
+          16: 'InvalidCharacter'
+        }[err.error]
+        return new vscode.Diagnostic(
+          new vscode.Range(doc.positionAt(err.offset), doc.positionAt(err.offset + err.length)),
+          t('maa.pipeline.error.parse-error', errorId)
+        )
+      })
+    } else {
+      const errors = validateJson('pipeline', parsedObj) ?? []
+      const map = jsm.parse(content)
+      this.diagIndex[uri.fsPath] = errors.map(err => {
+        if (err.instancePath in map.pointers) {
+          const info = map.pointers[err.instancePath]
+          const beg = info.key ?? info.value
+          const end = info.keyEnd ?? info.valueEnd
+          return new vscode.Diagnostic(
+            new vscode.Range(beg.line, beg.column, end.line, end.column),
+            err.message ?? JSON.stringify(err)
+          )
+        }
+        return new vscode.Diagnostic(
+          new vscode.Range(0, 0, 0, 0),
+          t(
+            'maa.pipeline.error.validate-error',
+            err.message ? err.instancePath + ' ' + err.message : JSON.stringify(err)
+          )
+        )
+      })
+    }
 
     visit(content, {
       onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
@@ -249,8 +303,15 @@ class PipelineTaskIndexLayer extends Service {
         newTaskIndex[task] = info
       }
     }
-
     this.taskIndex = newTaskIndex
+
+    const newDiagIndex: Record<string, vscode.Diagnostic[]> = {}
+    for (const [path, diags] of Object.entries(this.diagIndex)) {
+      if (!dirtyList.has(path)) {
+        newDiagIndex[path] = diags
+      }
+    }
+    this.diagIndex = newDiagIndex
 
     for (const path of dirtyList) {
       // 有可能是delete
@@ -338,6 +399,13 @@ export class PipelineTaskIndexProvider extends Service {
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
     for (const layer of this.layers) {
+      for (const [path, diags] of Object.entries(layer.diagIndex)) {
+        const pathUri = vscode.Uri.file(path)
+        for (const diag of diags) {
+          result.push([pathUri, diag])
+        }
+      }
+
       for (const [task, taskInfo] of Object.entries(layer.taskIndex)) {
         // check conflict task
         const m = /(.+)@VSCEXT_CONFLICT,\d+/.exec(task)

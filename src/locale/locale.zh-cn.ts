@@ -36,5 +36,7 @@ export default {
   'maa.pipeline.error.unknown-task': '未知任务 {0}',
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
   'maa.pipeline.error.rename-not-allowed': '重命名: 无效',
-  'maa.pipeline.error.rename-already-exists': '重命名: 已存在'
+  'maa.pipeline.error.rename-already-exists': '重命名: 已存在',
+  'maa.pipeline.error.parse-error': 'Json解析失败 {0}',
+  'maa.pipeline.error.validate-error': 'Schema校验失败 {0}'
 } as const

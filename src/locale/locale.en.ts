@@ -36,5 +36,7 @@ export default {
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
   'maa.pipeline.error.rename-not-allowed': 'Rename: not allowed',
-  'maa.pipeline.error.rename-already-exists': 'Rename: already exists'
+  'maa.pipeline.error.rename-already-exists': 'Rename: already exists',
+  'maa.pipeline.error.parse-error': 'Json parse error {0}',
+  'maa.pipeline.error.validate-error': 'Schema validate error {0}'
 } as const

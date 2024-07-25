@@ -5,7 +5,7 @@
     "dev": "node scripts/watch.mjs"
   },
   "devDependencies": {
-    "@nekosu/maa-node": "^1.3.4",
+    "@nekosu/maa-node": "^1.4.8",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.14.9",

@@ -68,7 +68,7 @@ export type InterfaceConfig = {
     config: unknown
   }
   win32?: {
-    hwnd?: maa.Win32Hwnd
+    hwnd?: maa.Win32Hwnd | null
   }
   resource: string
   task: {

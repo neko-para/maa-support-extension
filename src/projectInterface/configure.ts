@@ -119,7 +119,7 @@ export async function configController(
       hwnds.map(hwnd => {
         const info = maa.Win32Controller.info(hwnd)
         return {
-          label: `${maa.get_window_hwnd(hwnd)} - ${info.class_name} - ${info.window_name}`,
+          label: `${maa.unwrap_window_hwnd(hwnd)} - ${info.class_name} - ${info.window_name}`,
           hwnd: hwnd
         }
       }),

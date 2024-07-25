@@ -27,7 +27,7 @@ type InstanceCache = {
 function serializeRuntime(runtime: InterfaceRuntime) {
   return JSON.stringify(runtime, (key, value) => {
     if (key === 'hwnd') {
-      return maa.get_window_hwnd(value)
+      return maa.unwrap_window_hwnd(value)
     }
     return value
   })

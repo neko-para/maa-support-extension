@@ -1,3 +1,4 @@
+import * as maa from '@nekosu/maa-node'
 import EventEmitter from 'events'
 import path from 'path'
 import { config, emit } from 'process'
@@ -45,7 +46,12 @@ export class PipelineProjectInterfaceProvider extends Service {
         }
       } else if (e.document.uri.toString() === this.interfaceConfigDoc?.uri.toString()) {
         try {
-          this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText())
+          this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText(), (key, value) => {
+            if (key === 'hwnd') {
+              return maa.wrap_window_hwnd(value)
+            }
+            return value
+          })
           this.event.emit('activateResourceChanged', this.resourcePaths())
         } catch (_) {
           return
@@ -82,7 +88,12 @@ export class PipelineProjectInterfaceProvider extends Service {
         await vscode.commands.executeCommand(commands.LaunchInterface)
       }
       if (this.interfaceConfigDoc) {
-        this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText())
+        this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText(), (key, value) => {
+          if (key === 'hwnd') {
+            return maa.wrap_window_hwnd(value)
+          }
+          return value
+        })
         this.event.emit('activateResourceChanged', this.resourcePaths())
       }
     } catch (_) {
@@ -101,7 +112,7 @@ export class PipelineProjectInterfaceProvider extends Service {
         this.interfaceConfigJson,
         (key, value) => {
           if (key === 'hwnd') {
-            return undefined
+            return maa.unwrap_window_hwnd(value)
           }
           return value
         },

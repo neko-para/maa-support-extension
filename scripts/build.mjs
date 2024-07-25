@@ -1,5 +1,4 @@
 import { build } from 'esbuild'
-import { build as vbuild } from 'vite'
 
 build({
   entryPoints: ['src/extension.ts'],
@@ -9,8 +8,4 @@ build({
   platform: 'node',
   sourcemap: true,
   mainFields: ['module', 'main']
-})
-
-vbuild({
-  configFile: 'web/vite.config.mts'
 })

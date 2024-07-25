@@ -1,5 +1,4 @@
 import { context } from 'esbuild'
-import { build } from 'vite'
 
 context({
   entryPoints: ['src/extension.ts'],
@@ -11,11 +10,4 @@ context({
   mainFields: ['module', 'main']
 }).then(ctx => {
   ctx.watch()
-})
-
-build({
-  configFile: 'web/vite.config.mts',
-  build: {
-    watch: true
-  }
 })

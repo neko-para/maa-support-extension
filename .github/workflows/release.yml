@@ -42,6 +42,8 @@ jobs:
         shell: bash
         run: |
           node scripts/build.mjs
+          cd web
+          npx vite build
 
       - name: Install maa.node
         shell: bash

@@ -53,5 +53,9 @@
       }
     ],
     "views": {}
+  },
+  "dependencies": {
+    "@nekosu/maa-node": "^1.4.5",
+    "@nekosu/maa-node-win32-x64": "^1.4.5"
   }
 }

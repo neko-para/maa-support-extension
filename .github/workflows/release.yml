@@ -42,7 +42,6 @@ jobs:
         shell: bash
         run: |
           node scripts/build.mjs
-          npx vite build web
 
       - name: Install maa.node
         shell: bash
@@ -51,6 +50,7 @@ jobs:
           echo "maa-node version ${ver}"
           npm i -g yarn
           cd release
+          yarn add @nekosu/maa-node --ignore-optional
           for os in win32 linux darwin; do
             for cpu in x64 arm64; do
               yarn add @nekosu/maa-node-${os}-${cpu}@${ver} --ignore-platform

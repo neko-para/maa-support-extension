@@ -12,8 +12,5 @@ build({
 })
 
 vbuild({
-  configFile: 'web/vite.config.mts',
-  build: {
-    watch: true
-  }
+  configFile: 'web/vite.config.mts'
 })

@@ -24,15 +24,7 @@ export default defineConfig({
     }
   },
   plugins: [
-    vue({
-      template: {
-        compilerOptions: {
-          isCustomElement: tag => {
-            return tag.startsWith('vscode-')
-          }
-        }
-      }
-    })
+    vue()
     // vueJsx()
     // VueI18nPlugin({
     //   include: [path.resolve(__dirname, './src/i18n/locales/*.json')],

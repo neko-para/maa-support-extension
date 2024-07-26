@@ -362,7 +362,11 @@ export class PipelineTaskIndexProvider extends Service {
         }
       }
     }
-    this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
+    if (result.length === 0) {
+      this.diagnostic.clear()
+    } else {
+      this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
+    }
 
     this.updateingDiag = false
   }

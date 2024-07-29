@@ -84,7 +84,7 @@ export class ProjectInterfaceWebProvider extends Service {
             if (!runtime) {
               return
             }
-            if (!(await pilp.setupInstance(runtime)) || !pilp.instance) {
+            if (!(await pilp.setupInstance(runtime, true)) || !pilp.instance) {
               return
             }
             await maa.controller_wait(

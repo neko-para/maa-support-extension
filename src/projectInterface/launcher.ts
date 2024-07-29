@@ -435,10 +435,13 @@ export class ProjectInterfaceLaunchProvider extends Service {
     return result as InterfaceRuntime
   }
 
-  async setupInstance(runtime: InterfaceRuntime): Promise<boolean> {
+  async setupInstance(runtime: InterfaceRuntime, useCache = false): Promise<boolean> {
     const key = serializeRuntime(runtime)
-    if (key === this.instanceConfig) {
-      return true
+
+    if (useCache) {
+      if (key === this.instanceConfig) {
+        return true
+      }
     }
 
     this.instance = null

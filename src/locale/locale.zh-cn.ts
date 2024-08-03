@@ -36,5 +36,13 @@ export default {
   'maa.pipeline.error.unknown-task': '未知任务 {0}',
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
   'maa.pipeline.error.rename-not-allowed': '重命名: 无效',
-  'maa.pipeline.error.rename-already-exists': '重命名: 已存在'
+  'maa.pipeline.error.rename-already-exists': '重命名: 已存在',
+
+  'maa.pipeline.status.no-interface-found': 'Maa: 未找到 interface',
+  'maa.pipeline.status.using-interface': 'Maa: 正在使用 {0}',
+  'maa.pipeline.status.load-interface-failed': 'Maa: 加载 interface 失败',
+  'maa.pipeline.status.interface-not-configured': 'Maa: interface 未配置',
+  'maa.pipeline.status.interface-configured': 'Maa: interface 已配置',
+  'maa.pipeline.status.tooltip.click-select-interface': '点击以选择 interface',
+  'maa.pipeline.status.tooltip.click-launch-interface': '点击以执行 interface'
 } as const

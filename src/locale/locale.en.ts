@@ -36,5 +36,13 @@ export default {
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
   'maa.pipeline.error.rename-not-allowed': 'Rename: not allowed',
-  'maa.pipeline.error.rename-already-exists': 'Rename: already exists'
+  'maa.pipeline.error.rename-already-exists': 'Rename: already exists',
+
+  'maa.pipeline.status.no-interface-found': 'Maa: No Interface Found',
+  'maa.pipeline.status.using-interface': 'Maa: Using {0}',
+  'maa.pipeline.status.load-interface-failed': 'Maa: Load Interface Failed',
+  'maa.pipeline.status.interface-not-configured': 'Maa: Interface Not Configured',
+  'maa.pipeline.status.interface-configured': 'Maa: Interface Configured',
+  'maa.pipeline.status.tooltip.click-select-interface': 'Click to select interface',
+  'maa.pipeline.status.tooltip.click-launch-interface': 'Click to launch interface'
 } as const

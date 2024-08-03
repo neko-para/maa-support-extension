@@ -6,11 +6,13 @@ import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
+import { t } from '../locale'
 import { Interface, InterfaceConfig } from '../projectInterface/type'
 import { ResourceRoot } from '../utils/fs'
 import { PipelineRootStatusProvider } from './root'
 
 export class PipelineProjectInterfaceProvider extends Service {
+  configStatusItem: vscode.StatusBarItem
   interfaceDoc: vscode.TextDocument | null
   interfaceConfigDoc: vscode.TextDocument | null
   interfaceJson: Interface | null
@@ -24,6 +26,9 @@ export class PipelineProjectInterfaceProvider extends Service {
   constructor(context: vscode.ExtensionContext) {
     super(context)
 
+    this.defer = this.configStatusItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Left
+    )
     this.interfaceDoc = null
     this.interfaceConfigDoc = null
     this.interfaceJson = null
@@ -31,17 +36,23 @@ export class PipelineProjectInterfaceProvider extends Service {
 
     this.event = new EventEmitter()
 
+    this.configStatusItem.command = commands.LaunchInterface
+    this.configStatusItem.tooltip = t('maa.pipeline.status.tooltip.click-launch-interface')
+
     this.shared(PipelineRootStatusProvider).event.on('activateRootChanged', async () => {
       await this.loadInterface()
+      this.updateConfigStatus()
     })
 
     vscode.workspace.onDidChangeTextDocument(e => {
       if (e.document.uri.toString() === this.interfaceDoc?.uri.toString()) {
         try {
           this.interfaceJson = JSON.parse(this.interfaceDoc.getText())
+          this.updateConfigStatus()
           this.event.emit('interfaceChanged')
           this.event.emit('activateResourceChanged', this.resourcePaths())
         } catch (_) {
+          this.updateConfigStatus()
           return
         }
       } else if (e.document.uri.toString() === this.interfaceConfigDoc?.uri.toString()) {
@@ -52,8 +63,10 @@ export class PipelineProjectInterfaceProvider extends Service {
             }
             return value
           })
+          this.updateConfigStatus()
           this.event.emit('activateResourceChanged', this.resourcePaths())
         } catch (_) {
+          this.updateConfigStatus()
           return
         }
       }
@@ -158,5 +171,19 @@ export class PipelineProjectInterfaceProvider extends Service {
   suggestResource() {
     const res = this.resourcePaths()
     return res.length > 0 ? res[res.length - 1] : null
+  }
+
+  updateConfigStatus() {
+    if (!this.interfaceJson) {
+      this.configStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
+      this.configStatusItem.text = t('maa.pipeline.status.load-interface-failed')
+    } else if (!this.interfaceConfigJson) {
+      this.configStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
+      this.configStatusItem.text = t('maa.pipeline.status.interface-not-configured')
+    } else {
+      this.configStatusItem.color = new vscode.ThemeColor('statusBarItem.background')
+      this.configStatusItem.text = t('maa.pipeline.status.interface-configured')
+    }
+    this.configStatusItem.show()
   }
 }

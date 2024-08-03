@@ -35,6 +35,7 @@ export class PipelineRootStatusProvider extends Service {
     this.syncRootInfo()
 
     this.rootStatusItem.command = commands.SelectResource
+    this.rootStatusItem.tooltip = t('maa.pipeline.status.tooltip.click-select-interface')
 
     this.defer = vscode.commands.registerCommand(commands.SelectResource, async () => {
       await this.syncRootInfo()
@@ -70,10 +71,13 @@ export class PipelineRootStatusProvider extends Service {
   updateRootStatus() {
     if (this.activateResource) {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.background')
-      this.rootStatusItem.text = 'Maa Support - ' + this.activateResource.interfaceRelative
+      this.rootStatusItem.text = t(
+        'maa.pipeline.status.using-interface',
+        this.activateResource.interfaceRelative
+      )
     } else {
       this.rootStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
-      this.rootStatusItem.text = 'Maa Support - No Interface Found'
+      this.rootStatusItem.text = t('maa.pipeline.status.no-interface-found')
     }
     this.rootStatusItem.show()
   }

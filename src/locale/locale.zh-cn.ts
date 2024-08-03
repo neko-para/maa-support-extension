@@ -14,6 +14,9 @@ export default {
   'maa.pi.title.select-task': '选择任务',
   'maa.pi.title.select-option': '选择选项 {0}',
   'maa.pi.title.input-image': '输入图片名称',
+  'maa.pi.title.init-config': '初始化配置',
+  'maa.pi.item.empty-config': '空配置',
+  'maa.pi.item.interactive-setup-config': '交互式设置配置',
 
   'maa.pi.error.cannot-find-controller': '无法找到控制器 {0}',
   'maa.pi.error.cannot-find-adb-for-controller': '无法找到控制器 {0} 的 Adb 配置',

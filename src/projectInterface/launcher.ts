@@ -113,11 +113,37 @@ export class ProjectInterfaceLaunchProvider extends Service {
       }
 
       if (!pip.interfaceConfigJson) {
-        const newConfig = await initConfig(pip.interfaceJson)
-        if (!newConfig) {
+        const way = await vscode.window.showQuickPick(
+          [t('maa.pi.item.empty-config'), t('maa.pi.item.interactive-setup-config')].map(
+            (label, index) => ({
+              label,
+              index
+            })
+          ),
+          {
+            title: t('maa.pi.title.init-config')
+          }
+        )
+
+        if (!way) {
           return
         }
-        pip.interfaceConfigJson = newConfig
+
+        if (way.index === 0) {
+          pip.interfaceConfigJson = {
+            controller: pip.interfaceJson.controller[0],
+            resource: pip.interfaceJson.resource[0].name,
+            task: []
+          }
+        } else {
+          const newConfig = await initConfig(pip.interfaceJson)
+          if (!newConfig) {
+            return
+          }
+          pip.interfaceConfigJson = newConfig
+        }
+
+        pip.updateConfigStatus()
         await pip.saveInterface()
       }
       while (pip.interfaceJson && pip.interfaceConfigJson) {

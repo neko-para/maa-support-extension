@@ -343,6 +343,10 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return null
     }
 
+    const replaceVar = (x: string) => {
+      return x.replaceAll('{PROJECT_DIR}', root)
+    }
+
     const result: Partial<InterfaceRuntime> = {}
 
     const ctrlInfo = data.controller.find(x => x.name === config.controller.name)
@@ -411,7 +415,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return null
     }
 
-    result.resource_path = resInfo.path.map(x => x.replace('{PROJECT_DIR}', root))
+    result.resource_path = resInfo.path.map(replaceVar)
 
     result.task = []
     for (const task of config.task) {
@@ -457,6 +461,16 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     result.recognizer = pip.interfaceJson?.recognizer ?? {}
     result.action = pip.interfaceJson?.action ?? {}
+
+    for (const reco of Object.values(result.recognizer)) {
+      reco.exec_path = replaceVar(reco.exec_path)
+      reco.exec_param = (reco.exec_param ?? []).map(replaceVar)
+    }
+
+    for (const act of Object.values(result.action)) {
+      act.exec_path = replaceVar(act.exec_path)
+      act.exec_param = (act.exec_param ?? []).map(replaceVar)
+    }
 
     return result as InterfaceRuntime
   }

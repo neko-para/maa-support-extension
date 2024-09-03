@@ -4,7 +4,7 @@
   "publisher": "nekosu",
   "description": "Maa framework support",
   "repository": "https://github.com/neko-para/maa-support-extension",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "license": "MIT",
   "icon": "images/logo.png",
   "engines": {

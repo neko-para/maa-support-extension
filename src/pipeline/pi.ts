@@ -59,7 +59,11 @@ export class PipelineProjectInterfaceProvider extends Service {
         try {
           this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText(), (key, value) => {
             if (key === 'hwnd') {
-              return maa.wrap_window_hwnd(value)
+              if (value !== null) {
+                return maa.wrap_window_hwnd(value)
+              } else {
+                return null
+              }
             }
             return value
           })
@@ -102,8 +106,10 @@ export class PipelineProjectInterfaceProvider extends Service {
       }
       if (this.interfaceConfigDoc) {
         this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText(), (key, value) => {
-          if (key === 'hwnd') {
+          if (value !== null) {
             return maa.wrap_window_hwnd(value)
+          } else {
+            return null
           }
           return value
         })
@@ -125,7 +131,11 @@ export class PipelineProjectInterfaceProvider extends Service {
         this.interfaceConfigJson,
         (key, value) => {
           if (key === 'hwnd') {
-            return maa.unwrap_window_hwnd(value)
+            if (value !== null) {
+              return maa.unwrap_window_hwnd(value)
+            } else {
+              return null
+            }
           }
           return value
         },
@@ -159,6 +169,9 @@ export class PipelineProjectInterfaceProvider extends Service {
       x => x.name === this.interfaceConfigJson?.resource
     )
     if (!resInfo) {
+      vscode.window.showErrorMessage(
+        t('maa.pi.error.cannot-find-resource', this.interfaceConfigJson?.resource ?? '<unknown>')
+      )
       return []
     }
     const rootPath = this.shared(PipelineRootStatusProvider).activateResource?.dirUri?.fsPath

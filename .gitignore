@@ -5,3 +5,4 @@ node_modules
 azure.token
 
 *.vsix
+.DS_Store

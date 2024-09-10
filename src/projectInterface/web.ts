@@ -100,6 +100,27 @@ export class ProjectInterfaceWebProvider extends Service {
               image: toPngDataUrl(image.encoded)
             })
             break
+          case 'crop.upload': {
+            const options: vscode.OpenDialogOptions = {
+              canSelectMany: false,
+              openLabel: 'Upload',
+              filters: {
+                'Png files': ['png']
+              }
+            }
+
+            const files = await vscode.window.showOpenDialog(options)
+            if (!files || files.length === 0) {
+              break
+            }
+
+            const data = await vscode.workspace.fs.readFile(files[0])
+            this.post({
+              cmd: 'crop.image',
+              image: toPngDataUrl(data)
+            })
+            break
+          }
           case 'crop.download':
             const root = this.shared(PipelineProjectInterfaceProvider).suggestResource()
             if (!root) {

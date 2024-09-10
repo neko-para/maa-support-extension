@@ -40,6 +40,9 @@ export type WebToExt =
       cmd: 'crop.screencap'
     }
   | {
+      cmd: 'crop.upload'
+    }
+  | {
       cmd: 'crop.download'
       image: string
       roi: maa.FlatRect

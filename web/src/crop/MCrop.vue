@@ -390,6 +390,13 @@ async function resize() {
   resizing.value = false
 }
 */
+
+async function upload() {
+  send({
+    cmd: 'crop.upload'
+  })
+}
+
 async function download() {
   const blob = await getImage()
   if (!blob) {
@@ -433,6 +440,7 @@ async function download() {
       <n-button @click="cropBound"> bound </n-button>
       <n-button @click="copyRoi"> roi </n-button>
       <!-- <n-button @click="resize" :loading="resizing"> resize </n-button> -->
+      <n-button @click="upload"> upload </n-button>
       <n-button @click="download"> download </n-button>
       <span> 左键移动裁剪区域，中键移动视图，右键裁剪；ceil对齐像素，bound移除出界范围 </span>
     </div>

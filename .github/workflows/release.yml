@@ -45,20 +45,6 @@ jobs:
           cd web
           npx vite build
 
-      - name: Install maa.node
-        shell: bash
-        run: |
-          ver=`npm pkg get devDependencies.@nekosu/maa-node | jq -r`
-          echo "maa-node version ${ver}"
-          npm i -g yarn
-          cd release
-          yarn add @nekosu/maa-node --ignore-optional
-          for os in win32 linux darwin; do
-            for cpu in x64 arm64; do
-              yarn add @nekosu/maa-node-${os}-${cpu}@${ver} --ignore-platform
-            done
-          done
-
       - name: Package extension
         shell: bash
         run: |

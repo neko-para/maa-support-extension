@@ -1,8 +1,8 @@
-import * as maa from '@nekosu/maa-node'
 import * as vscode from 'vscode'
 
 import { t } from '../locale'
-import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
+import { maa } from '../maa/loader'
+import { Interface, InterfaceConfig } from './type'
 
 type RemoveUndefined<T> = T extends undefined ? never : T
 

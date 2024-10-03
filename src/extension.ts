@@ -1,9 +1,9 @@
-import * as maa from '@nekosu/maa-node'
 import sms from 'source-map-support'
 import * as vscode from 'vscode'
 
 import { commands } from './command'
 import { loadServices, resetInstance } from './data'
+import { maa, setupMaa } from './maa/loader'
 import { PipelineCodeLensProvider } from './pipeline/codeLens'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
@@ -17,7 +17,16 @@ import { ProjectInterfaceWebProvider } from './projectInterface/web'
 
 sms.install()
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+  setupMaa(vscode.Uri.joinPath(context.extensionUri, 'maa').fsPath).then(succeeded => {
+    console.log('maa setup finished, ', succeeded ? 'succeeded' : 'failed')
+    if (succeeded) {
+      setup(context)
+    }
+  })
+}
+
+function setup(context: vscode.ExtensionContext) {
   console.log(maa.Global.version)
   maa.Global.debug_mode = true
   const logPath = context.storageUri

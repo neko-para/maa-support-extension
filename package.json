@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "@nekosu/maa-node": "^2.1.0",
+    "@npm/types": "^2.0.0",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.14.9",
@@ -16,6 +17,7 @@
     "@vue/tsconfig": "^0.5.1",
     "autoprefixer": "^10.4.19",
     "buffer": "^6.0.3",
+    "compressing": "^1.10.1",
     "esbuild": "^0.20.2",
     "highlight.js": "^11.10.0",
     "jimp": "^0.22.12",

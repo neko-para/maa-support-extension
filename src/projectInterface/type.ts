@@ -5,18 +5,15 @@ export type Interface = {
     name: string
     type: 'Adb' | 'Win32'
     adb?: {
-      touch?: number
-      key?: number
-      screencap?: number
+      screencap?: maa.api.ScreencapOrInputMethods
+      input?: maa.api.ScreencapOrInputMethods
       config?: unknown
     }
     win32?: {
-      method: 'Find' | 'Search' | 'Cursor' | 'Desktop' | 'Foreground'
-      class_name?: string
-      window_name?: string
-      touch?: number
-      key?: number
-      screencap?: number
+      class_regex?: string
+      window_regex?: string
+      screencap?: maa.api.ScreencapOrInputMethods
+      input?: maa.api.ScreencapOrInputMethods
     }
   }[]
   resource: {
@@ -26,7 +23,7 @@ export type Interface = {
   task: {
     name: string
     entry: string
-    param?: unknown
+    pipeline_override?: unknown
     option?: string[]
   }[]
   option?: Record<
@@ -34,23 +31,9 @@ export type Interface = {
     {
       cases: {
         name: string
-        param?: unknown
+        pipeline_override?: unknown
       }[]
       default_case?: string
-    }
-  >
-  recognizer?: Record<
-    string,
-    {
-      exec_path: string
-      exec_param?: string[]
-    }
-  >
-  action?: Record<
-    string,
-    {
-      exec_path: string
-      exec_param?: string[]
     }
   >
   version?: string
@@ -60,7 +43,6 @@ export type Interface = {
 export type InterfaceConfig = {
   controller: {
     name: string
-    type: 'Adb' | 'Win32'
   }
   adb?: {
     adb_path: string
@@ -68,7 +50,7 @@ export type InterfaceConfig = {
     config: unknown
   }
   win32?: {
-    hwnd?: maa.Win32Hwnd | null
+    hwnd?: maa.api.DesktopHandle | null
   }
   resource: string
   task: {
@@ -78,34 +60,30 @@ export type InterfaceConfig = {
       value: string
     }[]
   }[]
+  // gpu?: number
 }
 
 export type InterfaceRuntime = {
   controller_param:
-    | ({ ctype: 'adb' } & maa.AdbInfo)
+    | {
+        ctype: 'adb'
+        adb_path: string
+        address: string
+        screencap: maa.api.ScreencapOrInputMethods
+        input: maa.api.ScreencapOrInputMethods
+        config: string
+      }
     | {
         ctype: 'win32'
-        hwnd: maa.Win32Hwnd
-        controller_type: number
+        hwnd: maa.api.DesktopHandle
+        screencap: maa.api.ScreencapOrInputMethods
+        input: maa.api.ScreencapOrInputMethods
       }
   resource_path: string[]
   task: {
     name: string
     entry: string
-    param: unknown
+    pipeline_override: unknown
   }[]
-  recognizer: Record<
-    string,
-    {
-      exec_path: string
-      exec_param?: string[]
-    }
-  >
-  action: Record<
-    string,
-    {
-      exec_path: string
-      exec_param?: string[]
-    }
-  >
+  // gpu: number
 }

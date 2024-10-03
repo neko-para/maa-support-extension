@@ -5,9 +5,10 @@ export type RecoInfo = {
   draws: string[]
   info: {
     name: string
+    algorithm: string
     hit: boolean
-    hit_box: maa.Rect
-    detail_json: string
+    box: maa.api.Rect
+    detail: string
   }
 }
 
@@ -37,6 +38,9 @@ export type WebToExt =
       reco: number
     }
   | {
+      cmd: 'launch.stop'
+    }
+  | {
       cmd: 'crop.screencap'
     }
   | {
@@ -45,6 +49,6 @@ export type WebToExt =
   | {
       cmd: 'crop.download'
       image: string
-      roi: maa.FlatRect
-      expandRoi: maa.FlatRect
+      roi: maa.api.FlatRect
+      expandRoi: maa.api.FlatRect
     }

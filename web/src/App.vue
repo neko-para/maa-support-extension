@@ -1,20 +1,58 @@
 <script setup lang="ts">
 import hljs from 'highlight.js/lib/core'
 import hljsJson from 'highlight.js/lib/languages/json'
-import { NButton, NCard, NCode, NConfigProvider, NModal, NTabPane, NTabs } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NCode,
+  NConfigProvider,
+  NModal,
+  NTabPane,
+  NTabs,
+  darkTheme,
+  lightTheme
+} from 'naive-ui'
+import { onMounted, ref } from 'vue'
 
 import MCrop from '@/crop/MCrop.vue'
 import MLaunch from '@/launch/MLaunch.vue'
 
-import { activePage } from './data'
+import { activePage, themeType } from './data'
 import { send } from './ipc'
 import { recoInfo, showRecoInfo } from './launch/reco'
 
 hljs.registerLanguage('json', hljsJson)
+
+const theme = ref(lightTheme)
+
+function updateTheme() {
+  const type = document.body.getAttribute('class') ?? 'vscode-light'
+  if (/vscode-light/.test(type)) {
+    theme.value = lightTheme
+    themeType.value = 'light'
+  } else if (/vscode-dark/.test(type)) {
+    theme.value = darkTheme
+    themeType.value = 'dark'
+  } else {
+    theme.value = lightTheme
+    themeType.value = 'light'
+  }
+}
+
+onMounted(() => {
+  const obsv = new MutationObserver(() => {
+    updateTheme()
+  })
+  obsv.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+  })
+  updateTheme()
+})
 </script>
 
 <template>
-  <n-config-provider :hljs="hljs">
+  <n-config-provider :hljs="hljs" :theme="theme">
     <n-modal v-model:show="showRecoInfo">
       <n-card
         style="max-width: 90vw; margin-top: 5vh; max-height: 90vh; overflow-y: auto"
@@ -25,9 +63,9 @@ hljs.registerLanguage('json', hljsJson)
           <span> Hit </span>
           <span> {{ recoInfo.info.hit }} </span>
           <span> Box </span>
-          <span> {{ recoInfo.info.hit_box }} </span>
+          <span> {{ recoInfo.info.box }} </span>
           <span> Detail </span>
-          <n-code :code="recoInfo.info.detail_json" language="json"></n-code>
+          <n-code :code="recoInfo.info.detail" language="json"></n-code>
           <span> Raw </span>
           <img :src="recoInfo.raw" />
           <span> Draws </span>

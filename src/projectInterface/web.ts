@@ -54,50 +54,46 @@ export class ProjectInterfaceWebProvider extends Service {
       this.panel.webview.html = content
 
       this.panel.webview.onDidReceiveMessage(async (data: WebToExt) => {
+        const pilp = this.shared(ProjectInterfaceLaunchProvider)
+
         switch (data.cmd) {
           case 'launch.reco':
-            const info = new maa.RecoInfo(data.reco as maa.RecoId)
-            const raw = new maa.ImageBuffer()
-            const draws = new maa.ImageListBuffer()
-            const detailInfo = info.detail(raw, draws)
+            const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as maa.api.RecoId)
             if (!detailInfo) {
               return
             }
-            detailInfo.detail_json = JSON.stringify(JSON.parse(detailInfo.detail_json), null, 4)
+            detailInfo.detail = JSON.stringify(JSON.parse(detailInfo.detail), null, 4)
             this.post({
               cmd: 'show.reco',
-              raw: toPngDataUrl(raw.encoded),
-              draws: Array.from({ length: draws.size }, (_, i) =>
-                toPngDataUrl(draws.at(i).encoded)
-              ),
+              raw: toPngDataUrl(detailInfo.raw),
+              draws: detailInfo.draws.map(toPngDataUrl),
               info: detailInfo
             })
             return
+          case 'launch.stop':
+            pilp.tasker?.tasker.post_stop()
+            break
           case 'crop.screencap':
             if (!this.shared(PipelineRootStatusProvider).activateResource) {
               return
             }
-            const pilp = this.shared(ProjectInterfaceLaunchProvider)
             const runtime = await pilp.prepareRuntime(
               this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
             )
             if (!runtime) {
               return
             }
-            if (!(await pilp.setupInstance(runtime, true)) || !pilp.instance) {
+            if (!(await pilp.setupInstance(runtime, true)) || !pilp.tasker) {
               return
             }
-            await maa.controller_wait(
-              pilp.instance.controller.handle,
-              maa.controller_post_screencap(pilp.instance.controller.handle)
-            )
-            const image = new maa.ImageBuffer()
-            if (!maa.controller_get_image(pilp.instance.controller.handle, image.handle)) {
+            await pilp.tasker.controller.post_screencap().wait()
+            const image = pilp.tasker.controller.cached_image
+            if (!image) {
               return
             }
             this.post({
               cmd: 'crop.image',
-              image: toPngDataUrl(image.encoded)
+              image: toPngDataUrl(image)
             })
             break
           case 'crop.upload': {

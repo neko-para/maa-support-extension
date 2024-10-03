@@ -1,14 +1,12 @@
-import * as maa from '@nekosu/maa-node'
 import EventEmitter from 'events'
 import path from 'path'
-import { config, emit } from 'process'
 import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
 import { t } from '../locale'
 import { Interface, InterfaceConfig } from '../projectInterface/type'
-import { ResourceRoot } from '../utils/fs'
+import { JSONParse, JSONStringify } from '../utils/json'
 import { PipelineRootStatusProvider } from './root'
 
 export class PipelineProjectInterfaceProvider extends Service {
@@ -47,7 +45,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     vscode.workspace.onDidChangeTextDocument(e => {
       if (e.document.uri.toString() === this.interfaceDoc?.uri.toString()) {
         try {
-          this.interfaceJson = JSON.parse(this.interfaceDoc.getText())
+          this.interfaceJson = JSONParse(this.interfaceDoc.getText())
           this.updateConfigStatus()
           this.event.emit('interfaceChanged')
           this.event.emit('activateResourceChanged', this.resourcePaths())
@@ -57,16 +55,7 @@ export class PipelineProjectInterfaceProvider extends Service {
         }
       } else if (e.document.uri.toString() === this.interfaceConfigDoc?.uri.toString()) {
         try {
-          this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText(), (key, value) => {
-            if (key === 'hwnd') {
-              if (value !== null) {
-                return maa.wrap_window_hwnd(value)
-              } else {
-                return null
-              }
-            }
-            return value
-          })
+          this.interfaceConfigJson = JSONParse(this.interfaceConfigDoc.getText())
           this.updateConfigStatus()
           this.event.emit('activateResourceChanged', this.resourcePaths())
         } catch (_) {
@@ -95,7 +84,7 @@ export class PipelineProjectInterfaceProvider extends Service {
       return
     }
     try {
-      this.interfaceJson = JSON.parse(this.interfaceDoc.getText())
+      this.interfaceJson = JSONParse(this.interfaceDoc.getText())
       this.event.emit('interfaceChanged')
     } catch (_) {
       return
@@ -105,14 +94,7 @@ export class PipelineProjectInterfaceProvider extends Service {
         await vscode.commands.executeCommand(commands.LaunchInterface)
       }
       if (this.interfaceConfigDoc) {
-        this.interfaceConfigJson = JSON.parse(this.interfaceConfigDoc.getText(), (key, value) => {
-          if (value !== null) {
-            return maa.wrap_window_hwnd(value)
-          } else {
-            return null
-          }
-          return value
-        })
+        this.interfaceConfigJson = JSONParse(this.interfaceConfigDoc.getText())
         this.event.emit('activateResourceChanged', this.resourcePaths())
       }
     } catch (_) {
@@ -127,20 +109,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     }
 
     if (this.interfaceConfigJson) {
-      const data = JSON.stringify(
-        this.interfaceConfigJson,
-        (key, value) => {
-          if (key === 'hwnd') {
-            if (value !== null) {
-              return maa.unwrap_window_hwnd(value)
-            } else {
-              return null
-            }
-          }
-          return value
-        },
-        4
-      )
+      const data = JSONStringify(this.interfaceConfigJson)
       if (this.interfaceConfigDoc) {
         const edit = new vscode.WorkspaceEdit()
         const lastLine = this.interfaceConfigDoc.lineAt(this.interfaceConfigDoc.lineCount - 1)

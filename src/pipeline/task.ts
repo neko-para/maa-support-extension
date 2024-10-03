@@ -151,8 +151,8 @@ class PipelineTaskIndexLayer extends Service {
 
           switch (path[1]) {
             case 'next':
+            case 'interrupt':
             case 'timeout_next':
-            case 'runout_next':
               if (path.length >= 2 && path.length <= 3) {
                 taskInfo.taskRef.push({
                   task: value,

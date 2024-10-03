@@ -7,6 +7,7 @@ import { t } from '../locale'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
+import { JSONStringify } from '../utils/json'
 import {
   configController,
   configTask,
@@ -18,23 +19,14 @@ import {
 import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
 import { ProjectInterfaceWebProvider } from './web'
 
-type InstanceCache = {
-  instance: maa.InstanceBase
+type TaskerCache = {
+  tasker: maa.TaskerBase
   resource: maa.ResourceBase
   controller: maa.ControllerBase
 }
 
 function serializeRuntime(runtime: InterfaceRuntime) {
-  return JSON.stringify(runtime, (key, value) => {
-    if (key === 'hwnd') {
-      if (value !== null) {
-        return maa.unwrap_window_hwnd(value)
-      } else {
-        return null
-      }
-    }
-    return value
-  })
+  return JSONStringify(runtime)
 }
 
 export async function initConfig(data: Interface): Promise<InterfaceConfig | null> {
@@ -81,32 +73,20 @@ export async function initConfig(data: Interface): Promise<InterfaceConfig | nul
   return newConfig as InterfaceConfig
 }
 
-function overwriteTKSConfig(
-  base: number,
-  touch: number | null,
-  key: number | null,
-  screencap: number | null
-) {
-  const base_touch = base & 0xff
-  const base_key = (base >> 8) & 0xff
-  const base_screencap = (base >> 16) & 0xff
-  return (touch ?? base_touch) | ((key ?? base_key) << 8) | ((screencap ?? base_screencap) << 16)
-}
-
 export class ProjectInterfaceLaunchProvider extends Service {
   outputChannel: vscode.OutputChannel
-  instance: InstanceCache | null
+  tasker: TaskerCache | null
   instanceConfig: string | null
 
   constructor(context: vscode.ExtensionContext) {
     super(context)
 
     this.outputChannel = vscode.window.createOutputChannel('Maa')
-    this.instance = null
+    this.tasker = null
     this.instanceConfig = null
 
     this.defer = vscode.commands.registerCommand(commands.StopLaunch, async () => {
-      this.instance?.instance?.post_stop()
+      this.tasker?.tasker?.post_stop()
     })
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
@@ -373,15 +353,10 @@ export class ProjectInterfaceLaunchProvider extends Service {
       result.controller_param = {
         ctype: 'adb',
         adb_path: config.adb.adb_path,
-        adb_serial: config.adb.address,
-        adb_config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
-        adb_controller_type: overwriteTKSConfig(
-          maa.AdbControllerType.Input_Preset_AutoDetect |
-            maa.AdbControllerType.Screencap_FastestLosslessWay,
-          ctrlInfo.adb?.touch ?? null,
-          ctrlInfo.adb?.key ?? null,
-          ctrlInfo.adb?.screencap ?? null
-        )
+        address: config.adb.address,
+        config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
+        screencap: ctrlInfo.adb?.screencap ?? maa.api.AdbScreencapMethod.Default,
+        input: ctrlInfo.adb?.input ?? maa.api.AdbInputMethod.Default
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -401,14 +376,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
       result.controller_param = {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        controller_type: overwriteTKSConfig(
-          maa.Win32ControllerType.Touch_Seize |
-            maa.Win32ControllerType.Key_Seize |
-            maa.Win32ControllerType.Screencap_DXGI_DesktopDup,
-          ctrlInfo.win32?.touch ?? null,
-          ctrlInfo.win32?.key ?? null,
-          ctrlInfo.win32?.screencap ?? null
-        )
+        screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.DXGI_DesktopDup,
+        input: ctrlInfo.win32?.input ?? maa.api.Win32InputMethod.Seize
       }
     }
 
@@ -450,30 +419,17 @@ export class ProjectInterfaceLaunchProvider extends Service {
           return null
         }
 
-        Object.assign(param, csInfo.param ?? {})
+        Object.assign(param, csInfo.pipeline_override ?? {})
       }
 
       // 看看FW代码里面这玩意在前面还是后面
-      Object.assign(param, taskInfo.param ?? {})
+      Object.assign(param, taskInfo.pipeline_override ?? {})
 
       result.task.push({
         name: task.name,
         entry: taskInfo.entry,
-        param: param
+        pipeline_override: param
       })
-    }
-
-    result.recognizer = pip.interfaceJson?.recognizer ?? {}
-    result.action = pip.interfaceJson?.action ?? {}
-
-    for (const reco of Object.values(result.recognizer)) {
-      reco.exec_path = replaceVar(reco.exec_path)
-      reco.exec_param = (reco.exec_param ?? []).map(replaceVar)
-    }
-
-    for (const act of Object.values(result.action)) {
-      act.exec_path = replaceVar(act.exec_path)
-      act.exec_param = (act.exec_param ?? []).map(replaceVar)
     }
 
     return result as InterfaceRuntime
@@ -488,18 +444,17 @@ export class ProjectInterfaceLaunchProvider extends Service {
       }
     }
 
-    this.instance = null
+    this.tasker = null
     this.instanceConfig = null
 
     let controller: maa.ControllerBase
 
     if (runtime.controller_param.ctype === 'adb') {
-      controller = new maa.AdbController(runtime.controller_param)
+      const p = runtime.controller_param
+      controller = new maa.AdbController(p.adb_path, p.address, p.screencap, p.input, p.config)
     } else if (runtime.controller_param.ctype === 'win32') {
-      controller = new maa.Win32Controller(
-        runtime.controller_param.hwnd,
-        runtime.controller_param.controller_type
-      )
+      const p = runtime.controller_param
+      controller = new maa.Win32Controller(p.hwnd, p.screencap, p.input)
     } else {
       return false
     }
@@ -508,7 +463,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
       this.outputChannel.append(`${msg} ${detail}\n`)
     }
 
-    await controller.post_connection()
+    await controller.post_connection().wait()
 
     const resource = new maa.Resource()
 
@@ -517,45 +472,27 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
 
     for (const path of runtime.resource_path) {
-      await resource.post_path(path)
+      await resource.post_path(path).wait()
     }
 
-    const instance = new maa.Instance()
+    const tasker = new maa.Tasker()
 
-    instance.notify = (msg, detail) => {
+    tasker.notify = (msg, detail) => {
       this.outputChannel.append(`${msg} ${detail}\n`)
     }
 
-    instance.bind(controller)
-    instance.bind(resource)
+    tasker.bind(controller)
+    tasker.bind(resource)
 
-    for (const [name, reco] of Object.entries(runtime.recognizer)) {
-      maa.register_custom_recognizer_executor(
-        instance.handle,
-        name,
-        reco.exec_path,
-        reco.exec_param ?? []
-      )
-    }
-
-    for (const [name, act] of Object.entries(runtime.action)) {
-      maa.register_custom_action_executor(
-        instance.handle,
-        name,
-        act.exec_path,
-        act.exec_param ?? []
-      )
-    }
-
-    if (!instance.inited) {
-      instance.destroy()
+    if (!tasker.inited) {
+      tasker.destroy()
       controller.destroy()
       resource.destroy()
       return false
     }
 
-    this.instance = {
-      instance,
+    this.tasker = {
+      tasker: tasker,
       controller,
       resource
     }
@@ -565,7 +502,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
   }
 
   async launchTask(runtime: InterfaceRuntime, task: string) {
-    if (!(await this.setupInstance(runtime)) || !this.instance) {
+    if (!(await this.setupInstance(runtime)) || !this.tasker) {
       return
     }
 
@@ -575,8 +512,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
       cmd: 'launch.setup'
     })
 
-    const oldNotify = this.instance.instance.notify
-    this.instance.instance.notify = async (msg, details) => {
+    const oldNotify = this.tasker.tasker.notify
+    this.tasker.tasker.notify = async (msg, details) => {
       await oldNotify(msg, details)
       piwp.post(
         {
@@ -588,11 +525,11 @@ export class ProjectInterfaceLaunchProvider extends Service {
       )
     }
 
-    await this.instance.instance.post_task(task).wait()
+    await this.tasker.tasker.post_pipeline(task).wait()
   }
 
   async launchRuntime(runtime: InterfaceRuntime) {
-    if (!(await this.setupInstance(runtime)) || !this.instance) {
+    if (!(await this.setupInstance(runtime)) || !this.tasker) {
       return
     }
 
@@ -602,8 +539,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
       cmd: 'launch.setup'
     })
 
-    const oldNotify = this.instance.instance.notify
-    this.instance.instance.notify = async (msg, details) => {
+    const oldNotify = this.tasker.tasker.notify
+    this.tasker.tasker.notify = async (msg, details) => {
       await oldNotify(msg, details)
       piwp.post(
         {
@@ -615,10 +552,10 @@ export class ProjectInterfaceLaunchProvider extends Service {
       )
     }
 
-    let last: Promise<maa.Status> = Promise.resolve(maa.Status.Failed)
+    let last
     for (const task of runtime.task) {
-      last = this.instance.instance
-        .post_task(task.entry, task.param as unknown as maa.PipelineDecl)
+      last = this.tasker.tasker
+        .post_pipeline(task.entry, task.pipeline_override as unknown as any)
         .wait()
     }
     await last

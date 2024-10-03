@@ -18,11 +18,11 @@ import { ProjectInterfaceWebProvider } from './projectInterface/web'
 sms.install()
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log(maa.version())
-  maa.set_global_option('DebugMessage', true)
+  console.log(maa.Global.version)
+  maa.Global.debug_mode = true
   const logPath = context.storageUri
   if (logPath) {
-    maa.set_global_option('LogDir', logPath.fsPath)
+    maa.Global.log_dir = logPath.fsPath
     vscode.commands.registerCommand(commands.OpenLog, async () => {
       const doc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(logPath, 'maa.log'))
       if (doc) {

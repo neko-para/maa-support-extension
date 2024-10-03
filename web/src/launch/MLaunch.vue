@@ -1,39 +1,48 @@
 <script setup lang="ts">
 import { NButton } from 'naive-ui'
 
-import { send } from '../ipc'
+import ActButton from '@/components/ActButton.vue'
+import GroupBox from '@/components/GroupBox.vue'
+import RecoButton from '@/components/RecoButton.vue'
+import { send } from '@/ipc'
+
 import { taskList } from './task'
 
-function requestReco(id?: number) {
-  if (typeof id !== 'number') {
-    return
-  }
+function requestStop() {
   send({
-    cmd: 'launch.reco',
-    reco: id
+    cmd: 'launch.stop'
   })
 }
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2">
-    <div v-for="(node, idx) in taskList.node" :key="idx" class="flex flex-col">
-      <div class="flex flex-col gap-2 border p-2">
-        <span class="font-bold self-center"> {{ node.pre_hit_task }} </span>
-        <template v-for="(reco, ridx) in node.reco_list" :key="ridx">
-          <n-button @click="requestReco(reco.reco_id)">
-            <span v-if="reco.status === 'pending'" class="text-slate-500">
-              {{ reco.task }} {{ reco.reco_id ?? '' }}
-            </span>
-            <span v-else-if="reco.status === 'success'" class="text-green-500">
-              {{ reco.task }} {{ reco.reco_id ?? '' }}
-            </span>
-            <span v-else-if="reco.status === 'failed'" class="text-red-500">
-              {{ reco.task }} {{ reco.reco_id ?? '' }}
-            </span>
-          </n-button>
-        </template>
-      </div>
+  <div class="flex flex-col gap-2">
+    <div class="flex gap-2">
+      <n-button type="primary" @click="requestStop"> stop </n-button>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <group-box v-for="(task, idx) in taskList.info" :key="idx" :title="task.info.entry">
+        <div class="flex p-2 gap-2 flex-wrap">
+          <group-box v-for="(nl, nidx) in task.nexts" :key="nidx" :title="nl.info.name">
+            <div class="flex flex-col gap-2">
+              <template v-for="nlc in nl.info.list.length" :key="nlc">
+                <reco-button
+                  v-if="nl.recos[nlc]"
+                  :id="nl.recos[nlc].info.reco_id"
+                  :status="nl.recos[nlc].state"
+                >
+                  {{ nl.recos[nlc].info.name }} - {{ nl.recos[nlc].info.reco_id }}
+                </reco-button>
+                <span v-else></span>
+              </template>
+              <span></span>
+              <act-button v-if="nl.act" :status="nl.act.state">
+                {{ nl.act.info.name }} - {{ nl.act.info.node_id }}
+              </act-button>
+            </div>
+          </group-box>
+        </div>
+      </group-box>
     </div>
   </div>
 </template>

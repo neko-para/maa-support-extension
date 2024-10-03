@@ -1,92 +1,115 @@
 import { ref } from 'vue'
 
-import { type DebugMessageDetail, Message } from '../msg'
+import {
+  type ActionMessage,
+  Message,
+  type NextListMessage,
+  type RecognitionMessage,
+  type TaskMessage
+} from '../msg'
 
-type TaskNode = {
-  task_id: number
-  pre_hit_task: string
-  reco_list: {
-    task: string
-    status: 'success' | 'failed' | 'pending'
-    reco_id?: number
-  }[]
-  hit?: string
-  status: 'pending' | 'running' | 'success' | 'failed'
+type TaskScope = {
+  info: TaskMessage
+  state: 'running' | 'success' | 'failed'
+  nexts: NextListScope[]
+}
+
+type NextListScope = {
+  info: NextListMessage
+  state: 'running' | 'success' | 'failed'
+  recos: RecoScope[]
+  act: ActionScope | null
+}
+
+type RecoScope = {
+  info: RecognitionMessage
+  state: 'running' | 'success' | 'failed'
+}
+
+type ActionScope = {
+  info: ActionMessage
+  state: 'running' | 'success' | 'failed'
 }
 
 export class TaskList {
-  node: TaskNode[] = []
+  info: TaskScope[] = []
 
-  push<M extends Message>(msg: M, detail_: DebugMessageDetail[M]) {
+  get lastInfo() {
+    return this.info[this.info.length - 1]
+  }
+
+  get lastNLInfo() {
+    return this.lastInfo.nexts[this.lastInfo.nexts.length - 1]
+  }
+
+  get lastRInfo() {
+    return this.lastNLInfo.recos[this.lastNLInfo.recos.length - 1]
+  }
+
+  push(msg: Message, detail_: unknown) {
     switch (msg) {
-      case Message.Task_Debug_ListToRecognize: {
-        const detail = detail_ as DebugMessageDetail[Message.Task_Debug_ListToRecognize]
-        this.node.push({
-          task_id: detail.task_id,
-          pre_hit_task: detail.pre_hit_task,
-          reco_list: detail.list.map(task => ({
-            task,
-            status: 'pending'
-          })),
-          status: 'pending'
+      case Message.Tasker_Task_Starting:
+        this.info.push({
+          info: detail_ as TaskMessage,
+          state: 'running',
+          nexts: []
         })
         break
-      }
-      case Message.Task_Debug_RecognitionResult: {
-        const detail = detail_ as DebugMessageDetail[Message.Task_Debug_RecognitionResult]
-        if (!this.node.length) {
-          return
-        }
-        const n = this.node[this.node.length - 1]
-        for (const r of n.reco_list) {
-          if (r.task === detail.name) {
-            r.status = detail.recognition.hit ? 'success' : 'failed'
-            r.reco_id = detail.recognition.id
-          }
+      case Message.Tasker_Task_Succeeded:
+        this.lastInfo.state = 'success'
+        this.lastInfo.info = detail_ as TaskMessage
+        break
+      case Message.Tasker_Task_Failed:
+        this.lastInfo.state = 'failed'
+        this.lastInfo.info = detail_ as TaskMessage
+        break
+
+      case Message.Task_NextList_Starting:
+        this.lastInfo.nexts.push({
+          info: detail_ as NextListMessage,
+          state: 'running',
+          recos: [],
+          act: null
+        })
+        break
+      case Message.Task_NextList_Succeeded:
+        this.lastNLInfo.state = 'success'
+        this.lastNLInfo.info = detail_ as NextListMessage
+        break
+      case Message.Task_NextList_Failed:
+        this.lastNLInfo.state = 'failed'
+        this.lastNLInfo.info = detail_ as NextListMessage
+        break
+
+      case Message.Task_Recognition_Starting:
+        this.lastNLInfo.recos.push({
+          info: detail_ as RecognitionMessage,
+          state: 'running'
+        })
+        break
+      case Message.Task_Recognition_Succeeded:
+        this.lastRInfo.state = 'success'
+        this.lastRInfo.info = detail_ as RecognitionMessage
+        break
+      case Message.Task_Recognition_Failed:
+        this.lastRInfo.state = 'failed'
+        this.lastRInfo.info = detail_ as RecognitionMessage
+        break
+
+      case Message.Task_Action_Starting:
+        this.lastNLInfo.act = {
+          info: detail_ as ActionMessage,
+          state: 'running'
         }
         break
-      }
-      case Message.Task_Debug_Hit: {
-        const detail = detail_ as DebugMessageDetail[Message.Task_Debug_Hit]
-        if (!this.node.length) {
-          return
-        }
-        const n = this.node[this.node.length - 1]
-        n.hit = detail.name
+      case Message.Task_Action_Succeeded:
+        this.lastNLInfo.act!.state = 'success'
+        this.lastNLInfo.act!.info = detail_ as ActionMessage
         break
-      }
-      case Message.Task_Debug_ReadyToRun: {
-        if (!this.node.length) {
-          return
-        }
-        const n = this.node[this.node.length - 1]
-        n.status = 'running'
+      case Message.Task_Action_Failed:
+        this.lastNLInfo.act!.state = 'failed'
+        this.lastNLInfo.act!.info = detail_ as ActionMessage
         break
-      }
-      case Message.Task_Debug_Completed: {
-        if (!this.node.length) {
-          return
-        }
-        const n = this.node[this.node.length - 1]
-        n.status = 'success'
-        break
-      }
-      case Message.Task_Debug_Runout: {
-        if (!this.node.length) {
-          return
-        }
-        const n = this.node[this.node.length - 1]
-        n.status = 'failed'
-        break
-      }
-      case Message.Task_Debug_MissAll: {
-        if (!this.node.length) {
-          return
-        }
-        const n = this.node[this.node.length - 1]
-        n.status = 'failed'
-        break
-      }
     }
   }
 }

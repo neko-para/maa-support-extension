@@ -1,6 +1,14 @@
 import { type JSONPath, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
+export let JSONParse: (x: string) => any
+export let JSONStringify: (x: any) => string
+
+import('json-with-bigint').then(m => {
+  JSONParse = m.JSONParse
+  JSONStringify = m.JSONStringify
+})
+
 export function visitJsonDocument(
   doc: vscode.TextDocument,
   visitor: {

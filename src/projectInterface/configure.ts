@@ -32,8 +32,7 @@ export async function selectController(
   }
 
   return {
-    name: ctrlRes.label,
-    type: ctrlInfo.type
+    name: ctrlRes.label
   }
 }
 
@@ -57,10 +56,10 @@ export async function configController(
     }
 
     const devRes = await vscode.window.showQuickPick(
-      devices.map((dev, idx): vscode.QuickPickItem & { index: number } => {
+      devices.map(([name, adb_path, adb_serial], idx): vscode.QuickPickItem & { index: number } => {
         return {
-          label: dev.name,
-          description: `${dev.name} - ${dev.adb_serial} - ${dev.adb_path}`,
+          label: name,
+          description: `${name} - ${adb_serial} - ${adb_path}`,
           index: idx
         }
       }),
@@ -73,13 +72,14 @@ export async function configController(
       return null
     }
 
-    const dev = devices[devRes.index]
+    const [name, adb_path, adb_serial, screencap_methods, input_methods, adb_config] =
+      devices[devRes.index]
 
     return {
       adb: {
-        adb_path: dev.adb_path,
-        address: dev.adb_serial,
-        config: JSON.parse(dev.adb_config)
+        adb_path: adb_path,
+        address: adb_serial,
+        config: JSON.parse(adb_config)
       }
     }
   } else if (ctrlInfo.type === 'Win32') {
@@ -88,39 +88,24 @@ export async function configController(
       return null
     }
 
-    let hwnds: maa.Win32Hwnd[]
-    switch (ctrlInfo.win32.method) {
-      case 'Find':
-        hwnds = maa.Win32Controller.find(
-          'find',
-          ctrlInfo.win32.class_name ?? '',
-          ctrlInfo.win32.window_name ?? ''
-        )
-        break
-      case 'Search':
-        hwnds = maa.Win32Controller.find(
-          'search',
-          ctrlInfo.win32.class_name ?? '',
-          ctrlInfo.win32.window_name ?? ''
-        )
-        break
-      case 'Cursor':
-        hwnds = [maa.Win32Controller.get('cursor')]
-        break
-      case 'Desktop':
-        hwnds = [maa.Win32Controller.get('desktop')]
-        break
-      case 'Foreground':
-        hwnds = [maa.Win32Controller.get('foreground')]
-        break
+    const allWnds = (await maa.Win32Controller.find()) ?? []
+    let hwnds = allWnds
+
+    if (ctrlInfo.win32.window_regex) {
+      const reg = new RegExp(ctrlInfo.win32.window_regex)
+      hwnds = hwnds.filter(x => reg.test(x[2]))
+    }
+
+    if (ctrlInfo.win32.class_regex) {
+      const reg = new RegExp(ctrlInfo.win32.class_regex)
+      hwnds = hwnds.filter(x => reg.test(x[1]))
     }
 
     const hwndRes = await vscode.window.showQuickPick(
-      hwnds.map(hwnd => {
-        const info = maa.Win32Controller.info(hwnd)
+      hwnds.map(([handle, class_name, window_name]) => {
         return {
-          label: `${maa.unwrap_window_hwnd(hwnd)} - ${info.class_name} - ${info.window_name}`,
-          hwnd: hwnd
+          label: `${handle} - ${class_name} - ${window_name}`,
+          hwnd: handle
         }
       }),
       {

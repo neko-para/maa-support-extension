@@ -156,6 +156,10 @@ export class PipelineProjectInterfaceProvider extends Service {
   }
 
   updateConfigStatus() {
+    if (!this.shared(PipelineRootStatusProvider).activateResource) {
+      this.configStatusItem.hide()
+      return
+    }
     if (!this.interfaceJson) {
       this.configStatusItem.color = new vscode.ThemeColor('statusBarItem.errorBackground')
       this.configStatusItem.text = t('maa.pipeline.status.load-interface-failed')

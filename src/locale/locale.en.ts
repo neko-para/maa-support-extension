@@ -38,6 +38,7 @@ export default {
   'maa.pipeline.error.conflict-task': 'Conflict task {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
+  'maa.pipeline.error.duplicate-next': 'Duplicate route {0}',
   'maa.pipeline.error.rename-not-allowed': 'Rename: not allowed',
   'maa.pipeline.error.rename-already-exists': 'Rename: already exists',
 

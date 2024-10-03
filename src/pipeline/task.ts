@@ -42,6 +42,7 @@ export type TaskIndexInfo = {
   taskRef: {
     task: string
     range: vscode.Range
+    belong: 'next' | 'target'
   }[]
   imageRef: {
     path: string
@@ -157,7 +158,8 @@ class PipelineTaskIndexLayer extends Service {
               if (path.length >= 2 && path.length <= 3) {
                 taskInfo.taskRef.push({
                   task: value,
-                  range: range
+                  range: range,
+                  belong: 'next'
                 })
               }
               break
@@ -167,7 +169,8 @@ class PipelineTaskIndexLayer extends Service {
               if (path.length === 2) {
                 taskInfo.taskRef.push({
                   task: value,
-                  range: range
+                  range: range,
+                  belong: 'target'
                 })
               }
               break
@@ -184,7 +187,8 @@ class PipelineTaskIndexLayer extends Service {
               if (path[2] === 'target' && path.length >= 3 && path.length <= 4) {
                 taskInfo.taskRef.push({
                   task: value,
-                  range: range
+                  range: range,
+                  belong: 'target'
                 })
               }
               break
@@ -367,6 +371,24 @@ export class PipelineTaskIndexProvider extends Service {
                 vscode.DiagnosticSeverity.Error
               )
             ])
+          }
+        }
+
+        // check duplicate next task
+        const nextRefs = taskInfo.taskRef.filter(x => x.belong === 'next')
+        const nextFirst: Set<string> = new Set()
+        for (const ref of nextRefs) {
+          if (nextFirst.has(ref.task)) {
+            result.push([
+              taskInfo.uri,
+              new vscode.Diagnostic(
+                ref.range,
+                t('maa.pipeline.error.duplicate-next', ref.task),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          } else {
+            nextFirst.add(ref.task)
           }
         }
       }

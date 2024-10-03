@@ -38,6 +38,7 @@ export default {
   'maa.pipeline.error.conflict-task': '冲突任务 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-task': '未知任务 {0}',
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
+  'maa.pipeline.error.duplicate-next': '重复路由 {0}',
   'maa.pipeline.error.rename-not-allowed': '重命名: 无效',
   'maa.pipeline.error.rename-already-exists': '重命名: 已存在',
 

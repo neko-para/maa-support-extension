@@ -1,5 +1,5 @@
 import compressing from 'compressing'
-import { existsSync } from 'fs'
+import { close, constants, existsSync, open } from 'fs'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import * as vscode from 'vscode'
@@ -55,6 +55,24 @@ async function releaseTarball(pkg: string, ver: string, dir: string) {
 export async function setupMaa(dir: string) {
   await fs.mkdir(dir, { recursive: true })
 
+  const excludeTag = path.join(dir, '.lock')
+
+  const block = await new Promise<boolean>(resolve => {
+    open(excludeTag, constants.O_CREAT | constants.O_EXCL, (err, fd) => {
+      if (err) {
+        resolve(false)
+      } else {
+        close(fd)
+        resolve(true)
+      }
+    })
+  })
+
+  if (!block) {
+    vscode.window.showErrorMessage('Another instance of extension detected')
+    return false
+  }
+
   const rootVerFile = path.join(dir, 'maa-node.version')
   const platVerFile = path.join(dir, 'maa-node-platform.version')
 
@@ -104,6 +122,8 @@ export async function setupMaa(dir: string) {
   }
 
   const [gotRoot, gotPlat] = await Promise.all([checkRoot(), checkPlat()])
+
+  await fs.rm(excludeTag)
 
   if (!(gotRoot && gotPlat)) {
     return false

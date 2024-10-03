@@ -1,4 +1,7 @@
 {
   "extends": ["@tsconfig/node20/tsconfig.json"],
-  "include": ["src/**/*.ts"]
+  "compilerOptions": {
+    "allowJs": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.js"]
 }

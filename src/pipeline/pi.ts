@@ -6,7 +6,7 @@ import { commands } from '../command'
 import { Service } from '../data'
 import { t } from '../locale'
 import { Interface, InterfaceConfig } from '../projectInterface/type'
-import { JSONParse, JSONStringify } from '../utils/json'
+import { JSONParse, JSONStringify } from '../utils/json-bigint'
 import { PipelineRootStatusProvider } from './root'
 
 export class PipelineProjectInterfaceProvider extends Service {
@@ -109,7 +109,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     }
 
     if (this.interfaceConfigJson) {
-      const data = JSONStringify(this.interfaceConfigJson)
+      const data = JSONStringify(this.interfaceConfigJson, 4)
       if (this.interfaceConfigDoc) {
         const edit = new vscode.WorkspaceEdit()
         const lastLine = this.interfaceConfigDoc.lineAt(this.interfaceConfigDoc.lineCount - 1)

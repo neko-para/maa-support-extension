@@ -7,7 +7,7 @@ import { t } from '../locale'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
-import { JSONStringify } from '../utils/json'
+import { JSONStringify } from '../utils/json-bigint'
 import {
   configController,
   configTask,

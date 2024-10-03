@@ -152,6 +152,7 @@ class PipelineTaskIndexLayer extends Service {
           switch (path[1]) {
             case 'next':
             case 'interrupt':
+            case 'on_error':
             case 'timeout_next':
               if (path.length >= 2 && path.length <= 3) {
                 taskInfo.taskRef.push({
@@ -177,7 +178,15 @@ class PipelineTaskIndexLayer extends Service {
                   range: range
                 })
               }
-
+              break
+            case 'pre_wait_freezes':
+            case 'post_wait_freezes':
+              if (path[2] === 'target' && path.length >= 3 && path.length <= 4) {
+                taskInfo.taskRef.push({
+                  task: value,
+                  range: range
+                })
+              }
               break
           }
         }

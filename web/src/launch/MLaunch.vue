@@ -4,6 +4,7 @@ import { NButton } from 'naive-ui'
 import ActButton from '@/components/ActButton.vue'
 import GroupBox from '@/components/GroupBox.vue'
 import RecoButton from '@/components/RecoButton.vue'
+import StateLabel from '@/components/StateLabel.vue'
 import { send } from '@/ipc'
 
 import { taskList } from './task'
@@ -27,13 +28,15 @@ function requestStop() {
             <div class="flex flex-col gap-2">
               <template v-for="nlc in nl.info.list.length" :key="nlc">
                 <reco-button
-                  v-if="nl.recos[nlc]"
-                  :id="nl.recos[nlc].info.reco_id"
-                  :status="nl.recos[nlc].state"
+                  v-if="nl.recos[nlc - 1]"
+                  :id="nl.recos[nlc - 1].info.reco_id"
+                  :status="nl.recos[nlc - 1].state"
                 >
-                  {{ nl.recos[nlc].info.name }} - {{ nl.recos[nlc].info.reco_id }}
+                  {{ nl.recos[nlc - 1].info.name }} - {{ nl.recos[nlc - 1].info.reco_id }}
                 </reco-button>
-                <span v-else></span>
+                <state-label v-else :status="null">
+                  {{ nl.info.list[nlc - 1] }}
+                </state-label>
               </template>
               <span></span>
               <act-button v-if="nl.act" :status="nl.act.state">

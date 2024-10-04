@@ -129,8 +129,7 @@ export async function setupMaa(dir: string) {
     return false
   }
 
-  const oldPaths = (process.env['NODE_PATH'] ?? '').split(path.delimiter).filter(x => x)
-  process.env['NODE_PATH'] = [dir, ...oldPaths].join(path.delimiter)
+  module.paths.push(dir)
 
   maa = require('@nekosu/maa-node')
 

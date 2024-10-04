@@ -18,7 +18,7 @@ import { ProjectInterfaceWebProvider } from './projectInterface/web'
 sms.install()
 
 export async function activate(context: vscode.ExtensionContext) {
-  setupMaa(vscode.Uri.joinPath(context.extensionUri, 'maa').fsPath).then(succeeded => {
+  setupMaa(vscode.Uri.joinPath(context.extensionUri, 'maa/node_modules').fsPath).then(succeeded => {
     console.log('maa setup finished, ', succeeded ? 'succeeded' : 'failed')
     if (succeeded) {
       setup(context)

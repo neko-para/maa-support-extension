@@ -16,6 +16,7 @@
     "@vitejs/plugin-vue": "^5.0.5",
     "@vue/tsconfig": "^0.5.1",
     "autoprefixer": "^10.4.19",
+    "axios": "^1.7.7",
     "buffer": "^6.0.3",
     "compressing": "^1.10.1",
     "esbuild": "^0.20.2",

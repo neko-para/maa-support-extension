@@ -1,3 +1,4 @@
+import axios from 'axios'
 import compressing from 'compressing'
 import { close, constants, existsSync, open } from 'fs'
 import * as fs from 'fs/promises'
@@ -14,6 +15,31 @@ const registryUrl = 'https://registry.npmmirror.com/'
 const rootPackage = '@nekosu/maa-node'
 const platformPackage = `@nekosu/maa-node-${process.platform}-${process.arch}`
 
+async function performDownload(url: string, title: string) {
+  return vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title
+    },
+    async progress => {
+      return (
+        await axios({
+          url,
+          responseType: 'arraybuffer',
+          onDownloadProgress(progressEvent) {
+            if (progressEvent.total) {
+              progress.report({
+                increment: (progressEvent.bytes / progressEvent.total) * 100,
+                message: `${((progressEvent.loaded / progressEvent.total) * 100).toFixed(1)}%`
+              })
+            }
+          }
+        })
+      ).data as ArrayBuffer
+    }
+  )
+}
+
 async function fetchManifest(pkg: string) {
   return (await (await fetch(`${registryUrl}${encodeURIComponent(pkg)}`)).json()) as Manifest
 }
@@ -24,7 +50,7 @@ async function fetchTarball(pkg: string, ver: string) {
     return null
   }
   const regver = reg.versions[ver]
-  return await (await fetch(regver.dist.tarball)).arrayBuffer()
+  return await performDownload(regver.dist.tarball, `Downloading ${pkg}@${ver}`)
 }
 
 async function releaseTarball(pkg: string, ver: string, dir: string) {
@@ -82,17 +108,7 @@ export async function setupMaa(dir: string) {
   const checkRoot = async () => {
     if (curRootVer !== maaVersion) {
       console.log('current', curRootVer, 'expect', maaVersion)
-      if (
-        !(await vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: `downloading ${rootPackage}@${maaVersion}`
-          },
-          () => {
-            return releaseTarball(rootPackage, maaVersion, dir)
-          }
-        ))
-      ) {
+      if (!(await releaseTarball(rootPackage, maaVersion, dir))) {
         return false
       }
       await fs.writeFile(rootVerFile, maaVersion)
@@ -103,17 +119,7 @@ export async function setupMaa(dir: string) {
   const checkPlat = async () => {
     if (curPlatVer !== maaVersion) {
       console.log('current', curPlatVer, 'expect', maaVersion)
-      if (
-        !(await vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: `downloading ${platformPackage}@${maaVersion}`
-          },
-          () => {
-            return releaseTarball(platformPackage, maaVersion, dir)
-          }
-        ))
-      ) {
+      if (!(await releaseTarball(platformPackage, maaVersion, dir))) {
         return false
       }
       await fs.writeFile(platVerFile, maaVersion)

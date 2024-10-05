@@ -48,6 +48,10 @@
         "command": "maa.open-web"
       },
       {
+        "title": "%maa.command.open-maa-folder%",
+        "command": "maa.open-maa-folder"
+      },
+      {
         "title": "Maa: query location (debug)",
         "command": "maa.debug.query-location"
       }

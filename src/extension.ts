@@ -1,3 +1,4 @@
+import open from 'open'
 import sms from 'source-map-support'
 import * as vscode from 'vscode'
 
@@ -18,6 +19,10 @@ import { ProjectInterfaceWebProvider } from './projectInterface/web'
 sms.install()
 
 export async function activate(context: vscode.ExtensionContext) {
+  vscode.commands.registerCommand(commands.OpenMaaFolder, async () => {
+    open(context.globalStorageUri.fsPath)
+  })
+
   setupMaa(vscode.Uri.joinPath(context.globalStorageUri, 'node_modules').fsPath).then(succeeded => {
     console.log('maa setup finished, ', succeeded ? 'succeeded' : 'failed')
     if (succeeded) {

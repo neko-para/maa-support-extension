@@ -5,5 +5,6 @@
   "maa.command.launch-task": "Maa: 执行任务",
   "maa.command.stop-launch": "Maa: 停止执行",
   "maa.command.open-web": "Maa: 打开Webview",
-  "maa.command.launch-interface": "Maa: 执行interface"
+  "maa.command.launch-interface": "Maa: 执行interface",
+  "maa.command.open-maa-folder": "Maa: 打开maa-node目录"
 }

@@ -109,6 +109,8 @@ const cropBoxExpand = computed<Box>(() => {
     .intersect(Box.from(new Pos(), imageSize.value))
 })
 const current = ref<Pos>(new Pos())
+const pickColor = ref(false)
+const pickedColor = ref<[r: number, g: number, b: number] | null>(null)
 
 const cropBoxView = computed<Box>({
   get() {
@@ -224,6 +226,8 @@ function onMouseMove(ev: PointerEvent) {
 }
 
 function onMouseUp(ev: PointerEvent) {
+  pickColor.value = false
+
   if (cornerMoveDrag.value.state && ev.button === 0) {
     cornerMoveDrag.value.up()
     canvasEl.value!.releasePointerCapture(ev.pointerId)
@@ -255,6 +259,12 @@ function draw(ctx: CanvasRenderingContext2D) {
       ...imageSize.value.flat(),
       ...viewport.value.toView(Box.from(new Pos(), imageSize.value)).flat()
     )
+
+    if (pickColor.value) {
+      const pos = current.value.round()
+      const clr = ctx.getImageData(pos.x, pos.y, 1, 1).data
+      pickedColor.value = [clr[0], clr[1], clr[2]]
+    }
   }
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
   ctx.fillRect(...cropBoxView.value.flat())
@@ -431,6 +441,15 @@ async function download() {
       <span class="select-none">
         suggest roi: <span class="select-all">{{ cropBoxExpand.flat() }}</span>
       </span>
+      <div class="flex items-center gap-2" v-if="pickedColor">
+        <span class="select-none">
+          picked color: <span class="select-all">{{ pickedColor.join(', ') }}</span>
+        </span>
+        <div
+          style="width: 32px; height: 32px"
+          :style="`background-color: rgb(${pickedColor.join(',')});`"
+        ></div>
+      </div>
     </div>
     <div class="flex items-center gap-2">
       <n-button @click="screencap" :loading="loading"> screencap </n-button>
@@ -442,6 +461,7 @@ async function download() {
       <!-- <n-button @click="resize" :loading="resizing"> resize </n-button> -->
       <n-button @click="upload"> upload </n-button>
       <n-button @click="download"> download </n-button>
+      <n-button @click="pickColor = !pickColor"> pick color </n-button>
       <span> 左键移动裁剪区域，中键移动视图，右键裁剪；ceil对齐像素，bound移除出界范围 </span>
     </div>
     <div ref="canvasSizeEl" class="relative flex-1">

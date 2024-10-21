@@ -52,6 +52,10 @@
         "command": "maa.open-maa-folder"
       },
       {
+        "title": "%maa.command.load-maa%",
+        "command": "maa.load-maa"
+      },
+      {
         "title": "Maa: query location (debug)",
         "command": "maa.debug.query-location"
       }

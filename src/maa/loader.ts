@@ -3,6 +3,7 @@ import compressing from 'compressing'
 import { close, constants, existsSync, open } from 'fs'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import lock from 'proper-lockfile'
 import * as vscode from 'vscode'
 
 import type { Manifest } from './npm'
@@ -81,21 +82,15 @@ async function releaseTarball(pkg: string, ver: string, dir: string) {
 export async function setupMaa(dir: string) {
   await fs.mkdir(dir, { recursive: true })
 
-  const excludeTag = path.join(dir, '.lock')
-
-  const block = await new Promise<boolean>(resolve => {
-    open(excludeTag, constants.O_CREAT | constants.O_EXCL, (err, fd) => {
-      if (err) {
-        resolve(false)
-      } else {
-        close(fd)
-        resolve(true)
-      }
-    })
+  const release = await lock.lock(dir).catch(err => {
+    console.log(err)
+    return null
   })
 
-  if (!block) {
-    vscode.window.showErrorMessage('Another instance of extension detected')
+  if (!release) {
+    vscode.window.showErrorMessage(
+      'Another instance of extension detected.\nTry closing other VSCode window and reopen this window later.'
+    )
     return false
   }
 
@@ -129,7 +124,7 @@ export async function setupMaa(dir: string) {
 
   const [gotRoot, gotPlat] = await Promise.all([checkRoot(), checkPlat()])
 
-  await fs.rm(excludeTag)
+  await release()
 
   if (!(gotRoot && gotPlat)) {
     return false

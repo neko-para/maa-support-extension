@@ -6,5 +6,6 @@
   "maa.command.stop-launch": "Maa: 停止执行",
   "maa.command.open-web": "Maa: 打开Webview",
   "maa.command.launch-interface": "Maa: 执行interface",
-  "maa.command.open-maa-folder": "Maa: 打开maa-node目录"
+  "maa.command.open-maa-folder": "Maa: 打开maa-node目录",
+  "maa.command.load-maa": "Maa: 加载maa-node, 如果没有加载的话"
 }

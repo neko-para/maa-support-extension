@@ -10,7 +10,7 @@ import type { Manifest } from './npm'
 
 export let maa: typeof import('@nekosu/maa-node')
 
-const maaVersion = '2.1.1'
+const maaVersion = '2.2.2'
 const registryUrl = 'https://registry.npmmirror.com/'
 
 const rootPackage = '@nekosu/maa-node'

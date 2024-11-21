@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@nekosu/maa-node':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.2.2
+        version: 2.2.2
       '@npm/types':
         specifier: ^2.0.0
         version: 2.0.0
@@ -649,38 +649,38 @@ packages:
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
 
-  '@nekosu/maa-node-darwin-arm64@2.1.1':
-    resolution: {integrity: sha512-Y13Ou7mY+Xcpq8qzk6rJHR0Yho87600LxdCqJf4q8AxjU2r8SJQnNAn9rPsdPt75y9ZT7kXTuy2Uu5NpLYU5Ng==}
+  '@nekosu/maa-node-darwin-arm64@2.2.2':
+    resolution: {integrity: sha512-rCyHuh5/rjAy5OuvEUtmYzHbvgelNDh9ake3OOQPYaEF4zVyOr7YMP6uttnqmPCaTPEVJyzY49ydKDqnxeF2UA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@nekosu/maa-node-darwin-x64@2.1.1':
-    resolution: {integrity: sha512-hXJ+s22H0PvKvZH+d3bYHPQ2h0Nry7ESl3DM8rDeUBLcDybJhqwgiSFdSoHonhMdgAaqvRsFh235HRJAWIS1mQ==}
+  '@nekosu/maa-node-darwin-x64@2.2.2':
+    resolution: {integrity: sha512-GpExXpmRRHl0botZXLEnDnMopBZAp+SxEW2c5KJGru3EispEcsBnWusyaZF1pYfplXJOYrOmjXNK5gfHoHzc9g==}
     cpu: [x64]
     os: [darwin]
 
-  '@nekosu/maa-node-linux-arm64@2.1.1':
-    resolution: {integrity: sha512-TWZZ43S+jgz5DponQUxh51Iia6OyMQSw22f/FoeD6LZPnF5mg9OzFZiGrJ49g2CzFTQi4O5DeWb23onOWmGPzg==}
+  '@nekosu/maa-node-linux-arm64@2.2.2':
+    resolution: {integrity: sha512-Bfs1z1xOPOQ1JNgvvzSRLyTnVq7WNnw9leSvxqxEOJkMIls1y1MZ173mQilDxMpodZhFHtfHvsXt/Gnl513e4Q==}
     cpu: [arm64]
     os: [linux]
 
-  '@nekosu/maa-node-linux-x64@2.1.1':
-    resolution: {integrity: sha512-l0muLkvz+KXGEYoqFzqP9fxtU972Imh9GJqDsITEo8HqEsp3mW+0w6YGjHZNvQXBQB1SInWlqMmp8D6/7JjghQ==}
+  '@nekosu/maa-node-linux-x64@2.2.2':
+    resolution: {integrity: sha512-fKOay/CFxaU9loRtUlXWFUsiXpgU4sommM+hECLdkLsWhK0uypQ4XJ5d0WS3deP2AtCtMvgEHhUMq14QD5fpsA==}
     cpu: [x64]
     os: [linux]
 
-  '@nekosu/maa-node-win32-arm64@2.1.1':
-    resolution: {integrity: sha512-92eYpNIppSF9JgLW95v0p7wT+phZFl1XLOQuiFgVSPzlMNpm11bGPKD0IcxHGgMqiNH15JkLPPn2f6Fe4kduQw==}
+  '@nekosu/maa-node-win32-arm64@2.2.2':
+    resolution: {integrity: sha512-8JJkF7cYHWxxa5EnaWGu4ks1BqAOX8hmk/N87VjVWD8eBGy3ugAnrGI85IHy+4o/3o17o+GgzBFI/hUHScGhEg==}
     cpu: [arm64]
     os: [win32]
 
-  '@nekosu/maa-node-win32-x64@2.1.1':
-    resolution: {integrity: sha512-/u01NmsRXUnLVgpHqOOdvXR6YA4h6115bLrUMBiYHhn6ECODzcByPZY6CHNsBWUVceUsFEHTknizmvimGupWMQ==}
+  '@nekosu/maa-node-win32-x64@2.2.2':
+    resolution: {integrity: sha512-lRXt5lnZmw1gMlmvuUqdBFLoHn7SC+BdP2fcvYdvAExGW4H7CsrpDV6wk+Nehk9cl0qHB7Z3MnEtOtn2lccgwQ==}
     cpu: [x64]
     os: [win32]
 
-  '@nekosu/maa-node@2.1.1':
-    resolution: {integrity: sha512-UsL7bnPQkDNRZyy1JZId8Gpv3+eM+h3Jr3ODALLw/KMMV6RScxN9MPNpvIZjV9jjMpdrtpNzEg0yikUM3d3k7w==}
+  '@nekosu/maa-node@2.2.2':
+    resolution: {integrity: sha512-AjHlRdmT19eNhY16sB6mUGwWP8oW1zQNRO8rPIH7TAH56D4fD8E1QxTUWKcXUEb/Dp/RhDFemigj9ZDMtbfdPw==}
     engines: {node: '>= 20.0.0'}
     hasBin: true
 
@@ -2333,32 +2333,32 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@nekosu/maa-node-darwin-arm64@2.1.1':
+  '@nekosu/maa-node-darwin-arm64@2.2.2':
     optional: true
 
-  '@nekosu/maa-node-darwin-x64@2.1.1':
+  '@nekosu/maa-node-darwin-x64@2.2.2':
     optional: true
 
-  '@nekosu/maa-node-linux-arm64@2.1.1':
+  '@nekosu/maa-node-linux-arm64@2.2.2':
     optional: true
 
-  '@nekosu/maa-node-linux-x64@2.1.1':
+  '@nekosu/maa-node-linux-x64@2.2.2':
     optional: true
 
-  '@nekosu/maa-node-win32-arm64@2.1.1':
+  '@nekosu/maa-node-win32-arm64@2.2.2':
     optional: true
 
-  '@nekosu/maa-node-win32-x64@2.1.1':
+  '@nekosu/maa-node-win32-x64@2.2.2':
     optional: true
 
-  '@nekosu/maa-node@2.1.1':
+  '@nekosu/maa-node@2.2.2':
     optionalDependencies:
-      '@nekosu/maa-node-darwin-arm64': 2.1.1
-      '@nekosu/maa-node-darwin-x64': 2.1.1
-      '@nekosu/maa-node-linux-arm64': 2.1.1
-      '@nekosu/maa-node-linux-x64': 2.1.1
-      '@nekosu/maa-node-win32-arm64': 2.1.1
-      '@nekosu/maa-node-win32-x64': 2.1.1
+      '@nekosu/maa-node-darwin-arm64': 2.2.2
+      '@nekosu/maa-node-darwin-x64': 2.2.2
+      '@nekosu/maa-node-linux-arm64': 2.2.2
+      '@nekosu/maa-node-linux-x64': 2.2.2
+      '@nekosu/maa-node-win32-arm64': 2.2.2
+      '@nekosu/maa-node-win32-x64': 2.2.2
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

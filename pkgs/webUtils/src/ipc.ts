@@ -24,11 +24,27 @@ export function useIpc<HostContext, WebvContext, TH extends IpcRest, FH extends 
   }
 
   window.addEventListener('message', ev => {
-    const data = JSON.parse(ev.data) as IpcFromHost<HostContext, FH>
+    const data = JSON.parse(ev.data) as IpcFromHost<HostContext, WebvContext, FH>
     // console.log('[webv] recv', data)
     if (data.__builtin) {
       switch (data.cmd) {
-        case 'inited':
+        case 'initContext':
+          webvContext.value = data.ctx
+
+          watch(
+            () => webvContext.value,
+            ctx => {
+              realPost({
+                __builtin: true,
+                cmd: 'updateContext',
+                ctx
+              })
+            },
+            {
+              deep: true
+            }
+          )
+
           inited()
           break
         case 'updateContext':
@@ -44,20 +60,6 @@ export function useIpc<HostContext, WebvContext, TH extends IpcRest, FH extends 
     __builtin: true,
     cmd: 'requestInit'
   })
-
-  watch(
-    () => webvContext.value,
-    ctx => {
-      realPost({
-        __builtin: true,
-        cmd: 'updateContext',
-        ctx
-      })
-    },
-    {
-      deep: true
-    }
-  )
 
   return {
     hostContext,

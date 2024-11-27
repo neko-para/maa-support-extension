@@ -31,7 +31,7 @@ export function createUseWebView<HostContext, WebvContext, TH extends IpcRest, F
         ({} as WebvContext)
     )
 
-    let realPost: (data: IpcFromHost<HostContext, FH>) => void
+    let realPost: (data: IpcFromHost<HostContext, WebvContext, FH>) => void
 
     const { view, postMessage } = useWebviewView(id, html, {
       webviewOptions: {
@@ -51,7 +51,8 @@ export function createUseWebView<HostContext, WebvContext, TH extends IpcRest, F
               })
               realPost({
                 __builtin: true,
-                cmd: 'inited'
+                cmd: 'initContext',
+                ctx: webvContext.value
               })
               break
             case 'updateContext':
@@ -65,7 +66,7 @@ export function createUseWebView<HostContext, WebvContext, TH extends IpcRest, F
       }
     })
 
-    realPost = (data: IpcFromHost<HostContext, FH>) => {
+    realPost = (data: IpcFromHost<HostContext, WebvContext, FH>) => {
       // console.log('[host] post', data)
       postMessage(JSON.stringify(data))
     }

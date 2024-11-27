@@ -3,7 +3,7 @@ export type IpcRest = {
   cmd: string
 }
 
-export type IpcFromHostBuiltin<HostContext> =
+export type IpcFromHostBuiltin<HostContext, WebvContext> =
   | {
       __builtin: true
       cmd: 'updateContext'
@@ -11,7 +11,8 @@ export type IpcFromHostBuiltin<HostContext> =
     }
   | {
       __builtin: true
-      cmd: 'inited'
+      cmd: 'initContext'
+      ctx: WebvContext
     }
 
 export type IpcToHostBuiltin<WebvContext> =
@@ -25,12 +26,18 @@ export type IpcToHostBuiltin<WebvContext> =
       ctx: WebvContext
     }
 
-export type IpcFromHost<HostContext, Rest extends IpcRest> = IpcFromHostBuiltin<HostContext> | Rest
+export type IpcFromHost<HostContext, WebvContext, Rest extends IpcRest> =
+  | IpcFromHostBuiltin<HostContext, WebvContext>
+  | Rest
 
 export type IpcToHost<WebvContext, Rest extends IpcRest> = IpcToHostBuiltin<WebvContext> | Rest
 
 export type ControlPanelHostContext = {
-  interfaces?: string[]
+  interfaces?: {
+    path: string
+    content: unknown
+  }[]
+  refreshingInterface?: boolean
 }
 
 export type ControlPanelWebvContext = {

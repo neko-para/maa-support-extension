@@ -2,17 +2,19 @@ import { ref, watch } from 'vue'
 
 import type { IpcFromHost, IpcRest, IpcToHost, IpcToHostBuiltin } from '@mse/types'
 
-export function useIpc<Context extends {}, TH extends IpcRest, FH extends IpcRest>(
-  initContext: Context,
+export function useIpc<HostContext, WebvContext, TH extends IpcRest, FH extends IpcRest>(
   inited: () => void
 ) {
   const vscodeApi = acquireVsCodeApi()
 
   const handler = ref<(data: FH) => void>(() => {})
 
-  const context = ref<Context>(initContext)
+  let sync = false
 
-  const realPost = (data: IpcToHost<Context, TH>) => {
+  const hostContext = ref<HostContext>({} as HostContext)
+  const webvContext = ref<WebvContext>({} as WebvContext)
+
+  const realPost = (data: IpcToHost<WebvContext, TH>) => {
     // console.log('[webv] post', data)
     vscodeApi.postMessage(JSON.stringify(data))
   }
@@ -22,31 +24,19 @@ export function useIpc<Context extends {}, TH extends IpcRest, FH extends IpcRes
   }
 
   window.addEventListener('message', ev => {
-    const data = JSON.parse(ev.data) as IpcFromHost<Context, FH>
+    const data = JSON.parse(ev.data) as IpcFromHost<HostContext, FH>
     // console.log('[webv] recv', data)
     if (data.__builtin) {
-      if (data.cmd === 'initContext') {
-        context.value = data.ctx
-
-        watch(
-          () => context.value,
-          ctx => {
-            // console.log(JSON.stringify(ctx))
-            realPost({
-              __builtin: true,
-              cmd: 'updateContext',
-              ctx
-            })
-          },
-          {
-            deep: true
-          }
-        )
-
-        inited()
+      switch (data.cmd) {
+        case 'inited':
+          inited()
+          break
+        case 'updateContext':
+          hostContext.value = data.ctx
+          break
       }
     } else {
-      handler.value(ev.data)
+      handler.value(data)
     }
   })
 
@@ -55,8 +45,23 @@ export function useIpc<Context extends {}, TH extends IpcRest, FH extends IpcRes
     cmd: 'requestInit'
   })
 
+  watch(
+    () => webvContext.value,
+    ctx => {
+      realPost({
+        __builtin: true,
+        cmd: 'updateContext',
+        ctx
+      })
+    },
+    {
+      deep: true
+    }
+  )
+
   return {
-    context,
+    hostContext,
+    webvContext,
     handler,
     postMessage
   }

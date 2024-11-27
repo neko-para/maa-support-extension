@@ -1,16 +1,35 @@
-import { defineExtension } from 'reactive-vscode'
+import { defineExtension, watch } from 'reactive-vscode'
 
-import { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '@mse/types'
+import {
+  ControlPanelFromHost,
+  ControlPanelHostContext,
+  ControlPanelToHost,
+  ControlPanelWebvContext
+} from '@mse/types'
 import { createUseWebView } from '@mse/utils'
 
-const useWeb = createUseWebView<ControlPanelContext, ControlPanelToHost, ControlPanelFromHost>(
-  'controlPanel',
-  'maa.view.control-panel',
-  {
-    counter: 0
+import { useInterface } from './pi/state'
+
+export const useControlPanel = createUseWebView<
+  ControlPanelHostContext,
+  ControlPanelWebvContext,
+  ControlPanelToHost,
+  ControlPanelFromHost
+>('controlPanel', 'maa.view.control-panel')
+
+function initControlPanel() {
+  const { handler, post } = useControlPanel()
+  const { scanInterface } = useInterface()
+
+  handler.value = data => {
+    switch (data.cmd) {
+      case 'refreshInterface':
+        scanInterface()
+        break
+    }
   }
-)
+}
 
 export const { activate, deactivate } = defineExtension(() => {
-  useWeb()
+  initControlPanel()
 })

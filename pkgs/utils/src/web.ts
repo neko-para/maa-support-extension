@@ -13,17 +13,25 @@ import { IpcFromHost, IpcFromHostBuiltin, IpcRest, IpcToHost } from '@mse/types'
 
 import { vscfs } from './fs'
 
-export function createUseWebView<Context extends {}, TH extends IpcRest, FH extends IpcRest>(
+export function createUseWebView<HostContext, WebvContext, TH extends IpcRest, FH extends IpcRest>(
   dir: string,
-  id: string,
-  initContext: Context
+  id: string
 ) {
-  return createSingletonComposable(async () => {
+  return createSingletonComposable(() => {
     const handler = ref<(data: TH) => void>(() => {})
     const rootUri = vscode.Uri.joinPath(extensionContext.value!.extensionUri, dir)
     const html = ref('loading...')
 
-    let realPost: (data: IpcFromHost<Context, FH>) => void
+    const hostContext = ref<HostContext>(
+      extensionContext.value?.workspaceState.get<HostContext>(`webview:${id}:hostContext`) ??
+        ({} as HostContext)
+    )
+    const webvContext = ref<WebvContext>(
+      extensionContext.value?.workspaceState.get<WebvContext>(`webview:${id}:webvContext`) ??
+        ({} as WebvContext)
+    )
+
+    let realPost: (data: IpcFromHost<HostContext, FH>) => void
 
     const { view, postMessage } = useWebviewView(id, html, {
       webviewOptions: {
@@ -31,21 +39,24 @@ export function createUseWebView<Context extends {}, TH extends IpcRest, FH exte
         localResourceRoots: [rootUri]
       },
       onDidReceiveMessage(data: string) {
-        const msg = JSON.parse(data) as IpcToHost<Context, TH>
+        const msg = JSON.parse(data) as IpcToHost<WebvContext, TH>
         // console.log('[host] recv', msg)
         if (msg.__builtin) {
           switch (msg.cmd) {
             case 'requestInit':
               realPost({
                 __builtin: true,
-                cmd: 'initContext',
-                ctx:
-                  extensionContext.value?.workspaceState.get<Context>(`webview:${id}:context`) ??
-                  initContext
-              } satisfies IpcFromHostBuiltin<Context>)
+                cmd: 'updateContext',
+                ctx: hostContext.value
+              })
+              realPost({
+                __builtin: true,
+                cmd: 'inited'
+              })
               break
             case 'updateContext':
-              extensionContext.value?.workspaceState.update(`webview:${id}:context`, msg.ctx)
+              extensionContext.value?.workspaceState.update(`webview:${id}:webvContext`, msg.ctx)
+              webvContext.value = msg.ctx
               break
           }
         } else {
@@ -54,7 +65,7 @@ export function createUseWebView<Context extends {}, TH extends IpcRest, FH exte
       }
     })
 
-    realPost = (data: IpcFromHost<Context, FH>) => {
+    realPost = (data: IpcFromHost<HostContext, FH>) => {
       // console.log('[host] post', data)
       postMessage(JSON.stringify(data))
     }
@@ -78,7 +89,24 @@ export function createUseWebView<Context extends {}, TH extends IpcRest, FH exte
       }
     })
 
+    watch(
+      hostContext,
+      ctx => {
+        extensionContext.value?.workspaceState.update(`webview:${id}:hostContext`, ctx)
+        realPost({
+          __builtin: true,
+          cmd: 'updateContext',
+          ctx
+        })
+      },
+      {
+        deep: true
+      }
+    )
+
     return {
+      hostContext,
+      webvContext,
       handler,
       post
     }

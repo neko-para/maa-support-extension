@@ -23,3 +23,7 @@ export type IpcToHostBuiltin<Context> =
 export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Context> | Rest
 
 export type IpcToHost<Context, Rest extends IpcRest> = IpcToHostBuiltin<Context> | Rest
+
+export type ControlPanelContext = {}
+export type ControlPanelToHost = never
+export type ControlPanelFromHost = never

@@ -3,6 +3,7 @@
   "devDependencies": {
     "@maaxyz/maa-node": "2.2.2-post.11-ci.12043306412",
     "@mse/utils": "workspace:*",
+    "@mse/types": "workspace:*",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.17.8",
     "@types/vscode": "^1.95.0",

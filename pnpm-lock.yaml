@@ -143,6 +143,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 2.2.2-post.11-ci.12043306412
         version: 2.2.2-post.11-ci.12043306412
+      '@mse/types':
+        specifier: workspace:*
+        version: link:../types
       '@mse/utils':
         specifier: workspace:*
         version: link:../utils

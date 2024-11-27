@@ -5,17 +5,8 @@ import { useIpc } from '@mse/web-utils'
 
 import App from '@/App.vue'
 
-export const ipc = useIpc<
-  {
-    counter: number
-  },
-  never,
-  never
->(
-  {
-    counter: 0
-  },
-  () => {
-    createApp(App).mount('#app')
-  }
-)
+import type { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '../../types/src'
+
+export const ipc = useIpc<ControlPanelContext, ControlPanelToHost, ControlPanelFromHost>({}, () => {
+  createApp(App).mount('#app')
+})

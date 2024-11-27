@@ -6,5 +6,5 @@ import { ipc } from './main'
 </script>
 
 <template>
-  <div></div>
+  <div>aaabbb</div>
 </template>

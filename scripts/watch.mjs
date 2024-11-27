@@ -1,6 +1,8 @@
-import { context } from 'esbuild'
+import { context as esContext } from 'esbuild'
+import path from 'path'
+import { build as viteBuild } from 'vite'
 
-context({
+esContext({
   entryPoints: ['pkgs/extension/src/extension.ts'],
   bundle: true,
   outdir: 'release/out',
@@ -9,4 +11,11 @@ context({
   sourcemap: true
 }).then(ctx => {
   ctx.watch()
+})
+
+viteBuild({
+  root: path.join(import.meta.dirname, '../pkgs/controlPanel'),
+  build: {
+    watch: {}
+  }
 })

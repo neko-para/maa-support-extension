@@ -52,6 +52,15 @@
         "command": "maa.debug.query-location"
       }
     ],
-    "views": {}
+    "views": {
+      "explorer": [
+        {
+          "id": "maa.view.control-panel",
+          "name": "%maa.view.control-panel.title%",
+          "visibility": "visible",
+          "type": "webview"
+        }
+      ]
+    }
   }
 }

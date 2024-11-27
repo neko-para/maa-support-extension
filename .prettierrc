@@ -5,7 +5,7 @@
   "arrowParens": "avoid",
   "printWidth": 100,
 
-  "importOrder": ["^@/", "^\\."],
+  "importOrder": ["^@mse/", "^@/", "^\\."],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,
 

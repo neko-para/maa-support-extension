@@ -1,0 +1,4 @@
+{
+  "name": "@mse/types",
+  "main": "./src/index.ts"
+}

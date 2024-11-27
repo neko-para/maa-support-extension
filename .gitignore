@@ -7,4 +7,4 @@ azure.token
 *.vsix
 .DS_Store
 
-/release/maa
+/release/controlPanel

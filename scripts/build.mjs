@@ -1,11 +1,10 @@
 import { build } from 'esbuild'
 
 build({
-  entryPoints: ['src/extension.ts'],
+  entryPoints: ['pkgs/extension/src/extension.ts'],
   bundle: true,
   outdir: 'release/out',
-  external: ['@nekosu/maa-node', 'vscode'],
+  external: ['@maaxyz/maa-node', 'vscode'],
   platform: 'node',
-  sourcemap: true,
-  mainFields: ['module', 'main']
+  sourcemap: true
 })

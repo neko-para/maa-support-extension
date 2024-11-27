@@ -8,9 +8,9 @@ importers:
 
   .:
     devDependencies:
-      '@nekosu/maa-node':
-        specifier: ^2.2.2
-        version: 2.2.2
+      '@maaxyz/maa-node':
+        specifier: 2.2.2-post.11-ci.12043306412
+        version: 2.2.2-post.11-ci.12043306412
       '@npm/types':
         specifier: ^2.0.0
         version: 2.0.0
@@ -649,40 +649,9 @@ packages:
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
 
-  '@nekosu/maa-node-darwin-arm64@2.2.2':
-    resolution: {integrity: sha512-rCyHuh5/rjAy5OuvEUtmYzHbvgelNDh9ake3OOQPYaEF4zVyOr7YMP6uttnqmPCaTPEVJyzY49ydKDqnxeF2UA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@nekosu/maa-node-darwin-x64@2.2.2':
-    resolution: {integrity: sha512-GpExXpmRRHl0botZXLEnDnMopBZAp+SxEW2c5KJGru3EispEcsBnWusyaZF1pYfplXJOYrOmjXNK5gfHoHzc9g==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@nekosu/maa-node-linux-arm64@2.2.2':
-    resolution: {integrity: sha512-Bfs1z1xOPOQ1JNgvvzSRLyTnVq7WNnw9leSvxqxEOJkMIls1y1MZ173mQilDxMpodZhFHtfHvsXt/Gnl513e4Q==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@nekosu/maa-node-linux-x64@2.2.2':
-    resolution: {integrity: sha512-fKOay/CFxaU9loRtUlXWFUsiXpgU4sommM+hECLdkLsWhK0uypQ4XJ5d0WS3deP2AtCtMvgEHhUMq14QD5fpsA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@nekosu/maa-node-win32-arm64@2.2.2':
-    resolution: {integrity: sha512-8JJkF7cYHWxxa5EnaWGu4ks1BqAOX8hmk/N87VjVWD8eBGy3ugAnrGI85IHy+4o/3o17o+GgzBFI/hUHScGhEg==}
-    cpu: [arm64]
-    os: [win32]
-
-  '@nekosu/maa-node-win32-x64@2.2.2':
-    resolution: {integrity: sha512-lRXt5lnZmw1gMlmvuUqdBFLoHn7SC+BdP2fcvYdvAExGW4H7CsrpDV6wk+Nehk9cl0qHB7Z3MnEtOtn2lccgwQ==}
-    cpu: [x64]
-    os: [win32]
-
-  '@nekosu/maa-node@2.2.2':
-    resolution: {integrity: sha512-AjHlRdmT19eNhY16sB6mUGwWP8oW1zQNRO8rPIH7TAH56D4fD8E1QxTUWKcXUEb/Dp/RhDFemigj9ZDMtbfdPw==}
+  '@maaxyz/maa-node@2.2.2-post.11-ci.12043306412':
+    resolution: {integrity: sha512-ZI5HFDpPcah7wVvoVk7d83b50xsH4MVFi600zDf3wQiPciEZdx8lX0ccsepd2Wb8AAk/b251qpkOb59j4jt/lA==}
     engines: {node: '>= 20.0.0'}
-    hasBin: true
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2333,32 +2302,7 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@nekosu/maa-node-darwin-arm64@2.2.2':
-    optional: true
-
-  '@nekosu/maa-node-darwin-x64@2.2.2':
-    optional: true
-
-  '@nekosu/maa-node-linux-arm64@2.2.2':
-    optional: true
-
-  '@nekosu/maa-node-linux-x64@2.2.2':
-    optional: true
-
-  '@nekosu/maa-node-win32-arm64@2.2.2':
-    optional: true
-
-  '@nekosu/maa-node-win32-x64@2.2.2':
-    optional: true
-
-  '@nekosu/maa-node@2.2.2':
-    optionalDependencies:
-      '@nekosu/maa-node-darwin-arm64': 2.2.2
-      '@nekosu/maa-node-darwin-x64': 2.2.2
-      '@nekosu/maa-node-linux-arm64': 2.2.2
-      '@nekosu/maa-node-linux-x64': 2.2.2
-      '@nekosu/maa-node-win32-arm64': 2.2.2
-      '@nekosu/maa-node-win32-x64': 2.2.2
+  '@maaxyz/maa-node@2.2.2-post.11-ci.12043306412': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

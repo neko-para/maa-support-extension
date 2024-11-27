@@ -5,7 +5,5 @@
   "maa.command.launch-task": "Maa: launch task",
   "maa.command.stop-launch": "Maa: stop launch",
   "maa.command.open-web": "Maa: open webview",
-  "maa.command.launch-interface": "Maa: launch interface",
-  "maa.command.open-maa-folder": "Maa: open maa-node folder",
-  "maa.command.load-maa": "Maa: load maa-node if not loaded"
+  "maa.command.launch-interface": "Maa: launch interface"
 }

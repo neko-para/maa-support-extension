@@ -1,10 +1,9 @@
-import type * as Maa from '@nekosu/maa-node'
+import maa from '@maaxyz/maa-node'
 import * as vscode from 'vscode'
 
 import { commands } from '../command'
 import { Service } from '../data'
 import { t } from '../locale'
-import { maa } from '../maa/loader'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
@@ -21,9 +20,9 @@ import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
 import { ProjectInterfaceWebProvider } from './web'
 
 type TaskerCache = {
-  tasker: Maa.TaskerBase
-  resource: Maa.ResourceBase
-  controller: Maa.ControllerBase
+  tasker: maa.TaskerBase
+  resource: maa.ResourceBase
+  controller: maa.ControllerBase
 }
 
 function serializeRuntime(runtime: InterfaceRuntime) {
@@ -448,7 +447,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     this.tasker = null
     this.instanceConfig = null
 
-    let controller: Maa.ControllerBase
+    let controller: maa.ControllerBase
 
     if (runtime.controller_param.ctype === 'adb') {
       const p = runtime.controller_param

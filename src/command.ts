@@ -9,8 +9,5 @@ export const commands = {
   LaunchInterface: 'maa.launch-interface',
   OpenWeb: 'maa.open-web',
 
-  OpenMaaFolder: 'maa.open-maa-folder',
-  LoadMaa: 'maa.load-maa',
-
   DebugQueryLocation: 'maa.debug.query-location'
 }

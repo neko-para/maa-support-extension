@@ -50,6 +50,7 @@ jobs:
         run: |
           npm i -g @vscode/vsce
           cd release
+          scripts/install.sh
           vsce package
           mkdir vsix
           cp *.vsix vsix/

@@ -1,10 +1,9 @@
-import open from 'open'
+import maa from '@maaxyz/maa-node'
 import sms from 'source-map-support'
 import * as vscode from 'vscode'
 
 import { commands } from './command'
 import { loadServices, resetInstance } from './data'
-import { maa, setupMaa } from './maa/loader'
 import { PipelineCodeLensProvider } from './pipeline/codeLens'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
@@ -18,42 +17,8 @@ import { ProjectInterfaceWebProvider } from './projectInterface/web'
 
 sms.install()
 
-let activated = false
-
-async function trySetupMaa(context: vscode.ExtensionContext) {
-  if (activated) {
-    return true
-  }
-  const succeeded = await setupMaa(
-    vscode.Uri.joinPath(context.globalStorageUri, 'node_modules').fsPath
-  )
-  console.log('maa setup finished, ', succeeded ? 'succeeded' : 'failed')
-  if (succeeded) {
-    setup(context)
-    activated = true
-  }
-  return succeeded
-}
-
 export async function activate(context: vscode.ExtensionContext) {
-  vscode.commands.registerCommand(commands.OpenMaaFolder, async () => {
-    await open(context.globalStorageUri.fsPath)
-  })
-
-  vscode.commands.registerCommand(commands.LoadMaa, async () => {
-    await trySetupMaa(context)
-  })
-
-  let retry = 3
-
-  while (retry-- > 0) {
-    const succeeded = await trySetupMaa(context)
-    if (succeeded) {
-      break
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 5000))
-    }
-  }
+  setup(context)
 }
 
 function setup(context: vscode.ExtensionContext) {

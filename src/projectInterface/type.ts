@@ -1,4 +1,4 @@
-import type * as maa from '@nekosu/maa-node'
+import maa from '@maaxyz/maa-node'
 
 export type Interface = {
   controller: {

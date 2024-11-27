@@ -1,4 +1,4 @@
-import type * as Maa from '@nekosu/maa-node'
+import maa from '@maaxyz/maa-node'
 import * as vscode from 'vscode'
 
 import type { ExtToWeb, WebToExt } from '../../types/ipc'
@@ -58,7 +58,7 @@ export class ProjectInterfaceWebProvider extends Service {
 
         switch (data.cmd) {
           case 'launch.reco':
-            const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as Maa.api.RecoId)
+            const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as maa.api.RecoId)
             if (!detailInfo) {
               return
             }

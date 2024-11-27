@@ -1,7 +1,7 @@
+import maa from '@maaxyz/maa-node'
 import * as vscode from 'vscode'
 
 import { t } from '../locale'
-import { maa } from '../maa/loader'
 import { Interface, InterfaceConfig } from './type'
 
 type RemoveUndefined<T> = T extends undefined ? never : T

@@ -32,11 +32,20 @@ export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Cont
 
 export type IpcToHost<Context, Rest extends IpcRest> = IpcToHostBuiltin<Context> | Rest
 
-export type ControlPanelContext = {}
-
-export type ControlPanelToHost = {
-  cmd: 'refreshInterface'
+export type ControlPanelContext = {
+  interfaceList?: string[]
+  interfaceCurrent?: string
+  interfaceRefreshing?: boolean
 }
+
+export type ControlPanelToHost =
+  | {
+      cmd: 'refreshInterface'
+    }
+  | {
+      cmd: 'selectInterface'
+      interface: string
+    }
 
 export type ControlPanelFromHost = never
 

@@ -6,7 +6,7 @@ import { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '@
 import { createUseWebView } from '@mse/utils'
 
 import { commands } from './command'
-import { loadServices } from './data'
+import { loadServices, sharedInstance } from './data'
 import { PipelineCodeLensProvider } from './pipeline/codeLens'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
@@ -25,14 +25,36 @@ export const useControlPanel = createUseWebView<
 >('controlPanel', 'maa.view.control-panel')
 
 function initControlPanel() {
-  const { handler, post } = useControlPanel()
+  const { handler, context } = useControlPanel()
 
-  handler.value = data => {
+  handler.value = async data => {
     switch (data.cmd) {
       case 'refreshInterface':
+        await sharedInstance(PipelineRootStatusProvider).syncRootInfo()
+        context.value.interfaceList = sharedInstance(PipelineRootStatusProvider).resourceRoot.map(
+          x => x.interfaceRelative
+        )
+        context.value.interfaceCurrent = sharedInstance(
+          PipelineRootStatusProvider
+        ).activateResource?.interfaceRelative
         break
+      case 'selectInterface': {
+        const rootIndex = sharedInstance(PipelineRootStatusProvider).resourceRoot.findIndex(
+          x => x.interfaceRelative === data.interface
+        )
+        if (rootIndex !== -1) {
+          const root = sharedInstance(PipelineRootStatusProvider).resourceRoot[rootIndex]
+          context.value.interfaceCurrent = root.interfaceRelative
+          sharedInstance(PipelineRootStatusProvider).selectRootInfo(rootIndex)
+        }
+        break
+      }
     }
   }
+
+  handler.value({
+    cmd: 'refreshInterface'
+  })
 }
 
 export const { activate, deactivate } = defineExtension(context => {

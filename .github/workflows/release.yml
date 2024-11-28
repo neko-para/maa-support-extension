@@ -46,12 +46,12 @@ jobs:
       - name: Change Version
         shell: bash
         run: |
-          isRelease=${{ startsWith(github.ref, 'refs/tags/v') }}
+          is_release=${{ startsWith(github.ref, 'refs/tags/v') }}
           if $is_release; then
             ver=${{ github.ref_name }}
             ver=${ver:1}
           else
-            ver=`git describe --tags --match "v*" --long | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/'`
+            ver=`git describe --tags --match "v*" --long | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/'`-`git branch`
           fi
           echo "Change version to ${ver}"
           npm --prefix release pkg set version=${ver}

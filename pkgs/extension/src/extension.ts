@@ -8,7 +8,7 @@ import {
 } from '@mse/types'
 import { createUseWebView } from '@mse/utils'
 
-import { useInterface } from './pi/state'
+import { useInterfaceRoot } from './pi/root'
 
 export const useControlPanel = createUseWebView<
   ControlPanelHostContext,
@@ -19,12 +19,12 @@ export const useControlPanel = createUseWebView<
 
 function initControlPanel() {
   const { handler, post } = useControlPanel()
-  const { scanInterface } = useInterface()
+  const { scanInterfaceRoot } = useInterfaceRoot()
 
   handler.value = data => {
     switch (data.cmd) {
       case 'refreshInterface':
-        scanInterface()
+        scanInterfaceRoot()
         break
     }
   }

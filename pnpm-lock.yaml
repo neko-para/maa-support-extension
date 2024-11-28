@@ -153,7 +153,11 @@ importers:
         specifier: ^5.7.2
         version: 5.7.2
 
-  pkgs/types: {}
+  pkgs/types:
+    devDependencies:
+      '@maaxyz/maa-node':
+        specifier: 2.2.2-post.11-ci.12043306412
+        version: 2.2.2-post.11-ci.12043306412
 
   pkgs/utils:
     devDependencies:

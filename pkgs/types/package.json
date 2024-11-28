@@ -1,4 +1,7 @@
 {
   "name": "@mse/types",
-  "main": "./src/index.ts"
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@maaxyz/maa-node": "2.2.2-post.11-ci.12043306412"
+  }
 }

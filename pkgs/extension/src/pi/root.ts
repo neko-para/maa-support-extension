@@ -1,13 +1,7 @@
-import {
-  computed,
-  extensionContext,
-  ref,
-  useVscodeContext,
-  useWorkspaceFolders
-} from 'reactive-vscode'
+import { useWorkspaceFolders } from 'reactive-vscode'
 import vscode from 'vscode'
 
-import { vscfs } from '@mse/utils'
+import { t, vscfs } from '@mse/utils'
 
 import { useControlPanel } from '../extension'
 
@@ -59,10 +53,10 @@ async function locateInterfaces() {
   return result
 }
 
-export function useInterface() {
-  const { hostContext } = useControlPanel()
+export function useInterfaceRoot() {
+  const { hostContext, webvContext } = useControlPanel()
 
-  async function scanInterface() {
+  async function scanInterfaceRoot() {
     hostContext.value.refreshingInterface = true
     const interfaces = await locateInterfaces()
     hostContext.value.interfaces = await Promise.all(
@@ -71,11 +65,16 @@ export function useInterface() {
         content: JSON.parse((await vscfs.readFile(x.interfaceUri)).toString())
       }))
     )
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    if (!hostContext.value.interfaces.find(x => x.path === webvContext.value.selectedInterface)) {
+      webvContext.value.selectedInterface
+    }
+    if (hostContext.value.interfaces.length === 0) {
+      vscode.window.showErrorMessage(t('maa.pipeline.error.no-interface-found'))
+    }
     hostContext.value.refreshingInterface = false
   }
 
   return {
-    scanInterface
+    scanInterfaceRoot
   }
 }

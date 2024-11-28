@@ -11,15 +11,15 @@ function refreshInterface() {
 }
 
 function selectInterface(i: string) {
-  ipc.context.value.selectedInterface = i
+  // ipc.context.value.selectedInterface = i
 }
 
 const selected = computed(() => {
-  for (const i of ipc.context.value.interfaces ?? []) {
-    if (i.path === ipc.context.value.selectedInterface) {
-      return i
-    }
-  }
+  // for (const i of ipc.context.value.interfaces ?? []) {
+  //   if (i.path === ipc.context.value.selectedInterface) {
+  //     return i
+  //   }
+  // }
   return null
 })
 
@@ -31,7 +31,7 @@ onMounted(() => {
 <template>
   {{ ipc.context }}
   <div id="interfaceSelectGroup">
-    <vscode-single-select
+    <!-- <vscode-single-select
       :disabled="ipc.context.value.refreshingInterface"
       @change="(ev: Event) => selectInterface((ev.target as VscodeSingleSelect).value)"
     >
@@ -50,11 +50,9 @@ onMounted(() => {
       @click="refreshInterface"
     >
       刷新
-    </vscode-button>
+    </vscode-button> -->
   </div>
-  <code>
-    <pre>{{ JSON.stringify(selected?.content ?? {}, null, 2) }}</pre>
-  </code>
+  <!-- <pre>{{ selected?.content }}</pre> -->
 </template>
 
 <style scoped>

@@ -2,16 +2,12 @@ import * as vscode from 'vscode'
 
 import { Service } from '../data'
 import { PipelineProjectInterfaceProvider } from './pi'
-import { PipelineRootStatusProvider } from './root'
 
 export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> extends Service {
   provider: T | null
 
-  constructor(
-    context: vscode.ExtensionContext,
-    setupProvider: (selector: vscode.DocumentFilter[]) => T
-  ) {
-    super(context)
+  constructor(setupProvider: (selector: vscode.DocumentFilter[]) => T) {
+    super()
 
     this.provider = null
 

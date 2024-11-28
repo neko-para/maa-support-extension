@@ -1,0 +1,74 @@
+diff --git a/lib/esm/impl/parser.js b/lib/esm/impl/parser.js
+index 6ebb947f32bcf5da4bd55ff140be75fb52bbe429..a1755ae9f6b0d00d96000b88f02fa58652f3cea6 100644
+--- a/lib/esm/impl/parser.js
++++ b/lib/esm/impl/parser.js
+@@ -469,10 +469,15 @@ export function visit(text, visitor, options = ParseOptions.DEFAULT) {
+         switch (_scanner.getToken()) {
+             case 11 /* SyntaxKind.NumericLiteral */:
+                 const tokenValue = _scanner.getTokenValue();
+-                let value = Number(tokenValue);
+-                if (isNaN(value)) {
+-                    handleError(2 /* ParseErrorCode.InvalidNumberFormat */);
+-                    value = 0;
++                let value;
++                if (/^-?\d{16,}$/.test(tokenValue)) {
++                    value = BigInt(tokenValue);
++                } else {
++                    value = Number(tokenValue);
++                    if (isNaN(value)) {
++                        handleError(2 /* ParseErrorCode.InvalidNumberFormat */);
++                        value = 0;
++                    }
+                 }
+                 onLiteralValue(value);
+                 break;
+diff --git a/lib/esm/main.d.ts b/lib/esm/main.d.ts
+index 66c1691fde24ede6a90f482123a712961f6499e4..5a1924785ac5b7ab3c662f17868779492a072e64 100644
+--- a/lib/esm/main.d.ts
++++ b/lib/esm/main.d.ts
+@@ -139,7 +139,7 @@ export declare const enum ParseErrorCode {
+     InvalidCharacter = 16
+ }
+ export declare function printParseErrorCode(code: ParseErrorCode): "InvalidSymbol" | "InvalidNumberFormat" | "PropertyNameExpected" | "ValueExpected" | "ColonExpected" | "CommaExpected" | "CloseBraceExpected" | "CloseBracketExpected" | "EndOfFileExpected" | "InvalidCommentToken" | "UnexpectedEndOfComment" | "UnexpectedEndOfString" | "UnexpectedEndOfNumber" | "InvalidUnicode" | "InvalidEscapeCharacter" | "InvalidCharacter" | "<unknown ParseErrorCode>";
+-export type NodeType = 'object' | 'array' | 'property' | 'string' | 'number' | 'boolean' | 'null';
++export type NodeType = 'object' | 'array' | 'property' | 'string' | 'number' | 'bigint' | 'boolean' | 'null';
+ export interface Node {
+     readonly type: NodeType;
+     readonly value?: any;
+diff --git a/lib/umd/impl/parser.js b/lib/umd/impl/parser.js
+index b30bb9364def1b1a14d297a73e5f2e93ae49dac3..6f3d794251ef9d09f737c232ef60c48f2803a95c 100644
+--- a/lib/umd/impl/parser.js
++++ b/lib/umd/impl/parser.js
+@@ -488,10 +488,15 @@
+             switch (_scanner.getToken()) {
+                 case 11 /* SyntaxKind.NumericLiteral */:
+                     const tokenValue = _scanner.getTokenValue();
+-                    let value = Number(tokenValue);
+-                    if (isNaN(value)) {
+-                        handleError(2 /* ParseErrorCode.InvalidNumberFormat */);
+-                        value = 0;
++                    let value;
++                    if (/^-?\d{16,}$/.test(tokenValue)) {
++                        value = BigInt(tokenValue);
++                    } else {
++                        value = Number(tokenValue);
++                        if (isNaN(value)) {
++                            handleError(2 /* ParseErrorCode.InvalidNumberFormat */);
++                            value = 0;
++                        }
+                     }
+                     onLiteralValue(value);
+                     break;
+diff --git a/lib/umd/main.d.ts b/lib/umd/main.d.ts
+index 66c1691fde24ede6a90f482123a712961f6499e4..5a1924785ac5b7ab3c662f17868779492a072e64 100644
+--- a/lib/umd/main.d.ts
++++ b/lib/umd/main.d.ts
+@@ -139,7 +139,7 @@ export declare const enum ParseErrorCode {
+     InvalidCharacter = 16
+ }
+ export declare function printParseErrorCode(code: ParseErrorCode): "InvalidSymbol" | "InvalidNumberFormat" | "PropertyNameExpected" | "ValueExpected" | "ColonExpected" | "CommaExpected" | "CloseBraceExpected" | "CloseBracketExpected" | "EndOfFileExpected" | "InvalidCommentToken" | "UnexpectedEndOfComment" | "UnexpectedEndOfString" | "UnexpectedEndOfNumber" | "InvalidUnicode" | "InvalidEscapeCharacter" | "InvalidCharacter" | "<unknown ParseErrorCode>";
+-export type NodeType = 'object' | 'array' | 'property' | 'string' | 'number' | 'boolean' | 'null';
++export type NodeType = 'object' | 'array' | 'property' | 'string' | 'number' | 'bigint' | 'boolean' | 'null';
+ export interface Node {
+     readonly type: NodeType;
+     readonly value?: any;

@@ -1,13 +1,14 @@
 import maa from '@maaxyz/maa-node'
+import { JSONStringify } from 'json-with-bigint'
 import * as vscode from 'vscode'
+
+import { t } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { t } from '../locale'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
-import { JSONStringify } from '../utils/json-bigint'
 import {
   configController,
   configTask,
@@ -78,8 +79,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
   tasker: TaskerCache | null
   instanceConfig: string | null
 
-  constructor(context: vscode.ExtensionContext) {
-    super(context)
+  constructor() {
+    super()
 
     this.outputChannel = vscode.window.createOutputChannel('Maa')
     this.tasker = null

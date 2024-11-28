@@ -1,15 +1,14 @@
 import * as vscode from 'vscode'
 
 import { ProviderBase } from './providerBase'
-import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineCompletionProvider
   extends ProviderBase
   implements vscode.CompletionItemProvider
 {
-  constructor(context: vscode.ExtensionContext) {
-    super(context, selector => {
+  constructor() {
+    super(selector => {
       return vscode.languages.registerCompletionItemProvider(selector, this, '"')
     })
   }

@@ -1,10 +1,9 @@
 import * as vscode from 'vscode'
 
+import { t, visitJsonDocument, vscfs } from '@mse/utils'
+
 import { commands } from '../command'
 import { Service } from '../data'
-import { t } from '../locale'
-import { exists } from '../utils/fs'
-import { visitJsonDocument } from '../utils/json'
 import { PipelineProjectInterfaceProvider } from './pi'
 import { PipelineRootStatusProvider } from './root'
 
@@ -61,8 +60,8 @@ class PipelineTaskIndexLayer extends Service {
   flushing: boolean
   needReflush: boolean
 
-  constructor(context: vscode.ExtensionContext, uri: vscode.Uri, level: number) {
-    super(context)
+  constructor(uri: vscode.Uri, level: number) {
+    super()
 
     this.uri = uri
     this.level = level
@@ -232,7 +231,7 @@ class PipelineTaskIndexLayer extends Service {
 
     for (const path of dirtyList) {
       // 有可能是delete
-      if (await exists(vscode.Uri.file(path))) {
+      if (await vscfs.exists(vscode.Uri.file(path))) {
         await this.loadJson(vscode.Uri.file(path))
       }
     }
@@ -251,8 +250,8 @@ export class PipelineTaskIndexProvider extends Service {
 
   updateingDiag: boolean
 
-  constructor(context: vscode.ExtensionContext) {
-    super(context)
+  constructor() {
+    super()
 
     this.layers = []
     this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
@@ -262,7 +261,7 @@ export class PipelineTaskIndexProvider extends Service {
       for (const layer of this.layers) {
         layer.dispose()
       }
-      this.layers = resource.map((x, i) => new PipelineTaskIndexLayer(this.__context, x, i))
+      this.layers = resource.map((x, i) => new PipelineTaskIndexLayer(x, i))
     })
 
     this.defer = (() => {
@@ -501,7 +500,7 @@ export class PipelineTaskIndexProvider extends Service {
     try {
       for (const layer of this.layers.slice(0, level)) {
         const iu = vscode.Uri.joinPath(layer.uri, 'image', image)
-        if (await exists(iu)) {
+        if (await vscfs.exists(iu)) {
           result.push({
             uri: layer.uri,
             info: {

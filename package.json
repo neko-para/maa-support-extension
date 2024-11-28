@@ -5,31 +5,19 @@
     "dev": "node scripts/watch.mjs"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "2.2.2-post.11-ci.12043306412",
-    "@npm/types": "^2.0.0",
+    "@maaxyz/maa-node": "2.2.2-post.14-ci.12068666732",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
-    "@types/node": "^20.14.9",
-    "@types/proper-lockfile": "^4.1.4",
-    "@types/source-map-support": "^0.5.10",
-    "@types/vscode": "^1.91.0",
-    "@types/vscode-webview": "^1.57.5",
     "@vitejs/plugin-vue": "^5.0.5",
-    "@vue/tsconfig": "^0.5.1",
-    "axios": "^1.7.7",
-    "buffer": "^6.0.3",
-    "compressing": "^1.10.1",
     "esbuild": "^0.20.2",
-    "highlight.js": "^11.10.0",
-    "jimp": "^0.22.12",
     "jsonc-parser": "^3.3.1",
-    "naive-ui": "^2.39.0",
-    "open": "^8.4.2",
     "prettier": "^3.3.2",
-    "proper-lockfile": "^4.1.2",
-    "source-map-support": "^0.5.21",
     "typescript": "^5.5.3",
-    "vite": "^5.3.4",
-    "vue": "^3.4.32"
+    "vite": "^5.3.4"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "jsonc-parser@3.3.1": "patches/jsonc-parser@3.3.1.patch"
+    }
   }
 }

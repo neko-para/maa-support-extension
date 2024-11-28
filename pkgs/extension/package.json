@@ -1,12 +1,13 @@
 {
   "name": "@mse/extension",
   "devDependencies": {
-    "@maaxyz/maa-node": "2.2.2-post.11-ci.12043306412",
-    "@mse/utils": "workspace:*",
+    "@maaxyz/maa-node": "2.2.2-post.14-ci.12068666732",
     "@mse/types": "workspace:*",
+    "@mse/utils": "workspace:*",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.17.8",
     "@types/vscode": "^1.95.0",
+    "json-with-bigint": "^2.2.3",
     "jsonc-parser": "^3.3.1",
     "reactive-vscode": "^0.2.9",
     "typescript": "^5.7.2"

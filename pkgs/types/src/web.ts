@@ -1,3 +1,5 @@
+import type * as maa from '@maaxyz/maa-node'
+
 export type IpcRest = {
   __builtin?: false
   cmd: string
@@ -30,17 +32,63 @@ export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Cont
 
 export type IpcToHost<Context, Rest extends IpcRest> = IpcToHostBuiltin<Context> | Rest
 
-export type ControlPanelContext = {
-  interfaces?: {
-    path: string
-    content: unknown
-  }[]
-  refreshingInterface?: boolean
-  selectedInterface?: string
-}
+export type ControlPanelContext = {}
 
 export type ControlPanelToHost = {
   cmd: 'refreshInterface'
 }
 
 export type ControlPanelFromHost = never
+
+export type RecoInfo = {
+  raw: string
+  draws: string[]
+  info: {
+    name: string
+    algorithm: string
+    hit: boolean
+    box: maa.api.Rect
+    detail: string
+  }
+}
+
+export type ExtToWeb =
+  | {
+      cmd: 'launch.setup'
+    }
+  | {
+      cmd: 'launch.notify'
+      msg: string
+      details: string
+    }
+  | ({
+      cmd: 'show.reco'
+    } & RecoInfo)
+  | {
+      cmd: 'crop.setup'
+    }
+  | {
+      cmd: 'crop.image'
+      image: string
+    }
+
+export type WebToExt =
+  | {
+      cmd: 'launch.reco'
+      reco: number
+    }
+  | {
+      cmd: 'launch.stop'
+    }
+  | {
+      cmd: 'crop.screencap'
+    }
+  | {
+      cmd: 'crop.upload'
+    }
+  | {
+      cmd: 'crop.download'
+      image: string
+      roi: maa.api.FlatRect
+      expandRoi: maa.api.FlatRect
+    }

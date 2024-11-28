@@ -7,7 +7,8 @@ esBuild({
   outdir: 'release/out',
   external: ['@maaxyz/maa-node', 'vscode'],
   platform: 'node',
-  sourcemap: true
+  sourcemap: true,
+  mainFields: ['module', 'main']
 })
 
 viteBuild({

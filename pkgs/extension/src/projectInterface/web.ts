@@ -1,10 +1,11 @@
 import maa from '@maaxyz/maa-node'
 import * as vscode from 'vscode'
 
-import type { ExtToWeb, WebToExt } from '../../types/ipc'
+import type { ExtToWeb, WebToExt } from '@mse/types'
+import { t } from '@mse/utils'
+
 import { commands } from '../command'
 import { Service } from '../data'
-import { t } from '../locale'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { ProjectInterfaceLaunchProvider } from './launcher'
@@ -16,8 +17,8 @@ function toPngDataUrl(buffer: ArrayBuffer) {
 export class ProjectInterfaceWebProvider extends Service {
   panel: vscode.WebviewPanel | null
 
-  constructor(context: vscode.ExtensionContext) {
-    super(context)
+  constructor() {
+    super()
 
     this.panel = null
 
@@ -31,7 +32,7 @@ export class ProjectInterfaceWebProvider extends Service {
   acquire(create: boolean): Promise<vscode.WebviewPanel | null>
   async acquire(create = true) {
     if (!this.panel && create) {
-      const rootUri = vscode.Uri.file(this.__context.asAbsolutePath('web'))
+      const rootUri = vscode.Uri.file(this.context.asAbsolutePath('web'))
 
       this.panel = vscode.window.createWebviewPanel(
         'maa.Webview',

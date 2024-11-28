@@ -4,8 +4,8 @@ import { ProviderBase } from './providerBase'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineReferenceProvider extends ProviderBase implements vscode.ReferenceProvider {
-  constructor(context: vscode.ExtensionContext) {
-    super(context, selector => {
+  constructor() {
+    super(selector => {
       return vscode.languages.registerReferenceProvider(selector, this)
     })
   }

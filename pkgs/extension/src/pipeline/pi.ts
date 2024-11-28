@@ -1,12 +1,13 @@
 import EventEmitter from 'events'
+import { JSONParse, JSONStringify } from 'json-with-bigint'
 import path from 'path'
 import * as vscode from 'vscode'
 
+import { t } from '@mse/utils'
+
 import { commands } from '../command'
 import { Service } from '../data'
-import { t } from '../locale'
 import { Interface, InterfaceConfig } from '../projectInterface/type'
-import { JSONParse, JSONStringify } from '../utils/json-bigint'
 import { PipelineRootStatusProvider } from './root'
 
 export class PipelineProjectInterfaceProvider extends Service {
@@ -21,8 +22,8 @@ export class PipelineProjectInterfaceProvider extends Service {
     activateResourceChanged: [resource: vscode.Uri[]]
   }>
 
-  constructor(context: vscode.ExtensionContext) {
-    super(context)
+  constructor() {
+    super()
 
     this.defer = this.configStatusItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left

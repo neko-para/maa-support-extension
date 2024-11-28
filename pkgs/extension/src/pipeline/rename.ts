@@ -1,13 +1,13 @@
 import * as vscode from 'vscode'
 
-import { commands } from '../command'
-import { t } from '../locale'
+import { t } from '@mse/utils'
+
 import { ProviderBase } from './providerBase'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineRenameProvider extends ProviderBase implements vscode.RenameProvider {
-  constructor(context: vscode.ExtensionContext) {
-    super(context, selector => {
+  constructor() {
+    super(selector => {
       return vscode.languages.registerRenameProvider(selector, this)
     })
   }

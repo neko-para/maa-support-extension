@@ -1,12 +1,11 @@
 import * as vscode from 'vscode'
 
 import { ProviderBase } from './providerBase'
-import { PipelineRootStatusProvider } from './root'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineHoverProvider extends ProviderBase implements vscode.HoverProvider {
-  constructor(context: vscode.ExtensionContext) {
-    super(context, selector => {
+  constructor() {
+    super(selector => {
       return vscode.languages.registerHoverProvider(selector, this)
     })
   }

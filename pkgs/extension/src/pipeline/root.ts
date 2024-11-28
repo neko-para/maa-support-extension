@@ -1,10 +1,11 @@
 import EventEmitter from 'events'
 import * as vscode from 'vscode'
 
+import { t } from '@mse/utils'
+
 import { commands } from '../command'
 import { Service } from '../data'
-import { t } from '../locale'
-import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../utils/fs'
+import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../fs'
 
 export class PipelineRootStatusProvider extends Service {
   rootStatusItem: vscode.StatusBarItem
@@ -16,8 +17,8 @@ export class PipelineRootStatusProvider extends Service {
     activateRootChanged: []
   }>
 
-  constructor(context: vscode.ExtensionContext) {
-    super(context)
+  constructor() {
+    super()
 
     this.defer = this.rootStatusItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left

@@ -10,7 +10,7 @@ export function visitJsonDocument(
     onArrayBegin?: (start: vscode.Position, path: JSONPath) => void
     onArrayEnd?: (range: vscode.Range, path: JSONPath) => void
     onLiteral?: (
-      value: string | number | boolean | null,
+      value: string | number | bigint | boolean | null,
       range: vscode.Range,
       path: JSONPath
     ) => void

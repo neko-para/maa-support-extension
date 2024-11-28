@@ -1,13 +1,14 @@
 import * as vscode from 'vscode'
 
+import { t } from '@mse/utils'
+
 import { commands } from '../command'
-import { t } from '../locale'
 import { ProviderBase } from './providerBase'
 import { PipelineTaskIndexProvider } from './task'
 
 export class PipelineCodeLensProvider extends ProviderBase implements vscode.CodeLensProvider {
-  constructor(context: vscode.ExtensionContext) {
-    super(context, selector => {
+  constructor() {
+    super(selector => {
       return vscode.languages.registerCodeLensProvider(selector, this)
     })
   }

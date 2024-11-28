@@ -11,12 +11,12 @@ function refreshInterface() {
 }
 
 function selectInterface(i: string) {
-  ipc.webvContext.value.selectedInterface = i
+  ipc.context.value.selectedInterface = i
 }
 
 const selected = computed(() => {
-  for (const i of ipc.hostContext.value.interfaces ?? []) {
-    if (i.path === ipc.webvContext.value.selectedInterface) {
+  for (const i of ipc.context.value.interfaces ?? []) {
+    if (i.path === ipc.context.value.selectedInterface) {
       return i
     }
   }
@@ -29,25 +29,24 @@ onMounted(() => {
 </script>
 
 <template>
-  {{ ipc.hostContext }}
-  {{ ipc.webvContext }}
+  {{ ipc.context }}
   <div id="interfaceSelectGroup">
     <vscode-single-select
-      :disabled="ipc.hostContext.value.refreshingInterface"
+      :disabled="ipc.context.value.refreshingInterface"
       @change="(ev: Event) => selectInterface((ev.target as VscodeSingleSelect).value)"
     >
       <vscode-option
-        v-for="(i, k) in ipc.hostContext.value.interfaces ?? []"
+        v-for="(i, k) in ipc.context.value.interfaces ?? []"
         :key="k"
-        :selected="i.path === ipc.webvContext.value.selectedInterface"
+        :selected="i.path === ipc.context.value.selectedInterface"
       >
         {{ i.path }}
       </vscode-option>
     </vscode-single-select>
     <vscode-button
-      :icon="ipc.hostContext.value.refreshingInterface ? 'loading' : undefined"
+      :icon="ipc.context.value.refreshingInterface ? 'loading' : undefined"
       iconSpin
-      :disabled="ipc.hostContext.value.refreshingInterface"
+      :disabled="ipc.context.value.refreshingInterface"
       @click="refreshInterface"
     >
       刷新

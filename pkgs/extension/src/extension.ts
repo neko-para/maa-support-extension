@@ -1,18 +1,12 @@
 import { defineExtension, watch } from 'reactive-vscode'
 
-import {
-  ControlPanelFromHost,
-  ControlPanelHostContext,
-  ControlPanelToHost,
-  ControlPanelWebvContext
-} from '@mse/types'
+import { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '@mse/types'
 import { createUseWebView } from '@mse/utils'
 
 import { useInterfaceRoot } from './pi/root'
 
 export const useControlPanel = createUseWebView<
-  ControlPanelHostContext,
-  ControlPanelWebvContext,
+  ControlPanelContext,
   ControlPanelToHost,
   ControlPanelFromHost
 >('controlPanel', 'maa.view.control-panel')

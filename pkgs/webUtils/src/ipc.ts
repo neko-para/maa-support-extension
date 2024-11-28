@@ -1,20 +1,16 @@
 import { ref, watch } from 'vue'
 
-import type { IpcFromHost, IpcRest, IpcToHost, IpcToHostBuiltin } from '@mse/types'
+import type { IpcFromHost, IpcRest, IpcToHost } from '@mse/types'
 
-export function useIpc<HostContext, WebvContext, TH extends IpcRest, FH extends IpcRest>(
-  inited: () => void
-) {
+export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(inited: () => void) {
   const vscodeApi = acquireVsCodeApi()
 
   const handler = ref<(data: FH) => void>(() => {})
 
   let sync = false
+  const context = ref<Context>({} as Context)
 
-  const hostContext = ref<HostContext>({} as HostContext)
-  const webvContext = ref<WebvContext>({} as WebvContext)
-
-  const realPost = (data: IpcToHost<WebvContext, TH>) => {
+  const realPost = (data: IpcToHost<Context, TH>) => {
     // console.log('[webv] post', data)
     vscodeApi.postMessage(JSON.stringify(data))
   }
@@ -24,31 +20,36 @@ export function useIpc<HostContext, WebvContext, TH extends IpcRest, FH extends 
   }
 
   window.addEventListener('message', ev => {
-    const data = JSON.parse(ev.data) as IpcFromHost<HostContext, WebvContext, FH>
+    const data = JSON.parse(ev.data) as IpcFromHost<Context, FH>
     // console.log('[webv] recv', data)
     if (data.__builtin) {
       switch (data.cmd) {
         case 'initContext':
-          webvContext.value = data.ctx
+          context.value = data.ctx
 
           watch(
-            () => webvContext.value,
+            () => context.value,
             ctx => {
-              realPost({
-                __builtin: true,
-                cmd: 'updateContext',
-                ctx
-              })
+              if (!sync) {
+                realPost({
+                  __builtin: true,
+                  cmd: 'updateContext',
+                  ctx
+                })
+              }
             },
             {
-              deep: true
+              deep: true,
+              flush: 'sync'
             }
           )
 
           inited()
           break
         case 'updateContext':
-          hostContext.value = data.ctx
+          sync = true
+          context.value = data.ctx
+          sync = false
           break
       }
     } else {
@@ -62,8 +63,7 @@ export function useIpc<HostContext, WebvContext, TH extends IpcRest, FH extends 
   })
 
   return {
-    hostContext,
-    webvContext,
+    context,
     handler,
     postMessage
   }

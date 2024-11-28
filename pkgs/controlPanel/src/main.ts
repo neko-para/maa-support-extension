@@ -1,22 +1,12 @@
 import '@vscode-elements/elements'
 import { computed, createApp } from 'vue'
 
-import type {
-  ControlPanelFromHost,
-  ControlPanelHostContext,
-  ControlPanelToHost,
-  ControlPanelWebvContext
-} from '@mse/types'
+import type { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '@mse/types'
 import { useIpc } from '@mse/web-utils'
 
 import App from '@/App.vue'
 
-export const ipc = useIpc<
-  ControlPanelHostContext,
-  ControlPanelWebvContext,
-  ControlPanelToHost,
-  ControlPanelFromHost
->(() => {
+export const ipc = useIpc<ControlPanelContext, ControlPanelToHost, ControlPanelFromHost>(() => {
   createApp(App).mount('#app')
 })
 

@@ -54,24 +54,24 @@ async function locateInterfaces() {
 }
 
 export function useInterfaceRoot() {
-  const { hostContext, webvContext } = useControlPanel()
+  const { context } = useControlPanel()
 
   async function scanInterfaceRoot() {
-    hostContext.value.refreshingInterface = true
+    context.value.refreshingInterface = true
     const interfaces = await locateInterfaces()
-    hostContext.value.interfaces = await Promise.all(
+    context.value.interfaces = await Promise.all(
       interfaces.map(async x => ({
         path: x.interfaceRelative,
         content: JSON.parse((await vscfs.readFile(x.interfaceUri)).toString())
       }))
     )
-    if (!hostContext.value.interfaces.find(x => x.path === webvContext.value.selectedInterface)) {
-      webvContext.value.selectedInterface
+    if (!context.value.interfaces.find(x => x.path === context.value.selectedInterface)) {
+      context.value.selectedInterface = undefined
     }
-    if (hostContext.value.interfaces.length === 0) {
+    if (context.value.interfaces.length === 0) {
       vscode.window.showErrorMessage(t('maa.pipeline.error.no-interface-found'))
     }
-    hostContext.value.refreshingInterface = false
+    context.value.refreshingInterface = false
   }
 
   return {

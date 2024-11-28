@@ -34,7 +34,10 @@ onMounted(() => {
 </script>
 
 <template>
-  {{ ipc.context }}
+  <div>
+    <vscode-button @click="ipc.context.value = {}"> Reset </vscode-button>
+  </div>
+
   <div id="interfaceSelectGroup">
     <vscode-single-select v-model="current" :disabled="ipc.context.value.interfaceRefreshing">
       <vscode-option v-for="(i, k) in ipc.context.value.interfaceList ?? []" :key="k">
@@ -49,6 +52,9 @@ onMounted(() => {
     >
       刷新
     </vscode-button>
+  </div>
+  <div>
+    <pre>{{ JSON.stringify(ipc.context.value, null, 2) }}</pre>
   </div>
 </template>
 

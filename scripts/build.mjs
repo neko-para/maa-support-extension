@@ -1,4 +1,5 @@
 import { build as esBuild } from 'esbuild'
+import path from 'path'
 import { build as viteBuild } from 'vite'
 
 esBuild({

@@ -233,8 +233,8 @@ function TaskOptionPanel(props: { task: InterfaceConfig['task'][number] }) {
         })
 
         return (
-          <div class={'row-flex'}>
-            <span class={'fixed'}> {opt} </span>
+          <div class={'col-flex'} style="gap: 0.25rem">
+            <span>{opt}</span>
             <vscode-single-select
               value={value.value}
               onChange={(v: Event) => {
@@ -267,12 +267,15 @@ function prevent(e: Event) {
   <div id="root">
     <div class="row-flex" style="margin-top: 0.5rem">
       <span class="fixed">配置</span>
-      <vscode-single-select v-model="currentInterface" :disabled="alterDisable">
-        <vscode-option v-for="(i, k) in ipc.context.value.interfaceList ?? []" :key="k">
-          {{ i }}
-        </vscode-option>
-      </vscode-single-select>
+      <div class="col-flex">
+        <vscode-single-select v-model="currentInterface" :disabled="alterDisable">
+          <vscode-option v-for="(i, k) in ipc.context.value.interfaceList ?? []" :key="k">
+            {{ i }}
+          </vscode-option>
+        </vscode-single-select>
+      </div>
       <vscode-button
+        class="fixed"
         :icon="ipc.context.value.interfaceRefreshing ? 'loading' : undefined"
         iconSpin
         :disabled="alterDisable"
@@ -313,7 +316,9 @@ function prevent(e: Event) {
             :disabled="alterDisable"
           >
           </vscode-single-select>
-          <vscode-button @click="addTask" :disabled="alterDisable"> 添加 </vscode-button>
+          <vscode-button class="fixed" @click="addTask" :disabled="alterDisable">
+            添加
+          </vscode-button>
         </div>
         <div class="col-flex" style="gap: 0">
           <vscode-collapsible

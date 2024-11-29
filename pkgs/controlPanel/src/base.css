@@ -24,6 +24,13 @@ body,
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  min-width: 0;
+}
+
+.fixed {
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
 vscode-collapsible::part(body) {

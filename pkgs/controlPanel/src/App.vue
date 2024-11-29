@@ -196,7 +196,7 @@ function TaskOptionPanel(props: { task: InterfaceConfig['task'][number] }) {
   }
 
   return (
-    <div class={'col-flex'} style="padding: 0.5rem">
+    <div class={'col-flex'} style="padding: 0.5rem 0 0.5rem 0;">
       {proto.option?.map((opt, idx) => {
         const optionProto = ipc.context.value.interfaceObj?.option?.[opt]
         if (!optionProto) {
@@ -205,7 +205,6 @@ function TaskOptionPanel(props: { task: InterfaceConfig['task'][number] }) {
 
         const value = computed<string | undefined>({
           set(v?: string) {
-            console.log('set!', v)
             if (v) {
               if (!props.task.option) {
                 props.task.option = [
@@ -235,7 +234,7 @@ function TaskOptionPanel(props: { task: InterfaceConfig['task'][number] }) {
 
         return (
           <div class={'row-flex'}>
-            <span> {opt} </span>
+            <span class={'fixed'}> {opt} </span>
             <vscode-single-select
               value={value.value}
               onChange={(v: Event) => {
@@ -267,7 +266,7 @@ function prevent(e: Event) {
 <template>
   <div id="root">
     <div class="row-flex" style="margin-top: 0.5rem">
-      <span>配置</span>
+      <span class="fixed">配置</span>
       <vscode-single-select v-model="currentInterface" :disabled="alterDisable">
         <vscode-option v-for="(i, k) in ipc.context.value.interfaceList ?? []" :key="k">
           {{ i }}
@@ -283,7 +282,7 @@ function prevent(e: Event) {
       </vscode-button>
     </div>
     <div class="row-flex">
-      <span>资源</span>
+      <span class="fixed">资源</span>
       <vscode-single-select
         v-model="currentResource"
         :options="resourceOptions"
@@ -292,7 +291,7 @@ function prevent(e: Event) {
       </vscode-single-select>
     </div>
     <div class="row-flex">
-      <span>控制</span>
+      <span class="fixed">控制</span>
       <div class="col-flex">
         <vscode-single-select
           v-model="currentController"
@@ -305,7 +304,7 @@ function prevent(e: Event) {
       </div>
     </div>
     <div class="row-flex">
-      <span> 任务 </span>
+      <span class="fixed">任务</span>
       <div class="col-flex">
         <div class="row-flex">
           <vscode-single-select
@@ -324,7 +323,6 @@ function prevent(e: Event) {
             :open="task.__vscExpand ?? true"
             @vsc-collapsible-toggle="
               (e: CustomEvent) => {
-                console.log(k, (e.target as VscodeCollapsible).open)
                 task.__vscExpand = (e.target as VscodeCollapsible).open
               }
             "

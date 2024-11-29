@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Option } from '@vscode-elements/elements/dist/includes/vscode-select/types'
 import { VscodeSingleSelect } from '@vscode-elements/elements/dist/vscode-single-select'
 import { JSONStringify } from 'json-with-bigint'
 import { computed, onMounted } from 'vue'
@@ -75,6 +76,21 @@ const currentController = computed<string | undefined>({
   }
 })
 
+const controllerOptions = computed<Option[]>(() => {
+  return (
+    ipc.context.value.interfaceObj?.controller?.map(i => {
+      return {
+        label: i.name,
+        value: i.name,
+        description: `${i.type}\n${tryStringify(i.type === 'Adb' ? i.adb : i.win32)}`,
+        // selected: currentController.value === i.name,
+        selected: false,
+        disabled: false
+      } satisfies Option
+    }) ?? []
+  )
+})
+
 onMounted(() => {
   refreshInterface()
 })
@@ -121,15 +137,9 @@ onMounted(() => {
         <span>控制</span>
         <vscode-single-select
           v-model="currentController"
+          :options="controllerOptions"
           :disabled="ipc.context.value.interfaceRefreshing"
         >
-          <vscode-option
-            v-for="(i, k) in ipc.context.value.interfaceObj?.controller ?? []"
-            :key="k"
-            :description="`${i.type}\n${tryStringify(i.type === 'Adb' ? i.adb : i.win32)}`"
-          >
-            {{ i.name }}
-          </vscode-option>
         </vscode-single-select>
       </div>
     </div>

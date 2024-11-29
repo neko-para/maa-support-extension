@@ -1,6 +1,6 @@
 // import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
-// import vueJsx from '@vitejs/plugin-vue-jsx'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import path from 'path'
 import { defineConfig } from 'vite'
 
@@ -37,8 +37,8 @@ export default defineConfig({
           isCustomElement: tag => tag.startsWith('vscode-')
         }
       }
-    })
-    // vueJsx()
+    }),
+    vueJsx()
     // VueI18nPlugin({
     //   include: [path.resolve(__dirname, './src/i18n/locales/*.json')],
     //   strictMessage: false

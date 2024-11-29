@@ -59,6 +59,8 @@ export type InterfaceConfig = {
       name: string
       value: string
     }[]
+
+    __vscExpand?: boolean
   }[]
   // gpu?: number
 }

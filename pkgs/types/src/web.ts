@@ -41,6 +41,8 @@ export type ControlPanelContext = {
 
   interfaceObj?: Partial<Interface>
   interfaceConfigObj?: Partial<InterfaceConfig>
+
+  interfaceLaunching?: boolean
 }
 
 export type ControlPanelToHost =
@@ -50,6 +52,9 @@ export type ControlPanelToHost =
   | {
       cmd: 'selectInterface'
       interface: string
+    }
+  | {
+      cmd: 'launchInterface'
     }
 
 export type ControlPanelFromHost = never

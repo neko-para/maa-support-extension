@@ -89,6 +89,11 @@ function initControlPanel() {
         context.value.interfaceRefreshing = false
         break
       }
+      case 'launchInterface':
+        context.value.interfaceLaunching = true
+        sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(5)
+        context.value.interfaceLaunching = false
+        break
     }
   }
 

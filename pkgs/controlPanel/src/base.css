@@ -3,11 +3,29 @@ body {
   padding: 0;
 }
 
-html, body, #app {
+html,
+body,
+#app {
   height: 100vh;
 }
 
 #app {
   display: flex;
   flex-direction: column;
+}
+
+.row-flex {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.col-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+vscode-collapsible::part(body) {
+  overflow: visible;
 }

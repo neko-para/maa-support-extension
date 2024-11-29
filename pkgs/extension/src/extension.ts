@@ -30,7 +30,9 @@ function initControlPanel() {
   handler.value = async data => {
     switch (data.cmd) {
       case 'refreshInterface':
-        await sharedInstance(PipelineRootStatusProvider).syncRootInfo()
+        await sharedInstance(PipelineRootStatusProvider).syncRootInfo(
+          context.value.interfaceCurrent
+        )
         context.value.interfaceList = sharedInstance(PipelineRootStatusProvider).resourceRoot.map(
           x => x.interfaceRelative
         )

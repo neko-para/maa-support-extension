@@ -24,14 +24,14 @@ export class PipelineRootStatusProvider extends Service {
     this.selector = null
 
     this.event = new EventEmitter()
-
-    this.syncRootInfo()
   }
 
-  async syncRootInfo() {
+  async syncRootInfo(trySelect?: string) {
+    const oldInterface = trySelect ?? this.activateResource?.interfaceRelative ?? null
     this.resourceRoot = await locateResourceRoot()
     if (this.resourceRoot.length > 0) {
-      this.activateResource = this.resourceRoot[0]
+      this.activateResource =
+        this.resourceRoot.find(x => x.interfaceRelative === oldInterface) ?? this.resourceRoot[0]
     } else {
       this.activateResource = null
     }

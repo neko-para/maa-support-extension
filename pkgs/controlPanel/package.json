@@ -1,14 +1,15 @@
 {
   "name": "@mse/control-panel",
   "devDependencies": {
-    "@mse/web-utils": "workspace:*",
     "@mse/types": "workspace:*",
+    "@mse/web-utils": "workspace:*",
     "@types/node": "^20.17.8",
     "@types/vscode-webview": "^1.57.5",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vscode-elements/elements": "^1.9.0",
     "@vscode/codicons": "^0.0.36",
     "@vue/tsconfig": "^0.5.1",
+    "json-with-bigint": "^2.2.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.1",
     "vue": "^3.5.13"

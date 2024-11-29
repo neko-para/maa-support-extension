@@ -2,11 +2,12 @@
   "name": "@mse/web-utils",
   "main": "./src/index.ts",
   "devDependencies": {
+    "@mse/types": "workspace:*",
     "@types/node": "^20.17.8",
     "@types/vscode-webview": "^1.57.5",
     "@vue/tsconfig": "^0.5.1",
+    "json-with-bigint": "^2.2.3",
     "typescript": "^5.7.2",
-    "vue": "^3.5.13",
-    "@mse/types": "workspace:*"
+    "vue": "^3.5.13"
   }
 }

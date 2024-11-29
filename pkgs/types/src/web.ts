@@ -1,5 +1,7 @@
 import type * as maa from '@maaxyz/maa-node'
 
+import type { Interface, InterfaceConfig } from './pi'
+
 export type IpcRest = {
   __builtin?: false
   cmd: string
@@ -36,6 +38,9 @@ export type ControlPanelContext = {
   interfaceList?: string[]
   interfaceCurrent?: string
   interfaceRefreshing?: boolean
+
+  interfaceObj?: Partial<Interface>
+  interfaceConfigObj?: Partial<InterfaceConfig>
 }
 
 export type ControlPanelToHost =

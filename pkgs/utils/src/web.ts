@@ -1,3 +1,4 @@
+import { JSONParse, JSONStringify } from 'json-with-bigint'
 import {
   ShallowRef,
   createSingletonComposable,
@@ -36,7 +37,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         localResourceRoots: [rootUri]
       },
       onDidReceiveMessage(data: string) {
-        const msg = JSON.parse(data) as IpcToHost<Context, TH>
+        const msg = JSONParse(data) as IpcToHost<Context, TH>
         // console.log('[host] recv', msg)
         if (msg.__builtin) {
           switch (msg.cmd) {
@@ -62,7 +63,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
 
     realPost = (data: IpcFromHost<Context, FH>) => {
       // console.log('[host] post', data)
-      postMessage(JSON.stringify(data))
+      postMessage(JSONStringify(data))
     }
 
     const post = (data: FH) => {

@@ -1,3 +1,4 @@
+import { JSONParse, JSONStringify } from 'json-with-bigint'
 import { ref, watch } from 'vue'
 
 import type { IpcFromHost, IpcRest, IpcToHost } from '@mse/types'
@@ -12,7 +13,7 @@ export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(inited: 
 
   const realPost = (data: IpcToHost<Context, TH>) => {
     // console.log('[webv] post', data)
-    vscodeApi.postMessage(JSON.stringify(data))
+    vscodeApi.postMessage(JSONStringify(data))
   }
 
   const postMessage = (data: TH) => {
@@ -20,7 +21,7 @@ export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(inited: 
   }
 
   window.addEventListener('message', ev => {
-    const data = JSON.parse(ev.data) as IpcFromHost<Context, FH>
+    const data = JSONParse(ev.data) as IpcFromHost<Context, FH>
     // console.log('[webv] recv', data)
     if (data.__builtin) {
       switch (data.cmd) {

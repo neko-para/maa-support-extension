@@ -128,7 +128,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
           pip.interfaceConfigJson = newConfig
         }
 
-        pip.updateConfigStatus()
         await pip.saveInterface()
       }
       while (pip.interfaceJson && pip.interfaceConfigJson) {

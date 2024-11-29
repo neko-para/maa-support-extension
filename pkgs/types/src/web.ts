@@ -42,6 +42,7 @@ export type ControlPanelContext = {
   interfaceObj?: Partial<Interface>
   interfaceConfigObj?: Partial<InterfaceConfig>
 
+  interfaceAddTask?: string
   interfaceLaunching?: boolean
 }
 

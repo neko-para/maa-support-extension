@@ -91,8 +91,6 @@ const currentControllerType = computed(() => {
   )?.type
 })
 
-const currentAddTask = ref<string | undefined>(undefined)
-
 const resourceOptions = computed<Option[]>(() => {
   return (
     ipc.context.value.interfaceObj?.resource?.map(i => {
@@ -139,7 +137,7 @@ const taskAddOptions = computed<Option[]>(() => {
 })
 
 function addTask() {
-  const taskName = currentAddTask.value
+  const taskName = ipc.context.value.interfaceAddTask
   if (!taskName) {
     return
   }
@@ -311,7 +309,7 @@ function prevent(e: Event) {
       <div class="col-flex">
         <div class="row-flex">
           <vscode-single-select
-            v-model="currentAddTask"
+            v-model="ipc.context.value.interfaceAddTask"
             :options="taskAddOptions"
             :disabled="alterDisable"
           >

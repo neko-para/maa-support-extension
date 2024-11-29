@@ -43,6 +43,8 @@ jobs:
         shell: bash
         run: |
           node scripts/build.mjs
+          cd pkgs/web
+          npx vite build
 
       - name: Change Version
         shell: bash

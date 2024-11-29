@@ -1,6 +1,7 @@
 {
   "name": "maa-support",
   "displayName": "Maa Pipeline Support",
+  "version": "0.0.0-dev",
   "publisher": "nekosu",
   "description": "Maa framework support",
   "repository": "https://github.com/neko-para/maa-support-extension",

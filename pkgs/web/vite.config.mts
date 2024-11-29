@@ -13,7 +13,7 @@ export default defineConfig({
     port: 9877
   },
   build: {
-    outDir: '../release/web',
+    outDir: '../../release/web',
     emptyOutDir: true,
     sourcemap: true
   },

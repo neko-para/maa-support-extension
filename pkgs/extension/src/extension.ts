@@ -94,8 +94,9 @@ function initControlPanel() {
 
   watch(
     () => context.value.interfaceConfigObj,
-    v => {
-      sharedInstance(PipelineProjectInterfaceProvider).saveConfig(JSONStringify(v, 4))
+    async v => {
+      await sharedInstance(PipelineProjectInterfaceProvider).saveConfig(JSONStringify(v, 4))
+      await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
     },
     {
       deep: true

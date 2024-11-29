@@ -147,9 +147,9 @@ onMounted(() => {
     <div>
       <vscode-button @click="ipc.context.value = {}"> Reset </vscode-button>
     </div>
-    <div>
+    <vscode-scrollable id="contextDump">
       <pre>{{ JSONStringify(ipc.context.value, 2) }}</pre>
-    </div>
+    </vscode-scrollable>
   </div>
 </template>
 
@@ -170,5 +170,11 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  height: 100%;
+}
+
+#contextDump {
+  flex: 1 1 auto;
+  overflow-y: auto;
 }
 </style>

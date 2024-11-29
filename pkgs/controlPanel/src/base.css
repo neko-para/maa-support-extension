@@ -2,3 +2,12 @@ body {
   margin: 0;
   padding: 0;
 }
+
+html, body, #app {
+  height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}

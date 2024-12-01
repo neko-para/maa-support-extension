@@ -48,8 +48,8 @@ export class PipelineProjectInterfaceProvider extends Service {
       : null
   }
 
-  async saveConfig(json: string) {
-    if (json === null) {
+  async saveConfig(json?: string) {
+    if (json === undefined) {
       return
     }
     const root = this.shared(PipelineRootStatusProvider).activateResource

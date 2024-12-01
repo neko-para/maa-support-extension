@@ -1,4 +1,4 @@
-import maa from '@maaxyz/maa-node'
+import * as maa from '@maaxyz/maa-node'
 import { JSONStringify } from 'json-with-bigint'
 import * as vscode from 'vscode'
 

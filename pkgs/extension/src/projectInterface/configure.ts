@@ -1,4 +1,4 @@
-import maa from '@maaxyz/maa-node'
+import * as maa from '@maaxyz/maa-node'
 import * as vscode from 'vscode'
 
 import { t } from '@mse/utils'

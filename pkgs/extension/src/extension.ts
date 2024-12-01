@@ -1,6 +1,7 @@
 import * as maa from '@maaxyz/maa-node'
-import { JSONParse, JSONStringify } from 'json-with-bigint'
+import { JSONParse, JSONStringify, Json } from 'json-with-bigint'
 import { defineExtension, useCommand, watch } from 'reactive-vscode'
+import sms from 'source-map-support'
 import vscode from 'vscode'
 
 import {
@@ -25,6 +26,8 @@ import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 import { ProjectInterfaceWebProvider } from './projectInterface/web'
+
+sms.install()
 
 export const useControlPanel = createUseWebView<
   ControlPanelContext,
@@ -100,7 +103,9 @@ function initControlPanel() {
   watch(
     () => context.value.interfaceConfigObj,
     async v => {
-      await sharedInstance(PipelineProjectInterfaceProvider).saveConfig(JSONStringify(v, 4))
+      await sharedInstance(PipelineProjectInterfaceProvider).saveConfig(
+        v ? JSONStringify(v, 4) : undefined
+      )
       await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
     },
     {

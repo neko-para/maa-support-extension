@@ -90,20 +90,17 @@ function useAdbDevice() {
           使用
         </vsc-button>
       </div>
-      <div class="grid-form">
-        <template v-if="currentControllerAdb?.adb_path">
-          <span class="fixed">adb</span>
-          <span> {{ currentControllerAdb.adb_path }} </span>
-        </template>
-        <template v-if="currentControllerAdb?.address">
-          <span class="fixed">address</span>
-          <span> {{ currentControllerAdb.address }} </span>
-        </template>
-        <template v-if="currentControllerAdb?.config">
+      <div v-if="currentControllerAdb?.adb_path && currentControllerAdb.address" class="grid-form">
+        <span class="fixed">adb</span>
+        <span> {{ currentControllerAdb.adb_path }} </span>
+        <span class="fixed">address</span>
+        <span> {{ currentControllerAdb.address }} </span>
+        <template v-if="currentControllerAdb.config">
           <span class="fixed">config</span>
           <span> {{ JSONStringify(currentControllerAdb.config) }} </span>
         </template>
       </div>
+      <span v-else> Adb 未配置 </span>
     </div>
     <div v-else-if="controllerSt.currentProto.value?.type === 'Win32'">Desktop配置 (未实现)</div>
   </div>

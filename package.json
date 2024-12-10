@@ -5,7 +5,7 @@
     "dev": "node scripts/watch.mjs"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "2.2.2-post.14-ci.12068666732",
+    "@maaxyz/maa-node": "^2.3.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
     "@vitejs/plugin-vue": "^5.0.5",

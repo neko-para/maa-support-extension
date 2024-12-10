@@ -97,6 +97,17 @@ function initControlPanel() {
         sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(5)
         context.value.interfaceLaunching = false
         break
+      case 'refreshAdbDevice':
+        context.value.adbDeviceRefreshing = true
+        const devs = (await maa.AdbController.find()) ?? []
+        context.value.adbDeviceList = devs.map(d => ({
+          name: d[0],
+          adb_path: d[1],
+          address: d[2],
+          config: JSONParse(d[5])
+        }))
+        context.value.adbDeviceRefreshing = false
+        break
     }
   }
 

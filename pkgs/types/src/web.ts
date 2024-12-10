@@ -44,6 +44,14 @@ export type ControlPanelContext = {
 
   interfaceAddTask?: string
   interfaceLaunching?: boolean
+
+  adbDeviceList?: {
+    name: string
+    adb_path: string
+    address: string
+    config: unknown
+  }[]
+  adbDeviceRefreshing?: boolean
 }
 
 export type ControlPanelToHost =
@@ -56,6 +64,9 @@ export type ControlPanelToHost =
     }
   | {
       cmd: 'launchInterface'
+    }
+  | {
+      cmd: 'refreshAdbDevice'
     }
 
 export type ControlPanelFromHost = never

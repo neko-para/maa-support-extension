@@ -91,6 +91,56 @@ const currentControllerType = computed(() => {
   )?.type
 })
 
+const currentControllerAdb = computed(() => {
+  return ipc.context.value.interfaceConfigObj?.adb
+})
+
+const currentAdbDevice = ref<string>('0')
+
+const adbDeviceOptions = computed<Option[]>(() => {
+  return (
+    ipc.context.value.adbDeviceList?.map((dev, idx) => {
+      return {
+        label: dev.name,
+        value: `${idx}`,
+        description: `${dev.address} - ${dev.adb_path}`,
+        selected: false,
+        disabled: false
+      } satisfies Option
+    }) ?? []
+  )
+})
+
+function refreshAdbDevice() {
+  ipc.postMessage({
+    cmd: 'refreshAdbDevice'
+  })
+}
+
+function useAdbDevice() {
+  if (/^\d+$/.test(currentAdbDevice.value ?? '')) {
+    const idx = parseInt(currentAdbDevice.value)
+    const dev = ipc.context.value.adbDeviceList?.[idx]
+    if (dev) {
+      if (ipc.context.value.interfaceConfigObj) {
+        ipc.context.value.interfaceConfigObj.adb = {
+          adb_path: dev.adb_path,
+          address: dev.address,
+          config: dev.config
+        }
+      } else {
+        ipc.context.value.interfaceConfigObj = {
+          adb: {
+            adb_path: dev.adb_path,
+            address: dev.address,
+            config: dev.config
+          }
+        }
+      }
+    }
+  }
+}
+
 const resourceOptions = computed<Option[]>(() => {
   return (
     ipc.context.value.interfaceObj?.resource?.map(i => {
@@ -256,11 +306,6 @@ function TaskOptionPanel(props: { task: InterfaceConfig['task'][number] }) {
     </div>
   )
 }
-
-function prevent(e: Event) {
-  e.preventDefault()
-  e.stopImmediatePropagation()
-}
 </script>
 
 <template>
@@ -302,7 +347,40 @@ function prevent(e: Event) {
           :disabled="alterDisable"
         >
         </vscode-single-select>
-        <div v-if="currentControllerType === 'Adb'">Adb配置 (未实现)</div>
+        <div v-if="currentControllerType === 'Adb'" class="col-flex">
+          <div class="row-flex">
+            <vscode-single-select
+              v-model="currentAdbDevice"
+              :options="adbDeviceOptions"
+              :disabled="alterDisable"
+            >
+            </vscode-single-select>
+            <vscode-button
+              :icon="ipc.context.value.adbDeviceRefreshing ? 'loading' : undefined"
+              iconSpin
+              :disabled="alterDisable || ipc.context.value.adbDeviceRefreshing"
+              @click="refreshAdbDevice"
+              >刷新</vscode-button
+            >
+            <vscode-button
+              :disabled="alterDisable || ipc.context.value.adbDeviceRefreshing"
+              @click="useAdbDevice"
+              >使用</vscode-button
+            >
+          </div>
+          <div v-if="currentControllerAdb?.adb_path" class="row-flex">
+            <span class="fixed">adb</span>
+            <span> {{ currentControllerAdb.adb_path }} </span>
+          </div>
+          <div v-if="currentControllerAdb?.address" class="row-flex">
+            <span class="fixed">address</span>
+            <span> {{ currentControllerAdb.address }} </span>
+          </div>
+          <div v-if="currentControllerAdb?.config" class="row-flex">
+            <span class="fixed">config</span>
+            <span> {{ JSONStringify(currentControllerAdb.config) }} </span>
+          </div>
+        </div>
         <div v-else-if="currentControllerType === 'Win32'">Desktop配置 (未实现)</div>
       </div>
     </div>

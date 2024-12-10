@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type * as maa from '@maaxyz/maa-node'
 import { JSONStringify } from 'json-with-bigint'
-import { computed, ref } from 'vue'
+import { type MapHTMLAttributes, computed, ref } from 'vue'
 
 import { VscButton, VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
 import { ipc } from '@/main'
@@ -8,6 +9,7 @@ import * as controllerSt from '@/states/controller'
 import * as interfaceSt from '@/states/interface'
 
 const currentAdbDevice = ref<string>('0')
+const currentDesktopWindow = ref<string | undefined>(undefined)
 
 const controllerOptions = computed<VscSingleSelectOption[]>(() => {
   return (
@@ -32,8 +34,22 @@ const adbDeviceOptions = computed<VscSingleSelectOption[]>(() => {
   )
 })
 
+const desktopWindowOptions = computed<VscSingleSelectOption[]>(() => {
+  return controllerSt.filteredDesktopWindowList.value.map((dev, idx) => {
+    return {
+      label: dev.window_name,
+      value: dev.hwnd,
+      description: dev.class_name
+    } satisfies VscSingleSelectOption
+  })
+})
+
 const currentControllerAdb = computed(() => {
   return interfaceSt.currentConfigObj.value.adb
+})
+
+const currentControllerDesktop = computed(() => {
+  return interfaceSt.currentConfigObj.value.win32
 })
 
 function useAdbDevice() {
@@ -41,22 +57,18 @@ function useAdbDevice() {
     const idx = parseInt(currentAdbDevice.value)
     const dev = ipc.context.value.adbDeviceList?.[idx]
     if (dev) {
-      if (ipc.context.value.interfaceConfigObj) {
-        ipc.context.value.interfaceConfigObj.adb = {
-          adb_path: dev.adb_path,
-          address: dev.address,
-          config: dev.config
-        }
-      } else {
-        ipc.context.value.interfaceConfigObj = {
-          adb: {
-            adb_path: dev.adb_path,
-            address: dev.address,
-            config: dev.config
-          }
-        }
+      interfaceSt.currentConfigObj.value.adb = {
+        adb_path: dev.adb_path,
+        address: dev.address,
+        config: dev.config
       }
     }
+  }
+}
+
+function useDesktopWindow() {
+  interfaceSt.currentConfigObj.value.win32 = {
+    hwnd: currentDesktopWindow.value as maa.api.DesktopHandle
   }
 }
 </script>
@@ -102,6 +114,33 @@ function useAdbDevice() {
       </div>
       <span v-else> Adb 未配置 </span>
     </div>
-    <div v-else-if="controllerSt.currentProto.value?.type === 'Win32'">Desktop配置 (未实现)</div>
+    <div v-if="controllerSt.currentProto.value?.type === 'Win32'" class="col-flex">
+      <div class="row-flex">
+        <vsc-single-select
+          v-model="currentDesktopWindow"
+          :options="desktopWindowOptions"
+          :disabled="interfaceSt.freezed.value"
+        ></vsc-single-select>
+        <vsc-button
+          :loading="ipc.context.value.adbDeviceRefreshing"
+          :disabled="interfaceSt.freezed.value || ipc.context.value.desktopWindowRefreshing"
+          @click="controllerSt.refreshDesktopWindow"
+        >
+          刷新
+        </vsc-button>
+        <vsc-button
+          :loading="ipc.context.value.adbDeviceRefreshing"
+          :disabled="interfaceSt.freezed.value || ipc.context.value.desktopWindowRefreshing"
+          @click="useDesktopWindow"
+        >
+          使用
+        </vsc-button>
+      </div>
+      <div v-if="currentControllerDesktop?.hwnd" class="grid-form">
+        <span class="fixed">hwnd</span>
+        <span> {{ currentControllerDesktop.hwnd }} </span>
+      </div>
+      <span v-else> Desktop 未配置 </span>
+    </div>
   </div>
 </template>

@@ -9,6 +9,12 @@ export function refreshAdbDevice() {
   })
 }
 
+export function refreshDesktopWindow() {
+  ipc.postMessage({
+    cmd: 'refreshDesktopWindow'
+  })
+}
+
 export const currentName = computed<string | undefined>({
   set(v?: string) {
     if (!interfaceSt.currentObj.value.controller?.find(x => x.name === v)) {
@@ -27,4 +33,17 @@ export const currentName = computed<string | undefined>({
 
 export const currentProto = computed(() => {
   return interfaceSt.currentObj.value.controller?.find(x => x.name === currentName.value)
+})
+
+export const filteredDesktopWindowList = computed(() => {
+  let list = ipc.context.value.desktopWindowList ?? []
+  if (currentProto.value?.win32?.window_regex) {
+    const reg = new RegExp(currentProto.value.win32.window_regex)
+    list = list.filter(x => reg.test(x.window_name))
+  }
+  if (currentProto.value?.win32?.class_regex) {
+    const reg = new RegExp(currentProto.value.win32.class_regex)
+    list = list.filter(x => reg.test(x.class_name))
+  }
+  return list
 })

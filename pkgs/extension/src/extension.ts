@@ -39,7 +39,11 @@ function initControlPanel() {
   const { handler, context } = useControlPanel()
 
   const tryParse = <T>(x?: string | null) => {
-    return x ? JSONParse<T>(x) : undefined
+    try {
+      return x ? JSONParse<T>(x) : undefined
+    } catch {
+      return undefined
+    }
   }
 
   handler.value = async data => {
@@ -97,7 +101,7 @@ function initControlPanel() {
         sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(5)
         context.value.interfaceLaunching = false
         break
-      case 'refreshAdbDevice':
+      case 'refreshAdbDevice': {
         context.value.adbDeviceRefreshing = true
         const devs = (await maa.AdbController.find()) ?? []
         context.value.adbDeviceList = devs.map(d => ({
@@ -108,6 +112,18 @@ function initControlPanel() {
         }))
         context.value.adbDeviceRefreshing = false
         break
+      }
+      case 'refreshDesktopWindow': {
+        context.value.desktopWindowRefreshing = true
+        const devs = (await maa.Win32Controller.find()) ?? []
+        context.value.desktopWindowList = devs.map(d => ({
+          hwnd: d[0],
+          window_name: d[1],
+          class_name: d[2]
+        }))
+        context.value.desktopWindowRefreshing = false
+        break
+      }
     }
   }
 

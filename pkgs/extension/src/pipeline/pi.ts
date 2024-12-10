@@ -57,7 +57,7 @@ export class PipelineProjectInterfaceProvider extends Service {
         vscode.Uri.file(path.dirname(root.configUri.fsPath))
       )
       await vscfs.writeFile(root.configUri, Buffer.from(json))
-      this.interfaceJson = JSONParse(json)
+      this.interfaceConfigJson = JSONParse(json)
     }
   }
 
@@ -84,10 +84,6 @@ export class PipelineProjectInterfaceProvider extends Service {
     }
     try {
       let json = await this.interfaceConfigContent
-      if (!json) {
-        await vscode.commands.executeCommand(commands.LaunchInterface)
-      }
-      json = await this.interfaceConfigContent
       if (json) {
         this.interfaceConfigJson = JSONParse(json)
         const newPaths = this.resourcePaths()

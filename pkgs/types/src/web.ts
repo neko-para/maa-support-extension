@@ -52,6 +52,13 @@ export type ControlPanelContext = {
     config: unknown
   }[]
   adbDeviceRefreshing?: boolean
+
+  desktopWindowList?: {
+    window_name: string
+    class_name: string
+    hwnd: maa.api.DesktopHandle
+  }[]
+  desktopWindowRefreshing?: boolean
 }
 
 export type ControlPanelToHost =
@@ -67,6 +74,9 @@ export type ControlPanelToHost =
     }
   | {
       cmd: 'refreshAdbDevice'
+    }
+  | {
+      cmd: 'refreshDesktopWindow'
     }
 
 export type ControlPanelFromHost = never

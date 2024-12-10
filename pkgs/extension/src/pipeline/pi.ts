@@ -15,7 +15,6 @@ export class PipelineProjectInterfaceProvider extends Service {
   interfaceConfigJson: InterfaceConfig | null
 
   event: EventEmitter<{
-    interfaceChanged: []
     activateResourceChanged: [resource: vscode.Uri[]]
   }>
 
@@ -65,6 +64,10 @@ export class PipelineProjectInterfaceProvider extends Service {
   async loadInterface() {
     const root = this.shared(PipelineRootStatusProvider).activateResource
 
+    const oldPaths = this.resourcePaths()
+      .map(x => x.fsPath)
+      .join(',')
+
     this.interfaceJson = null
     this.interfaceConfigJson = null
     if (!root) {
@@ -76,7 +79,6 @@ export class PipelineProjectInterfaceProvider extends Service {
         return
       }
       this.interfaceJson = JSONParse(json)
-      this.event.emit('interfaceChanged')
     } catch (_) {
       return
     }
@@ -88,7 +90,10 @@ export class PipelineProjectInterfaceProvider extends Service {
       json = await this.interfaceConfigContent
       if (json) {
         this.interfaceConfigJson = JSONParse(json)
-        this.event.emit('activateResourceChanged', this.resourcePaths())
+        const newPaths = this.resourcePaths()
+        if (newPaths.map(x => x.fsPath).join(',') !== oldPaths) {
+          this.event.emit('activateResourceChanged', newPaths)
+        }
       }
     } catch (_) {
       return
@@ -111,7 +116,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     if (!this.interfaceJson || !this.interfaceConfigJson) {
       return []
     }
-    const resInfo = this.interfaceJson.resource.find(
+    const resInfo = this.interfaceJson.resource?.find(
       x => x.name === this.interfaceConfigJson?.resource
     )
     if (!resInfo) {

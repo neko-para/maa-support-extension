@@ -16,16 +16,26 @@ body,
 
 .row-flex {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
   align-items: center;
 }
 
 .col-flex {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 
   min-width: 0;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem;
+}
+
+.grid-form > .fixed {
+  align-self: center;
 }
 
 .fixed {

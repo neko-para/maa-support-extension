@@ -93,6 +93,51 @@ export type RecoInfo = {
   }
 }
 
+export type OldWebContext = {
+  uploadDir?: string
+}
+
+export type OldWebToHost =
+  | {
+      cmd: 'launch.reco'
+      reco: number
+    }
+  | {
+      cmd: 'launch.stop'
+    }
+  | {
+      cmd: 'crop.screencap'
+    }
+  | {
+      cmd: 'crop.upload'
+    }
+  | {
+      cmd: 'crop.download'
+      image: string
+      roi: maa.api.FlatRect
+      expandRoi: maa.api.FlatRect
+    }
+
+export type OldWebFromHost =
+  | {
+      cmd: 'launch.setup'
+    }
+  | {
+      cmd: 'launch.notify'
+      msg: string
+      details: string
+    }
+  | ({
+      cmd: 'show.reco'
+    } & RecoInfo)
+  | {
+      cmd: 'crop.setup'
+    }
+  | {
+      cmd: 'crop.image'
+      image: string
+    }
+
 export type ExtToWeb =
   | {
       cmd: 'launch.setup'

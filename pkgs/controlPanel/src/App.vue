@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { JSONStringify } from 'json-with-bigint'
-import { computed, onMounted } from 'vue'
 
 import { VscButton, VscDivider, VscScrollable } from '@/components/VscEl'
 import * as interfaceSt from '@/states/interface'
@@ -10,14 +9,6 @@ import VController from './views/VController.vue'
 import VInterface from './views/VInterface.vue'
 import VResource from './views/VResource.vue'
 import VTask from './views/VTask.vue'
-
-const alterDisable = computed(() => {
-  return interfaceSt.refreshing.value || interfaceSt.launching.value
-})
-
-onMounted(() => {
-  interfaceSt.refresh()
-})
 </script>
 
 <template>
@@ -38,7 +29,7 @@ onMounted(() => {
     <div class="row-flex">
       <vsc-button
         :loading="interfaceSt.launching.value"
-        :disabled="alterDisable"
+        :disabled="interfaceSt.freezed.value"
         @click="interfaceSt.launch"
       >
         启动

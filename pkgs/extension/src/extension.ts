@@ -1,5 +1,6 @@
 import * as maa from '@maaxyz/maa-node'
 import { JSONParse, JSONStringify, Json } from 'json-with-bigint'
+import path from 'path'
 import { defineExtension, useCommand, watch } from 'reactive-vscode'
 import sms from 'source-map-support'
 import vscode from 'vscode'
@@ -9,9 +10,12 @@ import {
   ControlPanelFromHost,
   ControlPanelToHost,
   Interface,
-  InterfaceConfig
+  InterfaceConfig,
+  OldWebContext,
+  OldWebFromHost,
+  OldWebToHost
 } from '@mse/types'
-import { createUseWebView } from '@mse/utils'
+import { createUseWebPanel, createUseWebView, t } from '@mse/utils'
 
 import { commands } from './command'
 import { loadServices, sharedInstance } from './data'
@@ -26,7 +30,6 @@ import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
-import { ProjectInterfaceWebProvider } from './projectInterface/web'
 
 sms.install()
 
@@ -152,6 +155,111 @@ function initControlPanel() {
   })
 }
 
+const innerUseOldWebPanel = createUseWebPanel<OldWebContext, OldWebToHost, OldWebFromHost>(
+  'web',
+  'maa.Webview',
+  true
+)
+
+function toPngDataUrl(buffer: ArrayBuffer) {
+  return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
+}
+
+export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
+  const p = await innerUseOldWebPanel('Maa Support', column)
+  const { handler, context, post } = p
+
+  handler.value = async data => {
+    const pilp = sharedInstance(ProjectInterfaceLaunchProvider)
+
+    switch (data.cmd) {
+      case 'launch.reco':
+        const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as maa.api.RecoId)
+        if (!detailInfo) {
+          return
+        }
+        detailInfo.detail = JSON.stringify(JSON.parse(detailInfo.detail), null, 4)
+        post({
+          cmd: 'show.reco',
+          raw: toPngDataUrl(detailInfo.raw),
+          draws: detailInfo.draws.map(toPngDataUrl),
+          info: detailInfo
+        })
+        return
+      case 'launch.stop':
+        pilp.tasker?.tasker.post_stop()
+        break
+      case 'crop.screencap':
+        if (!sharedInstance(PipelineRootStatusProvider).activateResource) {
+          return
+        }
+        const runtime = await pilp.prepareRuntime(
+          sharedInstance(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
+        )
+        if (!runtime) {
+          return
+        }
+        if (!(await pilp.setupInstance(runtime, true)) || !pilp.tasker) {
+          return
+        }
+        await pilp.tasker.controller.post_screencap().wait()
+        const image = pilp.tasker.controller.cached_image
+        if (!image) {
+          return
+        }
+        post({
+          cmd: 'crop.image',
+          image: toPngDataUrl(image)
+        })
+        break
+      case 'crop.upload': {
+        const options: vscode.OpenDialogOptions = {
+          canSelectMany: false,
+          openLabel: 'Upload',
+          filters: {
+            'Png files': ['png']
+          },
+          defaultUri: context.value.uploadDir ? vscode.Uri.file(context.value.uploadDir) : undefined
+        }
+
+        const files = await vscode.window.showOpenDialog(options)
+        if (!files || files.length === 0) {
+          break
+        }
+
+        context.value.uploadDir = path.dirname(files[0].fsPath)
+
+        const data = await vscode.workspace.fs.readFile(files[0])
+        post({
+          cmd: 'crop.image',
+          image: toPngDataUrl(data)
+        })
+        break
+      }
+      case 'crop.download':
+        const root = sharedInstance(PipelineProjectInterfaceProvider).suggestResource()
+        if (!root) {
+          return
+        }
+        const imageRoot = vscode.Uri.joinPath(root, 'image')
+        const name = await vscode.window.showInputBox({
+          title: t('maa.pi.title.input-image')
+        })
+        if (!name) {
+          return
+        }
+        const resultPath = vscode.Uri.joinPath(
+          imageRoot,
+          `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
+        )
+        await vscode.workspace.fs.writeFile(resultPath, Buffer.from(data.image, 'base64'))
+        break
+    }
+  }
+
+  return p
+}
+
 export const { activate, deactivate } = defineExtension(context => {
   initControlPanel()
 
@@ -176,6 +284,10 @@ export const { activate, deactivate } = defineExtension(context => {
     }
   })
 
+  useCommand(commands.OpenWeb, () => {
+    useOldWebPanel()
+  })
+
   loadServices([
     PipelineRootStatusProvider,
     PipelineTaskIndexProvider,
@@ -187,7 +299,6 @@ export const { activate, deactivate } = defineExtension(context => {
     PipelineCodeLensProvider,
 
     ProjectInterfaceCodeLensProvider,
-    ProjectInterfaceLaunchProvider,
-    ProjectInterfaceWebProvider
+    ProjectInterfaceLaunchProvider
   ])
 })

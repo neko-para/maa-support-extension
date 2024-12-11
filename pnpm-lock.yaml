@@ -154,6 +154,12 @@ importers:
 
   pkgs/web:
     devDependencies:
+      '@mse/types':
+        specifier: workspace:*
+        version: link:../types
+      '@mse/web-utils':
+        specifier: workspace:*
+        version: link:../webUtils
       '@types/node':
         specifier: ^20.17.9
         version: 20.17.9

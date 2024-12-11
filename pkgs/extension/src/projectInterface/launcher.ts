@@ -7,6 +7,7 @@ import { t } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
+import { useOldWebPanel } from '../extension'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
@@ -19,7 +20,6 @@ import {
   selectTask
 } from './configure'
 import { InterfaceRuntime } from './type'
-import { ProjectInterfaceWebProvider } from './web'
 
 type TaskerCache = {
   tasker: maa.TaskerBase
@@ -405,7 +405,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     result.resource_path = resInfo.path.map(replaceVar)
 
     result.task = []
-    for (const task of config.task) {
+    for (const task of config.task ?? []) {
       const taskInfo = data.task.find(x => x.name === task.name)
 
       if (!taskInfo) {
@@ -519,23 +519,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return
     }
 
-    const piwp = this.shared(ProjectInterfaceWebProvider)
-    ;(await piwp.acquire()).reveal(vscode.ViewColumn.Two, false)
-    piwp.post({
+    const { post, visible } = await useOldWebPanel(vscode.ViewColumn.Two)
+
+    visible.value = true
+    post({
       cmd: 'launch.setup'
     })
 
     const oldNotify = this.tasker.tasker.notify
     this.tasker.tasker.notify = async (msg, details) => {
       await oldNotify(msg, details)
-      piwp.post(
-        {
-          cmd: 'launch.notify',
-          msg,
-          details
-        },
-        false
-      )
+      post({
+        cmd: 'launch.notify',
+        msg,
+        details
+      })
     }
 
     await this.tasker.tasker.post_pipeline(task).wait()
@@ -546,23 +544,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return
     }
 
-    const piwp = this.shared(ProjectInterfaceWebProvider)
-    ;(await piwp.acquire()).reveal(vscode.ViewColumn.Two, false)
-    piwp.post({
+    const { post, visible } = await useOldWebPanel(vscode.ViewColumn.Two)
+
+    visible.value = true
+    post({
       cmd: 'launch.setup'
     })
 
     const oldNotify = this.tasker.tasker.notify
     this.tasker.tasker.notify = async (msg, details) => {
       await oldNotify(msg, details)
-      piwp.post(
-        {
-          cmd: 'launch.notify',
-          msg,
-          details
-        },
-        false
-      )
+      post({
+        cmd: 'launch.notify',
+        msg,
+        details
+      })
     }
 
     let last

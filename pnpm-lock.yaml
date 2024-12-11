@@ -65,9 +65,6 @@ importers:
       '@vue/tsconfig':
         specifier: ^0.5.1
         version: 0.5.1
-      json-with-bigint:
-        specifier: ^2.3.3
-        version: 2.3.3
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
@@ -101,9 +98,6 @@ importers:
       '@types/vscode':
         specifier: ^1.95.0
         version: 1.95.0
-      json-with-bigint:
-        specifier: ^2.3.3
-        version: 2.3.3
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
@@ -134,9 +128,6 @@ importers:
       '@types/node':
         specifier: ^20.17.9
         version: 20.17.9
-      json-with-bigint:
-        specifier: ^2.3.3
-        version: 2.3.3
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
@@ -218,9 +209,6 @@ importers:
       '@vue/tsconfig':
         specifier: ^0.5.1
         version: 0.5.1
-      json-with-bigint:
-        specifier: ^2.3.3
-        version: 2.3.3
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
@@ -1633,9 +1621,6 @@ packages:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
     engines: {node: '>=6'}
     hasBin: true
-
-  json-with-bigint@2.3.3:
-    resolution: {integrity: sha512-FkcOi8ylX3OKLkvm8DheH+btV6BkwteRNs20dQcaI/FKVdb8WBSaOw8o+weceEtUHsKXdEp0Zy56/lu3aSeqow==}
 
   json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
@@ -3530,8 +3515,6 @@ snapshots:
   jsesc@2.5.2: {}
 
   jsesc@3.0.2: {}
-
-  json-with-bigint@2.3.3: {}
 
   json5@2.2.3: {}
 

@@ -5,15 +5,14 @@
     "dev": "node scripts/watch.mjs"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "^2.3.1",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
-    "@vitejs/plugin-vue": "^5.0.5",
+    "@vitejs/plugin-vue": "^5.2.1",
     "esbuild": "^0.20.2",
     "jsonc-parser": "^3.3.1",
-    "prettier": "^3.3.2",
-    "typescript": "^5.5.3",
-    "vite": "^5.3.4"
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
   },
   "pnpm": {
     "patchedDependencies": {

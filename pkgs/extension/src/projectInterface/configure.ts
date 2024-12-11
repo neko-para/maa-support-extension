@@ -1,9 +1,8 @@
 import * as maa from '@maaxyz/maa-node'
 import * as vscode from 'vscode'
 
+import { Interface, InterfaceConfig } from '@mse/types'
 import { t } from '@mse/utils'
-
-import { Interface, InterfaceConfig } from './type'
 
 type RemoveUndefined<T> = T extends undefined ? never : T
 

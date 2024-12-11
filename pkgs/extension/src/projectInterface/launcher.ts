@@ -2,6 +2,7 @@ import * as maa from '@maaxyz/maa-node'
 import { JSONStringify } from 'json-with-bigint'
 import * as vscode from 'vscode'
 
+import { Interface, InterfaceConfig } from '@mse/types'
 import { t } from '@mse/utils'
 
 import { commands } from '../command'
@@ -17,7 +18,7 @@ import {
   selectResource,
   selectTask
 } from './configure'
-import { Interface, InterfaceConfig, InterfaceRuntime } from './type'
+import { InterfaceRuntime } from './type'
 import { ProjectInterfaceWebProvider } from './web'
 
 type TaskerCache = {
@@ -414,6 +415,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
       const param: {} = {}
 
+      Object.assign(param, taskInfo.pipeline_override ?? {})
+
       // 是不是该检查一下task里面指定的option是否都被配置了？如果缺失的话看看要不要读下default
       for (const opt of task.option ?? []) {
         const optInfo = data.option?.[opt.name]
@@ -434,9 +437,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
         Object.assign(param, csInfo.pipeline_override ?? {})
       }
-
-      // 看看FW代码里面这玩意在前面还是后面
-      Object.assign(param, taskInfo.pipeline_override ?? {})
 
       result.task.push({
         name: task.name,

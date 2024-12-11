@@ -183,12 +183,32 @@ class PipelineTaskIndexLayer extends Service {
               break
             case 'pre_wait_freezes':
             case 'post_wait_freezes':
-              if (path[2] === 'target' && path.length >= 3 && path.length <= 4) {
-                taskInfo.taskRef.push({
-                  task: value,
-                  range: range,
-                  belong: 'target'
-                })
+              switch (path[2]) {
+                case 'target':
+                  if (path.length == 3) {
+                    taskInfo.taskRef.push({
+                      task: value,
+                      range: range,
+                      belong: 'target'
+                    })
+                  }
+                  break
+              }
+              break
+            case 'swipes':
+              if (typeof path[2] === 'number') {
+                switch (path[3]) {
+                  case 'begin':
+                  case 'end':
+                    if (path.length === 4) {
+                      taskInfo.taskRef.push({
+                        task: value,
+                        range: range,
+                        belong: 'target'
+                      })
+                    }
+                    break
+                }
               }
               break
           }

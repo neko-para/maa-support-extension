@@ -3,11 +3,11 @@ import { JSONParse, JSONStringify } from 'json-with-bigint'
 import path from 'path'
 import * as vscode from 'vscode'
 
+import { Interface, InterfaceConfig } from '@mse/types'
 import { t, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { Interface, InterfaceConfig } from '../projectInterface/type'
 import { PipelineRootStatusProvider } from './root'
 
 export class PipelineProjectInterfaceProvider extends Service {

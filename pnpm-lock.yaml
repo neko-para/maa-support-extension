@@ -36,8 +36,8 @@ importers:
   pkgs/controlPanel:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: 2.3.1-post.5-ci.12276679464
+        version: 2.3.1-post.5-ci.12276679464
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -78,8 +78,8 @@ importers:
   pkgs/extension:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: 2.3.1-post.5-ci.12276679464
+        version: 2.3.1-post.5-ci.12276679464
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -114,8 +114,8 @@ importers:
   pkgs/types:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: 2.3.1-post.5-ci.12276679464
+        version: 2.3.1-post.5-ci.12276679464
 
   pkgs/utils:
     devDependencies:
@@ -195,8 +195,8 @@ importers:
   pkgs/webUtils:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: 2.3.1-post.5-ci.12276679464
+        version: 2.3.1-post.5-ci.12276679464
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -219,8 +219,8 @@ importers:
   release:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: 2.3.1-post.5-ci.12276679464
+        version: 2.3.1-post.5-ci.12276679464
 
 packages:
 
@@ -1002,38 +1002,38 @@ packages:
   '@lit/reactive-element@2.0.4':
     resolution: {integrity: sha512-GFn91inaUa2oHLak8awSIigYz0cU0Payr1rcFsrkf5OJ5eSPxElyZfKh0f2p9FsTiZWXQdWGJeXZICEfXXYSXQ==}
 
-  '@maaxyz/maa-node-darwin-arm64@2.3.1':
-    resolution: {integrity: sha512-tBpazFQsZ+bdwG+OtiDSivp3ak2KitNtCUOgy6uQaZQW5tLXQp+6g6DRqd49OHBG5WCc/22N3rZC6bRCJasHLg==}
+  '@maaxyz/maa-node-darwin-arm64@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-7YMLwJru1KVkkcTgelSWKlsqfzXzOU6tN4T5flkKPHUxkO4/5MQ7TbmplCdD6d0jhtZb3dgt+zK7tCDYAiLciQ==}
     cpu: [arm64]
     os: [darwin]
 
-  '@maaxyz/maa-node-darwin-x64@2.3.1':
-    resolution: {integrity: sha512-wHRsuiXMPmFIkAl4HXJ/reMHXOIaBJl63H3KuzUtFJHtLeYFcLCBomcwz1Tp6EelLI6Id301ODSDk+ZxZxU9qw==}
+  '@maaxyz/maa-node-darwin-x64@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-iOaSYzYDMPgXmaivtafW+CwHcW7DUnXm3xsGcClcXVFkH1yY83Rt6q2zh+HNYLiONwfSYZmAatkf83Zv+MK8mA==}
     cpu: [x64]
     os: [darwin]
 
-  '@maaxyz/maa-node-linux-arm64@2.3.1':
-    resolution: {integrity: sha512-NeCjy+uNAB9LvrIQdlsSYGn2k1TskWT92wK7fgmxlYQhOITLrzcVUnjqzsRPzRW7596BLkZirRLKo2TjFuYaAw==}
+  '@maaxyz/maa-node-linux-arm64@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-V7crjl/cNhV9VAf3pXs2Z0LTyhsyDMRXxROjl127FngHmlGUTr+KOtt1VDYdhJgux8dZ+3XnEcHPisAC41Plzg==}
     cpu: [arm64]
     os: [linux]
 
-  '@maaxyz/maa-node-linux-x64@2.3.1':
-    resolution: {integrity: sha512-Eoudi86GFsTNbp/ZLXHXba+J01J2CMYe9IzFwSgn+2wQbW8eOpnzw5H2BVr21vtpd1YOjQcRoPDO8ijxMbzMvQ==}
+  '@maaxyz/maa-node-linux-x64@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-isUV4gcBCQwkOFzsQpaQsUzRq5Rgnpfq2ZI9oCbs/6uET0+MFejqSy+vE0C1mI+Sdgrn8O2deAEWa7JdcTRbHA==}
     cpu: [x64]
     os: [linux]
 
-  '@maaxyz/maa-node-win32-arm64@2.3.1':
-    resolution: {integrity: sha512-iDJQQtex2mBB1MFbcXIKCDKwBUuYwTt4gA/mI/zQ6NaufDqZRjZj8x9KJUxihr4dYkb0hgeZHZbnwNh8U5/v9Q==}
+  '@maaxyz/maa-node-win32-arm64@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-XdbCUYFRnLCpEQsNxxr4OdGbVuxo9cnHqRW2mdW0xjn7dB6Xk8Wvmsy7pP6VXU47HGuHgJR9s1EVI7KpDd+Chg==}
     cpu: [arm64]
     os: [win32]
 
-  '@maaxyz/maa-node-win32-x64@2.3.1':
-    resolution: {integrity: sha512-wmzROCZ02qjbcsYH0ntbuw3WHDI1i8pGVWnRhKx1pGUzaulBWgpFHNbqhrxs1zSNQ+4PmWitk+LK6VjfTxABBA==}
+  '@maaxyz/maa-node-win32-x64@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-OoWixYuP/A24nllYGQEGLoBl09KhHxe1YK87L7QZ/aqyCNpjzhvfhTERsqRTmsjSViPdwEJbSGf76o4xP05iFw==}
     cpu: [x64]
     os: [win32]
 
-  '@maaxyz/maa-node@2.3.1':
-    resolution: {integrity: sha512-hffzgGYcxjnyBmDIy2nhAEMBVG9k1hq3wP0Zq6wN7Gyjts9ZTOAgjyIukqCaI3ZzGGKd3oEOxlYcM20BPU2NnA==}
+  '@maaxyz/maa-node@2.3.1-post.5-ci.12276679464':
+    resolution: {integrity: sha512-10caI0Ho8dtWzgCT+014+/QuDSTvoHOhZvY+jy/xNJwcZ/sOl4hKz9GWGH9Z7MpBIgX1F5j8rCiQIQoLx2CGdQ==}
     engines: {node: '>= 20.0.0'}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -2865,32 +2865,32 @@ snapshots:
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.2.1
 
-  '@maaxyz/maa-node-darwin-arm64@2.3.1':
+  '@maaxyz/maa-node-darwin-arm64@2.3.1-post.5-ci.12276679464':
     optional: true
 
-  '@maaxyz/maa-node-darwin-x64@2.3.1':
+  '@maaxyz/maa-node-darwin-x64@2.3.1-post.5-ci.12276679464':
     optional: true
 
-  '@maaxyz/maa-node-linux-arm64@2.3.1':
+  '@maaxyz/maa-node-linux-arm64@2.3.1-post.5-ci.12276679464':
     optional: true
 
-  '@maaxyz/maa-node-linux-x64@2.3.1':
+  '@maaxyz/maa-node-linux-x64@2.3.1-post.5-ci.12276679464':
     optional: true
 
-  '@maaxyz/maa-node-win32-arm64@2.3.1':
+  '@maaxyz/maa-node-win32-arm64@2.3.1-post.5-ci.12276679464':
     optional: true
 
-  '@maaxyz/maa-node-win32-x64@2.3.1':
+  '@maaxyz/maa-node-win32-x64@2.3.1-post.5-ci.12276679464':
     optional: true
 
-  '@maaxyz/maa-node@2.3.1':
+  '@maaxyz/maa-node@2.3.1-post.5-ci.12276679464':
     optionalDependencies:
-      '@maaxyz/maa-node-darwin-arm64': 2.3.1
-      '@maaxyz/maa-node-darwin-x64': 2.3.1
-      '@maaxyz/maa-node-linux-arm64': 2.3.1
-      '@maaxyz/maa-node-linux-x64': 2.3.1
-      '@maaxyz/maa-node-win32-arm64': 2.3.1
-      '@maaxyz/maa-node-win32-x64': 2.3.1
+      '@maaxyz/maa-node-darwin-arm64': 2.3.1-post.5-ci.12276679464
+      '@maaxyz/maa-node-darwin-x64': 2.3.1-post.5-ci.12276679464
+      '@maaxyz/maa-node-linux-arm64': 2.3.1-post.5-ci.12276679464
+      '@maaxyz/maa-node-linux-x64': 2.3.1-post.5-ci.12276679464
+      '@maaxyz/maa-node-win32-arm64': 2.3.1-post.5-ci.12276679464
+      '@maaxyz/maa-node-win32-x64': 2.3.1-post.5-ci.12276679464
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

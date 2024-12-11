@@ -68,6 +68,6 @@
     }
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "^2.3.1"
+    "@maaxyz/maa-node": "2.3.1-post.5-ci.12276679464"
   }
 }

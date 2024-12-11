@@ -24,6 +24,7 @@ import { PipelineReferenceProvider } from './pipeline/reference'
 import { PipelineRenameProvider } from './pipeline/rename'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
+import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 import { ProjectInterfaceWebProvider } from './projectInterface/web'
 
@@ -62,6 +63,8 @@ function initControlPanel() {
         ).activateResource?.interfaceRelative
 
         await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
+        sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
+
         context.value.interfaceObj =
           tryParse<Interface>(
             await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
@@ -84,6 +87,8 @@ function initControlPanel() {
           sharedInstance(PipelineRootStatusProvider).selectRootInfo(rootIndex)
 
           await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
+          sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
+
           context.value.interfaceObj =
             tryParse<Interface>(
               await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
@@ -133,7 +138,9 @@ function initControlPanel() {
       await sharedInstance(PipelineProjectInterfaceProvider).saveConfig(
         v ? JSONStringify(v, 4) : undefined
       )
+
       await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
+      sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
     },
     {
       deep: true
@@ -161,6 +168,14 @@ export const { activate, deactivate } = defineExtension(context => {
     })
   }
 
+  useCommand(commands.PISwitchResource, (res: string) => {
+    const { handler, context } = useControlPanel()
+    const cfg = context.value.interfaceConfigObj
+    if (cfg) {
+      cfg.resource = res
+    }
+  })
+
   loadServices([
     PipelineRootStatusProvider,
     PipelineTaskIndexProvider,
@@ -171,6 +186,7 @@ export const { activate, deactivate } = defineExtension(context => {
     PipelineRenameProvider,
     PipelineCodeLensProvider,
 
+    ProjectInterfaceCodeLensProvider,
     ProjectInterfaceLaunchProvider,
     ProjectInterfaceWebProvider
   ])

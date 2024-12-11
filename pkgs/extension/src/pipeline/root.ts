@@ -12,12 +12,18 @@ export class PipelineRootStatusProvider extends Service {
   activateResource: ResourceRoot | null
   selector: vscode.DocumentFilter[] | null
 
+  event: EventEmitter<{
+    activateRootChanged: []
+  }>
+
   constructor() {
     super()
 
     this.resourceRoot = []
     this.activateResource = null
     this.selector = null
+
+    this.event = new EventEmitter()
   }
 
   async syncRootInfo(trySelect?: string) {
@@ -29,10 +35,12 @@ export class PipelineRootStatusProvider extends Service {
     } else {
       this.activateResource = null
     }
+    this.event.emit('activateRootChanged')
   }
 
   selectRootInfo(index: number) {
     this.activateResource = this.resourceRoot[index]
+    this.event.emit('activateRootChanged')
   }
 
   relativePath(uri: vscode.Uri) {

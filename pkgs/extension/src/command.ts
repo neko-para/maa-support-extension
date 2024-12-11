@@ -9,5 +9,7 @@ export const commands = {
   LaunchInterface: 'maa.launch-interface',
   OpenWeb: 'maa.open-web',
 
+  PISwitchResource: 'maa.pi.switch-resource',
+
   DebugQueryLocation: 'maa.debug.query-location'
 }

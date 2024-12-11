@@ -48,6 +48,10 @@
         "command": "maa.open-web"
       },
       {
+        "title": "Maa(PI): switch resource",
+        "command": "maa.pi.switch-resource"
+      },
+      {
         "title": "Maa: query location (debug)",
         "command": "maa.debug.query-location"
       }

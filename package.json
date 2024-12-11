@@ -13,10 +13,5 @@
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
     "vite": "^5.4.11"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "jsonc-parser@3.3.1": "patches/jsonc-parser@3.3.1.patch"
-    }
   }
 }

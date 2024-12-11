@@ -1,5 +1,4 @@
 import * as maa from '@maaxyz/maa-node'
-import { JSONParse, JSONStringify, Json } from 'json-with-bigint'
 import path from 'path'
 import { defineExtension, useCommand, watch } from 'reactive-vscode'
 import sms from 'source-map-support'
@@ -44,7 +43,7 @@ function initControlPanel() {
 
   const tryParse = <T>(x?: string | null) => {
     try {
-      return x ? JSONParse<T>(x) : undefined
+      return x ? (JSON.parse(x) as T) : undefined
     } catch {
       return undefined
     }
@@ -116,7 +115,7 @@ function initControlPanel() {
           name: d[0],
           adb_path: d[1],
           address: d[2],
-          config: JSONParse(d[5])
+          config: JSON.parse(d[5])
         }))
         context.value.adbDeviceRefreshing = false
         break
@@ -139,7 +138,7 @@ function initControlPanel() {
     () => context.value.interfaceConfigObj,
     async v => {
       await sharedInstance(PipelineProjectInterfaceProvider).saveConfig(
-        v ? JSONStringify(v, 4) : undefined
+        v ? JSON.stringify(v, null, 4) : undefined
       )
 
       await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()

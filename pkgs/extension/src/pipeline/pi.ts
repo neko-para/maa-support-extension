@@ -1,5 +1,4 @@
 import EventEmitter from 'events'
-import { JSONParse, JSONStringify } from 'json-with-bigint'
 import path from 'path'
 import * as vscode from 'vscode'
 
@@ -57,7 +56,7 @@ export class PipelineProjectInterfaceProvider extends Service {
         vscode.Uri.file(path.dirname(root.configUri.fsPath))
       )
       await vscfs.writeFile(root.configUri, Buffer.from(json))
-      this.interfaceConfigJson = JSONParse(json)
+      this.interfaceConfigJson = JSON.parse(json)
     }
   }
 
@@ -78,14 +77,14 @@ export class PipelineProjectInterfaceProvider extends Service {
       if (!json) {
         return
       }
-      this.interfaceJson = JSONParse(json)
+      this.interfaceJson = JSON.parse(json)
     } catch (_) {
       return
     }
     try {
       let json = await this.interfaceConfigContent
       if (json) {
-        this.interfaceConfigJson = JSONParse(json)
+        this.interfaceConfigJson = JSON.parse(json)
         const newPaths = this.resourcePaths()
         if (newPaths.map(x => x.fsPath).join(',') !== oldPaths) {
           this.event.emit('activateResourceChanged', newPaths)
@@ -103,7 +102,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     }
 
     if (this.interfaceConfigJson) {
-      const json = JSONStringify(this.interfaceConfigJson, 4)
+      const json = JSON.stringify(this.interfaceConfigJson, null, 4)
       await this.saveConfig(json)
     }
   }

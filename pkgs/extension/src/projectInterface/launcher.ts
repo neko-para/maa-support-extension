@@ -1,5 +1,4 @@
 import * as maa from '@maaxyz/maa-node'
-import { JSONStringify } from 'json-with-bigint'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
@@ -28,7 +27,7 @@ type TaskerCache = {
 }
 
 function serializeRuntime(runtime: InterfaceRuntime) {
-  return JSONStringify(runtime)
+  return JSON.stringify(runtime)
 }
 
 export async function initConfig(data: Interface): Promise<InterfaceConfig | null> {

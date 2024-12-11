@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  jsonc-parser@3.3.1:
-    hash: gdndipuykjrcmyb4kdwo3z7swy
-    path: patches/jsonc-parser@3.3.1.patch
-
 importers:
 
   .:
@@ -27,7 +22,7 @@ importers:
         version: 0.20.2
       jsonc-parser:
         specifier: ^3.3.1
-        version: 3.3.1(patch_hash=gdndipuykjrcmyb4kdwo3z7swy)
+        version: 3.3.1
       prettier:
         specifier: ^3.4.2
         version: 3.4.2
@@ -111,7 +106,7 @@ importers:
         version: 2.3.3
       jsonc-parser:
         specifier: ^3.3.1
-        version: 3.3.1(patch_hash=gdndipuykjrcmyb4kdwo3z7swy)
+        version: 3.3.1
       reactive-vscode:
         specifier: ^0.2.9
         version: 0.2.9(@types/vscode@1.95.0)
@@ -144,7 +139,7 @@ importers:
         version: 2.3.3
       jsonc-parser:
         specifier: ^3.3.1
-        version: 3.3.1(patch_hash=gdndipuykjrcmyb4kdwo3z7swy)
+        version: 3.3.1
       reactive-vscode:
         specifier: ^0.2.9
         version: 0.2.9(@types/vscode@1.95.0)
@@ -3540,7 +3535,7 @@ snapshots:
 
   json5@2.2.3: {}
 
-  jsonc-parser@3.3.1(patch_hash=gdndipuykjrcmyb4kdwo3z7swy): {}
+  jsonc-parser@3.3.1: {}
 
   lilconfig@3.1.3: {}
 

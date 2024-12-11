@@ -1,6 +1,8 @@
 {
   "name": "@mse/web",
   "devDependencies": {
+    "@mse/types": "workspace:*",
+    "@mse/web-utils": "workspace:*",
     "@types/node": "^20.17.9",
     "@types/vscode-webview": "^1.57.5",
     "@vitejs/plugin-vue": "^5.2.1",
@@ -15,8 +17,6 @@
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vue": "^3.5.13",
-    "@mse/types": "workspace:*",
-    "@mse/web-utils": "workspace:*"
+    "vue": "^3.5.13"
   }
 }

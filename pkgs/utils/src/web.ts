@@ -1,4 +1,3 @@
-import { JSONParse, JSONStringify } from 'json-with-bigint'
 import {
   ShallowRef,
   createSingletonComposable,
@@ -39,7 +38,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         localResourceRoots: [rootUri]
       },
       onDidReceiveMessage(data: string) {
-        const msg = JSONParse(data) as IpcToHost<Context, TH>
+        const msg = JSON.parse(data) as IpcToHost<Context, TH>
         if (msg.__builtin) {
           switch (msg.cmd) {
             case 'requestInit':
@@ -63,7 +62,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
     })
 
     realPost = (data: IpcFromHost<Context, FH>) => {
-      postMessage(JSONStringify(data))
+      postMessage(JSON.stringify(data))
     }
 
     const post = (data: FH) => {
@@ -143,7 +142,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
           localResourceRoots: [rootUri]
         },
         onDidReceiveMessage(data: string) {
-          const msg = JSONParse(data) as IpcToHost<Context, TH>
+          const msg = JSON.parse(data) as IpcToHost<Context, TH>
           if (msg.__builtin) {
             switch (msg.cmd) {
               case 'requestInit':
@@ -168,7 +167,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
     )
 
     realPost = (data: IpcFromHost<Context, FH>) => {
-      postMessage(JSONStringify(data))
+      postMessage(JSON.stringify(data))
     }
 
     const post = (data: FH) => {

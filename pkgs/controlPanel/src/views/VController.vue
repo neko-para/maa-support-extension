@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type * as maa from '@maaxyz/maa-node'
-import { JSONStringify } from 'json-with-bigint'
-import { type MapHTMLAttributes, computed, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { VscButton, VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
 import { ipc } from '@/main'
@@ -109,7 +108,7 @@ function useDesktopWindow() {
         <span> {{ currentControllerAdb.address }} </span>
         <template v-if="currentControllerAdb.config">
           <span class="fixed">config</span>
-          <span> {{ JSONStringify(currentControllerAdb.config) }} </span>
+          <span> {{ JSON.stringify(currentControllerAdb.config) }} </span>
         </template>
       </div>
       <span v-else> Adb 未配置 </span>

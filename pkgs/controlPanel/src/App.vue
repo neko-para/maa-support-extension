@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { JSONStringify } from 'json-with-bigint'
-
 import { VscButton, VscDivider, VscScrollable } from '@/components/VscEl'
 import * as interfaceSt from '@/states/interface'
 
@@ -40,7 +38,7 @@ import VTask from './views/VTask.vue'
       <vsc-button @click="ipc.context.value = {}"> Reset </vsc-button>
     </div>
     <vsc-scrollable>
-      <pre>{{ JSONStringify(ipc.context.value, 2) }}</pre>
+      <pre>{{ JSON.stringify(ipc.context.value, null, 2) }}</pre>
     </vsc-scrollable>
   </div>
 </template>

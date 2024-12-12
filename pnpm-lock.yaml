@@ -216,12 +216,6 @@ importers:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.7.2)
 
-  release:
-    devDependencies:
-      '@maaxyz/maa-node':
-        specifier: 2.3.1-post.5-ci.12276679464
-        version: 2.3.1-post.5-ci.12276679464
-
 packages:
 
   '@alloc/quick-lru@5.2.0':

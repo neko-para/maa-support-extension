@@ -21,6 +21,7 @@ import { loadServices, sharedInstance } from './data'
 import { PipelineCodeLensProvider } from './pipeline/codeLens'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
+import { PipelineDocumentLinkProvider } from './pipeline/documentLink'
 import { PipelineHoverProvider } from './pipeline/hover'
 import { PipelineProjectInterfaceProvider } from './pipeline/pi'
 import { PipelineReferenceProvider } from './pipeline/reference'
@@ -291,6 +292,7 @@ export const { activate, deactivate } = defineExtension(context => {
     PipelineRootStatusProvider,
     PipelineTaskIndexProvider,
     PipelineDefinitionProvider,
+    PipelineDocumentLinkProvider,
     PipelineCompletionProvider,
     PipelineReferenceProvider,
     PipelineHoverProvider,

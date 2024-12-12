@@ -24,9 +24,6 @@ export class PipelineDefinitionProvider extends ProviderBase implements vscode.D
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       const taskInfo = await this.shared(PipelineTaskIndexProvider).queryTask(info.target)
       return taskInfo.map(x => new vscode.Location(x.info.uri, x.info.taskProp))
-    } else if (info.type === 'image.ref') {
-      const imageInfo = await this.shared(PipelineTaskIndexProvider).queryImage(info.target)
-      return imageInfo.map(x => new vscode.Location(x.info.uri, new vscode.Position(0, 0)))
     }
 
     return null

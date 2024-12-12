@@ -202,7 +202,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
 
     html.value = htmlContent
 
-    watch(
+    const stopSyncContext = watch(
       context,
       ctx => {
         extensionContext.value?.workspaceState.update(`webview:${id}:context`, ctx)
@@ -219,6 +219,11 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
         flush: 'sync'
       }
     )
+
+    panel.onDidDispose(() => {
+      realPost = () => {}
+      stopSyncContext()
+    })
 
     return {
       context,

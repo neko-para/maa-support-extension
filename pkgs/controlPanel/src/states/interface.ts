@@ -4,6 +4,8 @@ import type { Interface, InterfaceConfig } from '@mse/types'
 
 import { ipc } from '@/main'
 
+import * as runtimeSt from './runtime'
+
 export function refresh() {
   ipc.postMessage({
     cmd: 'refreshInterface'
@@ -11,9 +13,13 @@ export function refresh() {
 }
 
 export function launch() {
-  ipc.postMessage({
-    cmd: 'launchInterface'
-  })
+  const [rt, err] = runtimeSt.runtime.value
+  if (rt) {
+    ipc.postMessage({
+      cmd: 'launchInterface',
+      runtime: rt
+    })
+  }
 }
 
 export const refreshing = computed(() => {

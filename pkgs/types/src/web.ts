@@ -1,6 +1,6 @@
 import type * as maa from '@maaxyz/maa-node'
 
-import type { Interface, InterfaceConfig } from './pi'
+import type { Interface, InterfaceConfig, InterfaceRuntime } from './pi'
 
 export type IpcRest = {
   __builtin?: false
@@ -34,11 +34,21 @@ export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Cont
 
 export type IpcToHost<Context, Rest extends IpcRest> = IpcToHostBuiltin<Context> | Rest
 
+export type MaaEnumForward =
+  | 'Status'
+  | 'AdbScreencapMethod'
+  | 'AdbInputMethod'
+  | 'Win32ScreencapMethod'
+  | 'Win32InputMethod'
+
 export type ControlPanelContext = {
+  maaEnum?: Pick<typeof maa.api, MaaEnumForward>
+
   interfaceList?: string[]
   interfaceCurrent?: string
   interfaceRefreshing?: boolean
 
+  interfaceProjectDir?: string
   interfaceObj?: Partial<Interface>
   interfaceConfigObj?: Partial<InterfaceConfig>
 
@@ -71,6 +81,7 @@ export type ControlPanelToHost =
     }
   | {
       cmd: 'launchInterface'
+      runtime: InterfaceRuntime
     }
   | {
       cmd: 'refreshAdbDevice'

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { VscButton, VscDivider, VscScrollable } from '@/components/VscEl'
-import * as interfaceSt from '@/states/interface'
 
 import { ipc } from './main'
 import VController from './views/VController.vue'
 import VInterface from './views/VInterface.vue'
 import VResource from './views/VResource.vue'
+import VRuntime from './views/VRuntime.vue'
 import VTask from './views/VTask.vue'
 </script>
 
@@ -23,15 +23,9 @@ import VTask from './views/VTask.vue'
 
       <span class="fixed">任务</span>
       <v-task></v-task>
-    </div>
-    <div class="row-flex">
-      <vsc-button
-        :loading="interfaceSt.launching.value"
-        :disabled="interfaceSt.freezed.value"
-        @click="interfaceSt.launch"
-      >
-        启动
-      </vsc-button>
+
+      <span class="fixed">执行</span>
+      <v-runtime></v-runtime>
     </div>
     <vsc-divider></vsc-divider>
     <div>

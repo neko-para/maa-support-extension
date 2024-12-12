@@ -68,6 +68,9 @@ function initControlPanel() {
         await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
         sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
 
+        context.value.interfaceProjectDir = sharedInstance(
+          PipelineRootStatusProvider
+        ).activateResource?.dirUri.fsPath
         context.value.interfaceObj =
           tryParse<Interface>(
             await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
@@ -92,6 +95,9 @@ function initControlPanel() {
           await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
           sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
 
+          context.value.interfaceProjectDir = sharedInstance(
+            PipelineRootStatusProvider
+          ).activateResource?.dirUri.fsPath
           context.value.interfaceObj =
             tryParse<Interface>(
               await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
@@ -106,7 +112,7 @@ function initControlPanel() {
       }
       case 'launchInterface':
         context.value.interfaceLaunching = true
-        sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(5)
+        await sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(data.runtime)
         context.value.interfaceLaunching = false
         break
       case 'refreshAdbDevice': {
@@ -153,6 +159,14 @@ function initControlPanel() {
   handler.value({
     cmd: 'refreshInterface'
   })
+
+  context.value.maaEnum = {
+    Status: maa.api.Status,
+    AdbScreencapMethod: maa.api.AdbScreencapMethod,
+    AdbInputMethod: maa.api.AdbInputMethod,
+    Win32ScreencapMethod: maa.api.Win32ScreencapMethod,
+    Win32InputMethod: maa.api.Win32InputMethod
+  }
 }
 
 const innerUseOldWebPanel = createUseWebPanel<OldWebContext, OldWebToHost, OldWebFromHost>(

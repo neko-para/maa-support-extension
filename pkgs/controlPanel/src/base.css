@@ -38,6 +38,11 @@ body,
   align-self: center;
 }
 
+.grid-form > :not(.fixed) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .fixed {
   flex-grow: 0;
   flex-shrink: 0;

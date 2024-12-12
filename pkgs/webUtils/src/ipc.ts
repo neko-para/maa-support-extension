@@ -62,9 +62,17 @@ export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(inited: 
     cmd: 'requestInit'
   })
 
+  const postAwake = () => {
+    realPost({
+      __builtin: true,
+      cmd: 'awake'
+    })
+  }
+
   return {
     context,
     handler,
-    postMessage
+    postMessage,
+    postAwake
   }
 }

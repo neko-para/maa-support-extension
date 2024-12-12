@@ -1,5 +1,6 @@
 import {
   ShallowRef,
+  computed,
   createSingletonComposable,
   extensionContext,
   ref,
@@ -32,6 +33,8 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
 
     let realPost: (data: IpcFromHost<Context, FH>) => void
 
+    const awakeListener = ref<(() => void)[]>([])
+
     const { view, postMessage } = useWebviewView(id, html, {
       webviewOptions: {
         enableScripts: true,
@@ -54,6 +57,12 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
               context.value = msg.ctx
               sync = false
               break
+            case 'awake': {
+              const funcs = awakeListener.value
+              awakeListener.value = []
+              funcs.forEach(f => f())
+              break
+            }
           }
         } else {
           handler.value(msg)
@@ -69,6 +78,8 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
       realPost(data)
     }
 
+    const visible = ref(false)
+
     watch(view, async v => {
       if (v) {
         const webRootUri = v.webview.asWebviewUri(rootUri)
@@ -81,6 +92,10 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
           .replaceAll('%{cspSource}', v.webview.cspSource)
 
         html.value = htmlContent
+
+        v.onDidChangeVisibility(e => {
+          visible.value = v.visible
+        })
       }
     })
 
@@ -105,7 +120,9 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
     return {
       context,
       handler,
-      post
+      post,
+      visible,
+      awakeListener
     }
   })
 }

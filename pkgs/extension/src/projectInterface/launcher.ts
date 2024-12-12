@@ -1,4 +1,5 @@
 import * as maa from '@maaxyz/maa-node'
+import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
@@ -6,7 +7,7 @@ import { t } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { useOldWebPanel } from '../extension'
+import { useControlPanel, useOldWebPanel } from '../extension'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
@@ -56,19 +57,22 @@ export class ProjectInterfaceLaunchProvider extends Service {
         task = taskRes
       }
 
-      const runtime = await this.prepareRuntime(
-        this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
-      )
+      const { post, visible, awakeListener } = useControlPanel()
 
-      console.log(runtime)
+      if (!visible.value) {
+        vscode.commands.executeCommand('maa.view.control-panel.focus')
 
-      if (runtime) {
-        this.outputChannel.show(true)
-        try {
-          await this.launchTask(runtime, task)
-        } catch (err) {
-          this.outputChannel.append(`${err}\n`)
-        }
+        awakeListener.value.push(() => {
+          post({
+            cmd: 'launchTask',
+            task
+          })
+        })
+      } else {
+        post({
+          cmd: 'launchTask',
+          task
+        })
       }
 
       return true

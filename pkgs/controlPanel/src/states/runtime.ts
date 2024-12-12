@@ -7,7 +7,6 @@ import { ipc } from '@/main'
 import * as controllerSt from './controller'
 import * as interfaceSt from './interface'
 import * as resourceSt from './resource'
-import * as taskSt from './task'
 
 export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() => {
   const root = ipc.context.value.interfaceProjectDir
@@ -111,3 +110,18 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
 
   return [result as InterfaceRuntime, null]
 })
+
+export function runtimeForTask(task: string) {
+  const [rt, err] = runtime.value
+  if (rt) {
+    const nrt = structuredClone(rt)
+    nrt.task = [
+      {
+        name: task,
+        entry: task,
+        pipeline_override: {}
+      }
+    ]
+    return nrt
+  }
+}

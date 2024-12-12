@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
 import { VscButton, VscDivider, VscScrollable } from '@/components/VscEl'
 
 import { ipc } from './main'
@@ -7,6 +9,10 @@ import VInterface from './views/VInterface.vue'
 import VResource from './views/VResource.vue'
 import VRuntime from './views/VRuntime.vue'
 import VTask from './views/VTask.vue'
+
+onMounted(() => {
+  ipc.postAwake()
+})
 </script>
 
 <template>

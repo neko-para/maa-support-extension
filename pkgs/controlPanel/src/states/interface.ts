@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 
-import type { Interface, InterfaceConfig } from '@mse/types'
+import type { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 
 import { ipc } from '@/main'
 
@@ -15,11 +15,15 @@ export function refresh() {
 export function launch() {
   const [rt, err] = runtimeSt.runtime.value
   if (rt) {
-    ipc.postMessage({
-      cmd: 'launchInterface',
-      runtime: rt
-    })
+    launchRuntime(rt)
   }
+}
+
+export function launchRuntime(runtime: InterfaceRuntime) {
+  ipc.postMessage({
+    cmd: 'launchInterface',
+    runtime
+  })
 }
 
 export const refreshing = computed(() => {

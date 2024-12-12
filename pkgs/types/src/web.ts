@@ -29,6 +29,10 @@ export type IpcToHostBuiltin<Context> =
       __builtin: true
       cmd: 'requestInit'
     }
+  | {
+      __builtin: true
+      cmd: 'awake'
+    }
 
 export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Context> | Rest
 
@@ -90,7 +94,10 @@ export type ControlPanelToHost =
       cmd: 'refreshDesktopWindow'
     }
 
-export type ControlPanelFromHost = never
+export type ControlPanelFromHost = {
+  cmd: 'launchTask'
+  task: string
+}
 
 export type RecoInfo = {
   raw: string

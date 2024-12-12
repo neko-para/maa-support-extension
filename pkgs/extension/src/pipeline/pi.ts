@@ -12,6 +12,7 @@ import { PipelineRootStatusProvider } from './root'
 export class PipelineProjectInterfaceProvider extends Service {
   interfaceJson: Interface | null
   interfaceConfigJson: InterfaceConfig | null
+  currentResourceKey?: string
 
   event: EventEmitter<{
     activateResourceChanged: [resource: vscode.Uri[]]
@@ -63,10 +64,6 @@ export class PipelineProjectInterfaceProvider extends Service {
   async loadInterface() {
     const root = this.shared(PipelineRootStatusProvider).activateResource
 
-    const oldPaths = this.resourcePaths()
-      .map(x => x.fsPath)
-      .join(',')
-
     this.interfaceJson = null
     this.interfaceConfigJson = null
     if (!root) {
@@ -86,7 +83,9 @@ export class PipelineProjectInterfaceProvider extends Service {
       if (json) {
         this.interfaceConfigJson = JSON.parse(json)
         const newPaths = this.resourcePaths()
-        if (newPaths.map(x => x.fsPath).join(',') !== oldPaths) {
+        const newPathsKey = newPaths.map(x => x.fsPath).join(',')
+        if (newPathsKey !== this.currentResourceKey) {
+          this.currentResourceKey = newPathsKey
           this.event.emit('activateResourceChanged', newPaths)
         }
       }

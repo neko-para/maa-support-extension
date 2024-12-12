@@ -1,0 +1,20 @@
+{
+  "name": "maa-node",
+  "displayName": "Maa Node Package",
+  "version": "0.0.0-dev",
+  "publisher": "nekosu",
+  "description": "This package is used by Maa Pipeline Support",
+  "repository": "https://github.com/neko-para/maa-support-extension",
+  "license": "MIT",
+  "icon": "images/logo.png",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js"
+}

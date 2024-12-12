@@ -1,4 +1,3 @@
-import * as maa from '@maaxyz/maa-node'
 import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
@@ -8,15 +7,16 @@ import { t } from '@mse/utils'
 import { commands } from '../command'
 import { Service } from '../data'
 import { useControlPanel, useOldWebPanel } from '../extension'
+import { Maa, maa } from '../maa'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
 import { InterfaceRuntime } from './type'
 
 type TaskerCache = {
-  tasker: maa.TaskerBase
-  resource: maa.ResourceBase
-  controller: maa.ControllerBase
+  tasker: Maa.TaskerBase
+  resource: Maa.ResourceBase
+  controller: Maa.ControllerBase
 }
 
 function serializeRuntime(runtime: InterfaceRuntime) {
@@ -228,7 +228,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     this.tasker = null
     this.instanceConfig = null
 
-    let controller: maa.ControllerBase
+    let controller: Maa.ControllerBase
 
     if (runtime.controller_param.ctype === 'adb') {
       const p = runtime.controller_param

@@ -1,4 +1,3 @@
-import * as maa from '@maaxyz/maa-node'
 import path from 'path'
 import { defineExtension, useCommand, watch } from 'reactive-vscode'
 import sms from 'source-map-support'
@@ -18,6 +17,7 @@ import { createUseWebPanel, createUseWebView, t } from '@mse/utils'
 
 import { commands } from './command'
 import { loadServices, sharedInstance } from './data'
+import { Maa, maa, setupMaa } from './maa'
 import { PipelineCodeLensProvider } from './pipeline/codeLens'
 import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
@@ -188,7 +188,7 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
 
     switch (data.cmd) {
       case 'launch.reco':
-        const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as maa.api.RecoId)
+        const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as Maa.api.RecoId)
         if (!detailInfo) {
           return
         }
@@ -275,6 +275,8 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
 }
 
 export const { activate, deactivate } = defineExtension(context => {
+  setupMaa()
+
   initControlPanel()
 
   console.log(maa.Global.version)

@@ -1,4 +1,4 @@
-import type maa from '@maaxyz/maa-node'
+import { Maa } from '../maa'
 
 export type InterfaceRuntime = {
   controller_param:
@@ -6,15 +6,15 @@ export type InterfaceRuntime = {
         ctype: 'adb'
         adb_path: string
         address: string
-        screencap: maa.api.ScreencapOrInputMethods
-        input: maa.api.ScreencapOrInputMethods
+        screencap: Maa.api.ScreencapOrInputMethods
+        input: Maa.api.ScreencapOrInputMethods
         config: string
       }
     | {
         ctype: 'win32'
-        hwnd: maa.api.DesktopHandle
-        screencap: maa.api.ScreencapOrInputMethods
-        input: maa.api.ScreencapOrInputMethods
+        hwnd: Maa.api.DesktopHandle
+        screencap: Maa.api.ScreencapOrInputMethods
+        input: Maa.api.ScreencapOrInputMethods
       }
   resource_path: string[]
   task: {

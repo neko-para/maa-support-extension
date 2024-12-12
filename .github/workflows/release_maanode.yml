@@ -1,0 +1,37 @@
+name: 'Release MaaNode'
+
+on:
+  push:
+    paths:
+      - 'maa/.maaver'
+      - '.github/workflows/release_maanode.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install maanode
+        shell: bash
+        run: |
+          npm i -g @vscode/vsce
+          cd maa
+          scripts/install.sh
+          vsce package
+          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath *.vsix

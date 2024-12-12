@@ -1,4 +1,4 @@
-import type maa from '@maaxyz/maa-node'
+import type * as maa from '@maaxyz/maa-node'
 
 export type Interface = {
   controller: {

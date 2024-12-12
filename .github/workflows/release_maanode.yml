@@ -2,6 +2,8 @@ name: 'Release MaaNode'
 
 on:
   push:
+    branches:
+      - 'main'
     paths:
       - 'maa/.maaver'
       - '.github/workflows/release_maanode.yml'

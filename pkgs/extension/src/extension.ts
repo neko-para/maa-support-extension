@@ -279,10 +279,10 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
   return p
 }
 
-export const { activate, deactivate } = defineExtension(context => {
+export const { activate, deactivate } = defineExtension(async context => {
   const channel = useOutputChannel('Maa')
   const logFile = vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'mse.log')
-  setupLogger(channel, logFile)
+  await setupLogger(channel, logFile)
 
   useCommand(commands.OpenExtLog, async () => {
     const doc = await vscode.workspace.openTextDocument(logFile)

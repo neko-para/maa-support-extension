@@ -3,6 +3,8 @@ import * as vscode from 'vscode'
 import { createLogger, format, transports } from 'winston'
 import Transport from 'winston-transport'
 
+import { vscfs } from './fs'
+
 export const logger = createLogger({
   transports: [
     new transports.Console({
@@ -20,8 +22,15 @@ export const logger = createLogger({
 
 export let loggerChannel: vscode.OutputChannel
 
-export function setupLogger(channel: vscode.OutputChannel, file: vscode.Uri) {
+export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Uri) {
   loggerChannel = channel
+
+  if (await vscfs.exists(file)) {
+    const stat = await vscfs.stat(file)
+    if (stat.size > 10 * 1024 * 1024) {
+      await vscfs.delete(file)
+    }
+  }
 
   logger.add(
     new (class VscodeOutputChannelTransport extends Transport {

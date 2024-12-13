@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue'
 
-import type { IpcFromHost, IpcRest, IpcToHost } from '@mse/types'
+import type { IpcFromHost, IpcRest, IpcToHost, LogCategory } from '@mse/types'
 
 export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(inited: () => void) {
   const vscodeApi = acquireVsCodeApi()
@@ -69,10 +69,27 @@ export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(inited: 
     })
   }
 
+  const log = new Proxy(
+    {},
+    {
+      get(_, key: string) {
+        return (msg: any) => {
+          realPost({
+            __builtin: true,
+            cmd: 'log',
+            message: `${msg}`,
+            type: key as LogCategory
+          })
+        }
+      }
+    }
+  ) as Record<LogCategory, (msg: any) => void>
+
   return {
     context,
     handler,
     postMessage,
-    postAwake
+    postAwake,
+    log
   }
 }

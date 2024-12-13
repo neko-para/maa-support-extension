@@ -11,8 +11,11 @@ import * as resourceSt from './resource'
 export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() => {
   const root = ipc.context.value.interfaceProjectDir
   const maaEnum = ipc.context.value.maaEnum
-  if (!root || !maaEnum) {
-    return [null, 'inner error']
+  if (!root) {
+    return [null, 'inner error, no root, consider restart']
+  }
+  if (!maaEnum) {
+    return [null, 'inner error, no maaEnum, consider restart']
   }
 
   const data = interfaceSt.currentObj.value
@@ -123,5 +126,7 @@ export function runtimeForTask(task: string) {
       }
     ]
     return nrt
+  } else {
+    ipc.log.error(`Run task build runtime failed, error ${err}`)
   }
 }

@@ -65,6 +65,9 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
               funcs.forEach(f => f())
               break
             }
+            case 'log':
+              logger.log(msg.type, msg.message)
+              break
           }
         } else {
           handler.value(msg)

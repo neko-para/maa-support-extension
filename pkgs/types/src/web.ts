@@ -1,5 +1,6 @@
 import type * as maa from '@maaxyz/maa-node'
 
+import type { LogCategory } from './logger'
 import type { Interface, InterfaceConfig, InterfaceRuntime } from './pi'
 
 export type IpcRest = {
@@ -32,6 +33,12 @@ export type IpcToHostBuiltin<Context> =
   | {
       __builtin: true
       cmd: 'awake'
+    }
+  | {
+      __builtin: true
+      cmd: 'log'
+      message: string
+      type: LogCategory
     }
 
 export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Context> | Rest

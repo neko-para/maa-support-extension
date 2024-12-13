@@ -15,6 +15,7 @@ import {
 } from '@mse/types'
 import { createUseWebPanel, createUseWebView, logger, setupLogger, t } from '@mse/utils'
 
+import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { loadServices, sharedInstance } from './data'
 import { Maa, maa, setupMaa } from './maa'
@@ -295,6 +296,7 @@ export const { activate, deactivate } = defineExtension(async context => {
 
   initControlPanel()
 
+  logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
   logger.info(`MaaFramework version ${maa.Global.version}`)
   maa.Global.debug_mode = true
   const logPath = context.storageUri

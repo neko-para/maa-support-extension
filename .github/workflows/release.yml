@@ -39,13 +39,6 @@ jobs:
       - name: Install dependencies
         run: pnpm i
 
-      - name: Build extension
-        shell: bash
-        run: |
-          node scripts/build.mjs
-          cd pkgs/web
-          npx vite build
-
       - name: Change Version
         shell: bash
         run: |
@@ -58,6 +51,13 @@ jobs:
           fi
           echo "Change version to ${ver}"
           npm --prefix release pkg set version=${ver}
+
+      - name: Build extension
+        shell: bash
+        run: |
+          node scripts/build.mjs
+          cd pkgs/web
+          npx vite build
 
       - name: Package extension
         shell: bash

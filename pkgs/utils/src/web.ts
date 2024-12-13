@@ -99,6 +99,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
           logger.debug(`webview ${id} change visibility ${v.visible}`)
           visible.value = v.visible
         })
+        logger.debug(`webview ${id} init visibility ${v.visible}`)
         visible.value = v.visible
       }
     })

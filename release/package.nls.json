@@ -7,5 +7,6 @@
   "maa.command.stop-launch": "Maa: stop launch",
   "maa.command.open-web": "Maa: open webview",
   "maa.command.launch-interface": "Maa: launch interface",
-  "maa.view.control-panel.title": "Maa Control Panel"
+  "maa.view.control-panel.title": "Maa Control Panel",
+  "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)"
 }

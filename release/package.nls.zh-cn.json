@@ -7,5 +7,6 @@
   "maa.command.stop-launch": "Maa: 停止执行",
   "maa.command.open-web": "Maa: 打开Webview",
   "maa.command.launch-interface": "Maa: 执行interface",
-  "maa.view.control-panel.title": "Maa 控制面板"
+  "maa.view.control-panel.title": "Maa 控制面板",
+  "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)"
 }

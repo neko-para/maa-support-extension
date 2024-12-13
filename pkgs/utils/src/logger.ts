@@ -38,7 +38,10 @@ export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Ur
         channel.appendLine(info[MESSAGE])
         next()
       }
-    })()
+    })({
+      level:
+        vscode.workspace.getConfiguration('nekosu.maa-support').get('maa.outputLevel') ?? 'info'
+    })
   )
   logger.add(
     new transports.File({

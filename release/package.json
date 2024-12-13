@@ -69,6 +69,19 @@
           "type": "webview"
         }
       ]
+    },
+    "configuration": {
+      "title": "Maa Support",
+      "properties": {
+        "maa.outputLevel": {
+          "type": "string",
+          "description": "%maa.setting.output-level%",
+          "enum": [
+            "error", "warn", "info",  "http", "verbose", "debug", "silly"
+          ],
+          "default": "info"
+        }
+      }
     }
   },
   "extensionDependencies": [

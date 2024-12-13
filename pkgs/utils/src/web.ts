@@ -13,6 +13,7 @@ import vscode from 'vscode'
 import { IpcFromHost, IpcFromHostBuiltin, IpcRest, IpcToHost } from '@mse/types'
 
 import { vscfs } from './fs'
+import { logger } from './logger'
 
 // TODO: 看看怎么不抄两份
 
@@ -59,7 +60,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
               break
             case 'awake': {
               const funcs = [...awakeListener.value]
-              console.log('maa: web awake', funcs)
+              logger.debug(`webview ${id} awake, listener count ${funcs.length}`)
               awakeListener.value = []
               funcs.forEach(f => f())
               break
@@ -95,9 +96,10 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         html.value = htmlContent
 
         v.onDidChangeVisibility(e => {
-          console.log('maa: web change visibility', v.visible)
+          logger.debug(`webview ${id} change visibility ${v.visible}`)
           visible.value = v.visible
         })
+        visible.value = v.visible
       }
     })
 

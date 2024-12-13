@@ -57,8 +57,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
       const { post, visible, awakeListener } = useControlPanel()
 
-      console.log('maa: launch task control panel visible', visible.value)
-
       if (!visible.value) {
         logger.info('Focus controlPanel')
         vscode.commands.executeCommand('maa.view.control-panel.focus')
@@ -88,8 +86,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
         this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
       )
     }
-
-    console.log(runtime)
 
     if (runtime) {
       loggerChannel.show(true)

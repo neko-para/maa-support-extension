@@ -115,7 +115,7 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
 })
 
 export function runtimeForTask(task: string) {
-  ipc.log.error(`Build runtime for task ${task}`)
+  ipc.log.info(`Build runtime for task ${task}`)
   const [rt, err] = runtime.value
   if (rt) {
     const nrt = structuredClone(rt)

@@ -114,7 +114,7 @@ function initControlPanel() {
         break
       }
       case 'launchInterface':
-        console.log('maa: launch interface request with', data.runtime)
+        logger.debug(`Launch Interface, runtime ${JSON.stringify(data.runtime)}`)
         context.value.interfaceLaunching = true
         await sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(data.runtime)
         context.value.interfaceLaunching = false

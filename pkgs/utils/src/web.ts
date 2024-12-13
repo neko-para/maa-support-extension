@@ -58,7 +58,8 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
               sync = false
               break
             case 'awake': {
-              const funcs = awakeListener.value
+              const funcs = [...awakeListener.value]
+              console.log('maa: web awake', funcs)
               awakeListener.value = []
               funcs.forEach(f => f())
               break
@@ -94,6 +95,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         html.value = htmlContent
 
         v.onDidChangeVisibility(e => {
+          console.log('maa: web change visibility', v.visible)
           visible.value = v.visible
         })
       }

@@ -59,16 +59,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
       const { post, visible, awakeListener } = useControlPanel()
 
+      console.log('maa: launch task control panel visible', visible.value)
+
       if (!visible.value) {
+        console.log('maa: launch task focus panel')
         vscode.commands.executeCommand('maa.view.control-panel.focus')
 
         awakeListener.value.push(() => {
+          console.log('maa: launch task send request')
           post({
             cmd: 'launchTask',
             task
           })
         })
       } else {
+        console.log('maa: launch task send request')
         post({
           cmd: 'launchTask',
           task

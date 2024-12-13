@@ -280,7 +280,7 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
   return p
 }
 
-export const { activate, deactivate } = defineExtension(async context => {
+async function setup(context: vscode.ExtensionContext) {
   const channel = useOutputChannel('Maa')
   const logFile = vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'mse.log')
   await setupLogger(channel, logFile)
@@ -336,4 +336,8 @@ export const { activate, deactivate } = defineExtension(async context => {
     ProjectInterfaceCodeLensProvider,
     ProjectInterfaceLaunchProvider
   ])
+}
+
+export const { activate, deactivate } = defineExtension(context => {
+  setup(context)
 })

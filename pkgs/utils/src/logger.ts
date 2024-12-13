@@ -39,8 +39,7 @@ export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Ur
         next()
       }
     })({
-      level:
-        vscode.workspace.getConfiguration('nekosu.maa-support').get('maa.outputLevel') ?? 'info'
+      level: vscode.workspace.getConfiguration('maa').get('outputLevel') ?? 'info'
     })
   )
   logger.add(

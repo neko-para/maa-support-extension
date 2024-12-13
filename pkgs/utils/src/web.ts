@@ -22,7 +22,9 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
   id: string
 ) {
   return createSingletonComposable(() => {
-    const handler = ref<(data: TH) => void>(() => {})
+    const handler = ref<(data: TH) => void>(data => {
+      logger.warn(`webview ${id} not handled ${JSON.stringify(data).slice(0, 200)}`)
+    })
     const rootUri = vscode.Uri.joinPath(extensionContext.value!.extensionUri, dir)
     const html = ref('loading...')
 
@@ -141,7 +143,9 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
   retain?: boolean
 ) {
   return async (title: string, column: vscode.ViewColumn) => {
-    const handler = ref<(data: TH) => void>(() => {})
+    const handler = ref<(data: TH) => void>(data => {
+      logger.warn(`webview ${id} not handled ${JSON.stringify(data).slice(0, 200)}`)
+    })
     const rootUri = vscode.Uri.joinPath(extensionContext.value!.extensionUri, dir)
     const html = ref('loading...')
 

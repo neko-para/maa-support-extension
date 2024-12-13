@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises'
 import { MESSAGE } from 'triple-beam'
 import * as vscode from 'vscode'
 import { createLogger, format, transports } from 'winston'
@@ -42,6 +43,8 @@ export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Ur
       level: vscode.workspace.getConfiguration('maa').get('outputLevel') ?? 'info'
     })
   )
+
+  await fs.appendFile(file.fsPath, '\n' + '-'.repeat(100) + '\n')
   logger.add(
     new transports.File({
       filename: file.fsPath,

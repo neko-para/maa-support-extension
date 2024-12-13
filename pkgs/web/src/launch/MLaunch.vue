@@ -25,7 +25,7 @@ function requestStop() {
       <group-box v-for="(task, idx) in taskList.info" :key="idx" :title="task.info.entry">
         <div class="flex p-2 gap-2 flex-wrap">
           <group-box v-for="(nl, nidx) in task.nexts" :key="nidx" :title="nl.info.name">
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2 h-full">
               <template v-for="nlc in nl.info.list.length" :key="nlc">
                 <reco-button
                   v-if="nl.recos[nlc - 1]"
@@ -38,7 +38,7 @@ function requestStop() {
                   {{ nl.info.list[nlc - 1] }}
                 </state-label>
               </template>
-              <span></span>
+              <span class="flex-1"></span>
               <act-button v-if="nl.act" :status="nl.act.state">
                 {{ nl.act.info.name }} - {{ nl.act.info.node_id }}
               </act-button>

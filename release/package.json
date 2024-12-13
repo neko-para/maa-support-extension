@@ -20,8 +20,12 @@
   "contributes": {
     "commands": [
       {
-        "title": "%maa.command.open-log%",
-        "command": "maa.open-log"
+        "title": "%maa.command.open-maa-log%",
+        "command": "maa.open-maa-log"
+      },
+      {
+        "title": "%maa.command.open-ext-log%",
+        "command": "maa.open-ext-log"
       },
       {
         "title": "%maa.command.select-resource%",

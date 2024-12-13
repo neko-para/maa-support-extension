@@ -2,7 +2,7 @@ import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
-import { t } from '@mse/utils'
+import { logger, loggerChannel, t } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
@@ -24,14 +24,12 @@ function serializeRuntime(runtime: InterfaceRuntime) {
 }
 
 export class ProjectInterfaceLaunchProvider extends Service {
-  outputChannel: vscode.OutputChannel
   tasker: TaskerCache | null
   instanceConfig: string | null
 
   constructor() {
     super()
 
-    this.outputChannel = vscode.window.createOutputChannel('Maa')
     this.tasker = null
     this.instanceConfig = null
 
@@ -62,18 +60,18 @@ export class ProjectInterfaceLaunchProvider extends Service {
       console.log('maa: launch task control panel visible', visible.value)
 
       if (!visible.value) {
-        console.log('maa: launch task focus panel')
+        logger.info('Focus controlPanel')
         vscode.commands.executeCommand('maa.view.control-panel.focus')
 
         awakeListener.value.push(() => {
-          console.log('maa: launch task send request')
+          logger.info(`Send launch task request ${task}`)
           post({
             cmd: 'launchTask',
             task
           })
         })
       } else {
-        console.log('maa: launch task send request')
+        logger.info(`Send launch task request ${task}`)
         post({
           cmd: 'launchTask',
           task
@@ -94,11 +92,11 @@ export class ProjectInterfaceLaunchProvider extends Service {
     console.log(runtime)
 
     if (runtime) {
-      this.outputChannel.show(true)
+      loggerChannel.show(true)
       try {
         await this.launchRuntime(runtime)
       } catch (err) {
-        this.outputChannel.append(`${err}\n`)
+        logger.error(`${err}`)
       }
     }
   }
@@ -246,7 +244,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
 
     controller.notify = (msg, detail) => {
-      this.outputChannel.append(`${msg} ${detail}\n`)
+      logger.info(`${msg} ${detail}`)
     }
 
     await controller.post_connection().wait()
@@ -254,7 +252,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const resource = new maa.Resource()
 
     resource.notify = (msg, detail) => {
-      this.outputChannel.append(`${msg} ${detail}\n`)
+      logger.info(`${msg} ${detail}`)
     }
 
     for (const path of runtime.resource_path) {
@@ -264,7 +262,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const tasker = new maa.Tasker()
 
     tasker.notify = (msg, detail) => {
-      this.outputChannel.append(`${msg} ${detail}\n`)
+      logger.info(`${msg} ${detail}`)
     }
 
     tasker.bind(controller)

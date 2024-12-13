@@ -1,5 +1,6 @@
 export const commands = {
-  OpenLog: 'maa.open-log',
+  OpenMaaLog: 'maa.open-maa-log',
+  OpenExtLog: 'maa.open-ext-log',
 
   SelectResource: 'maa.select-resource',
   GotoTask: 'maa.goto-task',

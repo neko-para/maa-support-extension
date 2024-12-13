@@ -1,5 +1,5 @@
 import path from 'path'
-import { defineExtension, useCommand, watch } from 'reactive-vscode'
+import { defineExtension, useCommand, useOutputChannel, watch } from 'reactive-vscode'
 import sms from 'source-map-support'
 import vscode from 'vscode'
 
@@ -13,7 +13,7 @@ import {
   OldWebFromHost,
   OldWebToHost
 } from '@mse/types'
-import { createUseWebPanel, createUseWebView, t } from '@mse/utils'
+import { createUseWebPanel, createUseWebView, logger, setupLogger, t } from '@mse/utils'
 
 import { commands } from './command'
 import { loadServices, sharedInstance } from './data'
@@ -51,6 +51,8 @@ function initControlPanel() {
   }
 
   handler.value = async data => {
+    logger.debug(`controlPanel ${data.cmd} ${JSON.stringify(data).slice(0, 200)}`)
+
     switch (data.cmd) {
       case 'refreshInterface':
         context.value.interfaceRefreshing = true
@@ -185,6 +187,8 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
   const { handler, context, post } = p
 
   handler.value = async data => {
+    logger.debug(`oldWeb ${data.cmd} ${JSON.stringify(data).slice(0, 200)}`)
+
     const pilp = sharedInstance(ProjectInterfaceLaunchProvider)
 
     switch (data.cmd) {
@@ -276,16 +280,27 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
 }
 
 export const { activate, deactivate } = defineExtension(context => {
+  const channel = useOutputChannel('Maa')
+  const logFile = vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'mse.log')
+  setupLogger(channel, logFile)
+
+  useCommand(commands.OpenExtLog, async () => {
+    const doc = await vscode.workspace.openTextDocument(logFile)
+    if (doc) {
+      await vscode.window.showTextDocument(doc)
+    }
+  })
+
   setupMaa()
 
   initControlPanel()
 
-  console.log(maa.Global.version)
+  logger.info(`MaaFramework version ${maa.Global.version}`)
   maa.Global.debug_mode = true
   const logPath = context.storageUri
   if (logPath) {
     maa.Global.log_dir = logPath.fsPath
-    useCommand(commands.OpenLog, async () => {
+    useCommand(commands.OpenMaaLog, async () => {
       const doc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(logPath, 'maa.log'))
       if (doc) {
         await vscode.window.showTextDocument(doc)

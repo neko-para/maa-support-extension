@@ -115,6 +115,10 @@ function initControlPanel() {
       }
       case 'launchInterface':
         logger.debug(`Launch Interface, runtime ${JSON.stringify(data.runtime)}`)
+        if (context.value.interfaceLaunching) {
+          logger.warn(`Launch Interface failed, another interface launching`)
+          break
+        }
         context.value.interfaceLaunching = true
         await sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(data.runtime)
         context.value.interfaceLaunching = false

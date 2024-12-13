@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 
 import { VscButton, VscDivider, VscScrollable } from '@/components/VscEl'
 
@@ -11,6 +11,7 @@ import VRuntime from './views/VRuntime.vue'
 import VTask from './views/VTask.vue'
 
 onMounted(() => {
+  ipc.log.info('controlPanel awake')
   ipc.postAwake()
 })
 </script>

@@ -10,6 +10,7 @@ import * as interfaceSt from '@/states/interface'
 import * as runtimeSt from '@/states/runtime'
 
 export const ipc = useIpc<ControlPanelContext, ControlPanelToHost, ControlPanelFromHost>(() => {
+  ipc.log.info('controlPanel loaded')
   createApp(App).mount('#app')
 })
 

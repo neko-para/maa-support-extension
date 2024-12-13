@@ -118,7 +118,7 @@ export function runtimeForTask(task: string) {
   ipc.log.info(`Build runtime for task ${task}`)
   const [rt, err] = runtime.value
   if (rt) {
-    const nrt = structuredClone(rt)
+    const nrt = JSON.parse(JSON.stringify(rt))
     nrt.task = [
       {
         name: task,

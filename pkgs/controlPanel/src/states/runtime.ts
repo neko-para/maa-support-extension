@@ -79,6 +79,8 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
   for (const task of config.task ?? []) {
     const taskInfo = data.task?.find(x => x.name === task.name)
 
+    ipc.log.debug(`process taskInfo ${JSON.stringify(taskInfo)}`)
+
     if (!taskInfo) {
       return [null, 'no task']
     }
@@ -87,15 +89,18 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
 
     Object.assign(param, taskInfo.pipeline_override ?? {})
 
-    // 是不是该检查一下task里面指定的option是否都被配置了？如果缺失的话看看要不要读下default
-    for (const opt of task.option ?? []) {
-      const optInfo = data.option?.[opt.name]
+    for (const optName of taskInfo.option ?? []) {
+      const optInfo = data.option?.[optName]
 
       if (!optInfo) {
         return [null, 'no option']
       }
 
-      const csInfo = optInfo.cases.find(x => x.name === opt.value)
+      const optEntry = task.option?.find(x => x.name === optName)
+
+      const optValue = optEntry?.value ?? optInfo.default_case ?? optInfo.cases[0].name
+
+      const csInfo = optInfo.cases.find(x => x.name === optValue)
 
       if (!csInfo) {
         return [null, 'no case']
@@ -103,6 +108,8 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
 
       Object.assign(param, csInfo.pipeline_override ?? {})
     }
+
+    ipc.log.debug(`process taskInfo param result ${JSON.stringify(param)}`)
 
     result.task.push({
       name: task.name,

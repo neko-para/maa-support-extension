@@ -16,6 +16,11 @@ export const ipc = useIpc<ControlPanelContext, ControlPanelToHost, ControlPanelF
 
 ipc.handler.value = data => {
   switch (data.cmd) {
+    case 'launchInterface':
+      if (runtimeSt.runtime.value[0]) {
+        interfaceSt.launchRuntime(runtimeSt.runtime.value[0])
+      }
+      break
     case 'launchTask': {
       const rt = runtimeSt.runtimeForTask(data.task)
       if (rt) {

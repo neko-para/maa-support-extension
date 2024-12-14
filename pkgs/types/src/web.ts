@@ -101,10 +101,14 @@ export type ControlPanelToHost =
       cmd: 'refreshDesktopWindow'
     }
 
-export type ControlPanelFromHost = {
-  cmd: 'launchTask'
-  task: string
-}
+export type ControlPanelFromHost =
+  | {
+      cmd: 'launchInterface'
+    }
+  | {
+      cmd: 'launchTask'
+      task: string
+    }
 
 export type RecoInfo = {
   raw: string

@@ -40,6 +40,23 @@ export const useControlPanel = createUseWebView<
   ControlPanelFromHost
 >('controlPanel', 'maa.view.control-panel')
 
+export function focusAndWaitPanel() {
+  return new Promise<void>(resolve => {
+    const { visible, awakeListener } = useControlPanel()
+
+    if (!visible.value) {
+      logger.info('Focus controlPanel')
+      vscode.commands.executeCommand('maa.view.control-panel.focus')
+
+      awakeListener.value.push(resolve)
+    } else {
+      resolve()
+    }
+
+    return true
+  })
+}
+
 function initControlPanel() {
   const { handler, context } = useControlPanel()
 
@@ -217,24 +234,17 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
         if (!sharedInstance(PipelineRootStatusProvider).activateResource) {
           return
         }
-        const runtime = await pilp.prepareRuntime(
-          sharedInstance(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
-        )
-        if (!runtime) {
-          return
+        if ((await pilp.updateCache()) && pilp.cache) {
+          await pilp.cache.controller.post_screencap().wait()
+          const image = pilp.cache.controller.cached_image
+          if (!image) {
+            return
+          }
+          post({
+            cmd: 'crop.image',
+            image: toPngDataUrl(image)
+          })
         }
-        if (!(await pilp.setupInstance(runtime, true)) || !pilp.tasker) {
-          return
-        }
-        await pilp.tasker.controller.post_screencap().wait()
-        const image = pilp.tasker.controller.cached_image
-        if (!image) {
-          return
-        }
-        post({
-          cmd: 'crop.image',
-          image: toPngDataUrl(image)
-        })
         break
       case 'crop.upload': {
         const options: vscode.OpenDialogOptions = {

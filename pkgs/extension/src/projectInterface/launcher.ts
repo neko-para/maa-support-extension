@@ -6,39 +6,54 @@ import { logger, loggerChannel, t } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { useControlPanel, useOldWebPanel } from '../extension'
+import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../extension'
 import { Maa, maa } from '../maa'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
 import { InterfaceRuntime } from './type'
 
-type TaskerCache = {
+type InstanceCache = {
+  controller: Maa.ControllerBase
+}
+
+type TaskerInstance = {
   tasker: Maa.TaskerBase
   resource: Maa.ResourceBase
   controller: Maa.ControllerBase
 }
 
-function serializeRuntime(runtime: InterfaceRuntime) {
+function serializeRuntimeCache(runtime: InterfaceRuntime['controller_param']) {
   return JSON.stringify(runtime)
 }
 
 export class ProjectInterfaceLaunchProvider extends Service {
-  tasker: TaskerCache | null
-  instanceConfig: string | null
+  cache: InstanceCache | null
+  cacheConfig: string | null
+  tasker: TaskerInstance | null
 
   constructor() {
     super()
 
+    this.cache = null
+    this.cacheConfig = null
     this.tasker = null
-    this.instanceConfig = null
 
     this.defer = vscode.commands.registerCommand(commands.StopLaunch, async () => {
       this.tasker?.tasker?.post_stop()
     })
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
-      await this.launchInterface()
+      // await this.launchInterface()
+      const { post } = useControlPanel()
+      await focusAndWaitPanel()
+
+      logger.info(`Send launch interface request`)
+      post({
+        cmd: 'launchInterface'
+      })
+
+      return true
     })
 
     this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
@@ -50,43 +65,25 @@ export class ProjectInterfaceLaunchProvider extends Service {
           }
         )
         if (!taskRes) {
-          return
+          return false
         }
         task = taskRes
       }
 
-      const { post, visible, awakeListener } = useControlPanel()
+      const { post } = useControlPanel()
+      await focusAndWaitPanel()
 
-      if (!visible.value) {
-        logger.info('Focus controlPanel')
-        vscode.commands.executeCommand('maa.view.control-panel.focus')
-
-        awakeListener.value.push(() => {
-          logger.info(`Send launch task request ${task}`)
-          post({
-            cmd: 'launchTask',
-            task
-          })
-        })
-      } else {
-        logger.info(`Send launch task request ${task}`)
-        post({
-          cmd: 'launchTask',
-          task
-        })
-      }
+      logger.info(`Send launch task request ${task}`)
+      post({
+        cmd: 'launchTask',
+        task
+      })
 
       return true
     })
   }
 
-  async launchInterface(runtime?: InterfaceRuntime | null) {
-    if (!runtime) {
-      runtime = await this.prepareRuntime(
-        this.shared(PipelineRootStatusProvider).activateResource!.dirUri.fsPath
-      )
-    }
-
+  async launchInterface(runtime: InterfaceRuntime) {
     if (runtime) {
       loggerChannel.show(true)
       try {
@@ -97,22 +94,13 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
   }
 
-  async prepareRuntime(
-    root: string // overwrite PROJECT_DIR
-  ): Promise<InterfaceRuntime | null> {
+  async prepareControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
     const pip = this.shared(PipelineProjectInterfaceProvider)
     const data = pip.interfaceJson
     const config = pip.interfaceConfigJson
-
     if (!data || !config) {
       return null
     }
-
-    const replaceVar = (x: string) => {
-      return x.replaceAll('{PROJECT_DIR}', root)
-    }
-
-    const result: Partial<InterfaceRuntime> = {}
 
     const ctrlInfo = data.controller.find(x => x.name === config.controller.name)
 
@@ -131,7 +119,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
         return null
       }
 
-      result.controller_param = {
+      return {
         ctype: 'adb',
         adb_path: config.adb.adb_path,
         address: config.adb.address,
@@ -154,7 +142,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
         return null
       }
 
-      result.controller_param = {
+      return {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
         screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.DXGI_DesktopDup,
@@ -162,79 +150,34 @@ export class ProjectInterfaceLaunchProvider extends Service {
       }
     }
 
-    const resInfo = data.resource.find(x => x.name === config.resource)
-
-    if (!resInfo) {
-      await vscode.window.showErrorMessage(t('maa.pi.error.cannot-find-resource', config.resource))
-      return null
-    }
-
-    result.resource_path = resInfo.path.map(replaceVar)
-
-    result.task = []
-    for (const task of config.task ?? []) {
-      const taskInfo = data.task.find(x => x.name === task.name)
-
-      if (!taskInfo) {
-        await vscode.window.showErrorMessage(t('maa.pi.error.cannot-find-task', task.name))
-        return null
-      }
-
-      const param: {} = {}
-
-      Object.assign(param, taskInfo.pipeline_override ?? {})
-
-      // 是不是该检查一下task里面指定的option是否都被配置了？如果缺失的话看看要不要读下default
-      for (const opt of task.option ?? []) {
-        const optInfo = data.option?.[opt.name]
-
-        if (!optInfo) {
-          await vscode.window.showErrorMessage(t('maa.pi.error.cannot-find-option', opt.name))
-          return null
-        }
-
-        const csInfo = optInfo.cases.find(x => x.name === opt.value)
-
-        if (!csInfo) {
-          await vscode.window.showErrorMessage(
-            t('maa.pi.error.cannot-find-case-for-option', opt.value, opt.name)
-          )
-          return null
-        }
-
-        Object.assign(param, csInfo.pipeline_override ?? {})
-      }
-
-      result.task.push({
-        name: task.name,
-        entry: taskInfo.entry,
-        pipeline_override: param
-      })
-    }
-
-    return result as InterfaceRuntime
+    return null
   }
 
-  async setupInstance(runtime: InterfaceRuntime, useCache = false): Promise<boolean> {
-    const key = serializeRuntime(runtime)
+  async updateCache(): Promise<boolean> {
+    const rt = await this.prepareControllerRuntime()
 
-    if (useCache) {
-      if (key === this.instanceConfig) {
-        return true
-      }
+    if (!rt) {
+      return false
     }
 
-    this.tasker = null
-    this.instanceConfig = null
+    const key = serializeRuntimeCache(rt)
 
-    let controller: Maa.ControllerBase
+    if (key !== this.cacheConfig) {
+      this.cache?.controller?.destroy()
+      this.cache = null
+      this.cacheConfig = null
+    }
 
-    if (runtime.controller_param.ctype === 'adb') {
-      const p = runtime.controller_param
-      controller = new maa.AdbController(p.adb_path, p.address, p.screencap, p.input, p.config)
-    } else if (runtime.controller_param.ctype === 'win32') {
-      const p = runtime.controller_param
-      controller = new maa.Win32Controller(p.hwnd, p.screencap, p.input)
+    let controller: Maa.ControllerBase | undefined = this.cache?.controller
+
+    if (controller) {
+      return true
+    }
+
+    if (rt.ctype === 'adb') {
+      controller = new maa.AdbController(rt.adb_path, rt.address, rt.screencap, rt.input, rt.config)
+    } else if (rt.ctype === 'win32') {
+      controller = new maa.Win32Controller(rt.hwnd, rt.screencap, rt.input)
     } else {
       return false
     }
@@ -244,6 +187,31 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
 
     await controller.post_connection().wait()
+
+    if (controller.connected) {
+      this.cache = { controller }
+      this.cacheConfig = key
+      return true
+    } else {
+      controller.destroy()
+      return false
+    }
+  }
+
+  async setupInstance(runtime: InterfaceRuntime): Promise<boolean> {
+    this.tasker?.tasker.destroy()
+    this.tasker?.resource.destroy()
+    this.tasker = null
+
+    if (!(await this.updateCache())) {
+      return false
+    }
+
+    const controller = this.cache?.controller
+
+    if (!controller) {
+      return false
+    }
 
     const resource = new maa.Resource()
 
@@ -266,7 +234,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     if (!tasker.inited) {
       tasker.destroy()
-      controller.destroy()
       resource.destroy()
       return false
     }
@@ -276,7 +243,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
       controller,
       resource
     }
-    this.instanceConfig = key
 
     return true
   }

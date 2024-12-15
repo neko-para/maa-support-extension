@@ -157,8 +157,8 @@ function initControlPanel() {
         const devs = (await maa.Win32Controller.find()) ?? []
         context.value.desktopWindowList = devs.map(d => ({
           hwnd: d[0],
-          window_name: d[1],
-          class_name: d[2]
+          class_name: d[1],
+          window_name: d[2]
         }))
         context.value.desktopWindowRefreshing = false
         break

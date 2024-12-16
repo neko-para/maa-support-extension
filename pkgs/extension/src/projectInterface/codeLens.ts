@@ -6,39 +6,26 @@ import { commands } from '../command'
 import { Service } from '../data'
 import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
+import { ProviderBase } from './providerBase'
 
-export class ProjectInterfaceCodeLensProvider extends Service implements vscode.CodeLensProvider {
-  bind?: vscode.Disposable
-
+export class ProjectInterfaceCodeLensProvider
+  extends ProviderBase
+  implements vscode.CodeLensProvider
+{
   didChangeCodeLenses: vscode.EventEmitter<void>
   onDidChangeCodeLenses: vscode.Event<void>
 
   constructor() {
-    super()
+    super(selector => {
+      return vscode.languages.registerCodeLensProvider(selector, this)
+    })
 
     this.didChangeCodeLenses = new vscode.EventEmitter()
     this.onDidChangeCodeLenses = this.didChangeCodeLenses.event
 
-    this.shared(PipelineRootStatusProvider).event.on('activateRootChanged', () => {
-      this.setup()
+    this.shared(PipelineProjectInterfaceProvider).event.on('activateInterfaceChanged', () => {
+      this.didChangeCodeLenses.fire()
     })
-
-    this.setup()
-  }
-
-  setup() {
-    this.bind?.dispose()
-
-    const root = this.shared(PipelineRootStatusProvider).activateResource
-
-    if (root) {
-      this.bind = vscode.languages.registerCodeLensProvider(
-        {
-          pattern: new vscode.RelativePattern(root.dirUri, 'interface.json') // stupid, but just works
-        },
-        this
-      )
-    }
   }
 
   provideCodeLenses(

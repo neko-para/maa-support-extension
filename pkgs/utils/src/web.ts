@@ -44,7 +44,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         localResourceRoots: [rootUri]
       },
       onDidReceiveMessage(data: string) {
-        logger.silly(`webview ${id} recv ${data.slice(0, 200)}`)
+        // logger.silly(`webview ${id} recv ${data.slice(0, 200)}`)
 
         const msg = JSON.parse(data) as IpcToHost<Context, TH>
         if (msg.__builtin) {
@@ -81,7 +81,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
 
     realPost = (data: IpcFromHost<Context, FH>) => {
       const datastr = JSON.stringify(data)
-      logger.silly(`webview ${id} send ${datastr.slice(0, 200)}`)
+      // logger.silly(`webview ${id} send ${datastr.slice(0, 200)}`)
       postMessage(datastr)
     }
 

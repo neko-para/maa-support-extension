@@ -30,6 +30,8 @@ import { PipelineRenameProvider } from './pipeline/rename'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
+import { ProjectInterfaceDefinitionProvider } from './projectInterface/definition'
+import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 
 sms.install()
@@ -86,7 +88,6 @@ function initControlPanel() {
         ).activateResource?.interfaceRelative
 
         await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
-        sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
 
         context.value.interfaceProjectDir = sharedInstance(
           PipelineRootStatusProvider
@@ -113,7 +114,6 @@ function initControlPanel() {
           sharedInstance(PipelineRootStatusProvider).selectRootInfo(rootIndex)
 
           await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
-          sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
 
           context.value.interfaceProjectDir = sharedInstance(
             PipelineRootStatusProvider
@@ -174,7 +174,6 @@ function initControlPanel() {
       )
 
       await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
-      sharedInstance(ProjectInterfaceCodeLensProvider).didChangeCodeLenses.fire()
     },
     {
       deep: true
@@ -347,7 +346,9 @@ async function setup(context: vscode.ExtensionContext) {
     PipelineRenameProvider,
     PipelineCodeLensProvider,
 
+    ProjectInterfaceIndexerProvider,
     ProjectInterfaceCodeLensProvider,
+    ProjectInterfaceDefinitionProvider,
     ProjectInterfaceLaunchProvider
   ])
 }

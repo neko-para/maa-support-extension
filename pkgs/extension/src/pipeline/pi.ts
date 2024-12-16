@@ -16,6 +16,7 @@ export class PipelineProjectInterfaceProvider extends Service {
 
   event: EventEmitter<{
     activateResourceChanged: [resource: vscode.Uri[]]
+    activateInterfaceChanged: []
   }>
 
   constructor() {
@@ -62,6 +63,11 @@ export class PipelineProjectInterfaceProvider extends Service {
   }
 
   async loadInterface() {
+    await this.loadInterfaceInner()
+    this.event.emit('activateInterfaceChanged')
+  }
+
+  async loadInterfaceInner() {
     const root = this.shared(PipelineRootStatusProvider).activateResource
 
     this.interfaceJson = null

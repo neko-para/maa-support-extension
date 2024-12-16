@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises'
+import path from 'path'
 import { MESSAGE } from 'triple-beam'
 import * as vscode from 'vscode'
 import { createLogger, format, transports } from 'winston'
@@ -44,6 +45,7 @@ export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Ur
     })
   )
 
+  await fs.mkdir(path.dirname(file.fsPath), { recursive: true })
   await fs.appendFile(file.fsPath, '\n' + '-'.repeat(100) + '\n')
   logger.add(
     new transports.File({

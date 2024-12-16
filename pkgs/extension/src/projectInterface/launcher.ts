@@ -81,6 +81,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
       return true
     })
+
+    this.defer = vscode.commands.registerCommand(commands.GenerateMSEIndex, async () => {
+      const mseDir = vscode.Uri.joinPath(
+        this.shared(PipelineRootStatusProvider).activateResource!.dirUri,
+        '.mse'
+      )
+      const mseIndex = vscode.Uri.joinPath(mseDir, 'index.js')
+      if (!(await vscfs.exists(mseIndex))) {
+        await vscfs.createDirectory(mseDir)
+        await vscfs.copy(
+          vscode.Uri.joinPath(this.context.extensionUri, 'data', 'index.js'),
+          mseIndex
+        )
+      }
+    })
   }
 
   async launchInterface(runtime: InterfaceRuntime) {

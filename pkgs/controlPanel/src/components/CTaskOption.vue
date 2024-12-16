@@ -80,10 +80,14 @@ function revealCase() {
     <div class="col-flex">
       <div class="row-flex">
         <span>{{ option }}</span>
-        <vscode-icon name="search" @click="revealOption" :title="`查看 ${option}`"></vscode-icon>
+        <vscode-icon
+          name="go-to-search"
+          @click="revealOption"
+          :title="`查看 ${option}`"
+        ></vscode-icon>
         <vscode-icon
           v-if="value"
-          name="search"
+          name="go-to-search"
           @click="revealCase"
           :title="`查看 ${option} - ${value}`"
         ></vscode-icon>

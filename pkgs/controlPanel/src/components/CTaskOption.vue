@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
+import { VscButton, VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
+import { ipc } from '@/main'
 import * as interfaceSt from '@/states/interface'
 
 const props = defineProps<{
@@ -51,12 +52,42 @@ const value = computed<string | undefined>({
     return choice?.value ?? optionProto.default_case ?? optionProto.cases[0].name
   }
 })
+
+function revealOption() {
+  ipc.postMessage({
+    cmd: 'revealInterfaceAt',
+    dest: {
+      type: 'option',
+      option: props.option
+    }
+  })
+}
+
+function revealCase() {
+  ipc.postMessage({
+    cmd: 'revealInterfaceAt',
+    dest: {
+      type: 'option',
+      option: props.option,
+      case: value.value
+    }
+  })
+}
 </script>
 
 <template>
   <template v-if="task && optionProto">
     <div class="col-flex">
-      <span>{{ option }}</span>
+      <div class="row-flex">
+        <span>{{ option }}</span>
+        <vscode-icon name="search" @click="revealOption" :title="`查看 ${option}`"></vscode-icon>
+        <vscode-icon
+          v-if="value"
+          name="search"
+          @click="revealCase"
+          :title="`查看 ${option} - ${value}`"
+        ></vscode-icon>
+      </div>
       <vsc-single-select
         v-model="value"
         :options="optionOptions"

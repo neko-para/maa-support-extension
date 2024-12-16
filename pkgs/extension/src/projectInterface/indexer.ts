@@ -8,17 +8,17 @@ import { PipelineRootStatusProvider } from '../pipeline/root'
 
 export type QueryResult =
   | {
-      type: 'task.entry'
+      type: 'task.ref'
       range: vscode.Range
       task: string
     }
   | {
-      type: 'task.option'
+      type: 'option.ref'
       range: vscode.Range
       option: string
     }
   | {
-      type: 'option.case'
+      type: 'case.ref'
       range: vscode.Range
       option: string
       case: string
@@ -27,7 +27,11 @@ export type QueryResult =
 export class ProjectInterfaceIndexerProvider extends Service {
   interfaceUri: vscode.Uri | null = null
 
-  entries: QueryResult[] = []
+  refs: QueryResult[] = []
+  entryDecl: {
+    range: vscode.Range
+    name: string
+  }[] = []
   optionDecl: {
     range: vscode.Range
     option: string
@@ -56,7 +60,7 @@ export class ProjectInterfaceIndexerProvider extends Service {
     }
     this.interfaceUri = uri
 
-    this.entries = []
+    this.refs = []
     this.optionDecl = []
     this.caseDecl = []
 
@@ -67,10 +71,18 @@ export class ProjectInterfaceIndexerProvider extends Service {
             case 'task':
               if (typeof path[1] === 'number') {
                 switch (path[2]) {
+                  case 'name':
+                    if (path.length === 3) {
+                      this.entryDecl.push({
+                        range,
+                        name: value
+                      })
+                    }
+                    break
                   case 'entry':
                     if (path.length === 3) {
-                      this.entries.push({
-                        type: 'task.entry',
+                      this.refs.push({
+                        type: 'task.ref',
                         range,
                         task: value
                       })
@@ -78,8 +90,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
                     break
                   case 'option':
                     if (typeof path[3] === 'number' && path.length === 4) {
-                      this.entries.push({
-                        type: 'task.option',
+                      this.refs.push({
+                        type: 'option.ref',
                         range,
                         option: value
                       })
@@ -107,8 +119,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
                     break
                   case 'default_case':
                     if (path.length === 3) {
-                      this.entries.push({
-                        type: 'option.case',
+                      this.refs.push({
+                        type: 'case.ref',
                         range,
                         option: path[1],
                         case: value
@@ -127,8 +139,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
               switch (path[2]) {
                 case 'pipeline_override':
                   if (typeof path[3] === 'string' && path.length === 4) {
-                    this.entries.push({
-                      type: 'task.entry',
+                    this.refs.push({
+                      type: 'task.ref',
                       range,
                       task: path[3]
                     })
@@ -151,8 +163,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
                       switch (path[4]) {
                         case 'pipeline_override':
                           if (typeof path[5] === 'string' && path.length === 6) {
-                            this.entries.push({
-                              type: 'task.entry',
+                            this.refs.push({
+                              type: 'task.ref',
                               range,
                               task: path[5]
                             })
@@ -175,7 +187,7 @@ export class ProjectInterfaceIndexerProvider extends Service {
       return null
     }
 
-    for (const entry of this.entries) {
+    for (const entry of this.refs) {
       if (entry.range.contains(pos)) {
         return entry
       }

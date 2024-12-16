@@ -25,10 +25,10 @@ export class ProjectInterfaceDefinitionProvider
       return null
     }
 
-    if (info.type === 'task.entry') {
+    if (info.type === 'task.ref') {
       const taskInfo = await this.shared(PipelineTaskIndexProvider).queryTask(info.task)
       return taskInfo.map(x => new vscode.Location(x.info.uri, x.info.taskProp))
-    } else if (info.type === 'task.option') {
+    } else if (info.type === 'option.ref') {
       const optionInfo = this.shared(ProjectInterfaceIndexerProvider).optionDecl.find(
         x => x.option === info.option
       )
@@ -38,7 +38,7 @@ export class ProjectInterfaceDefinitionProvider
             optionInfo.range
           )
         : null
-    } else if (info.type === 'option.case') {
+    } else if (info.type === 'case.ref') {
       const caseInfo = this.shared(ProjectInterfaceIndexerProvider).caseDecl.find(
         x => x.option === info.option && x.case === info.case
       )

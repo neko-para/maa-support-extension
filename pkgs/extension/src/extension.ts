@@ -163,6 +163,40 @@ function initControlPanel() {
         context.value.desktopWindowRefreshing = false
         break
       }
+      case 'revealInterfaceAt': {
+        let range: vscode.Range | undefined = undefined
+
+        if (data.dest.type === 'entry') {
+          const info = data.dest
+          const decl = sharedInstance(ProjectInterfaceIndexerProvider).entryDecl.find(
+            x => x.name === info.entry
+          )
+          range = decl?.range
+        } else if (data.dest.type === 'option') {
+          const info = data.dest
+          const decl = info.case
+            ? sharedInstance(ProjectInterfaceIndexerProvider).caseDecl.find(
+                x => x.option === info.option && x.case === info.case
+              )
+            : sharedInstance(ProjectInterfaceIndexerProvider).optionDecl.find(
+                x => x.option === info.option
+              )
+          range = decl?.range
+        }
+        if (range) {
+          const doc = await vscode.workspace.openTextDocument(
+            sharedInstance(ProjectInterfaceIndexerProvider).interfaceUri!
+          )
+          if (doc) {
+            const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
+            if (editor) {
+              editor.revealRange(range)
+              editor.selection = new vscode.Selection(range.start, range.end)
+            }
+          }
+        }
+        break
+      }
     }
   }
 

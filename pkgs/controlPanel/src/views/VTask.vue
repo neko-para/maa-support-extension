@@ -8,6 +8,7 @@ import {
   VscSingleSelect,
   type VscSingleSelectOption
 } from '@/components/VscEl'
+import { ipc } from '@/main'
 import * as interfaceSt from '@/states/interface'
 import * as taskSt from '@/states/task'
 
@@ -21,6 +22,16 @@ const taskAddOptions = computed<VscSingleSelectOption[]>(() => {
     }) ?? []
   )
 })
+
+function revealEntry(entry: string) {
+  ipc.postMessage({
+    cmd: 'revealInterfaceAt',
+    dest: {
+      type: 'entry',
+      entry
+    }
+  })
+}
 </script>
 
 <template>
@@ -43,6 +54,11 @@ const taskAddOptions = computed<VscSingleSelectOption[]>(() => {
         style="max-width: 20rem"
       >
         <template #decorations>
+          <vscode-icon
+            name="search"
+            @click.stop="revealEntry(task.name)"
+            :title="`查看 ${task.name}`"
+          ></vscode-icon>
           <vscode-icon
             name="arrow-down"
             :disabled="

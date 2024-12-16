@@ -100,6 +100,19 @@ export type ControlPanelToHost =
   | {
       cmd: 'refreshDesktopWindow'
     }
+  | {
+      cmd: 'revealInterfaceAt'
+      dest:
+        | {
+            type: 'entry'
+            entry: string
+          }
+        | {
+            type: 'option'
+            option: string
+            case?: string
+          }
+    }
 
 export type ControlPanelFromHost =
   | {

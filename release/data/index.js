@@ -3,7 +3,7 @@
  * @param {import("@maaxyz/maa-node").ControllerBase} controller
  * @param {import("@maaxyz/maa-node").ResourceBase} resource
  * @param {import("@maaxyz/maa-node").TaskerBase} tasker
- * @param {import("winston").Logger} logger
+ * @param {Record<'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly', (msg: string) => void>} logger
  */
 module.exports = function (controller, resource, tasker, logger) {
   logger.info('mse setup!')

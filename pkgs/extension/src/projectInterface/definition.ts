@@ -38,6 +38,16 @@ export class ProjectInterfaceDefinitionProvider
             optionInfo.range
           )
         : null
+    } else if (info.type === 'option.case') {
+      const caseInfo = this.shared(ProjectInterfaceIndexerProvider).caseDecl.find(
+        x => x.option === info.option && x.case === info.case
+      )
+      return caseInfo
+        ? new vscode.Location(
+            this.shared(ProjectInterfaceIndexerProvider).interfaceUri!,
+            caseInfo.range
+          )
+        : null
     }
 
     return null

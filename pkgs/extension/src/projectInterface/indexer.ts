@@ -9,29 +9,33 @@ import { PipelineRootStatusProvider } from '../pipeline/root'
 export type QueryResult =
   | {
       type: 'task.entry'
-      task: string
       range: vscode.Range
+      task: string
     }
   | {
       type: 'task.option'
       range: vscode.Range
       option: string
     }
+  | {
+      type: 'option.case'
+      range: vscode.Range
+      option: string
+      case: string
+    }
 
 export class ProjectInterfaceIndexerProvider extends Service {
   interfaceUri: vscode.Uri | null = null
 
-  taskEntry: {
-    range: vscode.Range
-    task: string
-  }[] = []
-  optionEntry: {
-    range: vscode.Range
-    option: string
-  }[] = []
+  entries: QueryResult[] = []
   optionDecl: {
     range: vscode.Range
     option: string
+  }[] = []
+  caseDecl: {
+    range: vscode.Range
+    option: string
+    case: string
   }[] = []
 
   constructor() {
@@ -52,7 +56,9 @@ export class ProjectInterfaceIndexerProvider extends Service {
     }
     this.interfaceUri = uri
 
-    this.taskEntry = []
+    this.entries = []
+    this.optionDecl = []
+    this.caseDecl = []
 
     visitJsonDocument(doc, {
       onLiteral: (value, range, path) => {
@@ -63,7 +69,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
                 switch (path[2]) {
                   case 'entry':
                     if (path.length === 3) {
-                      this.taskEntry.push({
+                      this.entries.push({
+                        type: 'task.entry',
                         range,
                         task: value
                       })
@@ -71,7 +78,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
                     break
                   case 'option':
                     if (typeof path[3] === 'number' && path.length === 4) {
-                      this.optionEntry.push({
+                      this.entries.push({
+                        type: 'task.option',
                         range,
                         option: value
                       })
@@ -80,6 +88,35 @@ export class ProjectInterfaceIndexerProvider extends Service {
                 }
               }
               break
+            case 'option':
+              if (typeof path[1] === 'string') {
+                switch (path[2]) {
+                  case 'cases':
+                    if (typeof path[3] === 'number') {
+                      switch (path[4]) {
+                        case 'name':
+                          if (path.length === 5) {
+                            this.caseDecl.push({
+                              range,
+                              option: path[1],
+                              case: value
+                            })
+                          }
+                      }
+                    }
+                    break
+                  case 'default_case':
+                    if (path.length === 3) {
+                      this.entries.push({
+                        type: 'option.case',
+                        range,
+                        option: path[1],
+                        case: value
+                      })
+                    }
+                    break
+                }
+              }
           }
         }
       },
@@ -90,7 +127,8 @@ export class ProjectInterfaceIndexerProvider extends Service {
               switch (path[2]) {
                 case 'pipeline_override':
                   if (typeof path[3] === 'string' && path.length === 4) {
-                    this.taskEntry.push({
+                    this.entries.push({
+                      type: 'task.entry',
                       range,
                       task: path[3]
                     })
@@ -100,12 +138,33 @@ export class ProjectInterfaceIndexerProvider extends Service {
             }
             break
           case 'option':
-            if (typeof path[1] === 'string' && path.length === 2) {
-              this.optionDecl.push({
-                range,
-                option: path[1]
-              })
+            if (typeof path[1] === 'string') {
+              if (path.length === 2) {
+                this.optionDecl.push({
+                  range,
+                  option: path[1]
+                })
+              } else {
+                switch (path[2]) {
+                  case 'cases':
+                    if (typeof path[3] === 'number') {
+                      switch (path[4]) {
+                        case 'pipeline_override':
+                          if (typeof path[5] === 'string' && path.length === 6) {
+                            this.entries.push({
+                              type: 'task.entry',
+                              range,
+                              task: path[5]
+                            })
+                          }
+                          break
+                      }
+                    }
+                    break
+                }
+              }
             }
+            break
         }
       }
     })
@@ -116,23 +175,9 @@ export class ProjectInterfaceIndexerProvider extends Service {
       return null
     }
 
-    for (const entry of this.taskEntry) {
+    for (const entry of this.entries) {
       if (entry.range.contains(pos)) {
-        return {
-          type: 'task.entry',
-          task: entry.task,
-          range: entry.range
-        }
-      }
-    }
-
-    for (const entry of this.optionEntry) {
-      if (entry.range.contains(pos)) {
-        return {
-          type: 'task.option',
-          range: entry.range,
-          option: entry.option
-        }
+        return entry
       }
     }
 

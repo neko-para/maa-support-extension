@@ -19,6 +19,12 @@ export function launch() {
   }
 }
 
+export function stop() {
+  ipc.postMessage({
+    cmd: 'stopInterface'
+  })
+}
+
 export function launchRuntime(runtime: InterfaceRuntime) {
   ipc.postMessage({
     cmd: 'launchInterface',

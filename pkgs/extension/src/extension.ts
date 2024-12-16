@@ -140,6 +140,9 @@ function initControlPanel() {
         await sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(data.runtime)
         context.value.interfaceLaunching = false
         break
+      case 'stopInterface':
+        sharedInstance(ProjectInterfaceLaunchProvider).tasker?.tasker.post_stop()
+        break
       case 'refreshAdbDevice': {
         context.value.adbDeviceRefreshing = true
         const devs = (await maa.AdbController.find()) ?? []

@@ -95,6 +95,9 @@ export type ControlPanelToHost =
       runtime: InterfaceRuntime
     }
   | {
+      cmd: 'stopInterface'
+    }
+  | {
       cmd: 'refreshAdbDevice'
     }
   | {

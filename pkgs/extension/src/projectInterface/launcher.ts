@@ -2,7 +2,7 @@ import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
-import { logger, loggerChannel, t } from '@mse/utils'
+import { logger, loggerChannel, t, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
@@ -242,6 +242,21 @@ export class ProjectInterfaceLaunchProvider extends Service {
       tasker: tasker,
       controller,
       resource
+    }
+
+    const mseDir = vscode.Uri.joinPath(
+      this.shared(PipelineRootStatusProvider).activateResource!.dirUri,
+      '.mse'
+    )
+    const mseIndex = vscode.Uri.joinPath(mseDir, 'index.js')
+    if (await vscfs.exists(mseIndex)) {
+      try {
+        delete require.cache[mseIndex.fsPath]
+        const module = require(mseIndex.fsPath)
+        module(controller, resource, tasker, logger)
+      } catch (err) {
+        logger.warn(`load mse failed, error ${err}`)
+      }
     }
 
     return true

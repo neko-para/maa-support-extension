@@ -81,13 +81,13 @@ function revealCase() {
       <div class="row-flex">
         <span>{{ option }}</span>
         <vscode-icon
-          name="go-to-search"
+          name="go-to-file"
           @click="revealOption"
           :title="`查看 ${option}`"
         ></vscode-icon>
         <vscode-icon
           v-if="value"
-          name="go-to-search"
+          name="go-to-file"
           @click="revealCase"
           :title="`查看 ${option} - ${value}`"
         ></vscode-icon>

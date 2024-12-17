@@ -26,7 +26,6 @@ import { PipelineDocumentLinkProvider } from './pipeline/documentLink'
 import { PipelineHoverProvider } from './pipeline/hover'
 import { PipelineProjectInterfaceProvider } from './pipeline/pi'
 import { PipelineReferenceProvider } from './pipeline/reference'
-import { PipelineRenameProvider } from './pipeline/rename'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
@@ -384,7 +383,6 @@ async function setup(context: vscode.ExtensionContext) {
     PipelineCompletionProvider,
     PipelineReferenceProvider,
     PipelineHoverProvider,
-    PipelineRenameProvider,
     PipelineCodeLensProvider,
 
     ProjectInterfaceIndexerProvider,

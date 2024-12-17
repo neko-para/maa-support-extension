@@ -28,16 +28,16 @@
         "command": "maa.open-ext-log"
       },
       {
-        "title": "%maa.command.select-resource%",
-        "command": "maa.select-resource"
-      },
-      {
         "title": "%maa.command.goto-task%",
         "command": "maa.goto-task"
       },
       {
         "title": "%maa.command.launch-task%",
         "command": "maa.launch-task"
+      },
+      {
+        "title": "%maa.command.launch-interface%",
+        "command": "maa.launch-interface"
       },
       {
         "title": "%maa.command.stop-launch%",
@@ -48,8 +48,8 @@
         "command": "maa.generate-mse-index"
       },
       {
-        "title": "%maa.command.launch-interface%",
-        "command": "maa.launch-interface"
+        "title": "%maa.command.reveal-control-panel%",
+        "command": "maa.reveal-control-panel"
       },
       {
         "title": "%maa.command.open-web%",
@@ -60,7 +60,7 @@
         "command": "maa.pi.switch-resource"
       },
       {
-        "title": "Maa: query location (debug)",
+        "title": "Maa(debug): query location",
         "command": "maa.debug.query-location"
       }
     ],

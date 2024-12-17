@@ -368,6 +368,10 @@ async function setup(context: vscode.ExtensionContext) {
     }
   })
 
+  useCommand(commands.RevealControlPanel, () => {
+    focusAndWaitPanel()
+  })
+
   useCommand(commands.OpenWeb, () => {
     useOldWebPanel()
   })

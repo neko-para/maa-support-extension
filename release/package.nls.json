@@ -1,13 +1,13 @@
 {
   "maa.command.open-maa-log": "Maa: open maa log",
   "maa.command.open-ext-log": "Maa: open extension log",
-  "maa.command.select-resource": "Maa: select resource",
   "maa.command.goto-task": "Maa: goto task",
   "maa.command.launch-task": "Maa: launch task",
+  "maa.command.launch-interface": "Maa: launch interface",
   "maa.command.stop-launch": "Maa: stop launch",
   "maa.command.generate-mse-index": "Maa: generate mse index script",
+  "maa.command.reveal-control-panel": "Maa: reveal control panel",
   "maa.command.open-web": "Maa: open webview",
-  "maa.command.launch-interface": "Maa: launch interface",
   "maa.view.control-panel.title": "Maa Control Panel",
   "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)"
 }

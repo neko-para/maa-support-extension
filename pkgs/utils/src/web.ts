@@ -66,6 +66,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
               const funcs = [...awakeListener.value]
               logger.debug(`webview ${id} awake, listener count ${funcs.length}`)
               awakeListener.value = []
+              visible.value = true
               funcs.forEach(f => f())
               break
             }
@@ -108,8 +109,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
           logger.debug(`webview ${id} change visibility ${v.visible}`)
           visible.value = v.visible
         })
-        logger.debug(`webview ${id} init visibility ${v.visible}`)
-        visible.value = v.visible
+        visible.value = false
       }
     })
 

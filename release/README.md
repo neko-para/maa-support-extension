@@ -2,9 +2,9 @@
 
 ## 针对项目MaaFramework, 提供下列功能:
 
-> 功能均基于interface.json的配置, 因此首次使用会自动提示进行初始化配置.
->
-> 你也可以后续使用`Maa: 执行interface`命令触发初始化配置.
+> 控制面板 通常在 大纲/时间线 的下面, 可以使用 Maa: 展示控制面板 命令将其聚焦
+> 
+> 功能均基于 `interface.json` 配置, 该文件修改后需要在 控制面板 中点击 刷新 重新载入
 
 * 语义化资源分析
   * 查询任务定义
@@ -27,10 +27,12 @@
 
 ## 提供的vscode命令
 
-* Maa: 打开日志
+使用 Ctrl Shift P (MacOS下 Cmd Shift P) 打开命令面板后搜索使用
+
+* Maa: 打开Maa日志
   * 打开MaaFramework的日志.
-* Maa: 选择资源
-  * 选择激活的interface.json, 也可以点击下方的 Maa Support 按钮.
+* Maa: 打开插件日志
+  * 打开插件的日志.
 * Maa: 跳转到任务
   * 搜索并跳转到指定任务.
 * Maa: 执行任务
@@ -38,6 +40,10 @@
 * Maa: 执行interface
   * 以等价于MaaPiCli的效果执行interface.
 * Maa: 停止执行
-  * 终止执行任务/执行interface
+  * 终止执行任务/执行interface.
+* Maa: 生成MSE入口脚本
+  * 生成插件专用的Custom脚本.
+* Maa: 展示控制面板
+  * 展示并聚焦 控制面板
 * Maa: 打开Webview
-  * 打开显示执行信息的Webview
+  * 打开 显示执行信息 和 进行截图裁剪 的Webview.

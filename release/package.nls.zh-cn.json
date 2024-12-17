@@ -1,13 +1,13 @@
 {
   "maa.command.open-maa-log": "Maa: 打开Maa日志",
   "maa.command.open-ext-log": "Maa: 打开插件日志",
-  "maa.command.select-resource": "Maa: 选择资源",
   "maa.command.goto-task": "Maa: 跳转到任务",
   "maa.command.launch-task": "Maa: 执行任务",
+  "maa.command.launch-interface": "Maa: 执行interface",
   "maa.command.stop-launch": "Maa: 停止执行",
   "maa.command.generate-mse-index": "Maa: 生成MSE入口脚本",
+  "maa.command.reveal-control-panel": "Maa: 展示控制面板",
   "maa.command.open-web": "Maa: 打开Webview",
-  "maa.command.launch-interface": "Maa: 执行interface",
   "maa.view.control-panel.title": "Maa 控制面板",
   "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)"
 }

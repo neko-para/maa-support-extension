@@ -55,7 +55,7 @@ function revealEntry(entry: string) {
       >
         <template #decorations>
           <vscode-icon
-            name="go-to-search"
+            name="go-to-file"
             @click.stop="revealEntry(task.name)"
             action-icon
             :title="`查看 ${task.name}`"

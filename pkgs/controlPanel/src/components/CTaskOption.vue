@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { VscButton, VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
+import { VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
 import { ipc } from '@/main'
 import * as interfaceSt from '@/states/interface'
 
@@ -83,12 +83,14 @@ function revealCase() {
         <vscode-icon
           name="go-to-file"
           @click="revealOption"
+          action-icon
           :title="`查看 ${option}`"
         ></vscode-icon>
         <vscode-icon
           v-if="value"
           name="go-to-file"
           @click="revealCase"
+          action-icon
           :title="`查看 ${option} - ${value}`"
         ></vscode-icon>
       </div>

@@ -55,8 +55,9 @@ function revealEntry(entry: string) {
       >
         <template #decorations>
           <vscode-icon
-            name="go-to-file"
+            name="go-to-search"
             @click.stop="revealEntry(task.name)"
+            action-icon
             :title="`查看 ${task.name}`"
           ></vscode-icon>
           <vscode-icon
@@ -68,16 +69,19 @@ function revealEntry(entry: string) {
                 : undefined
             "
             @click.stop="taskSt.move(k, 'down')"
+            action-icon
           ></vscode-icon>
           <vscode-icon
             name="arrow-up"
             :disabled="k === 0 || interfaceSt.freezed.value ? '' : undefined"
             @click.stop="taskSt.move(k, 'up')"
+            action-icon
           ></vscode-icon>
           <vscode-icon
             name="close"
-            @click.stop="taskSt.del(k)"
             :disabled="interfaceSt.freezed.value ? '' : undefined"
+            @click.stop="taskSt.del(k)"
+            action-icon
           ></vscode-icon>
         </template>
 

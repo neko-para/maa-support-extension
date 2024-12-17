@@ -7,8 +7,16 @@ import { ipc } from '@/main'
 import * as controllerSt from '@/states/controller'
 import * as interfaceSt from '@/states/interface'
 
-const currentAdbDevice = ref<string>('0')
+const currentAdbDeviceIndex = ref<string>('0')
 const currentDesktopWindow = ref<string | undefined>(undefined)
+
+const currentAdbDevice = computed(() => {
+  if (/^\d+$/.test(currentAdbDeviceIndex.value ?? '')) {
+    const idx = parseInt(currentAdbDeviceIndex.value)
+    return ipc.context.value.adbDeviceList?.[idx]
+  }
+  return undefined
+})
 
 const controllerOptions = computed<VscSingleSelectOption[]>(() => {
   return (
@@ -52,15 +60,11 @@ const currentControllerDesktop = computed(() => {
 })
 
 function useAdbDevice() {
-  if (/^\d+$/.test(currentAdbDevice.value ?? '')) {
-    const idx = parseInt(currentAdbDevice.value)
-    const dev = ipc.context.value.adbDeviceList?.[idx]
-    if (dev) {
-      interfaceSt.currentConfigObj.value.adb = {
-        adb_path: dev.adb_path,
-        address: dev.address,
-        config: dev.config
-      }
+  if (currentAdbDevice.value) {
+    interfaceSt.currentConfigObj.value.adb = {
+      adb_path: currentAdbDevice.value.adb_path,
+      address: currentAdbDevice.value.address,
+      config: currentAdbDevice.value.config
     }
   }
 }
@@ -82,7 +86,7 @@ function useDesktopWindow() {
     <div v-if="controllerSt.currentProto.value?.type === 'Adb'" class="col-flex">
       <div class="row-flex">
         <vsc-single-select
-          v-model="currentAdbDevice"
+          v-model="currentAdbDeviceIndex"
           :options="adbDeviceOptions"
           :disabled="interfaceSt.freezed.value"
         ></vsc-single-select>
@@ -95,13 +99,16 @@ function useDesktopWindow() {
         </vsc-button>
         <vsc-button
           :loading="ipc.context.value.adbDeviceRefreshing"
-          :disabled="interfaceSt.freezed.value || ipc.context.value.adbDeviceRefreshing"
+          :disabled="
+            interfaceSt.freezed.value || ipc.context.value.adbDeviceRefreshing || !currentAdbDevice
+          "
           @click="useAdbDevice"
         >
           使用
         </vsc-button>
       </div>
       <div v-if="currentControllerAdb?.adb_path && currentControllerAdb.address" class="grid-form">
+        <span class="fixed" style="grid-column: span 2"> Adb 已配置 </span>
         <span class="fixed">adb</span>
         <span> {{ currentControllerAdb.adb_path }} </span>
         <span class="fixed">address</span>
@@ -129,13 +136,18 @@ function useDesktopWindow() {
         </vsc-button>
         <vsc-button
           :loading="ipc.context.value.adbDeviceRefreshing"
-          :disabled="interfaceSt.freezed.value || ipc.context.value.desktopWindowRefreshing"
+          :disabled="
+            interfaceSt.freezed.value ||
+            ipc.context.value.desktopWindowRefreshing ||
+            !currentDesktopWindow
+          "
           @click="useDesktopWindow"
         >
           使用
         </vsc-button>
       </div>
       <div v-if="currentControllerDesktop?.hwnd" class="grid-form">
+        <span class="fixed" style="grid-column: span 2"> Desktop 已配置 </span>
         <span class="fixed">hwnd</span>
         <span> {{ currentControllerDesktop.hwnd }} </span>
       </div>

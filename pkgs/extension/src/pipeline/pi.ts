@@ -30,22 +30,26 @@ export class PipelineProjectInterfaceProvider extends Service {
 
   get interfaceContent() {
     const root = this.shared(PipelineRootStatusProvider).activateResource.value
-    return root
-      ? vscfs.readFile(root.interfaceUri).then(
-          arr => arr.toString(),
-          () => null
-        )
-      : null
+    if (!root) {
+      return null
+    }
+    const doc = vscode.workspace.openTextDocument(root.interfaceUri)
+    if (!doc) {
+      return null
+    }
+    return doc.then(x => x.getText())
   }
 
   get interfaceConfigContent() {
     const root = this.shared(PipelineRootStatusProvider).activateResource.value
-    return root
-      ? vscfs.readFile(root.configUri).then(
-          arr => arr.toString(),
-          () => null
-        )
-      : null
+    if (!root) {
+      return null
+    }
+    const doc = vscode.workspace.openTextDocument(root.configUri)
+    if (!doc) {
+      return null
+    }
+    return doc.then(x => x.getText())
   }
 
   async saveConfig(json?: string) {

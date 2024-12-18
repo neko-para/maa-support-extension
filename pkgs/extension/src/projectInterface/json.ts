@@ -1,29 +1,59 @@
 import EventEmitter from 'events'
 import path from 'path'
+import { ComputedRef, Ref, computed, ref } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
 import { t, vscfs } from '@mse/utils'
 
-import { commands } from '../command'
 import { Service } from '../data'
-import { PipelineRootStatusProvider } from './root'
+import { PipelineRootStatusProvider } from '../pipeline/root'
 
-export class PipelineProjectInterfaceProvider extends Service {
-  interfaceJson: Interface | null
-  interfaceConfigJson: InterfaceConfig | null
-  currentResourceKey?: string
+export class ProjectInterfaceJsonProvider extends Service {
+  interfaceJson: Ref<Partial<Interface> | null>
+  interfaceConfigJson: Ref<Partial<InterfaceConfig> | null>
+
+  resourcePaths: ComputedRef<vscode.Uri[]>
+  resourceKey: ComputedRef<string>
 
   event: EventEmitter<{
-    activateResourceChanged: [resource: vscode.Uri[]]
-    activateInterfaceChanged: []
+    interfaceChanged: []
   }>
 
   constructor() {
     super()
 
-    this.interfaceJson = null
-    this.interfaceConfigJson = null
+    this.interfaceJson = ref(null)
+    this.interfaceConfigJson = ref(null)
+
+    this.resourcePaths = computed(() => {
+      if (!this.interfaceJson.value || !this.interfaceConfigJson.value) {
+        return []
+      }
+      const resInfo = this.interfaceJson.value?.resource?.find(
+        x => x.name === this.interfaceConfigJson.value?.resource
+      )
+      if (!resInfo) {
+        vscode.window.showErrorMessage(
+          t(
+            'maa.pi.error.cannot-find-resource',
+            this.interfaceConfigJson.value?.resource ?? '<unknown>'
+          )
+        )
+        return []
+      }
+      const rootPath = this.shared(PipelineRootStatusProvider).activateResource.value?.dirUri
+        ?.fsPath
+      if (!rootPath) {
+        return []
+      }
+      return resInfo.path
+        .map(x => x.replace('{PROJECT_DIR}', rootPath))
+        .map(x => vscode.Uri.file(x))
+    })
+    this.resourceKey = computed(() => {
+      return this.resourcePaths.value.map(x => x.fsPath).join(',')
+    })
 
     this.event = new EventEmitter()
   }
@@ -62,20 +92,19 @@ export class PipelineProjectInterfaceProvider extends Service {
         vscode.Uri.file(path.dirname(root.configUri.fsPath))
       )
       await vscfs.writeFile(root.configUri, Buffer.from(json))
-      this.interfaceConfigJson = JSON.parse(json)
+      this.interfaceConfigJson.value = JSON.parse(json)
+      this.event.emit('interfaceChanged')
     }
   }
 
   async loadInterface() {
     await this.loadInterfaceInner()
-    this.event.emit('activateInterfaceChanged')
+    this.event.emit('interfaceChanged')
   }
 
   async loadInterfaceInner() {
     const root = this.shared(PipelineRootStatusProvider).activateResource
 
-    this.interfaceJson = null
-    this.interfaceConfigJson = null
     if (!root) {
       return
     }
@@ -84,20 +113,14 @@ export class PipelineProjectInterfaceProvider extends Service {
       if (!json) {
         return
       }
-      this.interfaceJson = JSON.parse(json)
+      this.interfaceJson.value = JSON.parse(json)
     } catch (_) {
       return
     }
     try {
       let json = await this.interfaceConfigContent
       if (json) {
-        this.interfaceConfigJson = JSON.parse(json)
-        const newPaths = this.resourcePaths()
-        const newPathsKey = newPaths.map(x => x.fsPath).join(',')
-        if (newPathsKey !== this.currentResourceKey) {
-          this.currentResourceKey = newPathsKey
-          this.event.emit('activateResourceChanged', newPaths)
-        }
+        this.interfaceConfigJson.value = JSON.parse(json)
       }
     } catch (_) {
       return
@@ -110,34 +133,14 @@ export class PipelineProjectInterfaceProvider extends Service {
       return
     }
 
-    if (this.interfaceConfigJson) {
-      const json = JSON.stringify(this.interfaceConfigJson, null, 4)
+    if (this.interfaceConfigJson.value) {
+      const json = JSON.stringify(this.interfaceConfigJson.value, null, 4)
       await this.saveConfig(json)
     }
   }
 
-  resourcePaths() {
-    if (!this.interfaceJson || !this.interfaceConfigJson) {
-      return []
-    }
-    const resInfo = this.interfaceJson.resource?.find(
-      x => x.name === this.interfaceConfigJson?.resource
-    )
-    if (!resInfo) {
-      vscode.window.showErrorMessage(
-        t('maa.pi.error.cannot-find-resource', this.interfaceConfigJson?.resource ?? '<unknown>')
-      )
-      return []
-    }
-    const rootPath = this.shared(PipelineRootStatusProvider).activateResource.value?.dirUri?.fsPath
-    if (!rootPath) {
-      return []
-    }
-    return resInfo.path.map(x => x.replace('{PROJECT_DIR}', rootPath)).map(x => vscode.Uri.file(x))
-  }
-
   suggestResource() {
-    const res = this.resourcePaths()
+    const res = this.resourcePaths.value
     return res.length > 0 ? res[res.length - 1] : null
   }
 }

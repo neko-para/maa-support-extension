@@ -8,9 +8,9 @@ import { commands } from '../command'
 import { Service } from '../data'
 import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../extension'
 import { Maa, maa } from '../maa'
-import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
+import { ProjectInterfaceJsonProvider } from './json'
 import { InterfaceRuntime } from './type'
 
 type InstanceCache = {
@@ -110,18 +110,18 @@ export class ProjectInterfaceLaunchProvider extends Service {
   }
 
   async prepareControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
-    const pip = this.shared(PipelineProjectInterfaceProvider)
-    const data = pip.interfaceJson
-    const config = pip.interfaceConfigJson
+    const pip = this.shared(ProjectInterfaceJsonProvider)
+    const data = pip.interfaceJson.value
+    const config = pip.interfaceConfigJson.value
     if (!data || !config) {
       return null
     }
 
-    const ctrlInfo = data.controller.find(x => x.name === config.controller.name)
+    const ctrlInfo = data.controller?.find(x => x.name === config.controller?.name)
 
     if (!ctrlInfo) {
       await vscode.window.showErrorMessage(
-        t('maa.pi.error.cannot-find-controller', config.controller.name)
+        t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '<unknown>')
       )
       return null
     }
@@ -129,7 +129,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
         await vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-adb-for-controller', config.controller.name)
+          t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '<unknown>')
         )
         return null
       }
@@ -145,14 +145,14 @@ export class ProjectInterfaceLaunchProvider extends Service {
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
         await vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-win32-for-controller', config.controller.name)
+          t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '<unknown>')
         )
         return null
       }
 
       if (!config.win32.hwnd) {
         await vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller.name)
+          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
         )
         return null
       }

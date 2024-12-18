@@ -3,8 +3,8 @@ import * as vscode from 'vscode'
 import { visitJsonDocument } from '@mse/utils'
 
 import { Service } from '../data'
-import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
+import { ProjectInterfaceJsonProvider } from './json'
 
 export type QueryResult =
   | {
@@ -45,7 +45,7 @@ export class ProjectInterfaceIndexerProvider extends Service {
   constructor() {
     super()
 
-    this.shared(PipelineProjectInterfaceProvider).event.on('activateInterfaceChanged', () => {
+    this.shared(ProjectInterfaceJsonProvider).event.on('interfaceChanged', () => {
       const root = this.shared(PipelineRootStatusProvider).activateResource.value
       if (root) {
         this.loadJson(root.interfaceUri)

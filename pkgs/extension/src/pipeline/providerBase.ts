@@ -1,7 +1,8 @@
+import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { Service } from '../data'
-import { PipelineProjectInterfaceProvider } from './pi'
+import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
 
 export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> extends Service {
   provider: T | null
@@ -11,15 +12,17 @@ export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> exten
 
     this.provider = null
 
-    this.shared(PipelineProjectInterfaceProvider).event.on(
-      'activateResourceChanged',
-      async resource => {
+    watch(
+      () => {
+        return this.shared(ProjectInterfaceJsonProvider).resourceKey.value
+      },
+      () => {
         if (this.provider) {
           this.provider.dispose()
           this.provider = null
         }
         this.provider = setupProvider(
-          resource.map(path => ({
+          this.shared(ProjectInterfaceJsonProvider).resourcePaths.value.map(path => ({
             pattern: new vscode.RelativePattern(path, 'pipeline/**/*.json')
           }))
         )

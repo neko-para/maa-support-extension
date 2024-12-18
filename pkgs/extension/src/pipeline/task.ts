@@ -1,10 +1,11 @@
+import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { t, visitJsonDocument, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { PipelineProjectInterfaceProvider } from './pi'
+import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
 import { PipelineRootStatusProvider } from './root'
 
 export type QueryResult =
@@ -277,12 +278,19 @@ export class PipelineTaskIndexProvider extends Service {
     this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
     this.updateingDiag = false
 
-    this.shared(PipelineProjectInterfaceProvider).event.on('activateResourceChanged', resource => {
-      for (const layer of this.layers) {
-        layer.dispose()
+    watch(
+      () => {
+        return this.shared(ProjectInterfaceJsonProvider).resourceKey.value
+      },
+      () => {
+        for (const layer of this.layers) {
+          layer.dispose()
+        }
+        this.layers = this.shared(ProjectInterfaceJsonProvider).resourcePaths.value.map(
+          (x, i) => new PipelineTaskIndexLayer(x, i)
+        )
       }
-      this.layers = resource.map((x, i) => new PipelineTaskIndexLayer(x, i))
-    })
+    )
 
     this.defer = (() => {
       const timer = setInterval(() => {

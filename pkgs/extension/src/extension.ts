@@ -24,13 +24,13 @@ import { PipelineCompletionProvider } from './pipeline/completion'
 import { PipelineDefinitionProvider } from './pipeline/definition'
 import { PipelineDocumentLinkProvider } from './pipeline/documentLink'
 import { PipelineHoverProvider } from './pipeline/hover'
-import { PipelineProjectInterfaceProvider } from './pipeline/pi'
 import { PipelineReferenceProvider } from './pipeline/reference'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
 import { ProjectInterfaceDefinitionProvider } from './projectInterface/definition'
 import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
+import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 
 sms.install()
@@ -86,18 +86,18 @@ function initControlPanel() {
           PipelineRootStatusProvider
         ).activateResource.value?.interfaceRelative
 
-        await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
+        await sharedInstance(ProjectInterfaceJsonProvider).loadInterface()
 
         context.value.interfaceProjectDir = sharedInstance(
           PipelineRootStatusProvider
         ).activateResource.value?.dirUri.fsPath
         context.value.interfaceObj =
           tryParse<Interface>(
-            await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
+            await sharedInstance(ProjectInterfaceJsonProvider).interfaceContent
           ) ?? undefined
         context.value.interfaceConfigObj =
           tryParse<InterfaceConfig>(
-            await sharedInstance(PipelineProjectInterfaceProvider).interfaceConfigContent
+            await sharedInstance(ProjectInterfaceJsonProvider).interfaceConfigContent
           ) ?? undefined
 
         context.value.interfaceRefreshing = false
@@ -112,18 +112,18 @@ function initControlPanel() {
           context.value.interfaceCurrent = root.interfaceRelative
           sharedInstance(PipelineRootStatusProvider).selectRootInfo(rootIndex)
 
-          await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
+          await sharedInstance(ProjectInterfaceJsonProvider).loadInterface()
 
           context.value.interfaceProjectDir = sharedInstance(
             PipelineRootStatusProvider
           ).activateResource.value?.dirUri.fsPath
           context.value.interfaceObj =
             tryParse<Interface>(
-              await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
+              await sharedInstance(ProjectInterfaceJsonProvider).interfaceContent
             ) ?? undefined
           context.value.interfaceConfigObj =
             tryParse<InterfaceConfig>(
-              await sharedInstance(PipelineProjectInterfaceProvider).interfaceConfigContent
+              await sharedInstance(ProjectInterfaceJsonProvider).interfaceConfigContent
             ) ?? undefined
         }
         context.value.interfaceRefreshing = false
@@ -205,11 +205,9 @@ function initControlPanel() {
   watch(
     () => context.value.interfaceConfigObj,
     async v => {
-      await sharedInstance(PipelineProjectInterfaceProvider).saveConfig(
+      await sharedInstance(ProjectInterfaceJsonProvider).saveConfig(
         v ? JSON.stringify(v, null, 4) : undefined
       )
-
-      await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
     },
     {
       deep: true
@@ -306,7 +304,7 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
         break
       }
       case 'crop.download':
-        const root = sharedInstance(PipelineProjectInterfaceProvider).suggestResource()
+        const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
         if (!root) {
           return
         }

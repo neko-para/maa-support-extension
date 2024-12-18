@@ -4,8 +4,8 @@ import { visitJsonDocument } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { PipelineProjectInterfaceProvider } from '../pipeline/pi'
 import { PipelineRootStatusProvider } from '../pipeline/root'
+import { ProjectInterfaceJsonProvider } from './json'
 import { ProviderBase } from './providerBase'
 
 export class ProjectInterfaceCodeLensProvider
@@ -23,7 +23,7 @@ export class ProjectInterfaceCodeLensProvider
     this.didChangeCodeLenses = new vscode.EventEmitter()
     this.onDidChangeCodeLenses = this.didChangeCodeLenses.event
 
-    this.shared(PipelineProjectInterfaceProvider).event.on('activateInterfaceChanged', () => {
+    this.shared(ProjectInterfaceJsonProvider).event.on('interfaceChanged', () => {
       this.didChangeCodeLenses.fire()
     })
   }
@@ -43,7 +43,7 @@ export class ProjectInterfaceCodeLensProvider
           path[2] === 'name'
         ) {
           const activated =
-            this.shared(PipelineProjectInterfaceProvider).interfaceConfigJson?.resource === value
+            this.shared(ProjectInterfaceJsonProvider).interfaceConfigJson.value?.resource === value
           result.push(
             activated
               ? new vscode.CodeLens(range, {

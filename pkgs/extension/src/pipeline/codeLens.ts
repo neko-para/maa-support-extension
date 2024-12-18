@@ -23,17 +23,19 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
     }
 
     const result: vscode.CodeLens[] = []
-    for (const [taskName, taskInfo] of Object.entries(layer.taskIndex)) {
-      if (taskInfo.uri.fsPath !== document.uri.fsPath) {
-        continue
+    for (const [taskName, taskInfos] of Object.entries(layer.taskIndex)) {
+      for (const taskInfo of taskInfos) {
+        if (taskInfo.uri.fsPath !== document.uri.fsPath) {
+          continue
+        }
+        result.push(
+          new vscode.CodeLens(taskInfo.taskProp, {
+            title: t('maa.pipeline.codelens.launch'),
+            command: commands.LaunchTask,
+            arguments: [taskName]
+          })
+        )
       }
-      result.push(
-        new vscode.CodeLens(taskInfo.taskProp, {
-          title: t('maa.pipeline.codelens.launch'),
-          command: commands.LaunchTask,
-          arguments: [taskName]
-        })
-      )
     }
     return result
   }

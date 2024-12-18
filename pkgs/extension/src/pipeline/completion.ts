@@ -19,14 +19,12 @@ export class PipelineCompletionProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
-    const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
+    const [info, layer] = await this.shared(PipelineTaskIndexProvider).queryLocation(
+      document.uri,
+      position
+    )
 
-    if (!info) {
-      return null
-    }
-
-    const layer = this.shared(PipelineTaskIndexProvider).getLayer(document.uri)
-    if (!layer) {
+    if (!info || !layer) {
       return null
     }
 
@@ -41,7 +39,11 @@ export class PipelineCompletionProvider
             kind: vscode.CompletionItemKind.Reference,
             insertText: esc.substring(0, esc.length - 1),
             range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
-            documentation: await this.shared(PipelineTaskIndexProvider).queryTaskDoc(task)
+            documentation: await this.shared(PipelineTaskIndexProvider).queryTaskDoc(
+              task,
+              layer.level + 1,
+              position
+            )
           }
         })
       )

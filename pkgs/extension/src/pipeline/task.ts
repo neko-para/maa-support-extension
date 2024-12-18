@@ -1,7 +1,7 @@
 import { watch, watchEffect } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
-import { JSONPath, t, visitJsonDocument, vscfs } from '@mse/utils'
+import { JSONPath, logger, t, visitJsonDocument, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
@@ -50,10 +50,18 @@ export type TaskIndexInfo = {
   }[]
 }
 
-class PipelineTaskIndexLayer extends Service {
+interface PipelineLayer {
   uri: vscode.Uri
   level: number
-  taskIndex: Record<string, TaskIndexInfo>
+  taskIndex: Record<string, TaskIndexInfo[]>
+
+  flushDirty(): Promise<void>
+}
+
+class PipelineTaskIndexLayer extends Service implements PipelineLayer {
+  uri: vscode.Uri
+  level: number
+  taskIndex: Record<string, TaskIndexInfo[]>
 
   watcher: vscode.FileSystemWatcher
   dirtyUri: Set<string>
@@ -125,19 +133,7 @@ class PipelineTaskIndexLayer extends Service {
             new vscode.Range(taskInfo.taskProp.start.line, 0, range.end.line + 1, 0)
           )
 
-          let name = path[0]
-
-          if (name in this.taskIndex) {
-            for (let i = 1; ; i++) {
-              const newProp = `${name}@VSCEXT_CONFLICT,${i}`
-              if (!(newProp in this.taskIndex)) {
-                name = newProp
-                break
-              }
-            }
-          }
-
-          this.taskIndex[name] = taskInfo
+          this.taskIndex[path[0]] = [...(this.taskIndex[path[0]] ?? []), taskInfo]
           taskInfo = null
         }
       },
@@ -241,11 +237,9 @@ class PipelineTaskIndexLayer extends Service {
     const dirtyList = this.dirtyUri
     this.dirtyUri = new Set()
 
-    const newTaskIndex: Record<string, TaskIndexInfo> = {}
-    for (const [task, info] of Object.entries(this.taskIndex)) {
-      if (!dirtyList.has(info.uri.fsPath)) {
-        newTaskIndex[task] = info
-      }
+    const newTaskIndex: Record<string, TaskIndexInfo[]> = {}
+    for (const [task, infos] of Object.entries(this.taskIndex)) {
+      newTaskIndex[task] = infos.filter(info => !dirtyList.has(info.uri.fsPath))
     }
 
     this.taskIndex = newTaskIndex
@@ -265,10 +259,10 @@ class PipelineTaskIndexLayer extends Service {
   }
 }
 
-class PipelineInterfaceIndexLayer extends Service {
+class PipelineInterfaceIndexLayer extends Service implements PipelineLayer {
   uri: vscode.Uri
   level: number
-  taskIndex: Record<string, TaskIndexInfo>
+  taskIndex: Record<string, TaskIndexInfo[]>
 
   watcher: vscode.FileSystemWatcher
   dirty: boolean
@@ -336,7 +330,7 @@ class PipelineInterfaceIndexLayer extends Service {
       imageRef: []
     }
 
-    this.taskIndex['@VSCEXT_INTERFACE'] = entryTaskInfo
+    this.taskIndex['@VSCEXT_INTERFACE'] = [entryTaskInfo]
 
     visitJsonDocument(doc, {
       onObjectProp: (prop, range, path) => {
@@ -375,21 +369,13 @@ class PipelineInterfaceIndexLayer extends Service {
             new vscode.Range(taskInfo.taskProp.start.line, 0, range.end.line + 1, 0)
           )
 
-          // let name = prefix.value + path[0]
-          let name = path[0]
-
-          if (name in this.taskIndex) {
-            for (let i = 1; ; i++) {
-              const newProp = `${name}@VSCEXT_CONFLICT,${i}`
-              if (!(newProp in this.taskIndex)) {
-                name = newProp
-                break
-              }
-            }
-          }
-
-          this.taskIndex[name] = taskInfo
+          this.taskIndex[path[0]] = [...(this.taskIndex[path[0]] ?? []), taskInfo]
           taskInfo = null
+        }
+      },
+      onArrayEnd: (range, path) => {
+        if (path[0] === 'task' && path.length === 1) {
+          entryTaskInfo.taskBody = range
         }
       },
       onLiteral: (value, range, path) => {
@@ -519,6 +505,7 @@ export class PipelineTaskIndexProvider extends Service {
   layers: PipelineTaskIndexLayer[]
   interfaceLayer?: PipelineInterfaceIndexLayer
   diagnostic: vscode.DiagnosticCollection
+  currentDiagnosticUris: vscode.Uri[]
 
   updateingDiag: boolean
 
@@ -527,6 +514,7 @@ export class PipelineTaskIndexProvider extends Service {
 
     this.layers = []
     this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
+    this.currentDiagnosticUris = []
     this.updateingDiag = false
 
     watch(
@@ -557,7 +545,7 @@ export class PipelineTaskIndexProvider extends Service {
     this.defer = (() => {
       const timer = setInterval(() => {
         this.updateDiagnostic()
-      }, 500)
+      }, 1000)
       return {
         dispose: () => {
           clearInterval(timer)
@@ -605,6 +593,10 @@ export class PipelineTaskIndexProvider extends Service {
     })
   }
 
+  get allLayers(): PipelineLayer[] {
+    return [...this.layers, ...(this.interfaceLayer ? [this.interfaceLayer] : [])]
+  }
+
   async updateDiagnostic() {
     if (this.updateingDiag) {
       return
@@ -612,90 +604,108 @@ export class PipelineTaskIndexProvider extends Service {
     this.updateingDiag = true
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
-    for (const layer of this.layers) {
-      for (const [task, taskInfo] of Object.entries(layer.taskIndex)) {
+    for (const layer of this.allLayers) {
+      for (const [task, taskInfos] of Object.entries(layer.taskIndex)) {
         // check conflict task
-        const m = /(.+)@VSCEXT_CONFLICT,\d+/.exec(task)
-        if (m) {
-          result.push([
-            taskInfo.uri,
-            new vscode.Diagnostic(
-              taskInfo.taskProp,
-              t(
-                'maa.pipeline.error.conflict-task',
-                m[1],
-                this.shared(PipelineRootStatusProvider).relativePathToRoot(
-                  layer.taskIndex[m[1]].uri
+        if (taskInfos.length > 1 && layer !== this.interfaceLayer) {
+          // interface layer contains same override
+          for (const taskInfo of taskInfos.slice(1)) {
+            result.push([
+              taskInfo.uri,
+              new vscode.Diagnostic(
+                taskInfo.taskProp,
+                t(
+                  'maa.pipeline.error.conflict-task',
+                  task,
+                  this.shared(PipelineRootStatusProvider).relativePathToRoot(taskInfos[0].uri)
+                ),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        }
+
+        for (const taskInfo of taskInfos) {
+          // check missing task
+          for (const ref of taskInfo.taskRef) {
+            const taskRes = await this.queryTask(ref.task, layer.level + 1)
+            if (taskRes.length === 0) {
+              result.push([
+                taskInfo.uri,
+                new vscode.Diagnostic(
+                  ref.range,
+                  t('maa.pipeline.error.unknown-task', ref.task),
+                  vscode.DiagnosticSeverity.Error
                 )
-              ),
-              vscode.DiagnosticSeverity.Error
-            )
-          ])
-        }
-
-        // check missing task
-        for (const ref of taskInfo.taskRef) {
-          const taskRes = await this.queryTask(ref.task, layer.level + 1)
-          if (taskRes.length === 0) {
-            result.push([
-              taskInfo.uri,
-              new vscode.Diagnostic(
-                ref.range,
-                t('maa.pipeline.error.unknown-task', ref.task),
-                vscode.DiagnosticSeverity.Error
-              )
-            ])
+              ])
+            }
           }
-        }
 
-        // check missing image
-        for (const ref of taskInfo.imageRef) {
-          const imageRes = await this.queryImage(ref.path, layer.level + 1)
-          if (imageRes.length === 0) {
-            result.push([
-              taskInfo.uri,
-              new vscode.Diagnostic(
-                ref.range,
-                t('maa.pipeline.error.unknown-image', ref.path),
-                vscode.DiagnosticSeverity.Error
-              )
-            ])
+          // check missing image
+          for (const ref of taskInfo.imageRef) {
+            const imageRes = await this.queryImage(ref.path, layer.level + 1)
+            if (imageRes.length === 0) {
+              result.push([
+                taskInfo.uri,
+                new vscode.Diagnostic(
+                  ref.range,
+                  t('maa.pipeline.error.unknown-image', ref.path),
+                  vscode.DiagnosticSeverity.Error
+                )
+              ])
+            }
           }
-        }
 
-        // check duplicate next task
-        const nextRefs = taskInfo.taskRef.filter(x => x.belong === 'next')
-        const nextFirst: Set<string> = new Set()
-        for (const ref of nextRefs) {
-          if (nextFirst.has(ref.task)) {
-            result.push([
-              taskInfo.uri,
-              new vscode.Diagnostic(
-                ref.range,
-                t('maa.pipeline.error.duplicate-next', ref.task),
-                vscode.DiagnosticSeverity.Error
-              )
-            ])
-          } else {
-            nextFirst.add(ref.task)
+          // check duplicate next task
+          const nextRefs = taskInfo.taskRef.filter(x => x.belong === 'next')
+          const nextFirst: Set<string> = new Set()
+          for (const ref of nextRefs) {
+            if (nextFirst.has(ref.task)) {
+              result.push([
+                taskInfo.uri,
+                new vscode.Diagnostic(
+                  ref.range,
+                  t('maa.pipeline.error.duplicate-next', ref.task),
+                  vscode.DiagnosticSeverity.Error
+                )
+              ])
+            } else {
+              nextFirst.add(ref.task)
+            }
           }
         }
       }
     }
     if (result.length === 0) {
       this.diagnostic.clear()
+      this.currentDiagnosticUris = []
     } else {
-      this.diagnostic.set(result.map(([uri, diag]) => [uri, [diag]]))
+      const nextDiagUris: vscode.Uri[] = []
+      const diagResult: [vscode.Uri, vscode.Diagnostic[]][] = []
+      for (const [uri, diag] of result) {
+        if (!nextDiagUris.find(x => x.fsPath === uri.fsPath)) {
+          nextDiagUris.push(uri)
+          diagResult.push([uri, [diag]])
+        } else {
+          diagResult.find(x => x[0].fsPath === uri.fsPath)?.[1].push(diag)
+        }
+      }
+      const needClear = this.currentDiagnosticUris.filter(
+        x => !nextDiagUris.find(y => y.fsPath === x.fsPath)
+      )
+      diagResult.push(...needClear.map(x => [x, []] as [vscode.Uri, vscode.Diagnostic[]]))
+      this.currentDiagnosticUris = nextDiagUris
+
+      this.diagnostic.set(diagResult)
     }
 
     this.updateingDiag = false
   }
 
   async flushDirty() {
-    for (const layer of this.layers) {
+    for (const layer of this.allLayers) {
       await layer.flushDirty()
     }
-    await this.interfaceLayer?.flushDirty()
   }
 
   getLayer(uri: vscode.Uri) {
@@ -710,59 +720,73 @@ export class PipelineTaskIndexProvider extends Service {
     return null
   }
 
-  async queryLocation(uri: vscode.Uri, pos: vscode.Position): Promise<QueryResult | null> {
+  async queryLocation(
+    uri: vscode.Uri,
+    pos: vscode.Position
+  ): Promise<[QueryResult, PipelineLayer] | [null, null]> {
     await this.flushDirty()
     const layer = this.getLayer(uri)
     if (!layer) {
-      return null
+      return [null, null]
     }
-    for (const [task, info] of Object.entries(layer.taskIndex)) {
-      if (info.uri.fsPath !== uri.fsPath) {
-        continue
-      }
-      if (info.taskProp.contains(pos)) {
-        return {
-          type: 'task.prop',
-          task: task,
-          range: info.taskProp,
-          target: task.replace(/@VSCEXT.+$/, '')
+    for (const [task, infos] of Object.entries(layer.taskIndex)) {
+      for (const info of infos) {
+        if (info.uri.fsPath !== uri.fsPath) {
+          continue
         }
-      } else if (info.taskBody.contains(pos)) {
-        for (const ref of info.taskRef) {
-          if (ref.range.contains(pos)) {
-            return {
-              type: 'task.ref',
+        if (info.taskProp.contains(pos)) {
+          return [
+            {
+              type: 'task.prop',
               task: task,
-              range: ref.range,
-              target: ref.task
+              range: info.taskProp,
+              target: task
+            },
+            layer
+          ]
+        } else if (info.taskBody.contains(pos)) {
+          for (const ref of info.taskRef) {
+            if (ref.range.contains(pos)) {
+              return [
+                {
+                  type: 'task.ref',
+                  task: task,
+                  range: ref.range,
+                  target: ref.task
+                },
+                layer
+              ]
             }
           }
-        }
-        for (const ref of info.imageRef) {
-          if (ref.range.contains(pos)) {
-            return {
-              type: 'image.ref',
-              task: task,
-              range: ref.range,
-              target: ref.path
+          for (const ref of info.imageRef) {
+            if (ref.range.contains(pos)) {
+              return [
+                {
+                  type: 'image.ref',
+                  task: task,
+                  range: ref.range,
+                  target: ref.path
+                },
+                layer
+              ]
             }
           }
-        }
-        return {
-          type: 'task.body',
-          task: task,
-          range: info.taskBody
+          return [
+            {
+              type: 'task.body',
+              task: task,
+              range: info.taskBody
+            },
+            layer
+          ]
         }
       }
     }
-    return null
+    return [null, null]
   }
 
-  async queryTask(task: string, level?: number) {
-    const allLayers: (PipelineTaskIndexLayer | PipelineInterfaceIndexLayer)[] = [...this.layers]
-    if (this.interfaceLayer) {
-      allLayers.push(this.interfaceLayer)
-    }
+  async queryTask(task: string, level?: number, pos?: vscode.Position) {
+    const allLayers = this.allLayers
 
     await this.flushDirty()
     if (level === undefined) {
@@ -775,10 +799,15 @@ export class PipelineTaskIndexProvider extends Service {
     try {
       for (const layer of allLayers.slice(0, level)) {
         if (task in layer.taskIndex) {
-          result.push({
-            uri: layer.uri,
-            info: layer.taskIndex[task]
-          })
+          for (const info of layer.taskIndex[task]) {
+            if (layer.taskIndex[task].length > 1 && pos && !info.taskProp.contains(pos)) {
+              continue
+            }
+            result.push({
+              uri: layer.uri,
+              info: info
+            })
+          }
         }
       }
     } catch (_) {}
@@ -786,10 +815,7 @@ export class PipelineTaskIndexProvider extends Service {
   }
 
   async queryImage(image: string, level?: number) {
-    const allLayers: (PipelineTaskIndexLayer | PipelineInterfaceIndexLayer)[] = [...this.layers]
-    if (this.interfaceLayer) {
-      allLayers.push(this.interfaceLayer)
-    }
+    const allLayers = this.allLayers
 
     await this.flushDirty()
     if (level === undefined) {
@@ -817,8 +843,12 @@ export class PipelineTaskIndexProvider extends Service {
     return result
   }
 
-  async queryTaskDoc(task: string): Promise<vscode.MarkdownString> {
-    const result = await this.queryTask(task)
+  async queryTaskDoc(
+    task: string,
+    level?: number,
+    pos?: vscode.Position
+  ): Promise<vscode.MarkdownString> {
+    const result = await this.queryTask(task, level, pos)
     if (result.length > 0) {
       return new vscode.MarkdownString(
         result

@@ -15,15 +15,22 @@ export class PipelineHoverProvider extends ProviderBase implements vscode.HoverP
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
-    const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
+    const [info, layer] = await this.shared(PipelineTaskIndexProvider).queryLocation(
+      document.uri,
+      position
+    )
 
-    if (!info) {
+    if (!info || !layer) {
       return null
     }
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       return new vscode.Hover(
-        await this.shared(PipelineTaskIndexProvider).queryTaskDoc(info.target)
+        await this.shared(PipelineTaskIndexProvider).queryTaskDoc(
+          info.target,
+          layer.level + 1,
+          position
+        )
       )
     } else if (info.type === 'image.ref') {
       return new vscode.Hover(

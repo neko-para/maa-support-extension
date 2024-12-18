@@ -19,7 +19,10 @@ export class ProjectInterfaceDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
-    const info = this.shared(ProjectInterfaceIndexerProvider).queryLocation(document.uri, position)
+    const info = await this.shared(ProjectInterfaceIndexerProvider).queryLocation(
+      document.uri,
+      position
+    )
 
     if (!info) {
       return null

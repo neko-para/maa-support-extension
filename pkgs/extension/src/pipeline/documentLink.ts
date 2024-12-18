@@ -26,18 +26,20 @@ export class PipelineDocumentLinkProvider
 
     await layer.flushDirty()
 
-    for (const [task, info] of Object.entries(layer.taskIndex)) {
-      if (info.uri.fsPath !== document.uri.fsPath) {
-        continue
-      }
+    for (const [task, infos] of Object.entries(layer.taskIndex)) {
+      for (const info of infos) {
+        if (info.uri.fsPath !== document.uri.fsPath) {
+          continue
+        }
 
-      for (const ref of info.imageRef) {
-        const ii = await this.shared(PipelineTaskIndexProvider).queryImage(
-          ref.path,
-          layer.level + 1
-        )
-        if (ii.length > 0) {
-          result.push(new vscode.DocumentLink(ref.range, ii[ii.length - 1].info.uri))
+        for (const ref of info.imageRef) {
+          const ii = await this.shared(PipelineTaskIndexProvider).queryImage(
+            ref.path,
+            layer.level + 1
+          )
+          if (ii.length > 0) {
+            result.push(new vscode.DocumentLink(ref.range, ii[ii.length - 1].info.uri))
+          }
         }
       }
     }

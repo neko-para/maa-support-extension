@@ -16,7 +16,10 @@ export class PipelineReferenceProvider extends ProviderBase implements vscode.Re
     context: vscode.ReferenceContext,
     token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
-    const info = await this.shared(PipelineTaskIndexProvider).queryLocation(document.uri, position)
+    const [info, _] = await this.shared(PipelineTaskIndexProvider).queryLocation(
+      document.uri,
+      position
+    )
 
     if (!info) {
       return null
@@ -25,7 +28,7 @@ export class PipelineReferenceProvider extends ProviderBase implements vscode.Re
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       const result: vscode.Location[] = []
       for (const layer of this.shared(PipelineTaskIndexProvider).layers) {
-        for (const taskInfo of Object.values(layer.taskIndex)) {
+        for (const taskInfo of Object.values(layer.taskIndex).flat()) {
           for (const refInfo of taskInfo.taskRef) {
             if (refInfo.task === info.target) {
               result.push(new vscode.Location(taskInfo.uri, refInfo.range))

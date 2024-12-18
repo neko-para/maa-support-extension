@@ -28,10 +28,12 @@ import { PipelineReferenceProvider } from './pipeline/reference'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
 import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
+import { ProjectInterfaceCompletionProvider } from './projectInterface/completion'
 import { ProjectInterfaceDefinitionProvider } from './projectInterface/definition'
 import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
+import { ProjectInterfaceReferenceProvider } from './projectInterface/reference'
 
 sms.install()
 
@@ -385,7 +387,9 @@ async function setup(context: vscode.ExtensionContext) {
 
     ProjectInterfaceIndexerProvider,
     ProjectInterfaceCodeLensProvider,
+    ProjectInterfaceCompletionProvider,
     ProjectInterfaceDefinitionProvider,
+    ProjectInterfaceReferenceProvider,
     ProjectInterfaceLaunchProvider
   ])
 }

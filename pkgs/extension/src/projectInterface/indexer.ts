@@ -41,10 +41,7 @@ export class ProjectInterfaceIndexerProvider extends Service {
     super()
 
     this.shared(ProjectInterfaceJsonProvider).event.on('interfaceChanged', () => {
-      const root = this.shared(PipelineRootStatusProvider).activateResource.value
-      if (root) {
-        this.loadJson(root.interfaceUri)
-      }
+      this.flushDirty()
     })
   }
 
@@ -99,6 +96,12 @@ export class ProjectInterfaceIndexerProvider extends Service {
                               option: path[1],
                               case: value
                             })
+                            this.refs.push({
+                              type: 'case.ref',
+                              range,
+                              option: path[1],
+                              case: value
+                            })
                           }
                       }
                     }
@@ -117,11 +120,39 @@ export class ProjectInterfaceIndexerProvider extends Service {
               }
           }
         }
+      },
+      onObjectProp: (prop, range, path) => {
+        switch (path[0]) {
+          case 'option':
+            if (typeof path[1] === 'string') {
+              if (path.length === 2) {
+                this.optionDecl.push({
+                  range,
+                  option: path[1]
+                })
+                this.refs.push({
+                  type: 'option.ref',
+                  range,
+                  option: path[1]
+                })
+              }
+            }
+            break
+        }
       }
     })
   }
 
-  queryLocation(document: vscode.Uri, pos: vscode.Position): QueryResult | null {
+  async flushDirty() {
+    const root = this.shared(PipelineRootStatusProvider).activateResource.value
+    if (root) {
+      await this.loadJson(root.interfaceUri)
+    }
+  }
+
+  async queryLocation(document: vscode.Uri, pos: vscode.Position): Promise<QueryResult | null> {
+    await this.flushDirty()
+
     if (document.fsPath !== this.interfaceUri?.fsPath) {
       return null
     }

@@ -84,7 +84,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     this.defer = vscode.commands.registerCommand(commands.GenerateMSEIndex, async () => {
       const mseDir = vscode.Uri.joinPath(
-        this.shared(PipelineRootStatusProvider).activateResource!.dirUri,
+        this.shared(PipelineRootStatusProvider).activateResource.value!.dirUri,
         '.mse'
       )
       const mseIndex = vscode.Uri.joinPath(mseDir, 'index.js')
@@ -260,7 +260,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
 
     const mseDir = vscode.Uri.joinPath(
-      this.shared(PipelineRootStatusProvider).activateResource!.dirUri,
+      this.shared(PipelineRootStatusProvider).activateResource.value!.dirUri,
       '.mse'
     )
     const mseIndex = vscode.Uri.joinPath(mseDir, 'index.js')

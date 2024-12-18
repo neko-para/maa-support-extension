@@ -46,7 +46,7 @@ export class ProjectInterfaceIndexerProvider extends Service {
     super()
 
     this.shared(PipelineProjectInterfaceProvider).event.on('activateInterfaceChanged', () => {
-      const root = this.shared(PipelineRootStatusProvider).activateResource
+      const root = this.shared(PipelineRootStatusProvider).activateResource.value
       if (root) {
         this.loadJson(root.interfaceUri)
       }

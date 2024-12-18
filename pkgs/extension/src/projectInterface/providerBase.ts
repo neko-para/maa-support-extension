@@ -1,3 +1,4 @@
+import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
 import { Service } from '../data'
@@ -11,17 +12,20 @@ export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> exten
 
     this.provider = null
 
-    this.shared(PipelineRootStatusProvider).event.on('activateRootChanged', async () => {
-      if (this.provider) {
-        this.provider.dispose()
-        this.provider = null
+    watch(
+      () => this.shared(PipelineRootStatusProvider).activateResource.value,
+      async () => {
+        if (this.provider) {
+          this.provider.dispose()
+          this.provider = null
+        }
+        const root = this.shared(PipelineRootStatusProvider).activateResource.value
+        if (root) {
+          this.provider = setupProvider({
+            pattern: new vscode.RelativePattern(root.dirUri, 'interface.json')
+          }) // stupid, but just works
+        }
       }
-      const root = this.shared(PipelineRootStatusProvider).activateResource
-      if (root) {
-        this.provider = setupProvider({
-          pattern: new vscode.RelativePattern(root.dirUri, 'interface.json')
-        }) // stupid, but just works
-      }
-    })
+    )
   }
 }

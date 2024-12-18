@@ -29,7 +29,7 @@ export class PipelineProjectInterfaceProvider extends Service {
   }
 
   get interfaceContent() {
-    const root = this.shared(PipelineRootStatusProvider).activateResource
+    const root = this.shared(PipelineRootStatusProvider).activateResource.value
     return root
       ? vscfs.readFile(root.interfaceUri).then(
           arr => arr.toString(),
@@ -39,7 +39,7 @@ export class PipelineProjectInterfaceProvider extends Service {
   }
 
   get interfaceConfigContent() {
-    const root = this.shared(PipelineRootStatusProvider).activateResource
+    const root = this.shared(PipelineRootStatusProvider).activateResource.value
     return root
       ? vscfs.readFile(root.configUri).then(
           arr => arr.toString(),
@@ -52,7 +52,7 @@ export class PipelineProjectInterfaceProvider extends Service {
     if (json === undefined) {
       return
     }
-    const root = this.shared(PipelineRootStatusProvider).activateResource
+    const root = this.shared(PipelineRootStatusProvider).activateResource.value
     if (root) {
       await vscode.workspace.fs.createDirectory(
         vscode.Uri.file(path.dirname(root.configUri.fsPath))
@@ -101,7 +101,7 @@ export class PipelineProjectInterfaceProvider extends Service {
   }
 
   async saveInterface() {
-    const root = this.shared(PipelineRootStatusProvider).activateResource
+    const root = this.shared(PipelineRootStatusProvider).activateResource.value
     if (!root) {
       return
     }
@@ -125,7 +125,7 @@ export class PipelineProjectInterfaceProvider extends Service {
       )
       return []
     }
-    const rootPath = this.shared(PipelineRootStatusProvider).activateResource?.dirUri?.fsPath
+    const rootPath = this.shared(PipelineRootStatusProvider).activateResource.value?.dirUri?.fsPath
     if (!rootPath) {
       return []
     }

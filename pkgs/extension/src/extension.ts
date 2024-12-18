@@ -84,13 +84,13 @@ function initControlPanel() {
         )
         context.value.interfaceCurrent = sharedInstance(
           PipelineRootStatusProvider
-        ).activateResource?.interfaceRelative
+        ).activateResource.value?.interfaceRelative
 
         await sharedInstance(PipelineProjectInterfaceProvider).loadInterface()
 
         context.value.interfaceProjectDir = sharedInstance(
           PipelineRootStatusProvider
-        ).activateResource?.dirUri.fsPath
+        ).activateResource.value?.dirUri.fsPath
         context.value.interfaceObj =
           tryParse<Interface>(
             await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
@@ -116,7 +116,7 @@ function initControlPanel() {
 
           context.value.interfaceProjectDir = sharedInstance(
             PipelineRootStatusProvider
-          ).activateResource?.dirUri.fsPath
+          ).activateResource.value?.dirUri.fsPath
           context.value.interfaceObj =
             tryParse<Interface>(
               await sharedInstance(PipelineProjectInterfaceProvider).interfaceContent
@@ -266,7 +266,7 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
         pilp.tasker?.tasker.post_stop()
         break
       case 'crop.screencap':
-        if (!sharedInstance(PipelineRootStatusProvider).activateResource) {
+        if (!sharedInstance(PipelineRootStatusProvider).activateResource.value) {
           return
         }
         if ((await pilp.updateCache()) && pilp.cache) {

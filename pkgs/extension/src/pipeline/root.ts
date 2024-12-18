@@ -1,46 +1,36 @@
 import EventEmitter from 'events'
+import { ShallowRef, shallowRef } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
-import { t } from '@mse/utils'
-
-import { commands } from '../command'
 import { Service } from '../data'
 import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../fs'
 
 export class PipelineRootStatusProvider extends Service {
   resourceRoot: ResourceRoot[]
-  activateResource: ResourceRoot | null
+  activateResource: ShallowRef<ResourceRoot | null>
   selector: vscode.DocumentFilter[] | null
-
-  event: EventEmitter<{
-    activateRootChanged: []
-  }>
 
   constructor() {
     super()
 
     this.resourceRoot = []
-    this.activateResource = null
+    this.activateResource = shallowRef(null)
     this.selector = null
-
-    this.event = new EventEmitter()
   }
 
   async syncRootInfo(trySelect?: string) {
-    const oldInterface = trySelect ?? this.activateResource?.interfaceRelative ?? null
+    const oldInterface = trySelect ?? this.activateResource.value?.interfaceRelative ?? null
     this.resourceRoot = await locateResourceRoot()
     if (this.resourceRoot.length > 0) {
-      this.activateResource =
+      this.activateResource.value =
         this.resourceRoot.find(x => x.interfaceRelative === oldInterface) ?? this.resourceRoot[0]
     } else {
-      this.activateResource = null
+      this.activateResource.value = null
     }
-    this.event.emit('activateRootChanged')
   }
 
   selectRootInfo(index: number) {
-    this.activateResource = this.resourceRoot[index]
-    this.event.emit('activateRootChanged')
+    this.activateResource.value = this.resourceRoot[index]
   }
 
   relativePath(uri: vscode.Uri) {
@@ -48,9 +38,9 @@ export class PipelineRootStatusProvider extends Service {
   }
 
   relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {
-    if (this.activateResource) {
+    if (this.activateResource.value) {
       if (!root) {
-        root = this.activateResource.dirUri
+        root = this.activateResource.value.dirUri
       }
       if (sub) {
         root = vscode.Uri.joinPath(root, sub)

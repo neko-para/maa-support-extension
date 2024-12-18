@@ -25,10 +25,7 @@ export class ProjectInterfaceDefinitionProvider
       return null
     }
 
-    if (info.type === 'task.ref') {
-      const taskInfo = await this.shared(PipelineTaskIndexProvider).queryTask(info.task)
-      return taskInfo.map(x => new vscode.Location(x.info.uri, x.info.taskProp))
-    } else if (info.type === 'option.ref') {
+    if (info.type === 'option.ref') {
       const optionInfo = this.shared(ProjectInterfaceIndexerProvider).optionDecl.find(
         x => x.option === info.option
       )

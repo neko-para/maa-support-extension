@@ -8,11 +8,6 @@ import { ProjectInterfaceJsonProvider } from './json'
 
 export type QueryResult =
   | {
-      type: 'task.ref'
-      range: vscode.Range
-      task: string
-    }
-  | {
       type: 'option.ref'
       range: vscode.Range
       option: string
@@ -79,15 +74,6 @@ export class ProjectInterfaceIndexerProvider extends Service {
                       })
                     }
                     break
-                  case 'entry':
-                    if (path.length === 3) {
-                      this.refs.push({
-                        type: 'task.ref',
-                        range,
-                        task: value
-                      })
-                    }
-                    break
                   case 'option':
                     if (typeof path[3] === 'number' && path.length === 4) {
                       this.refs.push({
@@ -130,53 +116,6 @@ export class ProjectInterfaceIndexerProvider extends Service {
                 }
               }
           }
-        }
-      },
-      onObjectProp: (prop, range, path) => {
-        switch (path[0]) {
-          case 'task':
-            if (typeof path[1] === 'number') {
-              switch (path[2]) {
-                case 'pipeline_override':
-                  if (typeof path[3] === 'string' && path.length === 4) {
-                    this.refs.push({
-                      type: 'task.ref',
-                      range,
-                      task: path[3]
-                    })
-                  }
-                  break
-              }
-            }
-            break
-          case 'option':
-            if (typeof path[1] === 'string') {
-              if (path.length === 2) {
-                this.optionDecl.push({
-                  range,
-                  option: path[1]
-                })
-              } else {
-                switch (path[2]) {
-                  case 'cases':
-                    if (typeof path[3] === 'number') {
-                      switch (path[4]) {
-                        case 'pipeline_override':
-                          if (typeof path[5] === 'string' && path.length === 6) {
-                            this.refs.push({
-                              type: 'task.ref',
-                              range,
-                              task: path[5]
-                            })
-                          }
-                          break
-                      }
-                    }
-                    break
-                }
-              }
-            }
-            break
         }
       }
     })

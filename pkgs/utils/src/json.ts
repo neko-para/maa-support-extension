@@ -1,6 +1,8 @@
 import { type JSONPath, visit } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
+export { type JSONPath } from 'jsonc-parser'
+
 export function visitJsonDocument(
   doc: vscode.TextDocument,
   visitor: {

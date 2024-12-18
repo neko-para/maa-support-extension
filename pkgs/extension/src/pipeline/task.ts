@@ -1,7 +1,7 @@
-import { watch } from 'reactive-vscode'
+import { watch, watchEffect } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
-import { t, visitJsonDocument, vscfs } from '@mse/utils'
+import { JSONPath, t, visitJsonDocument, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
@@ -265,8 +265,259 @@ class PipelineTaskIndexLayer extends Service {
   }
 }
 
+class PipelineInterfaceIndexLayer extends Service {
+  uri: vscode.Uri
+  level: number
+  taskIndex: Record<string, TaskIndexInfo>
+
+  watcher: vscode.FileSystemWatcher
+  dirty: boolean
+
+  flushing: boolean
+  needReflush: boolean
+
+  constructor(uri: vscode.Uri, level: number) {
+    super()
+
+    this.uri = vscode.Uri.joinPath(uri, 'interface.json')
+    this.level = level
+    this.taskIndex = {}
+    this.defer = this.watcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(uri, 'interface.json')
+    )
+    this.dirty = false
+    this.flushing = false
+    this.needReflush = false
+
+    vscode.workspace.onDidChangeTextDocument(event => {
+      if (event.document.uri.fsPath === this.uri.fsPath) {
+        this.dirty = true
+      }
+    })
+    this.watcher.onDidChange(event => {
+      this.dirty = true
+    })
+
+    this.loadJson()
+  }
+
+  async loadJson() {
+    const doc = await vscode.workspace.openTextDocument(this.uri)
+    if (!doc) {
+      return
+    }
+
+    const stripPath = (path: JSONPath, prefix: { value: string }): JSONPath => {
+      if (path[0] === 'task' && typeof path[1] === 'number' && path[2] === 'pipeline_override') {
+        prefix.value = `task${path[1]}@`
+        return path.slice(3)
+      }
+      if (
+        path[0] === 'option' &&
+        typeof path[1] === 'string' &&
+        path[2] === 'cases' &&
+        typeof path[3] === 'number' &&
+        path[4] === 'pipeline_override'
+      ) {
+        prefix.value = `case${path[1]}${path[3]}@`
+        return path.slice(5)
+      }
+      return []
+    }
+
+    let taskInfo: TaskIndexInfo | null = null
+    let entryTaskInfo: TaskIndexInfo = {
+      uri: this.uri,
+      taskContent: '',
+      taskReferContent: '',
+      taskProp: new vscode.Range(0, 0, 0, 0),
+      taskBody: new vscode.Range(0, 0, 0, 0),
+      taskRef: [],
+      imageRef: []
+    }
+
+    this.taskIndex['@VSCEXT_INTERFACE'] = entryTaskInfo
+
+    visitJsonDocument(doc, {
+      onObjectProp: (prop, range, path) => {
+        const prefix = { value: '' }
+        path = stripPath(path, prefix)
+        if (path.length === 0) {
+          return
+        }
+
+        if (path.length === 1) {
+          taskInfo = {
+            uri: this.uri,
+            taskContent: '',
+            taskReferContent: '',
+            taskProp: range,
+            taskBody: new vscode.Range(0, 0, 0, 0),
+            taskRef: [],
+            imageRef: []
+          }
+        }
+      },
+      onObjectEnd: (range, path) => {
+        const prefix = { value: '' }
+        path = stripPath(path, prefix)
+        if (path.length === 0) {
+          return
+        }
+
+        if (path.length === 1) {
+          if (!taskInfo) {
+            return
+          }
+          taskInfo.taskBody = range
+          taskInfo.taskContent = doc.getText(range)
+          taskInfo.taskReferContent = doc.getText(
+            new vscode.Range(taskInfo.taskProp.start.line, 0, range.end.line + 1, 0)
+          )
+
+          // let name = prefix.value + path[0]
+          let name = path[0]
+
+          if (name in this.taskIndex) {
+            for (let i = 1; ; i++) {
+              const newProp = `${name}@VSCEXT_CONFLICT,${i}`
+              if (!(newProp in this.taskIndex)) {
+                name = newProp
+                break
+              }
+            }
+          }
+
+          this.taskIndex[name] = taskInfo
+          taskInfo = null
+        }
+      },
+      onLiteral: (value, range, path) => {
+        if (typeof value === 'string') {
+          switch (path[0]) {
+            case 'task':
+              if (typeof path[1] === 'number') {
+                switch (path[2]) {
+                  case 'entry':
+                    if (path.length === 3) {
+                      entryTaskInfo.taskRef.push({
+                        task: value,
+                        range: range,
+                        belong: 'target'
+                      })
+                    }
+                    break
+                }
+              }
+          }
+        }
+
+        const prefix = { value: '' }
+        path = stripPath(path, prefix)
+        if (path.length === 0) {
+          return
+        }
+
+        if (typeof path[1] !== 'string') {
+          return
+        }
+        if (typeof value === 'string') {
+          if (!taskInfo) {
+            return
+          }
+
+          switch (path[1]) {
+            case 'next':
+            case 'interrupt':
+            case 'on_error':
+            case 'timeout_next':
+              if (path.length >= 2 && path.length <= 3) {
+                taskInfo.taskRef.push({
+                  task: value,
+                  range: range,
+                  belong: 'next'
+                })
+              }
+              break
+            case 'target':
+            case 'begin':
+            case 'end':
+              if (path.length === 2) {
+                taskInfo.taskRef.push({
+                  task: value,
+                  range: range,
+                  belong: 'target'
+                })
+              }
+              break
+            case 'template':
+              if (path.length >= 2 && path.length <= 3) {
+                taskInfo.imageRef.push({
+                  path: value,
+                  range: range
+                })
+              }
+              break
+            case 'pre_wait_freezes':
+            case 'post_wait_freezes':
+              switch (path[2]) {
+                case 'target':
+                  if (path.length == 3) {
+                    taskInfo.taskRef.push({
+                      task: value,
+                      range: range,
+                      belong: 'target'
+                    })
+                  }
+                  break
+              }
+              break
+            case 'swipes':
+              if (typeof path[2] === 'number') {
+                switch (path[3]) {
+                  case 'begin':
+                  case 'end':
+                    if (path.length === 4) {
+                      taskInfo.taskRef.push({
+                        task: value,
+                        range: range,
+                        belong: 'target'
+                      })
+                    }
+                    break
+                }
+              }
+              break
+          }
+        }
+      }
+    })
+  }
+
+  async flushDirty() {
+    if (this.flushing) {
+      this.needReflush = true
+      return
+    }
+    this.flushing = true
+
+    this.dirty = false
+
+    this.taskIndex = {}
+
+    await this.loadJson()
+
+    this.flushing = false
+    if (this.needReflush) {
+      this.needReflush = false
+      this.flushDirty()
+    }
+  }
+}
+
 export class PipelineTaskIndexProvider extends Service {
   layers: PipelineTaskIndexLayer[]
+  interfaceLayer?: PipelineInterfaceIndexLayer
   diagnostic: vscode.DiagnosticCollection
 
   updateingDiag: boolean
@@ -291,6 +542,17 @@ export class PipelineTaskIndexProvider extends Service {
         )
       }
     )
+
+    watchEffect(() => {
+      const root = this.shared(PipelineRootStatusProvider).activateResource.value
+      this.interfaceLayer?.dispose()
+      if (root) {
+        this.interfaceLayer = new PipelineInterfaceIndexLayer(
+          root.dirUri,
+          this.shared(ProjectInterfaceJsonProvider).resourcePaths.value.length
+        )
+      }
+    })
 
     this.defer = (() => {
       const timer = setInterval(() => {
@@ -433,6 +695,7 @@ export class PipelineTaskIndexProvider extends Service {
     for (const layer of this.layers) {
       await layer.flushDirty()
     }
+    await this.interfaceLayer?.flushDirty()
   }
 
   getLayer(uri: vscode.Uri) {
@@ -440,6 +703,9 @@ export class PipelineTaskIndexProvider extends Service {
       if (uri.fsPath.startsWith(layer.uri.fsPath)) {
         return layer
       }
+    }
+    if (this.interfaceLayer?.uri.fsPath === uri.fsPath) {
+      return this.interfaceLayer
     }
     return null
   }
@@ -493,16 +759,21 @@ export class PipelineTaskIndexProvider extends Service {
   }
 
   async queryTask(task: string, level?: number) {
+    const allLayers: (PipelineTaskIndexLayer | PipelineInterfaceIndexLayer)[] = [...this.layers]
+    if (this.interfaceLayer) {
+      allLayers.push(this.interfaceLayer)
+    }
+
     await this.flushDirty()
     if (level === undefined) {
-      level = this.layers.length
+      level = allLayers.length
     }
     const result: {
       uri: vscode.Uri
       info: TaskIndexInfo
     }[] = []
     try {
-      for (const layer of this.layers.slice(0, level)) {
+      for (const layer of allLayers.slice(0, level)) {
         if (task in layer.taskIndex) {
           result.push({
             uri: layer.uri,
@@ -515,9 +786,14 @@ export class PipelineTaskIndexProvider extends Service {
   }
 
   async queryImage(image: string, level?: number) {
+    const allLayers: (PipelineTaskIndexLayer | PipelineInterfaceIndexLayer)[] = [...this.layers]
+    if (this.interfaceLayer) {
+      allLayers.push(this.interfaceLayer)
+    }
+
     await this.flushDirty()
     if (level === undefined) {
-      level = this.layers.length
+      level = allLayers.length
     }
     const result: {
       uri: vscode.Uri
@@ -526,7 +802,7 @@ export class PipelineTaskIndexProvider extends Service {
       }
     }[] = []
     try {
-      for (const layer of this.layers.slice(0, level)) {
+      for (const layer of allLayers.slice(0, level)) {
         const iu = vscode.Uri.joinPath(layer.uri, 'image', image)
         if (await vscfs.exists(iu)) {
           result.push({

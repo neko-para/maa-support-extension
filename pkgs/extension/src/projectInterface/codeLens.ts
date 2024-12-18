@@ -1,6 +1,7 @@
+import { ComputedRef, computed, watchEffect } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
-import { visitJsonDocument } from '@mse/utils'
+import { logger, visitJsonDocument } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
@@ -15,6 +16,8 @@ export class ProjectInterfaceCodeLensProvider
   didChangeCodeLenses: vscode.EventEmitter<void>
   onDidChangeCodeLenses: vscode.Event<void>
 
+  currentResource: ComputedRef<string | undefined>
+
   constructor() {
     super(selector => {
       return vscode.languages.registerCodeLensProvider(selector, this)
@@ -23,7 +26,15 @@ export class ProjectInterfaceCodeLensProvider
     this.didChangeCodeLenses = new vscode.EventEmitter()
     this.onDidChangeCodeLenses = this.didChangeCodeLenses.event
 
-    this.shared(ProjectInterfaceJsonProvider).event.on('interfaceChanged', () => {
+    this.currentResource = computed(() => {
+      return this.shared(ProjectInterfaceJsonProvider).interfaceConfigJson.value?.resource
+    })
+
+    watchEffect(() => {
+      this.currentResource.value
+      this.shared(ProjectInterfaceJsonProvider).interfaceJson.value?.resource
+
+      logger.debug('interface codelens refresh')
       this.didChangeCodeLenses.fire()
     })
   }
@@ -42,8 +53,7 @@ export class ProjectInterfaceCodeLensProvider
           typeof path[1] === 'number' &&
           path[2] === 'name'
         ) {
-          const activated =
-            this.shared(ProjectInterfaceJsonProvider).interfaceConfigJson.value?.resource === value
+          const activated = this.currentResource.value === value
           result.push(
             activated
               ? new vscode.CodeLens(range, {

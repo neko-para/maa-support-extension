@@ -34,12 +34,6 @@ export class ProjectInterfaceJsonProvider extends Service {
         x => x.name === this.interfaceConfigJson.value?.resource
       )
       if (!resInfo) {
-        vscode.window.showErrorMessage(
-          t(
-            'maa.pi.error.cannot-find-resource',
-            this.interfaceConfigJson.value?.resource ?? '<unknown>'
-          )
-        )
         return []
       }
       const rootPath = this.shared(PipelineRootStatusProvider).activateResource.value?.dirUri

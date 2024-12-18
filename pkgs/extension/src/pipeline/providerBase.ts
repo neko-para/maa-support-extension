@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 
 import { Service } from '../data'
 import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
+import { PipelineRootStatusProvider } from './root'
 
 export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> extends Service {
   provider: T | null
@@ -21,11 +22,19 @@ export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> exten
           this.provider.dispose()
           this.provider = null
         }
-        this.provider = setupProvider(
-          this.shared(ProjectInterfaceJsonProvider).resourcePaths.value.map(path => ({
+        const root = this.shared(PipelineRootStatusProvider).activateResource.value
+        this.provider = setupProvider([
+          ...this.shared(ProjectInterfaceJsonProvider).resourcePaths.value.map(path => ({
             pattern: new vscode.RelativePattern(path, 'pipeline/**/*.json')
-          }))
-        )
+          })),
+          ...(root
+            ? [
+                {
+                  pattern: new vscode.RelativePattern(root.dirUri, 'interface.json')
+                }
+              ]
+            : [])
+        ])
       }
     )
   }

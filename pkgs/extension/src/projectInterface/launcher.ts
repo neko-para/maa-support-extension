@@ -6,10 +6,10 @@ import { logger, loggerChannel, t, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
 import { Service } from '../data'
-import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../extension'
 import { Maa, maa } from '../maa'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
+import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../web'
 import { ProjectInterfaceJsonProvider } from './json'
 import { InterfaceRuntime } from './type'
 

@@ -1,7 +1,12 @@
 import { LaunchViewFromHost } from '@mse/types'
 
+import { Maa } from '../maa'
 import { useLaunchView } from '../web'
 import { TaskerInstance } from './launcher'
+
+function toPngDataUrl(buffer: ArrayBuffer) {
+  return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
+}
 
 export class ProjectInterfaceLaunchInstance {
   instance: TaskerInstance
@@ -28,20 +33,38 @@ export class ProjectInterfaceLaunchInstance {
     handler.value = async data => {
       switch (data.cmd) {
         case 'queryReco':
+          {
+            const detailInfo = this.instance.tasker.recognition_detail(data.reco as Maa.api.RecoId)
+            if (!detailInfo) {
+              return
+            }
+            detailInfo.detail = JSON.stringify(JSON.parse(detailInfo.detail), null, 4)
+            post({
+              cmd: 'showReco',
+              raw: toPngDataUrl(detailInfo.raw),
+              draws: detailInfo.draws.map(toPngDataUrl),
+              info: detailInfo
+            })
+          }
           break
         case 'stopLaunch':
-          await this.stop()
+          await this.stop(false)
           break
       }
     }
   }
 
-  async stop() {
+  async stop(send: boolean) {
+    if (this.stopped) {
+      return
+    }
     await this.instance.tasker.post_stop().wait()
     this.stopped = true
-    this.post({
-      cmd: 'stopped'
-    })
+    if (send) {
+      this.post({
+        cmd: 'stopped'
+      })
+    }
   }
 
   async pushNotify(msg: string, details: string) {
@@ -53,7 +76,7 @@ export class ProjectInterfaceLaunchInstance {
   }
 
   async dispose() {
-    await this.instance.tasker.post_stop().wait()
+    await this.stop(true)
     this.pushNotify = async () => {}
     this.instance.tasker.destroy()
     this.instance.resource.destroy()

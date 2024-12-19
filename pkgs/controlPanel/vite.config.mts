@@ -14,31 +14,13 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'control.html'),
+        control: resolve(__dirname, 'control.html'),
         launch: resolve(__dirname, 'launch.html')
       },
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,
-        assetFileNames: `assets/[name].[ext]`,
-        manualChunks: id => {
-          if (/node_modules/.test(id)) {
-            return 'vendor'
-          }
-          if (
-            /pkgs\/controlPanel\/src\/control/.test(id) ||
-            /pkgs\/controlPanel\/control\.html/.test(id)
-          ) {
-            return 'control'
-          }
-          if (
-            /pkgs\/controlPanel\/src\/launch/.test(id) ||
-            /pkgs\/controlPanel\/launch\.html/.test(id)
-          ) {
-            return 'launch'
-          }
-          return 'rest'
-        }
+        assetFileNames: `assets/[name].[ext]`
       }
     }
   },

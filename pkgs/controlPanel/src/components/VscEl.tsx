@@ -1,3 +1,4 @@
+import '@vscode-elements/elements'
 import type { VscodeSingleSelect } from '@vscode-elements/elements'
 import type { Option } from '@vscode-elements/elements/dist/includes/vscode-select/types'
 import type { VscCollapsibleToggleEvent } from '@vscode-elements/elements/dist/vscode-collapsible/vscode-collapsible'
@@ -7,6 +8,9 @@ export function VscButton(
   props: {
     loading?: boolean
     disabled?: boolean
+    icon?: string
+    spin?: boolean
+    secondary?: boolean
     onClick?: () => void
   },
   context: SetupContext<{}>
@@ -14,9 +18,10 @@ export function VscButton(
   return (
     <vscode-button
       class="fixed"
-      icon={props.loading ? 'loading' : undefined}
-      iconSpin
+      icon={props.loading ? 'loading' : props.icon}
+      iconSpin={props.loading || props.spin}
       disabled={props.disabled}
+      secondary={props.secondary}
       onClick={props.onClick}
     >
       {context.slots.default?.()}

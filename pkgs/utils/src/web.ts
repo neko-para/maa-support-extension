@@ -101,7 +101,10 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         const htmlContent = (await vscfs.readFile(htmlUri))
           .toString()
           .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
-          .replaceAll('crossorigin href=', 'crossorigin id="vscode-codicon-stylesheet" href=')
+          .replaceAll(
+            'rel="stylesheet" crossorigin href=',
+            'rel="stylesheet" crossorigin id="vscode-codicon-stylesheet" href='
+          )
           .replaceAll('%{cspSource}', v.webview.cspSource)
 
         html.value = htmlContent
@@ -219,7 +222,10 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
     const htmlContent = (await vscfs.readFile(htmlUri))
       .toString()
       .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
-      .replaceAll('crossorigin href=', 'crossorigin id="vscode-codicon-stylesheet" href=')
+      .replaceAll(
+        'rel="stylesheet" crossorigin href=',
+        'rel="stylesheet" crossorigin id="vscode-codicon-stylesheet" href='
+      )
       .replaceAll('%{cspSource}', panel.webview.cspSource)
 
     html.value = htmlContent

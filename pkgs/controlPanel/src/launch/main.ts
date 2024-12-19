@@ -1,4 +1,3 @@
-import '@vscode-elements/elements'
 import { createApp } from 'vue'
 
 import type { LaunchViewContext, LaunchViewFromHost, LaunchViewToHost } from '@mse/types'
@@ -6,6 +5,7 @@ import { useIpc } from '@mse/web-utils'
 
 import '@/base.css'
 import App from '@/launch/App.vue'
+import * as recoSt from '@/launch/states/reco'
 import { stopped, taskList } from '@/launch/states/task'
 import type { Message } from '@/launch/types/msg'
 
@@ -21,6 +21,10 @@ ipc.handler.value = data => {
       break
     case 'stopped':
       stopped.value = true
+      break
+    case 'showReco':
+      recoSt.recoInfo.value = data
+      recoSt.showRecoInfo.value = true
       break
   }
 }

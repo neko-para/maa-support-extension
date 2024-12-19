@@ -1,4 +1,3 @@
-import '@vscode-elements/elements'
 import { createApp } from 'vue'
 
 import type { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '@mse/types'

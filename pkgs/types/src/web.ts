@@ -157,6 +157,9 @@ export type LaunchViewFromHost =
   | {
       cmd: 'stopped'
     }
+  | ({
+      cmd: 'showReco'
+    } & RecoInfo)
 
 export type OldWebContext = {
   uploadDir?: string

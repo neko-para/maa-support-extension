@@ -240,9 +240,12 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
       }
     )
 
+    const onDidDispose: (() => void)[] = []
+
     panel.onDidDispose(() => {
       realPost = () => {}
       stopSyncContext()
+      onDidDispose.forEach(f => f())
     })
 
     return {
@@ -250,7 +253,8 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
       handler,
       active,
       visible,
-      post
+      post,
+      onDidDispose
     }
   }
 }

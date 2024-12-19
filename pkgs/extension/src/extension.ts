@@ -241,9 +241,17 @@ function toPngDataUrl(buffer: ArrayBuffer) {
 
 export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
   const p = await innerUseOldWebPanel('Maa Support', column)
-  const { handler, context, post } = p
+  const { handler, context, post, onDidDispose } = p
 
-  context.value.selectFill = vscode.workspace.getConfiguration('maa').get('crop.selectFill')
+  const confWatch = vscode.workspace.onDidChangeConfiguration(e => {
+    if (e.affectsConfiguration('maa.crop.selectFill')) {
+      context.value.selectFill = vscode.workspace.getConfiguration('maa').get('crop.selectFill')
+    }
+  })
+
+  onDidDispose.push(() => {
+    confWatch.dispose()
+  })
 
   handler.value = async data => {
     logger.debug(`oldWeb ${data.cmd} ${JSON.stringify(data).slice(0, 200)}`)

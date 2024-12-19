@@ -64,7 +64,6 @@ export type ControlPanelContext = {
   interfaceConfigObj?: Partial<InterfaceConfig>
 
   interfaceAddTask?: string
-  interfaceLaunching?: boolean
 
   adbDeviceList?: {
     name: string
@@ -137,6 +136,27 @@ export type RecoInfo = {
     detail: string
   }
 }
+
+export type LaunchViewContext = {}
+
+export type LaunchViewToHost =
+  | {
+      cmd: 'queryReco'
+      reco: number
+    }
+  | {
+      cmd: 'stopLaunch'
+    }
+
+export type LaunchViewFromHost =
+  | {
+      cmd: 'notify'
+      msg: string
+      details: string
+    }
+  | {
+      cmd: 'stopped'
+    }
 
 export type OldWebContext = {
   uploadDir?: string

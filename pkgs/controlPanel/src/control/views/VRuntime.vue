@@ -8,14 +8,11 @@ import * as runtimeSt from '@/control/states/runtime'
   <div class="col-flex">
     <div class="row-flex">
       <vsc-button
-        v-if="!interfaceSt.launching.value"
         :disabled="interfaceSt.freezed.value || !!runtimeSt.runtime.value[1]"
         @click="interfaceSt.launch"
       >
         启动
       </vsc-button>
-      <vsc-button v-if="interfaceSt.launching.value" @click="interfaceSt.stop"> 停止 </vsc-button>
-      <vscode-icon v-if="interfaceSt.launching.value" name="loading" spin></vscode-icon>
       <span v-if="runtimeSt.runtime.value[1]">
         {{ runtimeSt.runtime.value[1] }}
       </span>

@@ -8,6 +8,9 @@ import {
   ControlPanelToHost,
   Interface,
   InterfaceConfig,
+  LaunchViewContext,
+  LaunchViewFromHost,
+  LaunchViewToHost,
   OldWebContext,
   OldWebFromHost,
   OldWebToHost
@@ -117,13 +120,7 @@ export function initControlPanel() {
       }
       case 'launchInterface':
         logger.debug(`Launch Interface, runtime ${JSON.stringify(data.runtime)}`)
-        if (context.value.interfaceLaunching) {
-          logger.warn(`Launch Interface failed, another interface launching`)
-          break
-        }
-        context.value.interfaceLaunching = true
         await sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(data.runtime)
-        context.value.interfaceLaunching = false
         break
       case 'stopInterface':
         sharedInstance(ProjectInterfaceLaunchProvider).tasker?.tasker.post_stop()
@@ -211,6 +208,16 @@ export function initControlPanel() {
     Win32ScreencapMethod: maa.api.Win32ScreencapMethod,
     Win32InputMethod: maa.api.Win32InputMethod
   }
+}
+
+const innerUseLaunchView = createUseWebPanel<
+  LaunchViewContext,
+  LaunchViewToHost,
+  LaunchViewFromHost
+>('controlPanel', 'launch', 'maa.view.launch', true)
+
+export async function useLaunchView(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
+  return await innerUseLaunchView('Maa Launch', column)
 }
 
 const innerUseOldWebPanel = createUseWebPanel<OldWebContext, OldWebToHost, OldWebFromHost>(

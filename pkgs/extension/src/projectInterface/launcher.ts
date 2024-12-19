@@ -11,13 +11,14 @@ import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
 import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../web'
 import { ProjectInterfaceJsonProvider } from './json'
+import { ProjectInterfaceLaunchInstance } from './launch'
 import { InterfaceRuntime } from './type'
 
 type InstanceCache = {
   controller: Maa.ControllerBase
 }
 
-type TaskerInstance = {
+export type TaskerInstance = {
   tasker: Maa.TaskerBase
   resource: Maa.ResourceBase
   controller: Maa.ControllerBase
@@ -178,7 +179,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const key = serializeRuntimeCache(rt)
 
     if (key !== this.cacheConfig) {
-      this.cache?.controller?.destroy()
+      // use auto release via gc. ProjectInterfaceLaunchInstance refer it
+      // this.cache?.controller?.destroy()
       this.cache = null
       this.cacheConfig = null
     }
@@ -282,24 +284,10 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return
     }
 
-    const { post, visible } = await useOldWebPanel(vscode.ViewColumn.Two)
-
-    visible.value = true
-    post({
-      cmd: 'launch.setup'
-    })
-
-    const oldNotify = this.tasker.tasker.notify
-    this.tasker.tasker.notify = async (msg, details) => {
-      await oldNotify(msg, details)
-      post({
-        cmd: 'launch.notify',
-        msg,
-        details
-      })
-    }
-
-    await this.tasker.tasker.post_pipeline(task).wait()
+    const tasker = this.tasker
+    this.tasker = null
+    await new ProjectInterfaceLaunchInstance(tasker).setup()
+    await tasker.tasker.post_pipeline(task).wait()
   }
 
   async launchRuntime(runtime: InterfaceRuntime) {
@@ -307,26 +295,12 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return
     }
 
-    const { post, visible } = await useOldWebPanel(vscode.ViewColumn.Two)
-
-    visible.value = true
-    post({
-      cmd: 'launch.setup'
-    })
-
-    const oldNotify = this.tasker.tasker.notify
-    this.tasker.tasker.notify = async (msg, details) => {
-      await oldNotify(msg, details)
-      post({
-        cmd: 'launch.notify',
-        msg,
-        details
-      })
-    }
-
+    const tasker = this.tasker
+    this.tasker = null
+    await new ProjectInterfaceLaunchInstance(tasker).setup()
     let last
     for (const task of runtime.task) {
-      last = this.tasker.tasker
+      last = tasker.tasker
         .post_pipeline(task.entry, task.pipeline_override as unknown as any)
         .wait()
     }

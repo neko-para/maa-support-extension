@@ -36,12 +36,8 @@ export const refreshing = computed(() => {
   return ipc.context.value.interfaceRefreshing ?? false
 })
 
-export const launching = computed(() => {
-  return ipc.context.value.interfaceLaunching ?? false
-})
-
 export const freezed = computed(() => {
-  return refreshing.value || launching.value
+  return refreshing.value
 })
 
 export const list = computed(() => {

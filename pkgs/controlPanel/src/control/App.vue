@@ -18,7 +18,7 @@ onMounted(() => {
 
 <template>
   <div id="root">
-    <div class="grid-form" style="margin-top: 0.5rem">
+    <div class="grid-form">
       <span class="fixed">配置</span>
       <v-interface></v-interface>
 
@@ -43,13 +43,3 @@ onMounted(() => {
     </vsc-scrollable>
   </div>
 </template>
-
-<style scoped>
-#root {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  height: 100%;
-  padding: 0 0.5rem;
-}
-</style>

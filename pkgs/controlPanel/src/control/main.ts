@@ -4,8 +4,8 @@ import { createApp } from 'vue'
 import type { ControlPanelContext, ControlPanelFromHost, ControlPanelToHost } from '@mse/types'
 import { useIpc } from '@mse/web-utils'
 
+import '@/base.css'
 import App from '@/control/App.vue'
-import '@/control/base.css'
 import * as interfaceSt from '@/control/states/interface'
 import * as runtimeSt from '@/control/states/runtime'
 

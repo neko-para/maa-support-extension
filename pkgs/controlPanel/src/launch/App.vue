@@ -27,15 +27,15 @@ import { taskList } from './states/task'
             </vscode-label>
             <div class="col-flex flex-wrap">
               <template v-for="nlc in nl.info.list.length" :key="nlc">
-                <span v-if="nl.recos[nlc - 1]">
-                  {{ nl.recos[nlc - 1].info.name }} - {{ nl.recos[nlc - 1].info.reco_id }}
-                </span>
-                <span v-else>
+                <vsc-button v-if="nl.recos[nlc - 1]">
+                  {{ nl.recos[nlc - 1].info.name }}
+                </vsc-button>
+                <vsc-button v-else disabled>
                   {{ nl.info.list[nlc - 1] }}
-                </span>
+                </vsc-button>
               </template>
             </div>
-            <span v-if="nl.act"> {{ nl.act.info.name }} - {{ nl.act.info.node_id }} </span>
+            <span v-if="nl.act"> {{ nl.act.info.name }} </span>
           </template>
         </div>
       </div>
@@ -45,8 +45,8 @@ import { taskList } from './states/task'
 
 <style>
 .group-box {
-  border: 1px solid var(--vscode-panel-border);
   border-radius: 0.25rem;
+  background-color: var(--vscode-sideBar-background);
   padding: 0.25rem;
   padding-top: 0;
 }

@@ -25,7 +25,7 @@ export const useControlPanel = createUseWebView<
   ControlPanelContext,
   ControlPanelToHost,
   ControlPanelFromHost
->('controlPanel', 'maa.view.control-panel')
+>('controlPanel', 'control', 'maa.view.control-panel')
 
 export function focusAndWaitPanel() {
   return new Promise<void>(resolve => {
@@ -215,6 +215,7 @@ export function initControlPanel() {
 
 const innerUseOldWebPanel = createUseWebPanel<OldWebContext, OldWebToHost, OldWebFromHost>(
   'web',
+  'index',
   'maa.Webview',
   true
 )

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import * as interfaceSt from '@/states/interface'
+import * as interfaceSt from '@/control/states/interface'
 
 import CTaskOption from './CTaskOption.vue'
 

@@ -2,7 +2,7 @@ import { computed } from 'vue'
 
 import type { InterfaceRuntime } from '@mse/types'
 
-import { ipc } from '@/main'
+import { ipc } from '@/control/main'
 
 import * as controllerSt from './controller'
 import * as interfaceSt from './interface'

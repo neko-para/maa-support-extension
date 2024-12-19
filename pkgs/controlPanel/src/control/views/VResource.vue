@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 
 import { VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
-import * as interfaceSt from '@/states/interface'
-import * as resourceSt from '@/states/resource'
+import * as interfaceSt from '@/control/states/interface'
+import * as resourceSt from '@/control/states/resource'
 
 const resourceOptions = computed<VscSingleSelectOption[]>(() => {
   return (

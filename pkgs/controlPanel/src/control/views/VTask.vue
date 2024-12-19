@@ -1,16 +1,16 @@
 <script setup lang="tsx">
 import { computed } from 'vue'
 
-import CTaskPanel from '@/components/CTaskPanel.vue'
 import {
   VscButton,
   VscCollapsible,
   VscSingleSelect,
   type VscSingleSelectOption
 } from '@/components/VscEl'
-import { ipc } from '@/main'
-import * as interfaceSt from '@/states/interface'
-import * as taskSt from '@/states/task'
+import CTaskPanel from '@/control/components/CTaskPanel.vue'
+import { ipc } from '@/control/main'
+import * as interfaceSt from '@/control/states/interface'
+import * as taskSt from '@/control/states/task'
 
 const taskAddOptions = computed<VscSingleSelectOption[]>(() => {
   return (

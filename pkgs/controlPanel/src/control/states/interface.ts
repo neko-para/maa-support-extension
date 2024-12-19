@@ -2,7 +2,7 @@ import { computed } from 'vue'
 
 import type { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 
-import { ipc } from '@/main'
+import { ipc } from '@/control/main'
 
 import * as runtimeSt from './runtime'
 

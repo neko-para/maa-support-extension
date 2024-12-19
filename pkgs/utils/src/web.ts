@@ -19,6 +19,7 @@ import { logger } from './logger'
 
 export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest>(
   dir: string,
+  index: string,
   id: string
 ) {
   return createSingletonComposable(() => {
@@ -96,7 +97,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
       if (v) {
         const webRootUri = v.webview.asWebviewUri(rootUri)
 
-        const htmlUri = vscode.Uri.joinPath(rootUri, 'index.html')
+        const htmlUri = vscode.Uri.joinPath(rootUri, index + '.html')
         const htmlContent = (await vscfs.readFile(htmlUri))
           .toString()
           .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
@@ -143,6 +144,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
 
 export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRest>(
   dir: string,
+  index: string,
   id: string,
   retain?: boolean
 ) {
@@ -213,7 +215,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
 
     const webRootUri = panel.webview.asWebviewUri(rootUri)
 
-    const htmlUri = vscode.Uri.joinPath(rootUri, 'index.html')
+    const htmlUri = vscode.Uri.joinPath(rootUri, index + '.html')
     const htmlContent = (await vscfs.readFile(htmlUri))
       .toString()
       .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)

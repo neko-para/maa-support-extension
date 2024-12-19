@@ -1,7 +1,7 @@
 import type { VscodeSingleSelect } from '@vscode-elements/elements'
 import type { Option } from '@vscode-elements/elements/dist/includes/vscode-select/types'
 import type { VscCollapsibleToggleEvent } from '@vscode-elements/elements/dist/vscode-collapsible/vscode-collapsible'
-import { type SetupContext, cloneVNode, computed } from 'vue'
+import { type SetupContext, cloneVNode } from 'vue'
 
 export function VscButton(
   props: {

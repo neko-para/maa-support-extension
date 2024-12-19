@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VscButton, VscScrollable } from '@/components/VscEl'
-import * as interfaceSt from '@/states/interface'
-import * as runtimeSt from '@/states/runtime'
+import * as interfaceSt from '@/control/states/interface'
+import * as runtimeSt from '@/control/states/runtime'
 </script>
 
 <template>

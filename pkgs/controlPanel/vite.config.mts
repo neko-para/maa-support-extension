@@ -1,26 +1,44 @@
 // import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import path from 'path'
+import path, { resolve } from 'path'
 import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config
 export default defineConfig({
   root: __dirname,
   base: './',
-  server: {
-    host: '127.0.0.1',
-    port: 9877
-  },
   build: {
     outDir: '../../release/controlPanel',
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'control.html'),
+        launch: resolve(__dirname, 'launch.html')
+      },
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,
-        assetFileNames: `assets/[name].[ext]`
+        assetFileNames: `assets/[name].[ext]`,
+        manualChunks: id => {
+          if (/node_modules/.test(id)) {
+            return 'vendor'
+          }
+          if (
+            /pkgs\/controlPanel\/src\/control/.test(id) ||
+            /pkgs\/controlPanel\/control\.html/.test(id)
+          ) {
+            return 'control'
+          }
+          if (
+            /pkgs\/controlPanel\/src\/launch/.test(id) ||
+            /pkgs\/controlPanel\/launch\.html/.test(id)
+          ) {
+            return 'launch'
+          }
+          return 'rest'
+        }
       }
     }
   },

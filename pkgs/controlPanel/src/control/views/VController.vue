@@ -3,9 +3,9 @@ import type * as maa from '@maaxyz/maa-node'
 import { computed, ref } from 'vue'
 
 import { VscButton, VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
-import { ipc } from '@/main'
-import * as controllerSt from '@/states/controller'
-import * as interfaceSt from '@/states/interface'
+import { ipc } from '@/control/main'
+import * as controllerSt from '@/control/states/controller'
+import * as interfaceSt from '@/control/states/interface'
 
 const currentAdbDeviceIndex = ref<string>('0')
 const currentDesktopWindow = ref<string | undefined>(undefined)

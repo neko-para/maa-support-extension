@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 
 import { VscSingleSelect, type VscSingleSelectOption } from '@/components/VscEl'
-import { ipc } from '@/main'
-import * as interfaceSt from '@/states/interface'
+import { ipc } from '@/control/main'
+import * as interfaceSt from '@/control/states/interface'
 
 const props = defineProps<{
   taskIndex: number

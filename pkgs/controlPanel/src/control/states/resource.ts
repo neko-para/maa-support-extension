@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 
-import * as interfaceSt from '@/states/interface'
+import * as interfaceSt from '@/control/states/interface'
 
 export const currentName = computed<string | undefined>({
   set(v?: string) {

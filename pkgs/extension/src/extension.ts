@@ -243,6 +243,8 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
   const p = await innerUseOldWebPanel('Maa Support', column)
   const { handler, context, post } = p
 
+  context.value.selectFill = vscode.workspace.getConfiguration('maa').get('crop.selectFill')
+
   handler.value = async data => {
     logger.debug(`oldWeb ${data.cmd} ${JSON.stringify(data).slice(0, 200)}`)
 

@@ -140,6 +140,7 @@ export type RecoInfo = {
 
 export type OldWebContext = {
   uploadDir?: string
+  selectFill?: string
 }
 
 export type OldWebToHost =

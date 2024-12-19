@@ -3,6 +3,7 @@ import { NButton } from 'naive-ui'
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 
 import { send } from '@/ipc'
+import { ipc } from '@/main'
 import { Box, DragHandler, Pos, Size, Viewport } from '@/utils/2d'
 
 import { setFulfillImage } from './crop'
@@ -266,7 +267,7 @@ function draw(ctx: CanvasRenderingContext2D) {
       pickedColor.value = [clr[0], clr[1], clr[2]]
     }
   }
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+  ctx.fillStyle = ipc.context.value.selectFill ?? 'rgba(255, 255, 255, 0.3)'
   ctx.fillRect(...cropBoxView.value.flat())
 
   // ctx.save()

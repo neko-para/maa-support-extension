@@ -9,5 +9,6 @@
   "maa.command.reveal-control-panel": "Maa: 展示控制面板",
   "maa.command.open-web": "Maa: 打开Webview",
   "maa.view.control-panel.title": "Maa 控制面板",
-  "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)"
+  "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)",
+  "maa.setting.select-fill": "Maa 截图选择区域填充颜色 (CSS语法)"
 }

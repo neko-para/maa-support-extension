@@ -16,5 +16,8 @@ ipc.handler.value = async data => {
     case 'setImage':
       imageSt.set(data.image)
       break
+    case 'decreaseLoading':
+      imageSt.loadingCounter.value -= 1
+      break
   }
 }

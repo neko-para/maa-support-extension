@@ -13,7 +13,7 @@ export class Pos {
   }
 
   static fromEvent(ev: MouseEvent) {
-    return Pos.from(ev.offsetX, ev.offsetY)
+    return Pos.from(Math.round(ev.offsetX), Math.round(ev.offsetY))
   }
 
   static is(x: unknown): x is Pos {

@@ -180,10 +180,14 @@ export type CropViewToHost =
       expandRoi: maa.api.FlatRect
     }
 
-export type CropViewFromHost = {
-  cmd: 'setImage'
-  image: string
-}
+export type CropViewFromHost =
+  | {
+      cmd: 'setImage'
+      image: string
+    }
+  | {
+      cmd: 'decreaseLoading'
+    }
 
 export type OldWebContext = {
   uploadDir?: string

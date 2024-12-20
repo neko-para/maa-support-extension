@@ -22,7 +22,10 @@ export class ProjectInterfaceCropInstance {
       switch (data.cmd) {
         case 'requestScreencap': {
           if (!sharedInstance(PipelineRootStatusProvider).activateResource.value) {
-            return
+            post({
+              cmd: 'decreaseLoading'
+            })
+            break
           }
           const pilp = sharedInstance(ProjectInterfaceLaunchProvider)
 
@@ -37,6 +40,9 @@ export class ProjectInterfaceCropInstance {
               image: toPngDataUrl(image)
             })
           }
+          post({
+            cmd: 'decreaseLoading'
+          })
           break
         }
         case 'requestUpload': {
@@ -53,6 +59,9 @@ export class ProjectInterfaceCropInstance {
 
           const files = await vscode.window.showOpenDialog(options)
           if (!files || files.length === 0) {
+            post({
+              cmd: 'decreaseLoading'
+            })
             break
           }
 
@@ -62,6 +71,9 @@ export class ProjectInterfaceCropInstance {
           post({
             cmd: 'setImage',
             image: toPngDataUrl(data)
+          })
+          post({
+            cmd: 'decreaseLoading'
           })
           break
         }

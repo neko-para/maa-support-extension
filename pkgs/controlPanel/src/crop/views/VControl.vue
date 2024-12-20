@@ -1,23 +1,33 @@
 <script lang="ts" setup>
 import { VscButton } from '@/components/VscEl'
+import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
 </script>
 
 <template>
   <div class="flex gap-2 flex-col">
-    <div class="flex gap-2">
+    <div class="flex gap-2 flex-col">
       <span> size: {{ imageSt.size.value.flat() }} </span>
+      <span> curr: {{ controlSt.current.value.flat() }} </span>
     </div>
 
     <div class="flex items-center gap-2">
-      <vsc-button @click="imageSt.screencap()" :loading="imageSt.loading.value > 0">
+      <vsc-button
+        @click="imageSt.screencap()"
+        :loading="imageSt.loading.value"
+        :disabled="imageSt.loading.value"
+      >
         screencap
       </vsc-button>
       <!--    <n-button @click="() => viewport.reset()"> reset </n-button>
         <n-button @click="cropCeil"> ceil </n-button>
         <n-button @click="cropBound"> bound </n-button>
         <n-button @click="copyRoi"> roi </n-button> -->
-      <vsc-button @click="imageSt.upload()" :loading="imageSt.loading.value > 0">
+      <vsc-button
+        @click="imageSt.upload()"
+        :loading="imageSt.loading.value"
+        :disabled="imageSt.loading.value"
+      >
         upload
       </vsc-button>
       <!-- <vsc-button @click="download"> download </vsc-button> -->

@@ -1,7 +1,8 @@
 import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 
+import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
-import { Size } from '@/crop/utils/2d'
+import { Box, Pos, Size } from '@/crop/utils/2d'
 
 export const size = ref<Size>(Size.from(0, 0))
 
@@ -11,7 +12,13 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
   if (imageSt.element.value) {
     ctx.imageSmoothingEnabled = false
-    ctx.drawImage(imageSt.element.value, 0, 0, ...imageSt.size.value.flat())
+    ctx.drawImage(
+      imageSt.element.value,
+      0,
+      0,
+      ...imageSt.size.value.flat(),
+      ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+    )
   }
 }
 

@@ -3,7 +3,10 @@ import { computed, ref, shallowRef } from 'vue'
 import { ipc } from '@/crop/main'
 import { Size } from '@/crop/utils/2d'
 
-export const loading = ref<number>(0)
+export const loadingCounter = ref<number>(0)
+export const loading = computed(() => {
+  return loadingCounter.value > 0
+})
 
 export const data = ref<string | null>(null)
 export const element = shallowRef<HTMLImageElement | null>(null)
@@ -14,7 +17,7 @@ export const size = computed(() => {
 export async function set(url: string) {
   ipc.log.info('imageSt.set called')
 
-  loading.value += 1
+  loadingCounter.value += 1
 
   const img = new Image()
 
@@ -32,16 +35,20 @@ export async function set(url: string) {
     element.value = null
   }
 
-  loading.value -= 1
+  loadingCounter.value -= 1
 }
 
 export function screencap() {
+  loadingCounter.value += 1
+
   ipc.postMessage({
     cmd: 'requestScreencap'
   })
 }
 
 export function upload() {
+  loadingCounter.value += 1
+
   ipc.postMessage({
     cmd: 'requestUpload'
   })

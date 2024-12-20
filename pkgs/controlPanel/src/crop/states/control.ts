@@ -7,6 +7,14 @@ export const current = ref<Pos>(new Pos())
 
 export const viewport = ref(new Viewport())
 
+export function onKeyDown(event: KeyboardEvent) {
+  // event.metaKey
+}
+
+export function onKeyUp(event: KeyboardEvent) {
+  // event.metaKey
+}
+
 export function onWheel(event: WheelEvent) {
   current.value = Pos.fromEvent(event)
 }

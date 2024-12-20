@@ -21,6 +21,8 @@ canvasSt.setup(canvasSizeEl, canvasEl)
         :style="{
           cursor: controlSt.cursor.value
         }"
+        @keydown="controlSt.onKeyDown"
+        @keyup="controlSt.onKeyUp"
         @wheel="controlSt.onWheel"
         @pointerdown="controlSt.onPointerDown"
         @pointermove="controlSt.onPointerMove"

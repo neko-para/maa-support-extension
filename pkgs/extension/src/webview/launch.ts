@@ -1,12 +1,9 @@
 import { LaunchViewFromHost } from '@mse/types'
 
 import { Maa } from '../maa'
+import { TaskerInstance } from '../projectInterface/launcher'
 import { useLaunchView } from '../web'
-import { TaskerInstance } from './launcher'
-
-function toPngDataUrl(buffer: ArrayBuffer) {
-  return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
-}
+import { toPngDataUrl } from './utils'
 
 export class ProjectInterfaceLaunchInstance {
   instance: TaskerInstance

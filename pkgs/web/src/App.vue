@@ -15,11 +15,9 @@ import {
 import { onMounted, ref } from 'vue'
 
 import MCrop from '@/crop/MCrop.vue'
-import MLaunch from '@/launch/MLaunch.vue'
 
 import { activePage, themeType } from './data'
 import { send } from './ipc'
-import { recoInfo, showRecoInfo } from './launch/reco'
 
 hljs.registerLanguage('json', hljsJson)
 
@@ -53,38 +51,11 @@ onMounted(() => {
 
 <template>
   <n-config-provider :hljs="hljs" :theme="theme">
-    <n-modal v-model:show="showRecoInfo">
-      <n-card
-        style="max-width: 90vw; margin-top: 5vh; max-height: 90vh; overflow-y: auto"
-        role="dialog"
-        v-if="recoInfo"
-      >
-        <div class="maa-form">
-          <span> Hit </span>
-          <span> {{ recoInfo.info.hit }} </span>
-          <span> Box </span>
-          <span> {{ recoInfo.info.box }} </span>
-          <span> Detail </span>
-          <n-code :code="recoInfo.info.detail" language="json"></n-code>
-          <span> Raw </span>
-          <img :src="recoInfo.raw" />
-          <span> Draws </span>
-          <div class="flex flex-col gap-2">
-            <img v-for="(img, idx) in recoInfo.draws" :key="idx" :src="img" />
-          </div>
-        </div>
-      </n-card>
-    </n-modal>
-
     <div class="flex flex-col gap-2 w-screen h-screen p-2">
       <n-tabs v-model:value="activePage">
-        <n-tab-pane name="launch"></n-tab-pane>
         <n-tab-pane name="crop"></n-tab-pane>
       </n-tabs>
-      <template v-if="activePage === 'launch'">
-        <m-launch></m-launch>
-      </template>
-      <template v-else-if="activePage === 'crop'">
+      <template v-if="activePage === 'crop'">
         <m-crop></m-crop>
       </template>
     </div>

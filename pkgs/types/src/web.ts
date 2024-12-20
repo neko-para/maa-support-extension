@@ -161,19 +161,36 @@ export type LaunchViewFromHost =
       cmd: 'showReco'
     } & RecoInfo)
 
+export type CropViewContext = {
+  uploadDir?: string
+  selectFill?: string
+}
+
+export type CropViewToHost =
+  | {
+      cmd: 'requestScreencap'
+    }
+  | {
+      cmd: 'requestUpload'
+    }
+  | {
+      cmd: 'requestSave'
+      image: string
+      roi: maa.api.FlatRect
+      expandRoi: maa.api.FlatRect
+    }
+
+export type CropViewFromHost = {
+  cmd: 'setImage'
+  image: string
+}
+
 export type OldWebContext = {
   uploadDir?: string
   selectFill?: string
 }
 
 export type OldWebToHost =
-  | {
-      cmd: 'launch.reco'
-      reco: number
-    }
-  | {
-      cmd: 'launch.stop'
-    }
   | {
       cmd: 'crop.screencap'
     }
@@ -189,61 +206,9 @@ export type OldWebToHost =
 
 export type OldWebFromHost =
   | {
-      cmd: 'launch.setup'
-    }
-  | {
-      cmd: 'launch.notify'
-      msg: string
-      details: string
-    }
-  | ({
-      cmd: 'show.reco'
-    } & RecoInfo)
-  | {
       cmd: 'crop.setup'
     }
   | {
       cmd: 'crop.image'
       image: string
-    }
-
-export type ExtToWeb =
-  | {
-      cmd: 'launch.setup'
-    }
-  | {
-      cmd: 'launch.notify'
-      msg: string
-      details: string
-    }
-  | ({
-      cmd: 'show.reco'
-    } & RecoInfo)
-  | {
-      cmd: 'crop.setup'
-    }
-  | {
-      cmd: 'crop.image'
-      image: string
-    }
-
-export type WebToExt =
-  | {
-      cmd: 'launch.reco'
-      reco: number
-    }
-  | {
-      cmd: 'launch.stop'
-    }
-  | {
-      cmd: 'crop.screencap'
-    }
-  | {
-      cmd: 'crop.upload'
-    }
-  | {
-      cmd: 'crop.download'
-      image: string
-      roi: maa.api.FlatRect
-      expandRoi: maa.api.FlatRect
     }

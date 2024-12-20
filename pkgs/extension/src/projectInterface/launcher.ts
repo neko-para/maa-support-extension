@@ -10,8 +10,8 @@ import { Maa, maa } from '../maa'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
 import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../web'
+import { ProjectInterfaceLaunchInstance } from '../webview/launch'
 import { ProjectInterfaceJsonProvider } from './json'
-import { ProjectInterfaceLaunchInstance } from './launch'
 import { InterfaceRuntime } from './type'
 
 type InstanceCache = {

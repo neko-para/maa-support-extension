@@ -24,6 +24,7 @@ import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 import { ProjectInterfaceReferenceProvider } from './projectInterface/reference'
 import { focusAndWaitPanel, initControlPanel, useControlPanel, useOldWebPanel } from './web'
+import { ProjectInterfaceCropInstance } from './webview/crop'
 
 sms.install()
 
@@ -70,8 +71,10 @@ async function setup(context: vscode.ExtensionContext) {
   })
 
   useCommand(commands.OpenWeb, () => {
-    useOldWebPanel()
+    new ProjectInterfaceCropInstance().setup()
   })
+
+  new ProjectInterfaceCropInstance().setup()
 
   loadServices([
     PipelineRootStatusProvider,

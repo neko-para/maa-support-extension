@@ -9,8 +9,6 @@ import '@/base.css'
 
 import { fulfillImage } from './crop/crop'
 import { activePage } from './data'
-import { recoInfo, showRecoInfo } from './launch/reco'
-import { TaskList, taskList } from './launch/task'
 
 export const ipc = useIpc<OldWebContext, OldWebToHost, OldWebFromHost>(() => {
   createApp(App).mount('#app')
@@ -19,17 +17,6 @@ export const ipc = useIpc<OldWebContext, OldWebToHost, OldWebFromHost>(() => {
 ipc.handler.value = data => {
   console.log('Maa.Webview:', data)
   switch (data.cmd) {
-    case 'launch.setup':
-      taskList.value = new TaskList()
-      activePage.value = 'launch'
-      break
-    case 'launch.notify':
-      taskList.value.push(data.msg as any, JSON.parse(data.details))
-      break
-    case 'show.reco':
-      recoInfo.value = data
-      showRecoInfo.value = true
-      break
     case 'crop.setup':
       activePage.value = 'crop'
       break

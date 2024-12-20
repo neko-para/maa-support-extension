@@ -6,6 +6,9 @@ import {
   ControlPanelContext,
   ControlPanelFromHost,
   ControlPanelToHost,
+  CropViewContext,
+  CropViewFromHost,
+  CropViewToHost,
   Interface,
   InterfaceConfig,
   LaunchViewContext,
@@ -220,6 +223,17 @@ export async function useLaunchView(column: vscode.ViewColumn = vscode.ViewColum
   return await innerUseLaunchView('Maa Launch', column)
 }
 
+const innerUseCropView = createUseWebPanel<CropViewContext, CropViewToHost, CropViewFromHost>(
+  'controlPanel',
+  'crop',
+  'maa.view.crop',
+  true
+)
+
+export async function useCropView(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
+  return await innerUseCropView('Maa Crop', column)
+}
+
 const innerUseOldWebPanel = createUseWebPanel<OldWebContext, OldWebToHost, OldWebFromHost>(
   'web',
   'index',
@@ -251,22 +265,6 @@ export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColu
     const pilp = sharedInstance(ProjectInterfaceLaunchProvider)
 
     switch (data.cmd) {
-      case 'launch.reco':
-        const detailInfo = pilp.tasker?.tasker.recognition_detail(data.reco as Maa.api.RecoId)
-        if (!detailInfo) {
-          return
-        }
-        detailInfo.detail = JSON.stringify(JSON.parse(detailInfo.detail), null, 4)
-        post({
-          cmd: 'show.reco',
-          raw: toPngDataUrl(detailInfo.raw),
-          draws: detailInfo.draws.map(toPngDataUrl),
-          info: detailInfo
-        })
-        return
-      case 'launch.stop':
-        pilp.tasker?.tasker.post_stop()
-        break
       case 'crop.screencap':
         if (!sharedInstance(PipelineRootStatusProvider).activateResource.value) {
           return

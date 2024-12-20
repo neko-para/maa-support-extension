@@ -14,26 +14,26 @@ function requestReco(id: number) {
 
 <template>
   <div id="root">
-    <div v-if="!taskSt.stopped.value" class="row-flex">
-      <vsc-button v-if="!taskSt.stopped.value" @click="taskSt.stop()"> stop </vsc-button>
+    <div class="flex gap-1 items-center">
+      <vsc-button @click="taskSt.stop()" :disabled="taskSt.stopped.value"> stop </vsc-button>
     </div>
-    <div class="main-box">
-      <div class="col-flex">
+    <div class="flex gap-1 grow-0 min-h-0">
+      <div class="flex-1 flex flex-col gap-1 min-w-0">
         <vsc-scrollable>
-          <div class="col-flex">
-            <div class="row-flex flex-wrap">
+          <div class="flex flex-col gap-1 min-w-0">
+            <div class="flex gap-1 items-center flex-wrap">
               <div
-                class="group-box col-flex"
+                class="mse-bg-vscode-sideBar-background flex flex-col gap-1 p-1 pt-0 rounded-md min-w-0"
                 v-for="(task, idx) in taskSt.taskList.value.info"
                 :key="idx"
                 :title="task.info.entry"
               >
-                <vscode-label class="group-box-title">
+                <vscode-label class="self-center">
                   {{ task.info.entry }}
                 </vscode-label>
-                <div class="row-flex flex-wrap" style="align-items: flex-start">
+                <div class="flex gap-1 items-center flex-wrap" style="align-items: flex-start">
                   <div
-                    class="group-box col-flex"
+                    class="mse-bg-vscode-sideBar-background flex flex-col gap-1 p-1 pt-0 min-w-0"
                     v-for="(nl, nidx) in task.nexts"
                     :key="nidx"
                     :title="nl.info.name"
@@ -41,7 +41,7 @@ function requestReco(id: number) {
                     <vscode-label>
                       {{ nl.info.name }}
                     </vscode-label>
-                    <div class="col-flex flex-wrap">
+                    <div class="flex flex-col gap-1 min-w-0 flex-wrap">
                       <template v-for="nlc in nl.info.list.length" :key="nlc">
                         <vsc-button
                           v-if="nl.recos[nlc - 1]"
@@ -72,9 +72,9 @@ function requestReco(id: number) {
           </div>
         </vsc-scrollable>
       </div>
-      <div class="col-flex">
+      <div class="flex-1 flex flex-col gap-1 min-w-0">
         <vsc-scrollable v-if="recoSt.showRecoInfo.value && recoSt.recoInfo.value">
-          <div class="reco-box">
+          <div class="mse-grid-form mse-bg-vscode-sideBar-background p-1 rounded-md">
             <vscode-label> Hit </vscode-label>
             <span> {{ recoSt.recoInfo.value.info.hit }} </span>
             <vscode-label> Box </vscode-label>
@@ -84,7 +84,7 @@ function requestReco(id: number) {
             <vscode-label> Raw </vscode-label>
             <img :src="recoSt.recoInfo.value.raw" />
             <vscode-label> Draws </vscode-label>
-            <div class="col-flex">
+            <div class="flex flex-col gap-1 min-w-0">
               <img v-for="(img, idx) in recoSt.recoInfo.value.draws" :key="idx" :src="img" />
             </div>
           </div>
@@ -93,51 +93,3 @@ function requestReco(id: number) {
     </div>
   </div>
 </template>
-
-<style>
-.main-box {
-  display: flex;
-  gap: 0.25rem;
-  flex-grow: 0;
-  min-height: 0;
-}
-
-.main-box > div {
-  flex: 1;
-}
-
-.group-box {
-  border-radius: 0.25rem;
-  background-color: var(--vscode-sideBar-background);
-  padding: 0.25rem;
-  padding-top: 0;
-}
-
-.group-box-title {
-  align-self: center;
-}
-
-.height-full {
-  height: 100%;
-}
-
-.task-box {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: auto;
-  grid-template-rows: max-content max-content max-content;
-  gap: 0.25rem;
-
-  max-width: 50%;
-}
-
-.reco-box {
-  border-radius: 0.25rem;
-  background-color: var(--vscode-sideBar-background);
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  align-items: center;
-}
-</style>

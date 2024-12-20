@@ -77,14 +77,14 @@ function useDesktopWindow() {
 </script>
 
 <template>
-  <div class="col-flex">
+  <div class="flex flex-col gap-1 min-w-0">
     <vsc-single-select
       v-model="controllerSt.currentName.value"
       :options="controllerOptions"
       :disabled="interfaceSt.freezed.value"
     ></vsc-single-select>
-    <div v-if="controllerSt.currentProto.value?.type === 'Adb'" class="col-flex">
-      <div class="row-flex">
+    <div v-if="controllerSt.currentProto.value?.type === 'Adb'" class="flex flex-col gap-1 min-w-0">
+      <div class="flex gap-1 items-center">
         <vsc-single-select
           v-model="currentAdbDeviceIndex"
           :options="adbDeviceOptions"
@@ -107,21 +107,27 @@ function useDesktopWindow() {
           使用
         </vsc-button>
       </div>
-      <div v-if="currentControllerAdb?.adb_path && currentControllerAdb.address" class="grid-form">
-        <span class="fixed" style="grid-column: span 2"> Adb 已配置 </span>
-        <span class="fixed">adb</span>
+      <div
+        v-if="currentControllerAdb?.adb_path && currentControllerAdb.address"
+        class="mse-grid-form"
+      >
+        <span class="mse-fixed-label" style="grid-column: span 2"> Adb 已配置 </span>
+        <span class="mse-fixed-label">adb</span>
         <span> {{ currentControllerAdb.adb_path }} </span>
-        <span class="fixed">address</span>
+        <span class="mse-fixed-label">address</span>
         <span> {{ currentControllerAdb.address }} </span>
         <template v-if="currentControllerAdb.config">
-          <span class="fixed">config</span>
+          <span class="mse-fixed-label">config</span>
           <span> {{ JSON.stringify(currentControllerAdb.config) }} </span>
         </template>
       </div>
       <span v-else> Adb 未配置 </span>
     </div>
-    <div v-if="controllerSt.currentProto.value?.type === 'Win32'" class="col-flex">
-      <div class="row-flex">
+    <div
+      v-if="controllerSt.currentProto.value?.type === 'Win32'"
+      class="flex flex-col gap-1 min-w-0"
+    >
+      <div class="flex gap-1 items-center">
         <vsc-single-select
           v-model="currentDesktopWindow"
           :options="desktopWindowOptions"
@@ -146,9 +152,9 @@ function useDesktopWindow() {
           使用
         </vsc-button>
       </div>
-      <div v-if="currentControllerDesktop?.hwnd" class="grid-form">
-        <span class="fixed" style="grid-column: span 2"> Desktop 已配置 </span>
-        <span class="fixed">hwnd</span>
+      <div v-if="currentControllerDesktop?.hwnd" class="mse-grid-form">
+        <span class="mse-fixed-label" style="grid-column: span 2"> Desktop 已配置 </span>
+        <span class="mse-fixed-label">hwnd</span>
         <span> {{ currentControllerDesktop.hwnd }} </span>
       </div>
       <span v-else> Desktop 未配置 </span>

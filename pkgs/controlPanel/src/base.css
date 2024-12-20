@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   margin: 0;
   padding: 0;
@@ -22,42 +26,28 @@ body,
   padding: 0.5rem;
 }
 
-.row-flex {
-  display: flex;
-  gap: 0.25rem;
-  align-items: center;
-}
-
-.col-flex {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  min-width: 0;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.grid-form {
+.mse-grid-form {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: 0.5rem;
 }
 
-.grid-form > .fixed {
+.mse-grid-form > .mse-fixed-label {
   align-self: center;
 }
 
-.grid-form > :not(.fixed) {
+.mse-grid-form > :not(.mse-fixed-label) {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.fixed {
+.mse-fixed-label {
   flex-grow: 0;
   flex-shrink: 0;
+}
+
+.mse-bg-vscode-sideBar-background {
+  background-color: var(--vscode-sideBar-background);
 }
 
 vscode-collapsible::part(body) {

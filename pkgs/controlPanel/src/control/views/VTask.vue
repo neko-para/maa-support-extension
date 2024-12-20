@@ -35,8 +35,8 @@ function revealEntry(entry: string) {
 </script>
 
 <template>
-  <div class="col-flex">
-    <div class="row-flex">
+  <div class="flex flex-col gap-1 min-w-0">
+    <div class="flex gap-1 items-center">
       <vsc-single-select
         v-model="taskSt.addTaskName.value"
         :options="taskAddOptions"
@@ -45,7 +45,11 @@ function revealEntry(entry: string) {
       </vsc-single-select>
       <vsc-button :disabled="interfaceSt.freezed.value" @click="taskSt.add"> 添加 </vsc-button>
     </div>
-    <div v-if="interfaceSt.currentConfigObj.value.task?.length" class="col-flex" style="gap: 0">
+    <div
+      v-if="interfaceSt.currentConfigObj.value.task?.length"
+      class="flex flex-col gap-1 min-w-0"
+      style="gap: 0"
+    >
       <vsc-collapsible
         v-for="(task, k) in interfaceSt.currentConfigObj.value.task"
         :key="k"

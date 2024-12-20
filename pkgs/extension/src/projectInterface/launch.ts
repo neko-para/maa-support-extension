@@ -48,13 +48,13 @@ export class ProjectInterfaceLaunchInstance {
           }
           break
         case 'stopLaunch':
-          await this.stop(false)
+          await this.stop()
           break
       }
     }
   }
 
-  async stop(send: boolean) {
+  async stop(send = true) {
     if (this.stopped) {
       return
     }
@@ -76,7 +76,7 @@ export class ProjectInterfaceLaunchInstance {
   }
 
   async dispose() {
-    await this.stop(true)
+    await this.stop()
     this.pushNotify = async () => {}
     this.instance.tasker.destroy()
     this.instance.resource.destroy()

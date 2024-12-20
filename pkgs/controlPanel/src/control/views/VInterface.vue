@@ -15,9 +15,9 @@ const interfaceOptions = computed<VscSingleSelectOption[]>(() => {
 </script>
 
 <template>
-  <div class="col-flex">
-    <div class="row-flex">
-      <div class="col-flex">
+  <div class="flex flex-col gap-1 min-w-0">
+    <div class="flex gap-1 items-center">
+      <div class="flex flex-col gap-1 min-w-0">
         <vsc-single-select
           v-model="interfaceSt.currentName.value"
           :options="interfaceOptions"

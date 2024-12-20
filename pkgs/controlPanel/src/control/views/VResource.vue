@@ -18,7 +18,7 @@ const resourceOptions = computed<VscSingleSelectOption[]>(() => {
 </script>
 
 <template>
-  <div class="col-flex">
+  <div class="flex flex-col gap-1 min-w-0">
     <vsc-single-select
       v-model="resourceSt.currentName.value"
       :options="resourceOptions"

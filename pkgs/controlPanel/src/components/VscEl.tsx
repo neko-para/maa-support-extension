@@ -17,7 +17,7 @@ export function VscButton(
 ) {
   return (
     <vscode-button
-      class="fixed"
+      class="mse-fixed-label"
       icon={props.loading ? 'loading' : props.icon}
       iconSpin={props.loading || props.spin}
       disabled={props.disabled}

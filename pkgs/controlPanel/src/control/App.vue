@@ -18,20 +18,20 @@ onMounted(() => {
 
 <template>
   <div id="root">
-    <div class="grid-form">
-      <span class="fixed">配置</span>
+    <div class="mse-grid-form">
+      <span class="mse-fixed-label">配置</span>
       <v-interface></v-interface>
 
-      <span class="fixed">资源</span>
+      <span class="mse-fixed-label">资源</span>
       <v-resource></v-resource>
 
-      <span class="fixed">控制</span>
+      <span class="mse-fixed-label">控制</span>
       <v-controller></v-controller>
 
-      <span class="fixed">任务</span>
+      <span class="mse-fixed-label">任务</span>
       <v-task></v-task>
 
-      <span class="fixed">执行</span>
+      <span class="mse-fixed-label">执行</span>
       <v-runtime></v-runtime>
     </div>
     <vsc-divider></vsc-divider>

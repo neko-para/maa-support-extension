@@ -77,8 +77,8 @@ function revealCase() {
 
 <template>
   <template v-if="task && optionProto">
-    <div class="col-flex">
-      <div class="row-flex">
+    <div class="flex flex-col gap-1 min-w-0">
+      <div class="flex gap-1 items-center">
         <span>{{ option }}</span>
         <vscode-icon
           name="go-to-file"

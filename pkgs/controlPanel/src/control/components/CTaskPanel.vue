@@ -13,7 +13,7 @@ const proto = interfaceSt.currentObj.value.task?.find(
 </script>
 
 <template>
-  <div v-if="proto && proto.option?.length" class="col-flex" style="padding: 0.25rem 0 0.25rem 0">
+  <div v-if="proto && proto.option?.length" class="flex flex-col gap-1 min-w-0 px-1 py-0">
     <c-task-option
       v-for="(opt, idx) in proto.option ?? []"
       :key="idx"

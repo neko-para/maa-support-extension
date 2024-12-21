@@ -7,8 +7,8 @@ import * as imageSt from '@/crop/states/image'
 <template>
   <div class="flex gap-2 flex-col">
     <div class="flex gap-2 flex-col">
-      <span> size: {{ imageSt.size.value.flat() }} </span>
-      <span> curr: {{ controlSt.current.value.flat() }} </span>
+      <span> size: {{ imageSt.size.value.flat().join(', ') }} </span>
+      <span> curr: {{ controlSt.current.value.flat().join(', ') }} </span>
     </div>
 
     <div class="flex items-center gap-2">
@@ -30,7 +30,7 @@ import * as imageSt from '@/crop/states/image'
       >
         upload
       </vsc-button>
-      <!-- <vsc-button @click="download"> download </vsc-button> -->
+      <vsc-button @click="imageSt.download()"> download </vsc-button>
       <!-- <n-button @click="pickColor = !pickColor"> pick color </n-button>
         <span> 左键移动裁剪区域，中键移动视图，右键裁剪；ceil对齐像素，bound移除出界范围 </span> -->
     </div>

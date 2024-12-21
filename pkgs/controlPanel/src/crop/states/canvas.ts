@@ -20,6 +20,9 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
     )
   }
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+  ctx.fillRect(...controlSt.cropBoxInView.value.flat())
 }
 
 export function setup(

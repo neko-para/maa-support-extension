@@ -21,13 +21,13 @@ canvasSt.setup(canvasSizeEl, canvasEl)
         :style="{
           cursor: controlSt.cursor.value
         }"
-        @keydown="controlSt.onKeyDown"
-        @keyup="controlSt.onKeyUp"
-        @wheel="controlSt.onWheel"
-        @pointerdown="controlSt.onPointerDown"
-        @pointermove="controlSt.onPointerMove"
-        @pointerup="controlSt.onPointerUp"
-        @contextmenu="controlSt.onContextMenu"
+        @keydown.prevent="controlSt.onKeyDown"
+        @keyup.prevent="controlSt.onKeyUp"
+        @wheel.prevent="controlSt.onWheel"
+        @pointerdown.prevent="controlSt.onPointerDown"
+        @pointermove.prevent="controlSt.onPointerMove"
+        @pointerup.prevent="controlSt.onPointerUp"
+        @contextmenu.prevent="controlSt.onContextMenu"
       ></canvas>
     </div>
   </div>

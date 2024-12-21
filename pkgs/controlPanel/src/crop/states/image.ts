@@ -1,7 +1,9 @@
+import { Jimp } from 'jimp'
 import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '@/crop/main'
-import { Size } from '@/crop/utils/2d'
+import * as controlSt from '@/crop/states/control'
+import { Box, Pos, Size } from '@/crop/utils/2d'
 
 export const loadingCounter = ref<number>(0)
 export const loading = computed(() => {
@@ -51,5 +53,46 @@ export function upload() {
 
   ipc.postMessage({
     cmd: 'requestUpload'
+  })
+}
+
+export async function cropImage() {
+  if (!data.value) {
+    return null
+  }
+  controlSt.cropBox.value.ceil()
+  controlSt.cropBox.value = controlSt.cropBox.value.intersect(Box.from(new Pos(), size.value))
+
+  const cropPos = controlSt.cropBox.value.flat()
+  if (cropPos[2] === 0 || cropPos[3] === 0) {
+    return null
+  }
+
+  const fullBuf = await (await fetch(data.value)).arrayBuffer()
+  const full = await Jimp.read(fullBuf)
+  const cropped = full.crop({
+    x: cropPos[0],
+    y: cropPos[1],
+    w: cropPos[2],
+    h: cropPos[3]
+  })
+  const croppedBuf = await cropped.getBuffer('image/png')
+  return croppedBuf.toString('base64')
+}
+
+export async function download() {
+  loadingCounter.value += 1
+
+  const data = await cropImage()
+  if (!data) {
+    loadingCounter.value -= 1
+    return
+  }
+
+  ipc.postMessage({
+    cmd: 'requestSave',
+    image: data,
+    roi: controlSt.cropBox.value.flat(),
+    expandRoi: controlSt.cropBoxExpand.value.flat()
   })
 }

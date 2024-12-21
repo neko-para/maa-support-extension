@@ -334,18 +334,20 @@ export class DragHandler {
 
   base: Pos = new Pos()
 
-  down(p: Pos, b: Pos) {
+  down(p: Pos, b: Pos, e: PointerEvent) {
     this.state = true
     this.start = this.stop = p
     this.base = b
+    ;(e.target as Element).setPointerCapture(e.pointerId)
   }
 
   move(p: Pos) {
     this.stop = p
   }
 
-  up() {
+  up(e: PointerEvent) {
     this.state = false
+    ;(e.target as Element).releasePointerCapture(e.pointerId)
   }
 
   get box() {

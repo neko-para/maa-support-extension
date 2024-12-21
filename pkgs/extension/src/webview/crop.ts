@@ -2,9 +2,11 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import { CropViewFromHost } from '@mse/types'
+import { t } from '@mse/utils'
 
 import { sharedInstance } from '../data'
 import { PipelineRootStatusProvider } from '../pipeline/root'
+import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from '../projectInterface/launcher'
 import { useCropView } from '../web'
 import { toPngDataUrl } from './utils'
@@ -78,6 +80,31 @@ export class ProjectInterfaceCropInstance {
           break
         }
         case 'requestSave':
+          const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
+          if (!root) {
+            post({
+              cmd: 'decreaseLoading'
+            })
+            return
+          }
+          const imageRoot = vscode.Uri.joinPath(root, 'image')
+          const name = await vscode.window.showInputBox({
+            title: t('maa.pi.title.input-image')
+          })
+          if (!name) {
+            post({
+              cmd: 'decreaseLoading'
+            })
+            return
+          }
+          const resultPath = vscode.Uri.joinPath(
+            imageRoot,
+            `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
+          )
+          await vscode.workspace.fs.writeFile(resultPath, Buffer.from(data.image, 'base64'))
+          post({
+            cmd: 'decreaseLoading'
+          })
           break
       }
     }

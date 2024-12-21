@@ -23,6 +23,14 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
   ctx.fillRect(...controlSt.cropBoxInView.value.flat())
+
+  ctx.strokeStyle = 'rgba(255, 127, 127, 1)'
+  ctx.beginPath()
+  ctx.moveTo(controlSt.current.value.x, 0)
+  ctx.lineTo(controlSt.current.value.x, size.value.h)
+  ctx.moveTo(0, controlSt.current.value.y)
+  ctx.lineTo(size.value.w, controlSt.current.value.y)
+  ctx.stroke()
 }
 
 export function setup(

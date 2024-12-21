@@ -60,8 +60,9 @@ export async function cropImage() {
   if (!data.value) {
     return null
   }
-  controlSt.cropBox.value.ceil()
-  controlSt.cropBox.value = controlSt.cropBox.value.intersect(Box.from(new Pos(), size.value))
+
+  controlSt.cropCeil()
+  controlSt.cropBound()
 
   const cropPos = controlSt.cropBox.value.flat()
   if (cropPos[2] === 0 || cropPos[3] === 0) {

@@ -6,9 +6,9 @@ import * as imageSt from '@/crop/states/image'
 
 <template>
   <div class="flex gap-2 flex-col">
-    <div class="flex gap-2 flex-col">
-      <span> size: {{ imageSt.size.value.flat().join(', ') }} </span>
-      <span> curr: {{ controlSt.current.value.flat().join(', ') }} </span>
+    <div class="flex gap-2">
+      <span class="select-none"> size: {{ imageSt.size.value.flat().join(', ') }} </span>
+      <span class="select-none"> curr: {{ controlSt.current.value.flat().join(', ') }} </span>
     </div>
 
     <div class="flex items-center gap-2">
@@ -19,10 +19,6 @@ import * as imageSt from '@/crop/states/image'
       >
         screencap
       </vsc-button>
-      <!--    <n-button @click="() => viewport.reset()"> reset </n-button>
-        <n-button @click="cropCeil"> ceil </n-button>
-        <n-button @click="cropBound"> bound </n-button>
-        <n-button @click="copyRoi"> roi </n-button> -->
       <vsc-button
         @click="imageSt.upload()"
         :loading="imageSt.loading.value"
@@ -31,8 +27,18 @@ import * as imageSt from '@/crop/states/image'
         upload
       </vsc-button>
       <vsc-button @click="imageSt.download()"> download </vsc-button>
-      <!-- <n-button @click="pickColor = !pickColor"> pick color </n-button>
-        <span> 左键移动裁剪区域，中键移动视图，右键裁剪；ceil对齐像素，bound移除出界范围 </span> -->
+      <vsc-button @click="controlSt.viewport.value.reset()"> reset </vsc-button>
+      <vsc-button @click="controlSt.cropCeil()"> ceil </vsc-button>
+      <vsc-button @click="controlSt.cropBound()"> bound </vsc-button>
+      <vsc-button @click="controlSt.copyRoi()" icon="copy">
+        roi {{ controlSt.cropBox.value.flat() }}
+      </vsc-button>
+      <vsc-button @click="controlSt.copyRoiExpand()" icon="copy">
+        roi ex {{ controlSt.cropBoxExpand.value.flat() }}
+      </vsc-button>
+      <!-- <n-button @click="copyRoi"> roi </n-button> -->
+      <!-- <n-button @click="pickColor = !pickColor"> pick color </n-button>  -->
+      <span> Ctrl裁剪，点击移动；ceil对齐像素，bound移除出界范围 </span>
     </div>
   </div>
 </template>

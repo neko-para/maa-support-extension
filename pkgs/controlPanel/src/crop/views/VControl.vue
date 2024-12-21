@@ -8,7 +8,10 @@ import * as imageSt from '@/crop/states/image'
   <div class="flex gap-2 flex-col">
     <div class="flex gap-2">
       <span class="select-none"> size: {{ imageSt.size.value.flat().join(', ') }} </span>
-      <span class="select-none"> curr: {{ controlSt.current.value.flat().join(', ') }} </span>
+      <span class="select-none">
+        position: {{ controlSt.currentInView.value.flat().join(', ') }}
+      </span>
+      <span class="select-none"> current: {{ controlSt.current.value.flat().join(', ') }} </span>
     </div>
 
     <div class="flex items-center gap-2">
@@ -31,14 +34,14 @@ import * as imageSt from '@/crop/states/image'
       <vsc-button @click="controlSt.cropCeil()"> ceil </vsc-button>
       <vsc-button @click="controlSt.cropBound()"> bound </vsc-button>
       <vsc-button @click="controlSt.copyRoi()" icon="copy">
-        roi {{ controlSt.cropBox.value.flat() }}
+        roi {{ controlSt.cropBox.value.ceiled().flat() }}
       </vsc-button>
       <vsc-button @click="controlSt.copyRoiExpand()" icon="copy">
-        roi ex {{ controlSt.cropBoxExpand.value.flat() }}
+        roi ex {{ controlSt.cropBoxExpand.value.ceiled().flat() }}
       </vsc-button>
       <!-- <n-button @click="copyRoi"> roi </n-button> -->
       <!-- <n-button @click="pickColor = !pickColor"> pick color </n-button>  -->
-      <span> Ctrl裁剪，点击移动；ceil对齐像素，bound移除出界范围 </span>
+      <span class="select-none"> Ctrl裁剪，点击移动；ceil对齐像素，bound移除出界范围 </span>
     </div>
   </div>
 </template>

@@ -219,6 +219,12 @@ export class Box {
     this.size = rb.sub(lt)
   }
 
+  ceiled() {
+    const box = this.copy()
+    box.ceil()
+    return box
+  }
+
   contains(p: Pos) {
     const lt = this.lt
     const rb = this.rb

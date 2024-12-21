@@ -13,6 +13,9 @@ import {
 
 export const cursor = ref<string>('default')
 export const current = ref<Pos>(new Pos())
+export const currentInView = computed(() => {
+  return viewport.value.fromView(current.value).round()
+})
 
 export const viewport = ref(new Viewport())
 const viewportDrag = ref<DragHandler>(new DragHandler())
@@ -163,9 +166,9 @@ export function cropBound() {
 }
 
 export function copyRoi() {
-  navigator.clipboard.writeText(JSON.stringify(cropBox.value.flat()))
+  navigator.clipboard.writeText(JSON.stringify(cropBox.value.ceiled().flat()))
 }
 
 export function copyRoiExpand() {
-  navigator.clipboard.writeText(JSON.stringify(cropBoxExpand.value.flat()))
+  navigator.clipboard.writeText(JSON.stringify(cropBoxExpand.value.ceiled().flat()))
 }

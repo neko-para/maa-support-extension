@@ -2,6 +2,7 @@
 import { VscButton } from '@/components/VscEl'
 import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
+import * as settingsSt from '@/crop/states/settings'
 </script>
 
 <template>
@@ -11,10 +12,14 @@ import * as imageSt from '@/crop/states/image'
       <span class="select-none">
         position: {{ controlSt.currentInView.value.flat().join(', ') }}
       </span>
+      <span class="select-none">
+        scale: {{ (100 / controlSt.viewport.value.scale).toFixed(2) }}%
+      </span>
       <span class="select-none"> current: {{ controlSt.current.value.flat().join(', ') }} </span>
     </div>
 
     <div class="flex items-center gap-2">
+      <vscode-icon name="settings-gear" @click="settingsSt.toggleShow()" action-icon></vscode-icon>
       <vsc-button
         @click="imageSt.screencap()"
         :loading="imageSt.loading.value"

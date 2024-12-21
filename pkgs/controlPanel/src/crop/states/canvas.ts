@@ -24,6 +24,25 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
   ctx.fillRect(...controlSt.cropBoxInView.value.flat())
 
+  ctx.save()
+  ctx.globalCompositeOperation = 'difference'
+  ctx.strokeStyle = 'white'
+  ctx.beginPath()
+  if (1 / controlSt.viewport.value.scale >= 10) {
+    const pos = controlSt.viewport.value.fromView(controlSt.current.value).round()
+    for (let dx = -10; dx <= 10; dx += 1) {
+      for (let dy = -10; dy <= 10; dy += 1) {
+        const dpos = controlSt.viewport.value.toView(pos.add(Size.from(dx, dy)))
+        ctx.moveTo(dpos.x, 0)
+        ctx.lineTo(dpos.x, size.value.h)
+        ctx.moveTo(0, dpos.y)
+        ctx.lineTo(size.value.w, dpos.y)
+      }
+    }
+  }
+  ctx.stroke()
+  ctx.restore()
+
   ctx.strokeStyle = 'rgba(255, 127, 127, 1)'
   ctx.beginPath()
   ctx.moveTo(controlSt.current.value.x, 0)

@@ -2,12 +2,13 @@ import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'v
 
 import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
+import * as settingsSt from '@/crop/states/settings'
 import { Box, Pos, Size } from '@/crop/utils/2d'
 
 export const size = ref<Size>(Size.from(0, 0))
 
 export function draw(ctx: CanvasRenderingContext2D) {
-  ctx.fillStyle = 'white'
+  ctx.fillStyle = settingsSt.colorWithDefault(settingsSt.backgroundFill.value, 'white')
   ctx.fillRect(0, 0, ...size.value.flat())
 
   if (imageSt.element.value) {
@@ -21,8 +22,11 @@ export function draw(ctx: CanvasRenderingContext2D) {
     )
   }
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+  ctx.save()
+  ctx.globalAlpha = settingsSt.toAlpha(settingsSt.selectOpacity.value, 0.3)
+  ctx.fillStyle = settingsSt.colorWithDefault(settingsSt.selectFill.value, 'wheat')
   ctx.fillRect(...controlSt.cropBoxInView.value.flat())
+  ctx.restore()
 
   ctx.save()
   ctx.globalCompositeOperation = 'difference'
@@ -43,7 +47,10 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.stroke()
   ctx.restore()
 
-  ctx.strokeStyle = 'rgba(255, 127, 127, 1)'
+  ctx.strokeStyle = settingsSt.colorWithDefault(
+    settingsSt.pointerAxesStroke.value,
+    'rgba(255, 127, 127, 1)'
+  )
   ctx.beginPath()
   ctx.moveTo(controlSt.current.value.x, 0)
   ctx.lineTo(controlSt.current.value.x, size.value.h)

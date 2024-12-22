@@ -163,7 +163,12 @@ export type LaunchViewFromHost =
 
 export type CropViewContext = {
   uploadDir?: string
+
+  backgroundFill?: string
   selectFill?: string
+  selectOpacity?: string
+  pointerAxesStroke?: string
+  // pixelBoundStroke?: string
 }
 
 export type CropViewToHost =

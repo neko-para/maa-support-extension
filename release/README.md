@@ -38,8 +38,6 @@
   * 基于interface配置创建实例, 然后执行任务.
 * Maa: 执行interface
   * 以等价于MaaPiCli的效果执行interface.
-* Maa: 停止执行
-  * 终止执行任务/执行interface.
 * Maa: 生成MSE入口脚本
   * 生成插件专用的Custom脚本.
 * Maa: 展示控制面板

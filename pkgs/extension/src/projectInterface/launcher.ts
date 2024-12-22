@@ -40,10 +40,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
     this.cacheConfig = null
     this.tasker = null
 
-    this.defer = vscode.commands.registerCommand(commands.StopLaunch, async () => {
-      this.tasker?.tasker?.post_stop()
-    })
-
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
       // await this.launchInterface()
       const { post } = useControlPanel()

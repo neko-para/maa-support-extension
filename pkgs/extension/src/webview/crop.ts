@@ -14,8 +14,8 @@ import { toPngDataUrl } from './utils'
 export class ProjectInterfaceCropInstance {
   post: (data: CropViewFromHost) => void = () => {}
 
-  async setup() {
-    const { onDidDispose, post, handler, context } = await useCropView()
+  async setup(initImage?: string) {
+    const { onDidDispose, post, handler, context, awaked } = await useCropView()
     this.post = post
     onDidDispose.push(() => {
       this.dispose()
@@ -107,6 +107,15 @@ export class ProjectInterfaceCropInstance {
           })
           break
       }
+    }
+
+    if (initImage) {
+      awaked.then(() => {
+        post({
+          cmd: 'setImage',
+          image: initImage
+        })
+      })
     }
   }
 

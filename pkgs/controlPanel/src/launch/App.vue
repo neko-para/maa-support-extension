@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
 import { VscButton, VscScrollable } from '@/components/VscEl'
 import { ipc } from '@/launch/main'
 import * as recoSt from '@/launch/states/reco'
 import * as taskSt from '@/launch/states/task'
+
+import ImageView from './components/ImageView.vue'
 
 function requestReco(id: number) {
   ipc.postMessage({
@@ -10,6 +14,10 @@ function requestReco(id: number) {
     reco: id
   })
 }
+
+onMounted(() => {
+  ipc.postAwake()
+})
 </script>
 
 <template>
@@ -82,10 +90,14 @@ function requestReco(id: number) {
             <vscode-label> Detail </vscode-label>
             <pre>{{ JSON.stringify(JSON.parse(recoSt.recoInfo.value.info.detail), null, 2) }}</pre>
             <vscode-label> Raw </vscode-label>
-            <img :src="recoSt.recoInfo.value.raw" />
+            <image-view :src="recoSt.recoInfo.value.raw"></image-view>
             <vscode-label> Draws </vscode-label>
             <div class="flex flex-col gap-1 min-w-0">
-              <img v-for="(img, idx) in recoSt.recoInfo.value.draws" :key="idx" :src="img" />
+              <image-view
+                v-for="(img, idx) in recoSt.recoInfo.value.draws"
+                :key="idx"
+                :src="img"
+              ></image-view>
             </div>
           </div>
         </vsc-scrollable>

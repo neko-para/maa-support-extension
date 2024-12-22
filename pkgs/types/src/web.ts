@@ -147,6 +147,10 @@ export type LaunchViewToHost =
   | {
       cmd: 'stopLaunch'
     }
+  | {
+      cmd: 'showCrop'
+      image: string
+    }
 
 export type LaunchViewFromHost =
   | {

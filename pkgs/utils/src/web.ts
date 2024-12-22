@@ -166,6 +166,11 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
 
     let realPost: (data: IpcFromHost<Context, FH>) => void
 
+    let awakeResolve: () => void = () => {}
+    const awaked = new Promise<void>(resolve => {
+      awakeResolve = resolve
+    })
+
     const { panel, active, visible, postMessage } = useWebviewPanel(
       id,
       title,
@@ -197,6 +202,12 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
                 sync = true
                 context.value = msg.ctx
                 sync = false
+                break
+              case 'awake':
+                awakeResolve()
+                break
+              case 'log':
+                logger.log(msg.type, msg.message)
                 break
             }
           } else {
@@ -262,7 +273,8 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
       active,
       visible,
       post,
-      onDidDispose
+      onDidDispose,
+      awaked
     }
   }
 }

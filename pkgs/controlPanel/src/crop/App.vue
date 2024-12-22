@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { onMounted, useTemplateRef } from 'vue'
 
+import { ipc } from '@/crop/main'
 import * as canvasSt from '@/crop/states/canvas'
 import * as controlSt from '@/crop/states/control'
 import * as settingsSt from '@/crop/states/settings'
 import VControl from '@/crop/views/VControl.vue'
-
-import VSettings from './views/VSettings.vue'
+import VSettings from '@/crop/views/VSettings.vue'
 
 const canvasSizeEl = useTemplateRef('canvasSizeEl')
 const canvasEl = useTemplateRef('canvasEl')
@@ -14,6 +14,8 @@ const canvasEl = useTemplateRef('canvasEl')
 canvasSt.setup(canvasSizeEl, canvasEl)
 
 onMounted(() => {
+  ipc.postAwake()
+
   document.addEventListener('keydown', controlSt.onKeyDown)
   document.addEventListener('keyup', controlSt.onKeyUp)
 })

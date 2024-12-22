@@ -3,6 +3,7 @@ import { LaunchViewFromHost } from '@mse/types'
 import { Maa } from '../maa'
 import { TaskerInstance } from '../projectInterface/launcher'
 import { useLaunchView } from '../web'
+import { ProjectInterfaceCropInstance } from './crop'
 import { toPngDataUrl } from './utils'
 
 export class ProjectInterfaceLaunchInstance {
@@ -46,6 +47,9 @@ export class ProjectInterfaceLaunchInstance {
           break
         case 'stopLaunch':
           await this.stop()
+          break
+        case 'showCrop':
+          new ProjectInterfaceCropInstance().setup(data.image)
           break
       }
     }

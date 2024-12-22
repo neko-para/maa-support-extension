@@ -1,7 +1,5 @@
-import { watch } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
-import { Interface, InterfaceConfig } from '@mse/types'
 import { logger, loggerChannel, t, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
@@ -9,7 +7,7 @@ import { Service } from '../data'
 import { Maa, maa } from '../maa'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { PipelineTaskIndexProvider } from '../pipeline/task'
-import { focusAndWaitPanel, useControlPanel, useOldWebPanel } from '../web'
+import { focusAndWaitPanel, useControlPanel } from '../web'
 import { ProjectInterfaceLaunchInstance } from '../webview/launch'
 import { ProjectInterfaceJsonProvider } from './json'
 import { InterfaceRuntime } from './type'

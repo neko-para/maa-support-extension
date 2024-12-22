@@ -56,8 +56,6 @@ jobs:
         shell: bash
         run: |
           node scripts/build.mjs
-          cd pkgs/web
-          npx vite build
 
       - name: Package extension
         shell: bash

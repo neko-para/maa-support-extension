@@ -197,31 +197,3 @@ export type CropViewFromHost =
   | {
       cmd: 'decreaseLoading'
     }
-
-export type OldWebContext = {
-  uploadDir?: string
-  selectFill?: string
-}
-
-export type OldWebToHost =
-  | {
-      cmd: 'crop.screencap'
-    }
-  | {
-      cmd: 'crop.upload'
-    }
-  | {
-      cmd: 'crop.download'
-      image: string
-      roi: maa.api.FlatRect
-      expandRoi: maa.api.FlatRect
-    }
-
-export type OldWebFromHost =
-  | {
-      cmd: 'crop.setup'
-    }
-  | {
-      cmd: 'crop.image'
-      image: string
-    }

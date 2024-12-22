@@ -23,7 +23,7 @@ import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 import { ProjectInterfaceReferenceProvider } from './projectInterface/reference'
-import { focusAndWaitPanel, initControlPanel, useControlPanel, useOldWebPanel } from './web'
+import { focusAndWaitPanel, initControlPanel, useControlPanel } from './web'
 import { ProjectInterfaceCropInstance } from './webview/crop'
 
 sms.install()
@@ -59,7 +59,7 @@ async function setup(context: vscode.ExtensionContext) {
   }
 
   useCommand(commands.PISwitchResource, (res: string) => {
-    const { handler, context } = useControlPanel()
+    const { context } = useControlPanel()
     const cfg = context.value.interfaceConfigObj
     if (cfg) {
       cfg.resource = res

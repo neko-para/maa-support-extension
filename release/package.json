@@ -90,10 +90,6 @@
             "silly"
           ],
           "default": "info"
-        },
-        "maa.crop.selectFill": {
-          "type": "string",
-          "description": "%maa.setting.select-fill%"
         }
       }
     }

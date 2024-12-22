@@ -13,15 +13,12 @@ import {
   InterfaceConfig,
   LaunchViewContext,
   LaunchViewFromHost,
-  LaunchViewToHost,
-  OldWebContext,
-  OldWebFromHost,
-  OldWebToHost
+  LaunchViewToHost
 } from '@mse/types'
 import { createUseWebPanel, createUseWebView, logger, t } from '@mse/utils'
 
 import { sharedInstance } from './data'
-import { Maa, maa } from './maa'
+import { maa } from './maa'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceJsonProvider } from './projectInterface/json'
@@ -232,99 +229,4 @@ const innerUseCropView = createUseWebPanel<CropViewContext, CropViewToHost, Crop
 
 export async function useCropView(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
   return await innerUseCropView('Maa Crop', column)
-}
-
-const innerUseOldWebPanel = createUseWebPanel<OldWebContext, OldWebToHost, OldWebFromHost>(
-  'web',
-  'index',
-  'maa.Webview',
-  true
-)
-
-function toPngDataUrl(buffer: ArrayBuffer) {
-  return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
-}
-
-export async function useOldWebPanel(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
-  const p = await innerUseOldWebPanel('Maa Support', column)
-  const { handler, context, post, onDidDispose } = p
-
-  const confWatch = vscode.workspace.onDidChangeConfiguration(e => {
-    if (e.affectsConfiguration('maa.crop.selectFill')) {
-      context.value.selectFill = vscode.workspace.getConfiguration('maa').get('crop.selectFill')
-    }
-  })
-
-  onDidDispose.push(() => {
-    confWatch.dispose()
-  })
-
-  handler.value = async data => {
-    logger.debug(`oldWeb ${data.cmd} ${JSON.stringify(data).slice(0, 200)}`)
-
-    const pilp = sharedInstance(ProjectInterfaceLaunchProvider)
-
-    switch (data.cmd) {
-      case 'crop.screencap':
-        if (!sharedInstance(PipelineRootStatusProvider).activateResource.value) {
-          return
-        }
-        if ((await pilp.updateCache()) && pilp.cache) {
-          await pilp.cache.controller.post_screencap().wait()
-          const image = pilp.cache.controller.cached_image
-          if (!image) {
-            return
-          }
-          post({
-            cmd: 'crop.image',
-            image: toPngDataUrl(image)
-          })
-        }
-        break
-      case 'crop.upload': {
-        const options: vscode.OpenDialogOptions = {
-          canSelectMany: false,
-          openLabel: 'Upload',
-          filters: {
-            'Png files': ['png']
-          },
-          defaultUri: context.value.uploadDir ? vscode.Uri.file(context.value.uploadDir) : undefined
-        }
-
-        const files = await vscode.window.showOpenDialog(options)
-        if (!files || files.length === 0) {
-          break
-        }
-
-        context.value.uploadDir = path.dirname(files[0].fsPath)
-
-        const data = await vscode.workspace.fs.readFile(files[0])
-        post({
-          cmd: 'crop.image',
-          image: toPngDataUrl(data)
-        })
-        break
-      }
-      case 'crop.download':
-        const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
-        if (!root) {
-          return
-        }
-        const imageRoot = vscode.Uri.joinPath(root, 'image')
-        const name = await vscode.window.showInputBox({
-          title: t('maa.pi.title.input-image')
-        })
-        if (!name) {
-          return
-        }
-        const resultPath = vscode.Uri.joinPath(
-          imageRoot,
-          `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
-        )
-        await vscode.workspace.fs.writeFile(resultPath, Buffer.from(data.image, 'base64'))
-        break
-    }
-  }
-
-  return p
 }

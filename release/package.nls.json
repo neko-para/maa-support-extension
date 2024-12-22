@@ -7,7 +7,7 @@
   "maa.command.stop-launch": "Maa: stop launch",
   "maa.command.generate-mse-index": "Maa: generate mse index script",
   "maa.command.reveal-control-panel": "Maa: reveal control panel",
-  "maa.command.open-web": "Maa: open webview",
+  "maa.command.open-crop": "Maa: open crop tool",
   "maa.view.control-panel.title": "Maa Control Panel",
   "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)",
   "maa.setting.select-fill": "Maa Crop Selection Filling Color (CSS style)"

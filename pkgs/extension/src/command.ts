@@ -9,7 +9,7 @@ export const commands = {
 
   LaunchInterface: 'maa.launch-interface',
   RevealControlPanel: 'maa.reveal-control-panel',
-  OpenWeb: 'maa.open-web',
+  OpenCrop: 'maa.open-crop',
 
   PISwitchResource: 'maa.pi.switch-resource',
 

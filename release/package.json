@@ -52,8 +52,8 @@
         "command": "maa.reveal-control-panel"
       },
       {
-        "title": "%maa.command.open-web%",
-        "command": "maa.open-web"
+        "title": "%maa.command.open-crop%",
+        "command": "maa.open-crop"
       },
       {
         "title": "Maa(PI): switch resource",
@@ -81,7 +81,13 @@
           "type": "string",
           "description": "%maa.setting.output-level%",
           "enum": [
-            "error", "warn", "info",  "http", "verbose", "debug", "silly"
+            "error",
+            "warn",
+            "info",
+            "http",
+            "verbose",
+            "debug",
+            "silly"
           ],
           "default": "info"
         },

@@ -70,11 +70,9 @@ async function setup(context: vscode.ExtensionContext) {
     focusAndWaitPanel()
   })
 
-  useCommand(commands.OpenWeb, () => {
+  useCommand(commands.OpenCrop, () => {
     new ProjectInterfaceCropInstance().setup()
   })
-
-  new ProjectInterfaceCropInstance().setup()
 
   loadServices([
     PipelineRootStatusProvider,

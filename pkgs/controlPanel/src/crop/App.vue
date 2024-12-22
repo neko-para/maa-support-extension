@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useTemplateRef } from 'vue'
+import { onMounted, useTemplateRef } from 'vue'
 
 import * as canvasSt from '@/crop/states/canvas'
 import * as controlSt from '@/crop/states/control'
@@ -12,6 +12,11 @@ const canvasSizeEl = useTemplateRef('canvasSizeEl')
 const canvasEl = useTemplateRef('canvasEl')
 
 canvasSt.setup(canvasSizeEl, canvasEl)
+
+onMounted(() => {
+  document.addEventListener('keydown', controlSt.onKeyDown)
+  document.addEventListener('keyup', controlSt.onKeyUp)
+})
 </script>
 
 <template>
@@ -25,8 +30,6 @@ canvasSt.setup(canvasSizeEl, canvasEl)
           :style="{
             cursor: controlSt.cursor.value
           }"
-          @keydown.prevent="controlSt.onKeyDown"
-          @keyup.prevent="controlSt.onKeyUp"
           @wheel.prevent="controlSt.onWheel"
           @pointerdown.prevent="controlSt.onPointerDown"
           @pointermove.prevent="controlSt.onPointerMove"

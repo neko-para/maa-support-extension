@@ -43,6 +43,10 @@ const cornerDrag = ref<DragHandler>(new DragHandler())
 const cornerDragTarget = ref<CornerType | EdgeType>('lt')
 
 export function onKeyDown(event: KeyboardEvent) {
+  console.log(event)
+  if (event.key === 'Escape') {
+    cropBox.value = new Box()
+  }
   // event.metaKey
 }
 

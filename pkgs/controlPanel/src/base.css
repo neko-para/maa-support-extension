@@ -44,6 +44,7 @@ body,
 .mse-fixed-label {
   flex-grow: 0;
   flex-shrink: 0;
+  user-select: none;
 }
 
 .mse-bg-vscode-sideBar-background {

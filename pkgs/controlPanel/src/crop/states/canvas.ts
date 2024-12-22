@@ -2,6 +2,7 @@ import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'v
 
 import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
+import * as pickSt from '@/crop/states/pick'
 import * as settingsSt from '@/crop/states/settings'
 import { Box, Pos, Size } from '@/crop/utils/2d'
 
@@ -20,6 +21,12 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ...imageSt.size.value.flat(),
       ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
     )
+
+    if (pickSt.picking.value) {
+      const pos = controlSt.current.value.round()
+      const clr = ctx.getImageData(pos.x, pos.y, 1, 1).data
+      pickSt.color.value = [clr[0], clr[1], clr[2]]
+    }
   }
 
   ctx.save()

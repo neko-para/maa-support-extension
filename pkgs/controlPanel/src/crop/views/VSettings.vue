@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import * as settingsSt from '@/crop/states/settings'
+import VPick from '@/crop/views/VPick.vue'
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="flex flex-col gap-2">
     <div class="mse-grid-form">
       <span class="mse-fixed-label"> background fill </span>
       <vscode-textfield v-model="settingsSt.backgroundFill.value"></vscode-textfield>
@@ -15,5 +16,6 @@ import * as settingsSt from '@/crop/states/settings'
       <vscode-textfield v-model="settingsSt.pointerAxesStroke.value"></vscode-textfield>
       <!-- <vscode-textfield v-model="settingsSt.pixelBoundStroke.value"></vscode-textfield> -->
     </div>
+    <v-pick></v-pick>
   </div>
 </template>

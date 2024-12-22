@@ -1,6 +1,7 @@
 import { computed, ref, shallowRef } from 'vue'
 
 import * as imageSt from '@/crop/states/image'
+import * as pickSt from '@/crop/states/pick'
 import { Box, DragHandler, Pos, Size, Viewport } from '@/crop/utils/2d'
 import {
   type CornerType,
@@ -64,6 +65,8 @@ export function onWheel(event: WheelEvent) {
 export function onPointerDown(event: PointerEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
+
+  pickSt.picking.value = false
 
   if (event.ctrlKey) {
     cropBoxDrag.value.down(mp, mp, event)

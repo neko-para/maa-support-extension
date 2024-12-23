@@ -18,8 +18,6 @@ import VOcr from './VOcr.vue'
       <vscode-textfield v-model="settingsSt.selectOpacity.value"></vscode-textfield>
       <span class="mse-fixed-label"> pointer axes fill </span>
       <vscode-textfield v-model="settingsSt.pointerAxesStroke.value"></vscode-textfield>
-      <span class="mse-fixed-label"> ocr stroke </span>
-      <vscode-textfield v-model="settingsSt.ocrStroke.value"></vscode-textfield>
       <span></span>
       <vscode-checkbox
         label="helper axes overflow"
@@ -34,6 +32,10 @@ import VOcr from './VOcr.vue'
       <vscode-textfield v-model="settingsSt.helperAxesThreshold.value"></vscode-textfield>
       <!-- <vscode-textfield v-model="settingsSt.pixelBoundStroke.value"></vscode-textfield> -->
     </div>
+    <span class="mse-fixed-label"> ocr stroke </span>
+    <vscode-textfield v-model="settingsSt.ocrStroke.value"></vscode-textfield>
+    <span class="mse-fixed-label"> ocr font </span>
+    <vscode-textfield v-model="settingsSt.ocrFont.value"></vscode-textfield>
     <v-pick></v-pick>
     <v-ocr></v-ocr>
   </div>

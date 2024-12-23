@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { VscodeCheckbox } from '@vscode-elements/elements'
+
 import * as settingsSt from '@/crop/states/settings'
 import VPick from '@/crop/views/VPick.vue'
 
@@ -18,6 +20,18 @@ import VOcr from './VOcr.vue'
       <vscode-textfield v-model="settingsSt.pointerAxesStroke.value"></vscode-textfield>
       <span class="mse-fixed-label"> ocr stroke </span>
       <vscode-textfield v-model="settingsSt.ocrStroke.value"></vscode-textfield>
+      <span></span>
+      <vscode-checkbox
+        label="helper axes overflow"
+        :checked="settingsSt.helperAxesOverflow.value"
+        @change="
+          (e: Event) => (settingsSt.helperAxesOverflow.value = (e.target as VscodeCheckbox).checked)
+        "
+      ></vscode-checkbox>
+      <span class="mse-fixed-label"> helper axes radius </span>
+      <vscode-textfield v-model="settingsSt.helperAxesRadius.value"></vscode-textfield>
+      <span class="mse-fixed-label"> helper axes threshold </span>
+      <vscode-textfield v-model="settingsSt.helperAxesThreshold.value"></vscode-textfield>
       <!-- <vscode-textfield v-model="settingsSt.pixelBoundStroke.value"></vscode-textfield> -->
     </div>
     <v-pick></v-pick>

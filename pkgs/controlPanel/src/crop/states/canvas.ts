@@ -41,7 +41,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ctx.strokeStyle = color
 
       if (info.detail) {
-        ctx.font = '24pt Consolas'
+        ctx.font = settingsSt.fontWithDefault(settingsSt.ocrFont.value, '24pt consolas')
 
         let entries = info.detail[ocrSt.drawType.value]
         if (!Array.isArray(entries)) {
@@ -73,15 +73,31 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.globalCompositeOperation = 'difference'
   ctx.strokeStyle = 'white'
   ctx.beginPath()
-  if (1 / controlSt.viewport.value.scale >= 10) {
+  if (1 / controlSt.viewport.value.scale >= (settingsSt.helperAxesThreshold.value ?? 10)) {
     const pos = controlSt.viewport.value.fromView(controlSt.current.value).round()
-    for (let dx = -10; dx <= 10; dx += 1) {
-      for (let dy = -10; dy <= 10; dy += 1) {
-        const dpos = controlSt.viewport.value.toView(pos.add(Size.from(dx, dy)))
-        ctx.moveTo(dpos.x, 0)
-        ctx.lineTo(dpos.x, size.value.h)
-        ctx.moveTo(0, dpos.y)
-        ctx.lineTo(size.value.w, dpos.y)
+    const radius = Math.max(0, settingsSt.helperAxesRadius.value ?? 20)
+    if (settingsSt.helperAxesOverflow.value) {
+      for (let dx = -radius; dx <= radius; dx += 1) {
+        for (let dy = -radius; dy <= radius; dy += 1) {
+          const dpos = controlSt.viewport.value.toView(pos.add(Size.from(dx, dy)))
+          ctx.moveTo(dpos.x, 0)
+          ctx.lineTo(dpos.x, size.value.h)
+          ctx.moveTo(0, dpos.y)
+          ctx.lineTo(size.value.w, dpos.y)
+        }
+      }
+    } else {
+      for (let dlt = 0; dlt <= radius; dlt += 1) {
+        const len = Math.sqrt(radius * radius - dlt * dlt)
+
+        ctx.moveTo(...controlSt.viewport.value.toView(pos.add(Size.from(-dlt, -len))).flat())
+        ctx.lineTo(...controlSt.viewport.value.toView(pos.add(Size.from(-dlt, len))).flat())
+        ctx.moveTo(...controlSt.viewport.value.toView(pos.add(Size.from(dlt, -len))).flat())
+        ctx.lineTo(...controlSt.viewport.value.toView(pos.add(Size.from(dlt, len))).flat())
+        ctx.moveTo(...controlSt.viewport.value.toView(pos.add(Size.from(-len, -dlt))).flat())
+        ctx.lineTo(...controlSt.viewport.value.toView(pos.add(Size.from(len, -dlt))).flat())
+        ctx.moveTo(...controlSt.viewport.value.toView(pos.add(Size.from(-len, dlt))).flat())
+        ctx.lineTo(...controlSt.viewport.value.toView(pos.add(Size.from(len, dlt))).flat())
       }
     }
   }

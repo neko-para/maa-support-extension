@@ -2,6 +2,7 @@ import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'v
 
 import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
+import * as ocrSt from '@/crop/states/ocr'
 import * as pickSt from '@/crop/states/pick'
 import * as settingsSt from '@/crop/states/settings'
 import { Box, Pos, Size } from '@/crop/utils/2d'
@@ -9,6 +10,8 @@ import { Box, Pos, Size } from '@/crop/utils/2d'
 export const size = ref<Size>(Size.from(0, 0))
 
 export function draw(ctx: CanvasRenderingContext2D) {
+  ctx.reset()
+
   ctx.fillStyle = settingsSt.colorWithDefault(settingsSt.backgroundFill.value, 'white')
   ctx.fillRect(0, 0, ...size.value.flat())
 
@@ -26,6 +29,37 @@ export function draw(ctx: CanvasRenderingContext2D) {
       const pos = controlSt.current.value.round()
       const clr = ctx.getImageData(pos.x, pos.y, 1, 1).data
       pickSt.color.value = [clr[0], clr[1], clr[2]]
+    }
+
+    if (ocrSt.draw.value && ocrSt.resultObject.value) {
+      ctx.save()
+
+      const info = ocrSt.resultObject.value
+      const color = settingsSt.colorWithDefault(settingsSt.ocrStroke.value, 'green')
+
+      ctx.fillStyle = color
+      ctx.strokeStyle = color
+
+      if (info.detail) {
+        ctx.font = '24pt Consolas'
+
+        let entries = info.detail[ocrSt.drawType.value]
+        if (!Array.isArray(entries)) {
+          entries = [entries]
+        }
+        for (const entry of entries) {
+          const box = controlSt.viewport.value.toView(
+            Box.from(Pos.from(entry.box[0], entry.box[1]), Size.from(entry.box[2], entry.box[3]))
+          )
+
+          ctx.rect(...box.flat())
+          ctx.stroke()
+
+          ctx.fillText(entry.text, ...box.rb.add(Size.from(5, 0)).flat())
+        }
+      }
+
+      ctx.restore()
     }
   }
 

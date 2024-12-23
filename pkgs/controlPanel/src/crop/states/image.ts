@@ -3,7 +3,7 @@ import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '@/crop/main'
 import * as controlSt from '@/crop/states/control'
-import { Box, Pos, Size } from '@/crop/utils/2d'
+import { Size } from '@/crop/utils/2d'
 
 export const loadingCounter = ref<number>(0)
 export const loading = computed(() => {

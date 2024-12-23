@@ -8,6 +8,7 @@ import { sharedInstance } from '../data'
 import { PipelineRootStatusProvider } from '../pipeline/root'
 import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from '../projectInterface/launcher'
+import { performOcr } from '../tools/ocr'
 import { useCropView } from '../web'
 import { toPngDataUrl } from './utils'
 
@@ -106,6 +107,26 @@ export class ProjectInterfaceCropInstance {
             cmd: 'decreaseLoading'
           })
           break
+        case 'requestOCR': {
+          const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
+          if (!root) {
+            post({
+              cmd: 'ocrResult',
+              data: null
+            })
+            return
+          }
+          const result = await performOcr(
+            Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+            data.roi,
+            root.fsPath
+          )
+          post({
+            cmd: 'ocrResult',
+            data: result
+          })
+          break
+        }
       }
     }
 

@@ -172,6 +172,7 @@ export type CropViewContext = {
   selectFill?: string
   selectOpacity?: string
   pointerAxesStroke?: string
+  ocrStroke?: string
   // pixelBoundStroke?: string
 }
 
@@ -188,6 +189,11 @@ export type CropViewToHost =
       roi: maa.api.FlatRect
       expandRoi: maa.api.FlatRect
     }
+  | {
+      cmd: 'requestOCR'
+      image: string
+      roi: maa.api.FlatRect
+    }
 
 export type CropViewFromHost =
   | {
@@ -196,4 +202,8 @@ export type CropViewFromHost =
     }
   | {
       cmd: 'decreaseLoading'
+    }
+  | {
+      cmd: 'ocrResult'
+      data: string | null
     }

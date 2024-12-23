@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ver=`cat .maaver`
+echo "MaaNode version $ver"
 
 npm i -f @maaxyz/maa-node@${ver}
 

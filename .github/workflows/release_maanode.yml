@@ -6,7 +6,6 @@ on:
       - 'main'
     paths:
       - 'maa/.maaver'
-      - '.github/workflows/release_maanode.yml'
   workflow_dispatch:
 
 defaults:
@@ -14,7 +13,8 @@ defaults:
     shell: bash
 
 jobs:
-  build:
+  release:
+    if: github.repository == 'neko-para/maa-support-extension'
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install maanode
+      - name: Install And Publish
         shell: bash
         run: |
           npm i -g @vscode/vsce

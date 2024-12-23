@@ -2,7 +2,7 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import { CropViewFromHost } from '@mse/types'
-import { t } from '@mse/utils'
+import { logger, t } from '@mse/utils'
 
 import { sharedInstance } from '../data'
 import { PipelineRootStatusProvider } from '../pipeline/root'
@@ -116,11 +116,16 @@ export class ProjectInterfaceCropInstance {
             })
             return
           }
-          const result = await performOcr(
-            Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
-            data.roi,
-            root.fsPath
-          )
+          let result = null
+          try {
+            result = await performOcr(
+              Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+              data.roi,
+              root.fsPath
+            )
+          } catch (err) {
+            logger.error(`ocr failed, error ${err}`)
+          }
           post({
             cmd: 'ocrResult',
             data: result

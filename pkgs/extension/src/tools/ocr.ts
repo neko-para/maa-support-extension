@@ -1,6 +1,12 @@
+import { logger } from '@mse/utils'
+
 import { Maa, maa } from '../maa'
 
-export async function performOcr(image: ArrayBuffer, roi: Maa.api.FlatRect, resource: string) {
+export async function performOcr(
+  image: ArrayBuffer,
+  roi: Maa.api.FlatRect,
+  resource: string
+): Promise<string | null> {
   const ctrl = new maa.CustomController(
     new (class extends maa.CustomControllerActorDefaultImpl {
       connect() {
@@ -18,12 +24,14 @@ export async function performOcr(image: ArrayBuffer, roi: Maa.api.FlatRect, reso
   )
   await ctrl.post_connection().wait()
   if (!ctrl.connected) {
+    logger.error('ocr ctrl create failed')
     return null
   }
 
   const res = new maa.Resource()
   await res.post_path(resource).wait()
   if (!res.loaded) {
+    logger.error('ocr res create failed')
     return null
   }
 
@@ -31,18 +39,21 @@ export async function performOcr(image: ArrayBuffer, roi: Maa.api.FlatRect, reso
   tasker.bind(ctrl)
   tasker.bind(res)
   if (!tasker.inited) {
+    logger.error('ocr tasker create failed')
     return null
   }
 
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
+    logger.info('ocr action called')
     const resp = await self.context.run_recognition('@mse/ocr', image, {
       '@mse/ocr': {
         recognition: 'OCR',
         roi
       }
     })
+    logger.info(`ocr reco done, resp ${JSON.stringify(resp)}`)
     if (resp) {
       const presp = {
         ...resp
@@ -62,6 +73,8 @@ export async function performOcr(image: ArrayBuffer, roi: Maa.api.FlatRect, reso
       }
     })
     .wait()
+
+  logger.info('ocr destroy')
 
   tasker.destroy()
   res.destroy()

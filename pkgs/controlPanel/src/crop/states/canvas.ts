@@ -6,7 +6,6 @@ import * as ocrSt from '@/crop/states/ocr'
 import * as pickSt from '@/crop/states/pick'
 import * as settingsSt from '@/crop/states/settings'
 import { Box, Pos, Size } from '@/crop/utils/2d'
-import { ipc } from '../main'
 
 export const size = ref<Size>(Size.from(0, 0))
 

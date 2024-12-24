@@ -73,7 +73,9 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
     return [null, 'no resource']
   }
 
-  result.resource_path = resInfo.path.map(replaceVar)
+  result.resource_path = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path).map(
+    replaceVar
+  )
 
   result.task = []
   for (const task of config.task ?? []) {

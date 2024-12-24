@@ -41,7 +41,7 @@ export class ProjectInterfaceJsonProvider extends Service {
       if (!rootPath) {
         return []
       }
-      return resInfo.path
+      return (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
         .map(x => x.replace('{PROJECT_DIR}', rootPath))
         .map(x => vscode.Uri.file(x))
     })

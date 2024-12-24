@@ -18,7 +18,7 @@ export type Interface = {
   }[]
   resource: {
     name: string
-    path: string[]
+    path: string | string[]
   }[]
   task: {
     name: string

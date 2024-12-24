@@ -87,6 +87,14 @@ export function draw(ctx: CanvasRenderingContext2D) {
         }
       }
     } else {
+      const scaledPos = controlSt.viewport.value.toView(pos)
+      const scaledRadius = radius * (1 / controlSt.viewport.value.scale)
+      const gradient = ctx.createRadialGradient(scaledPos.x, scaledPos.y, 0, scaledPos.x, scaledPos.y, scaledRadius)
+      gradient.addColorStop(0, 'white')
+      gradient.addColorStop(0.7, 'white')
+      gradient.addColorStop(1, 'transparent')
+      ctx.strokeStyle = gradient
+
       for (let dlt = 0; dlt <= radius; dlt += 1) {
         const len = Math.sqrt(radius * radius - dlt * dlt)
 

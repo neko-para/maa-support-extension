@@ -1,5 +1,7 @@
 import { computed, ref } from 'vue'
 
+import type { CropViewContext } from '@mse/types'
+
 import { ipc } from '@/crop/main'
 
 export const show = ref(false)
@@ -44,7 +46,7 @@ export const toAlpha = (value: string | undefined, def: number) => {
   return isNaN(v) ? def : v < 0 ? 0 : v > 1 ? 1 : v
 }
 
-function makeSettings(key: keyof typeof ipc.context.value) {
+function makeSettings(key: keyof CropViewContext) {
   return computed<string | undefined>({
     get() {
       return ipc.context.value[key]
@@ -55,7 +57,7 @@ function makeSettings(key: keyof typeof ipc.context.value) {
   })
 }
 
-function makeBoolSettings(key: keyof typeof ipc.context.value) {
+function makeBoolSettings(key: keyof CropViewContext) {
   return computed<boolean>({
     get() {
       return ipc.context.value[key] === 'true'
@@ -66,7 +68,7 @@ function makeBoolSettings(key: keyof typeof ipc.context.value) {
   })
 }
 
-function makeIntegerSettings(key: keyof typeof ipc.context.value) {
+function makeIntegerSettings(key: keyof CropViewContext) {
   return computed<number | undefined>({
     get() {
       if (!ipc.context.value[key]) {
@@ -81,7 +83,7 @@ function makeIntegerSettings(key: keyof typeof ipc.context.value) {
   })
 }
 
-function makeFloatSettings(key: keyof typeof ipc.context.value) {
+function makeFloatSettings(key: keyof CropViewContext) {
   return computed<number | undefined>({
     get() {
       if (!ipc.context.value[key]) {

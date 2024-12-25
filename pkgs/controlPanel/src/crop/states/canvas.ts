@@ -78,13 +78,14 @@ export function draw(ctx: CanvasRenderingContext2D) {
     const radius = Math.max(0, settingsSt.helperAxesRadius.value ?? 20)
     if (settingsSt.helperAxesOverflow.value) {
       for (let dx = -radius; dx <= radius; dx += 1) {
-        for (let dy = -radius; dy <= radius; dy += 1) {
-          const dpos = controlSt.viewport.value.toView(pos.add(Size.from(dx, dy)))
-          ctx.moveTo(dpos.x, 0)
-          ctx.lineTo(dpos.x, size.value.h)
-          ctx.moveTo(0, dpos.y)
-          ctx.lineTo(size.value.w, dpos.y)
-        }
+        const dposX = controlSt.viewport.value.toView(pos.add(Size.from(dx, 0))).x
+        ctx.moveTo(dposX, 0)
+        ctx.lineTo(dposX, size.value.h)
+      }
+      for (let dy = -radius; dy <= radius; dy += 1) {
+        const dposY = controlSt.viewport.value.toView(pos.add(Size.from(0, dy))).y
+        ctx.moveTo(0, dposY)
+        ctx.lineTo(size.value.w, dposY)
       }
     } else {
       const scaledPos = controlSt.viewport.value.toView(pos)

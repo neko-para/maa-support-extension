@@ -26,11 +26,14 @@ import VOcr from './VOcr.vue'
           (e: Event) => (settingsSt.helperAxesOverflow.value = (e.target as VscodeCheckbox).checked)
         "
       ></vscode-checkbox>
+      <span class="mse-fixed-label"> helper axes stroke </span>
+      <vscode-textfield v-model="settingsSt.helperAxesStroke.value"></vscode-textfield>
+      <span class="mse-fixed-label"> helper axes alpha </span>
+      <vscode-textfield v-model="settingsSt.helperAxesOpacity.value"></vscode-textfield>
       <span class="mse-fixed-label"> helper axes radius </span>
       <vscode-textfield v-model="settingsSt.helperAxesRadius.value"></vscode-textfield>
       <span class="mse-fixed-label"> helper axes threshold </span>
       <vscode-textfield v-model="settingsSt.helperAxesThreshold.value"></vscode-textfield>
-      <!-- <vscode-textfield v-model="settingsSt.pixelBoundStroke.value"></vscode-textfield> -->
     </div>
     <span class="mse-fixed-label"> ocr stroke </span>
     <vscode-textfield v-model="settingsSt.ocrStroke.value"></vscode-textfield>

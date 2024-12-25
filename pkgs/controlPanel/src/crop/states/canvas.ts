@@ -70,8 +70,9 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.restore()
 
   ctx.save()
-  ctx.globalCompositeOperation = 'difference'
-  ctx.strokeStyle = 'white'
+  ctx.globalAlpha = settingsSt.toAlpha(settingsSt.helperAxesOpacity.value, 0.4)
+  const helperAxesStrokeColor = settingsSt.colorWithDefault(settingsSt.helperAxesStroke.value, 'white')
+  ctx.strokeStyle = helperAxesStrokeColor
   ctx.beginPath()
   if (1 / controlSt.viewport.value.scale >= (settingsSt.helperAxesThreshold.value ?? 10)) {
     const pos = controlSt.viewport.value.fromView(controlSt.current.value).round()
@@ -91,7 +92,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
       const scaledPos = controlSt.viewport.value.toView(pos)
       const scaledRadius = radius * (1 / controlSt.viewport.value.scale)
       const gradient = ctx.createRadialGradient(scaledPos.x, scaledPos.y, 0, scaledPos.x, scaledPos.y, scaledRadius)
-      gradient.addColorStop(0.7, 'white')
+      gradient.addColorStop(0.7, helperAxesStrokeColor)
       gradient.addColorStop(1, 'transparent')
       ctx.strokeStyle = gradient
 

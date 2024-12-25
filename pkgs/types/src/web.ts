@@ -172,7 +172,8 @@ export type CropViewContext = {
   selectFill?: string
   selectOpacity?: string
   pointerAxesStroke?: string
-  // helperAxesStroke?: string
+  helperAxesStroke?: string
+  helperAxesOpacity?: string
   helperAxesOverflow?: string
   helperAxesRadius?: string
   helperAxesThreshold?: string

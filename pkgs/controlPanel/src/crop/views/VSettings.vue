@@ -18,9 +18,8 @@ import VOcr from './VOcr.vue'
       <vscode-textfield v-model="settingsSt.selectOpacity.value"></vscode-textfield>
       <span class="mse-fixed-label"> pointer axes fill </span>
       <vscode-textfield v-model="settingsSt.pointerAxesStroke.value"></vscode-textfield>
-      <span></span>
+      <span> helper axes overflow </span>
       <vscode-checkbox
-        label="helper axes overflow"
         :checked="settingsSt.helperAxesOverflow.value"
         @change="
           (e: Event) => (settingsSt.helperAxesOverflow.value = (e.target as VscodeCheckbox).checked)

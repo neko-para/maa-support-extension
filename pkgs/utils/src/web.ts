@@ -9,6 +9,7 @@ import {
   watch
 } from 'reactive-vscode'
 import vscode from 'vscode'
+import { AddressInfo, WebSocketServer } from 'ws'
 
 import { IpcFromHost, IpcFromHostBuiltin, IpcRest, IpcToHost } from '@mse/types'
 
@@ -17,10 +18,16 @@ import { logger } from './logger'
 
 // TODO: 看看怎么不抄两份
 
+const cspMeta = `<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'none'; font-src %{cspSource}; style-src 'unsafe-inline' %{cspSource}; script-src %{cspSource}; img-src %{cspSource} data:; connect-src %{cspSource} data:;"
+/>`
+
 export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest>(
   dir: string,
   index: string,
-  id: string
+  id: string,
+  dev: boolean
 ) {
   return createSingletonComposable(() => {
     const handler = ref<(data: TH) => void>(data => {
@@ -39,52 +46,37 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
 
     const awakeListener = ref<(() => void)[]>([])
 
-    const { view, postMessage } = useWebviewView(id, html, {
-      webviewOptions: {
-        enableScripts: true,
-        localResourceRoots: [rootUri]
-      },
-      onDidReceiveMessage(data: string) {
-        // logger.silly(`webview ${id} recv ${data.slice(0, 200)}`)
-
-        const msg = JSON.parse(data) as IpcToHost<Context, TH>
-        if (msg.__builtin) {
-          switch (msg.cmd) {
-            case 'requestInit':
-              realPost({
-                __builtin: true,
-                cmd: 'initContext',
-                ctx: context.value
-              })
-              break
-            case 'updateContext':
-              extensionContext.value?.workspaceState.update(`webview:${id}:context`, msg.ctx)
-              sync = true
-              context.value = msg.ctx
-              sync = false
-              break
-            case 'awake': {
-              const funcs = [...awakeListener.value]
-              logger.debug(`webview ${id} awake, listener count ${funcs.length}`)
-              awakeListener.value = []
-              visible.value = true
-              funcs.forEach(f => f())
-              break
-            }
-            case 'log':
-              logger.log(msg.type, msg.message)
-              break
+    const processMessage = (data: IpcToHost<Context, TH>) => {
+      if (data.__builtin) {
+        switch (data.cmd) {
+          case 'requestInit':
+            realPost({
+              __builtin: true,
+              cmd: 'initContext',
+              ctx: context.value
+            })
+            break
+          case 'updateContext':
+            extensionContext.value?.workspaceState.update(`webview:${id}:context`, data.ctx)
+            sync = true
+            context.value = data.ctx
+            sync = false
+            break
+          case 'awake': {
+            const funcs = [...awakeListener.value]
+            logger.debug(`webview ${id} awake, listener count ${funcs.length}`)
+            awakeListener.value = []
+            visible.value = true
+            funcs.forEach(f => f())
+            break
           }
-        } else {
-          handler.value(msg)
+          case 'log':
+            logger.log(data.type, data.message)
+            break
         }
+      } else {
+        handler.value(data)
       }
-    })
-
-    realPost = (data: IpcFromHost<Context, FH>) => {
-      const datastr = JSON.stringify(data)
-      // logger.silly(`webview ${id} send ${datastr.slice(0, 200)}`)
-      postMessage(datastr)
     }
 
     const post = (data: FH) => {
@@ -92,30 +84,107 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
     }
 
     const visible = ref(false)
+    let focus: (focusCmd: string) => Promise<void>
 
-    watch(view, async v => {
-      if (v) {
-        const webRootUri = v.webview.asWebviewUri(rootUri)
+    if (dev) {
+      visible.value = false
+      realPost = () => {}
 
-        const htmlUri = vscode.Uri.joinPath(rootUri, index + '.html')
-        const htmlContent = (await vscfs.readFile(htmlUri))
-          .toString()
-          .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
-          .replaceAll(
-            'rel="stylesheet" crossorigin href=',
-            'rel="stylesheet" crossorigin id="vscode-codicon-stylesheet" href='
-          )
-          .replaceAll('%{cspSource}', v.webview.cspSource)
+      const server = new WebSocketServer({
+        port: 0
+      })
+      server.on('connection', conn => {
+        if (visible.value) {
+          logger.error('duplicate websocket connect in!')
+          return
+        }
+        visible.value = true
 
-        html.value = htmlContent
-
-        v.onDidChangeVisibility(e => {
-          logger.debug(`webview ${id} change visibility ${v.visible}`)
-          visible.value = v.visible
+        conn.on('close', () => {
+          visible.value = false
+          realPost = data => {
+            logger.warn(`webview ${id} data not posted ${JSON.stringify(data).slice(0, 200)}`)
+          }
         })
-        visible.value = false
+
+        conn.on('message', data => {
+          processMessage(JSON.parse(data.toString()))
+        })
+
+        realPost = (data: IpcFromHost<Context, FH>) => {
+          const datastr = JSON.stringify(data)
+          conn.send(datastr)
+        }
+      })
+      const port = (server.address() as AddressInfo).port
+      const show = () => {
+        vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
       }
-    })
+      focus = () => {
+        return new Promise<void>(resolve => {
+          if (!visible.value) {
+            show()
+            awakeListener.value.push(resolve)
+          } else {
+            resolve()
+          }
+        })
+      }
+      show()
+    } else {
+      const { view, postMessage } = useWebviewView(id, html, {
+        webviewOptions: {
+          enableScripts: true,
+          localResourceRoots: [rootUri]
+        },
+        onDidReceiveMessage(data: string) {
+          processMessage(JSON.parse(data))
+        }
+      })
+
+      realPost = (data: IpcFromHost<Context, FH>) => {
+        const datastr = JSON.stringify(data)
+        postMessage(datastr)
+      }
+
+      watch(view, async v => {
+        if (v) {
+          const webRootUri = v.webview.asWebviewUri(rootUri)
+
+          const htmlUri = vscode.Uri.joinPath(rootUri, index + '.html')
+          const htmlContent = (await vscfs.readFile(htmlUri))
+            .toString()
+            .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
+            .replaceAll(
+              'rel="stylesheet" crossorigin href=',
+              'rel="stylesheet" crossorigin id="vscode-codicon-stylesheet" href='
+            )
+            .replace(
+              '</title>',
+              '</title>' + cspMeta.replaceAll('%{cspSource}', v.webview.cspSource)
+            )
+
+          html.value = htmlContent
+
+          v.onDidChangeVisibility(e => {
+            logger.debug(`webview ${id} change visibility ${v.visible}`)
+            visible.value = v.visible
+          })
+          visible.value = false
+        }
+      })
+
+      focus = focusCmd => {
+        return new Promise<void>(resolve => {
+          if (!visible.value) {
+            vscode.commands.executeCommand(focusCmd)
+            awakeListener.value.push(resolve)
+          } else {
+            resolve()
+          }
+        })
+      }
+    }
 
     watch(
       context,
@@ -140,7 +209,8 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
       handler,
       post,
       visible,
-      awakeListener
+      awakeListener,
+      focus
     }
   })
 }
@@ -149,6 +219,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
   dir: string,
   index: string,
   id: string,
+  dev: boolean,
   retain?: boolean
 ) {
   return async (title: string, column: vscode.ViewColumn) => {
@@ -171,75 +242,112 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
       awakeResolve = resolve
     })
 
-    const { panel, active, visible, postMessage } = useWebviewPanel(
-      id,
-      title,
-      html,
-      {
-        viewColumn: column
-      },
-      {
-        retainContextWhenHidden: retain ?? false,
-        webviewOptions: {
-          enableScripts: true,
-          localResourceRoots: [rootUri]
-        },
-        onDidReceiveMessage(data: string) {
-          // logger.silly(`webview ${id} recv ${data.slice(0, 200)}`)
+    const processMessage = (data: IpcToHost<Context, TH>) => {
+      if (data.__builtin) {
+        switch (data.cmd) {
+          case 'requestInit':
+            realPost({
+              __builtin: true,
+              cmd: 'initContext',
+              ctx: context.value
+            })
+            break
+          case 'updateContext':
+            extensionContext.value?.workspaceState.update(`webview:${id}:context`, data.ctx)
+            sync = true
+            context.value = data.ctx
+            sync = false
+            break
+          case 'awake':
+            awakeResolve()
+            break
+          case 'log':
+            logger.log(data.type, data.message)
+            break
+        }
+      } else {
+        handler.value(data)
+      }
+    }
 
-          const msg = JSON.parse(data) as IpcToHost<Context, TH>
-          if (msg.__builtin) {
-            switch (msg.cmd) {
-              case 'requestInit':
-                realPost({
-                  __builtin: true,
-                  cmd: 'initContext',
-                  ctx: context.value
-                })
-                break
-              case 'updateContext':
-                extensionContext.value?.workspaceState.update(`webview:${id}:context`, msg.ctx)
-                sync = true
-                context.value = msg.ctx
-                sync = false
-                break
-              case 'awake':
-                awakeResolve()
-                break
-              case 'log':
-                logger.log(msg.type, msg.message)
-                break
-            }
-          } else {
-            handler.value(msg)
+    if (dev) {
+      const server = new WebSocketServer({
+        port: 0
+      })
+      server.once('connection', conn => {
+        conn.on('close', () => {
+          realPost = () => {}
+          stopSyncContext()
+          onDidDispose.forEach(f => f())
+        })
+
+        conn.on('message', data => {
+          processMessage(JSON.parse(data.toString()))
+        })
+
+        realPost = (data: IpcFromHost<Context, FH>) => {
+          const datastr = JSON.stringify(data)
+          conn.send(datastr)
+        }
+      })
+      const port = (server.address() as AddressInfo).port
+      const show = () => {
+        vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
+      }
+      show()
+    } else {
+      const { panel, postMessage } = useWebviewPanel(
+        id,
+        title,
+        html,
+        {
+          viewColumn: column
+        },
+        {
+          retainContextWhenHidden: retain ?? false,
+          webviewOptions: {
+            enableScripts: true,
+            localResourceRoots: [rootUri]
+          },
+          onDidReceiveMessage(data: string) {
+            processMessage(JSON.parse(data))
           }
         }
-      }
-    )
+      )
 
-    realPost = (data: IpcFromHost<Context, FH>) => {
-      const datastr = JSON.stringify(data)
-      // logger.silly(`webview ${id} send ${datastr.slice(0, 200)}`)
-      postMessage(datastr)
+      realPost = (data: IpcFromHost<Context, FH>) => {
+        const datastr = JSON.stringify(data)
+        // logger.silly(`webview ${id} send ${datastr.slice(0, 200)}`)
+        postMessage(datastr)
+      }
+
+      const webRootUri = panel.webview.asWebviewUri(rootUri)
+
+      const htmlUri = vscode.Uri.joinPath(rootUri, index + '.html')
+      const htmlContent = (await vscfs.readFile(htmlUri))
+        .toString()
+        .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
+        .replaceAll(
+          'rel="stylesheet" crossorigin href=',
+          'rel="stylesheet" crossorigin id="vscode-codicon-stylesheet" href='
+        )
+        .replace(
+          '</title>',
+          '</title>' + cspMeta.replaceAll('%{cspSource}', panel.webview.cspSource)
+        )
+
+      html.value = htmlContent
+
+      panel.onDidDispose(() => {
+        realPost = () => {}
+        stopSyncContext()
+        onDidDispose.forEach(f => f())
+      })
     }
 
     const post = (data: FH) => {
       realPost(data)
     }
-
-    const webRootUri = panel.webview.asWebviewUri(rootUri)
-
-    const htmlUri = vscode.Uri.joinPath(rootUri, index + '.html')
-    const htmlContent = (await vscfs.readFile(htmlUri))
-      .toString()
-      .replaceAll('="./assets', `="${webRootUri.toString()}/assets`)
-      .replaceAll(
-        'rel="stylesheet" crossorigin href=',
-        'rel="stylesheet" crossorigin id="vscode-codicon-stylesheet" href='
-      )
-      .replaceAll('%{cspSource}', panel.webview.cspSource)
-
-    html.value = htmlContent
 
     const stopSyncContext = watch(
       context,
@@ -261,17 +369,9 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
 
     const onDidDispose: (() => void)[] = []
 
-    panel.onDidDispose(() => {
-      realPost = () => {}
-      stopSyncContext()
-      onDidDispose.forEach(f => f())
-    })
-
     return {
       context,
       handler,
-      active,
-      visible,
       post,
       onDidDispose,
       awaked

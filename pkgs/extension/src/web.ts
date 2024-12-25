@@ -23,28 +23,17 @@ import { PipelineRootStatusProvider } from './pipeline/root'
 import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
+import { isCropDev, isCtrlDev, isLaunchDev } from './webview/dev'
 
 export const useControlPanel = createUseWebView<
   ControlPanelContext,
   ControlPanelToHost,
   ControlPanelFromHost
->('controlPanel', 'control', 'maa.view.control-panel')
+>('controlPanel', 'control', 'maa.view.control-panel', isCtrlDev)
 
 export function focusAndWaitPanel() {
-  return new Promise<void>(resolve => {
-    const { visible, awakeListener } = useControlPanel()
-
-    if (!visible.value) {
-      logger.info('Focus controlPanel')
-      vscode.commands.executeCommand('maa.view.control-panel.focus')
-
-      awakeListener.value.push(resolve)
-    } else {
-      resolve()
-    }
-
-    return true
-  })
+  const { focus } = useControlPanel()
+  return focus('maa.view.control-panel.focus')
 }
 
 export function initControlPanel() {
@@ -214,7 +203,7 @@ const innerUseLaunchView = createUseWebPanel<
   LaunchViewContext,
   LaunchViewToHost,
   LaunchViewFromHost
->('controlPanel', 'launch', 'maa.view.launch', true)
+>('controlPanel', 'launch', 'maa.view.launch', isLaunchDev, true)
 
 export async function useLaunchView(column: vscode.ViewColumn = vscode.ViewColumn.Active) {
   return await innerUseLaunchView('Maa Launch', column)
@@ -224,6 +213,7 @@ const innerUseCropView = createUseWebPanel<CropViewContext, CropViewToHost, Crop
   'controlPanel',
   'crop',
   'maa.view.crop',
+  isCropDev,
   true
 )
 

@@ -39,7 +39,9 @@ export default defineConfig({
         }
       }
     }),
-    vueJsx()
+    vueJsx({
+      isCustomElement: tag => tag.startsWith('vscode-')
+    })
     // VueI18nPlugin({
     //   include: [path.resolve(__dirname, './src/i18n/locales/*.json')],
     //   strictMessage: false

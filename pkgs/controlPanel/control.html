@@ -4,11 +4,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Maa Control Panel</title>
 
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'none'; font-src %{cspSource}; style-src 'unsafe-inline' %{cspSource}; script-src %{cspSource}; img-src %{cspSource} data:; connect-src %{cspSource} data:;"
-    />
-
     <link
       rel="stylesheet"
       href="./node_modules/@vscode/codicons/dist/codicon.css"
@@ -16,7 +11,6 @@
     />
   </head>
   <body>
-    <div class="bg-black"></div>
     <div id="app"></div>
 
     <script type="module" src="./src/control/main.ts"></script>

@@ -8,6 +8,9 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   root: __dirname,
   base: './',
+  server: {
+    port: 5173
+  },
   build: {
     outDir: '../../release/controlPanel',
     emptyOutDir: true,

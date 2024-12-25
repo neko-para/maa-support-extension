@@ -60,6 +60,10 @@ export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(
         processMessage(e)
       }
 
+      socket.onclose = () => {
+        window.close()
+      }
+
       return (data: IpcToHost<Context, TH>) => {
         socket.send(JSON.stringify(data))
       }

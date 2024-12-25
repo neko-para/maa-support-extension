@@ -2,13 +2,14 @@
   "name": "maa-support",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "dev": "node scripts/watch.mjs"
+    "dev": "concurrently \"node scripts/watch.mjs\" \"node scripts/dev.mjs\""
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.4",
     "@vitejs/plugin-vue": "^5.2.1",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
     "esbuild": "^0.20.2",
     "jsonc-parser": "^3.3.1",
     "postcss": "^8.4.49",

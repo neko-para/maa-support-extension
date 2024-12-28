@@ -321,11 +321,11 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
         port: 0
       })
       server.once('connection', conn => {
-        conn.on('close', () => {
-          realPost = () => {}
-          stopSyncContext()
-          onDidDispose.forEach(f => f())
-        })
+        // conn.on('close', () => {
+        //   realPost = () => {}
+        //   stopSyncContext()
+        //   onDidDispose.forEach(f => f())
+        // })
 
         conn.on('message', data => {
           processMessage(JSON.parse(data.toString()))

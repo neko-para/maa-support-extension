@@ -23,7 +23,8 @@ export class ProjectInterfaceLaunchInstance {
   }
 
   async setup() {
-    const { onDidDispose, post, handler } = await useLaunchView()
+    const { onDidDispose, post, handler, awaked } = await useLaunchView()
+    await awaked
     this.post = post
     onDidDispose.push(() => {
       this.dispose()

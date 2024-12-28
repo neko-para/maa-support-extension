@@ -17,6 +17,7 @@ export class ProjectInterfaceCropInstance {
 
   async setup(initImage?: string) {
     const { onDidDispose, post, handler, context, awaked } = await useCropView()
+    await awaked
     this.post = post
     onDidDispose.push(() => {
       this.dispose()
@@ -136,11 +137,9 @@ export class ProjectInterfaceCropInstance {
     }
 
     if (initImage) {
-      awaked.then(() => {
-        post({
-          cmd: 'setImage',
-          image: initImage
-        })
+      post({
+        cmd: 'setImage',
+        image: initImage
       })
     }
   }

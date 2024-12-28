@@ -23,6 +23,23 @@ const cspMeta = `<meta
   content="default-src 'none'; font-src %{cspSource}; style-src 'unsafe-inline' %{cspSource}; script-src %{cspSource}; img-src %{cspSource} data:; connect-src %{cspSource} data:;"
 />`
 
+const forwardIframe = (url: string) => {
+  return `<head>
+  <style>
+    body {
+      padding: 0;
+    }
+    iframe {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      border-width: 0;
+    }
+  </style>
+</head>
+<iframe src="${url}"></iframe>`
+}
+
 export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest>(
   dir: string,
   index: string,
@@ -117,20 +134,49 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
         }
       })
       const port = (server.address() as AddressInfo).port
-      const show = () => {
-        vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
-      }
-      focus = () => {
+      // const show = () => {
+      //   vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
+      // }
+      // focus = () => {
+      //   return new Promise<void>(resolve => {
+      //     if (!visible.value) {
+      //       show()
+      //       awakeListener.value.push(resolve)
+      //     } else {
+      //       resolve()
+      //     }
+      //   })
+      // }
+      // show()
+
+      const { view } = useWebviewView(id, html, {
+        webviewOptions: {
+          enableScripts: true
+        }
+      })
+
+      watch(view, async v => {
+        if (v) {
+          html.value = forwardIframe(`http://localhost:5173/${index}?msePort=${port}`)
+
+          v.onDidChangeVisibility(e => {
+            logger.debug(`webview ${id} change visibility ${v.visible}`)
+            visible.value = v.visible
+          })
+          visible.value = false
+        }
+      })
+
+      focus = focusCmd => {
         return new Promise<void>(resolve => {
           if (!visible.value) {
-            show()
+            vscode.commands.executeCommand(focusCmd)
             awakeListener.value.push(resolve)
           } else {
             resolve()
           }
         })
       }
-      show()
     } else {
       const { view, postMessage } = useWebviewView(id, html, {
         webviewOptions: {
@@ -291,10 +337,32 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
         }
       })
       const port = (server.address() as AddressInfo).port
-      const show = () => {
-        vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
-      }
-      show()
+      // const show = () => {
+      //   vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
+      // }
+      // show()
+
+      const { panel } = useWebviewPanel(
+        id,
+        title,
+        html,
+        {
+          viewColumn: column
+        },
+        {
+          retainContextWhenHidden: retain ?? false,
+          webviewOptions: {
+            enableScripts: true
+          }
+        }
+      )
+
+      html.value = forwardIframe(`http://localhost:5173/${index}?msePort=${port}`)
+      panel.onDidDispose(() => {
+        realPost = () => {}
+        stopSyncContext()
+        onDidDispose.forEach(f => f())
+      })
     } else {
       const { panel, postMessage } = useWebviewPanel(
         id,

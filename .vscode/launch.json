@@ -12,7 +12,7 @@
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/release"],
       "outFiles": ["${workspaceFolder}/release/out/**/*.js"],
       "env": {
-        "MSE_DEV_CTRL": "0",
+        "MSE_DEV_CTRL": "1",
         "MSE_DEV_CROP": "1",
         "MSE_DEV_LAUNCH": "1"
       }

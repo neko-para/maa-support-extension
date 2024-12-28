@@ -25,6 +25,7 @@ declare global {
 if (import.meta.env.DEV) {
   await import('@vscode-elements/webview-playground')
   document.body.append(document.createElement('vscode-dev-toolbar'))
+  document.body.style.padding = '0'
 }
 
 export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(

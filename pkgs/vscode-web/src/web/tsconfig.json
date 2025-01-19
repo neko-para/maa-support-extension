@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "paths": {
+      "@/*": ["./*"],
+      "@uni/*": ["../uni/*"]
+    }
+  },
+  "include": ["./**/*.ts"],
+  "references": [{ "path": "../uni" }]
+}

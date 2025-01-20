@@ -1,12 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["ESNext"],
-    "paths": {
-      "@/*": ["./*"],
-      "@uni/*": ["../uni/*"]
-    }
-  },
+  "extends": "@tsconfig/node20/tsconfig.json",
   "include": ["./**/*.ts"],
   "references": [{ "path": "../uni" }]
 }

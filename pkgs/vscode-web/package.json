@@ -1,13 +1,21 @@
 {
   "name": "@nekosu/vscode-web",
+  "exports": {
+    ".": {
+      "browser": "./src/web/index.ts",
+      "default": "./src/node/index.ts"
+    }
+  },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.17.9",
     "@types/vscode": "^1.95.0",
     "@types/ws": "^8.5.13",
+    "@vue/tsconfig": "^0.5.1",
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@vscode-elements/webview-playground": "^1.3.0",
     "ws": "^8.18.0"
   }
 }

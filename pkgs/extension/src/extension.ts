@@ -1,6 +1,7 @@
+import { VscodePanel } from '@nekosu/vscode-web'
 import { defineExtension, useCommand, useOutputChannel } from 'reactive-vscode'
 import sms from 'source-map-support'
-import vscode from 'vscode'
+import vscode, { ViewColumn } from 'vscode'
 
 import { logger, setupLogger } from '@mse/utils'
 
@@ -71,7 +72,14 @@ async function setup(context: vscode.ExtensionContext) {
   })
 
   useCommand(commands.OpenCrop, () => {
-    new ProjectInterfaceCropInstance().setup()
+    // new ProjectInterfaceCropInstance().setup()
+    const root = vscode.Uri.joinPath(context.extensionUri, 'test-web')
+    const panel = new VscodePanel(VscodePanel.makePanel('test', '123123', ViewColumn.Active, root))
+    const res = panel.setupDevelop(async (method, ...args) => {
+      console.log(method, ...args)
+      return method
+    }, vscode.Uri.parse('http://localhost:5173'))
+    // const res = panel.setupProduct(async () => 0, root, vscode.Uri.joinPath(root, 'index.html'))
   })
 
   loadServices([

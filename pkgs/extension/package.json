@@ -4,6 +4,7 @@
     "@maaxyz/maa-node": "2.4.0",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",
+    "@nekosu/vscode-web": "workspace:*",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.17.9",
     "@types/source-map-support": "^0.5.10",

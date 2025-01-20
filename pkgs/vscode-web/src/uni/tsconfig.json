@@ -1,9 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "strict": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "composite": true
   },
   "include": ["./**/*.ts"]
 }

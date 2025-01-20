@@ -1,4 +1,4 @@
-import type { RpcClientAdapter, RpcRequest, RpcResponse, RpcServerAdapter } from '@uni/rpc'
+import type { RpcClientAdapter, RpcRequest, RpcResponse, RpcServerAdapter } from '../../uni/rpc'
 
 export function makeAdapter(socket: WebSocket): [RpcServerAdapter, RpcClientAdapter] {
   const server: RpcServerAdapter = {

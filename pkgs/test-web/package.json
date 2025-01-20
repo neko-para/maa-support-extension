@@ -1,0 +1,18 @@
+{
+  "name": "@mse/test-web",
+  "devDependencies": {
+    "@maaxyz/maa-node": "2.4.0",
+    "@nekosu/vscode-web": "workspace:*",
+    "@types/node": "^20.17.9",
+    "@types/vscode-webview": "^1.57.5",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue-jsx": "^4.1.1",
+    "@vscode-elements/elements": "^1.9.0",
+    "@vscode/codicons": "^0.0.36",
+    "@vue/tsconfig": "^0.5.1",
+    "jimp": "^1.6.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vue": "^3.5.13"
+  }
+}

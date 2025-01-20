@@ -1,7 +1,7 @@
 import type { RpcClientAdapter, RpcRequest, RpcResponse, RpcServerAdapter } from '@uni/rpc'
 import type * as ws from 'ws'
 
-export function makeAdapter(socket: ws.WebSocket): [RpcServerAdapter, RpcClientAdapter] {
+export function makeWsAdapter(socket: ws.WebSocket): [RpcServerAdapter, RpcClientAdapter] {
   const server: RpcServerAdapter = {
     send: rsp => {
       socket.send(JSON.stringify(rsp))

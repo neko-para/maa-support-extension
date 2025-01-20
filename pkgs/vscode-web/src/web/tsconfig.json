@@ -1,12 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "paths": {
-      "@/*": ["./*"],
-      "@uni/*": ["../uni/*"]
-    }
-  },
+  "extends": "@vue/tsconfig/tsconfig.json",
   "include": ["./**/*.ts"],
   "references": [{ "path": "../uni" }]
 }

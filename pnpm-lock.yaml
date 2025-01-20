@@ -101,6 +101,9 @@ importers:
       '@mse/utils':
         specifier: workspace:*
         version: link:../utils
+      '@nekosu/vscode-web':
+        specifier: workspace:*
+        version: link:../vscode-web
       '@tsconfig/node20':
         specifier: ^20.1.4
         version: 20.1.4
@@ -125,6 +128,48 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
+
+  pkgs/test-web:
+    devDependencies:
+      '@maaxyz/maa-node':
+        specifier: 2.4.0
+        version: 2.4.0
+      '@nekosu/vscode-web':
+        specifier: workspace:*
+        version: link:../vscode-web
+      '@types/node':
+        specifier: ^20.17.9
+        version: 20.17.9
+      '@types/vscode-webview':
+        specifier: ^1.57.5
+        version: 1.57.5
+      '@vitejs/plugin-vue':
+        specifier: ^5.2.1
+        version: 5.2.1(vite@6.0.3(@types/node@20.17.9)(jiti@1.21.6)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))
+      '@vitejs/plugin-vue-jsx':
+        specifier: ^4.1.1
+        version: 4.1.1(vite@6.0.3(@types/node@20.17.9)(jiti@1.21.6)(yaml@2.6.1))(vue@3.5.13(typescript@5.7.2))
+      '@vscode-elements/elements':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@vscode/codicons':
+        specifier: ^0.0.36
+        version: 0.0.36
+      '@vue/tsconfig':
+        specifier: ^0.5.1
+        version: 0.5.1
+      jimp:
+        specifier: ^1.6.0
+        version: 1.6.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.7.2
+      vite:
+        specifier: ^6.0.3
+        version: 6.0.3(@types/node@20.17.9)(jiti@1.21.6)(yaml@2.6.1)
+      vue:
+        specifier: ^3.5.13
+        version: 3.5.13(typescript@5.7.2)
 
   pkgs/types:
     devDependencies:
@@ -173,6 +218,9 @@ importers:
 
   pkgs/vscode-web:
     dependencies:
+      '@vscode-elements/webview-playground':
+        specifier: ^1.3.0
+        version: 1.3.0
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -189,33 +237,12 @@ importers:
       '@types/ws':
         specifier: ^8.5.13
         version: 8.5.13
+      '@vue/tsconfig':
+        specifier: ^0.5.1
+        version: 0.5.1
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
-
-  pkgs/vscode-web-host:
-    dependencies:
-      '@nekosu/vscode-web-types':
-        specifier: workspace:*
-        version: link:../vscode-web-types
-      ws:
-        specifier: ^8.18.0
-        version: 8.18.0
-    devDependencies:
-      '@tsconfig/node20':
-        specifier: ^20.1.4
-        version: 20.1.4
-      '@types/node':
-        specifier: '20'
-        version: 20.17.9
-      '@types/vscode':
-        specifier: ^1.95.0
-        version: 1.95.0
-      typescript:
-        specifier: ^5.7.2
-        version: 5.7.2
-
-  pkgs/vscode-web-types: {}
 
   pkgs/webUtils:
     devDependencies:

@@ -40,7 +40,9 @@ async function setup(context: vscode.ExtensionContext) {
     }
   })
 
-  setupMaa()
+  if (!setupMaa()) {
+    return
+  }
 
   initControlPanel()
 

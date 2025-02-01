@@ -3,17 +3,17 @@ export const enum Message {
   Tasker_Task_Succeeded = 'Tasker.Task.Succeeded',
   Tasker_Task_Failed = 'Tasker.Task.Failed',
 
-  Task_NextList_Starting = 'Task.NextList.Starting',
-  Task_NextList_Succeeded = 'Task.NextList.Succeeded',
-  Task_NextList_Failed = 'Task.NextList.Failed',
+  Task_NextList_Starting = 'Node.NextList.Starting',
+  Task_NextList_Succeeded = 'Node.NextList.Succeeded',
+  Task_NextList_Failed = 'Node.NextList.Failed',
 
-  Task_Recognition_Starting = 'Task.Recognition.Starting',
-  Task_Recognition_Succeeded = 'Task.Recognition.Succeeded',
-  Task_Recognition_Failed = 'Task.Recognition.Failed',
+  Task_Recognition_Starting = 'Node.Recognition.Starting',
+  Task_Recognition_Succeeded = 'Node.Recognition.Succeeded',
+  Task_Recognition_Failed = 'Node.Recognition.Failed',
 
-  Task_Action_Starting = 'Task.Action.Starting',
-  Task_Action_Succeeded = 'Task.Action.Succeeded',
-  Task_Action_Failed = 'Task.Action.Failed'
+  Task_Action_Starting = 'Node.Action.Starting',
+  Task_Action_Succeeded = 'Node.Action.Succeeded',
+  Task_Action_Failed = 'Node.Action.Failed'
 }
 
 export type TaskMessage = {

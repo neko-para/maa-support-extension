@@ -231,7 +231,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
 
     for (const path of runtime.resource_path) {
-      await resource.post_path(path).wait()
+      await resource.post_bundle(path).wait()
     }
 
     const tasker = new maa.Tasker()
@@ -281,7 +281,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     const tasker = this.tasker
     this.tasker = null
     await new ProjectInterfaceLaunchInstance(tasker).setup()
-    await tasker.tasker.post_pipeline(task).wait()
+    await tasker.tasker.post_task(task).wait()
   }
 
   async launchRuntime(runtime: InterfaceRuntime) {
@@ -294,9 +294,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     await new ProjectInterfaceLaunchInstance(tasker).setup()
     let last
     for (const task of runtime.task) {
-      last = tasker.tasker
-        .post_pipeline(task.entry, task.pipeline_override as unknown as any)
-        .wait()
+      last = tasker.tasker.post_task(task.entry, task.pipeline_override as unknown as any).wait()
     }
     await last
   }

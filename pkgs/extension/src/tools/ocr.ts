@@ -29,7 +29,7 @@ export async function performOcr(
   }
 
   const res = new maa.Resource()
-  await res.post_path(resource).wait()
+  await res.post_bundle(resource).wait()
   if (!res.loaded) {
     logger.error('ocr res create failed')
     return null
@@ -66,7 +66,7 @@ export async function performOcr(
   })
 
   await tasker
-    .post_pipeline('@mse/action', {
+    .post_task('@mse/action', {
       '@mse/action': {
         action: 'Custom',
         custom_action: '@mse/action'

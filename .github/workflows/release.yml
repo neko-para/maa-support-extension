@@ -9,6 +9,7 @@ on:
     paths-ignore:
       - '**.md'
       - '.vscode'
+      - '.github/workflows/release_maanode.yml'
   workflow_dispatch:
 
 defaults:

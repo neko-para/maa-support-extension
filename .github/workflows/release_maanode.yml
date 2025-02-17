@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
     paths:
+      - '.github/workflows/release_maanode.yml'
       - 'maa/.maaver'
   workflow_dispatch:
 

@@ -29,11 +29,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install And Publish
+      - name: Install
         shell: bash
         run: |
           npm i -g @vscode/vsce
           cd maa
           scripts/install.sh
           vsce package
-          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath *.vsix
+          mkdir vsix
+          cp *.vsix vsix/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maa-node-package
+          path: 'maa/vsix'
+
+      - name: Publish
+        shell: bash
+        run: |
+          cd maa
+          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath vsix/*.vsix

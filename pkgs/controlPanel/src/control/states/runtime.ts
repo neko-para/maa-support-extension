@@ -120,6 +120,8 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
     })
   }
 
+  result.agent = data.agent
+
   return [result as InterfaceRuntime, null]
 })
 

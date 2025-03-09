@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 
+import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t, vscfs } from '@mse/utils'
 
 import { commands } from '../command'
@@ -10,7 +11,6 @@ import { PipelineTaskIndexProvider } from '../pipeline/task'
 import { focusAndWaitPanel, useControlPanel } from '../web'
 import { ProjectInterfaceLaunchInstance } from '../webview/launch'
 import { ProjectInterfaceJsonProvider } from './json'
-import { InterfaceRuntime } from './type'
 
 type InstanceCache = {
   controller: Maa.ControllerBase
@@ -20,6 +20,7 @@ export type TaskerInstance = {
   tasker: Maa.TaskerBase
   resource: Maa.ResourceBase
   controller: Maa.ControllerBase
+  agent?: vscode.TaskExecution
 }
 
 function serializeRuntimeCache(runtime: InterfaceRuntime['controller_param']) {
@@ -234,6 +235,33 @@ export class ProjectInterfaceLaunchProvider extends Service {
       await resource.post_bundle(path).wait()
     }
 
+    let agent: vscode.TaskExecution | undefined = undefined
+    if (runtime.agent) {
+      const client = new maa.AgentClient()
+      const identifier = client.create_socket(runtime.agent.identifier ?? null)
+
+      logger.info(`AgentClient listening ${identifier}`)
+
+      if (runtime.agent.child_exec) {
+        const task = new vscode.Task(
+          {
+            type: 'shell'
+          },
+          vscode.TaskScope.Workspace,
+          'maa-agent-server',
+          'maa',
+          new vscode.ShellExecution(
+            runtime.agent.child_exec,
+            (runtime.agent.child_args ?? []).concat([identifier])
+          )
+        )
+        agent = await vscode.tasks.executeTask(task)
+      }
+
+      client.connect()
+      client.bind_resource(resource)
+    }
+
     const tasker = new maa.Tasker()
 
     tasker.notify = (msg, detail) => {
@@ -246,13 +274,15 @@ export class ProjectInterfaceLaunchProvider extends Service {
     if (!tasker.inited) {
       tasker.destroy()
       resource.destroy()
+      agent?.terminate()
       return false
     }
 
     this.tasker = {
       tasker: tasker,
       controller,
-      resource
+      resource,
+      agent
     }
 
     const mseDir = vscode.Uri.joinPath(

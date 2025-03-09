@@ -38,6 +38,11 @@ export type Interface = {
   >
   version?: string
   message?: string
+  agent?: {
+    child_exec?: string
+    child_args?: string[]
+    identifier?: string
+  }
 }
 
 export type InterfaceConfig = {
@@ -88,4 +93,9 @@ export type InterfaceRuntime = {
     pipeline_override: unknown
   }[]
   // gpu: number
+  agent?: {
+    child_exec?: string
+    child_args?: string[]
+    identifier?: string
+  }
 }

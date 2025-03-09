@@ -82,5 +82,6 @@ export class ProjectInterfaceLaunchInstance {
     this.pushNotify = async () => {}
     this.instance.tasker.destroy()
     this.instance.resource.destroy()
+    this.instance.agent?.terminate()
   }
 }

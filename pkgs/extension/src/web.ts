@@ -171,6 +171,15 @@ export function initControlPanel() {
         }
         break
       }
+      case '__updateMaaEnum':
+        context.value.maaEnum = {
+          Status: maa.api.Status,
+          AdbScreencapMethod: maa.api.AdbScreencapMethod,
+          AdbInputMethod: maa.api.AdbInputMethod,
+          Win32ScreencapMethod: maa.api.Win32ScreencapMethod,
+          Win32InputMethod: maa.api.Win32InputMethod
+        }
+        break
     }
   }
 
@@ -187,16 +196,11 @@ export function initControlPanel() {
   )
 
   handler.value({
+    cmd: '__updateMaaEnum'
+  })
+  handler.value({
     cmd: 'refreshInterface'
   })
-
-  context.value.maaEnum = {
-    Status: maa.api.Status,
-    AdbScreencapMethod: maa.api.AdbScreencapMethod,
-    AdbInputMethod: maa.api.AdbInputMethod,
-    Win32ScreencapMethod: maa.api.Win32ScreencapMethod,
-    Win32InputMethod: maa.api.Win32InputMethod
-  }
 }
 
 const innerUseLaunchView = createUseWebPanel<

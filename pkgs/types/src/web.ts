@@ -115,6 +115,9 @@ export type ControlPanelToHost =
             case?: string
           }
     }
+  | {
+      cmd: '__updateMaaEnum'
+    }
 
 export type ControlPanelFromHost =
   | {

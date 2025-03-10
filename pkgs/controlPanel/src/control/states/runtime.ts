@@ -15,6 +15,9 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
     return [null, 'inner error, no root, consider restart']
   }
   if (!maaEnum) {
+    ipc.postMessage({
+      cmd: '__updateMaaEnum'
+    })
     return [null, 'inner error, no maaEnum, consider restart']
   }
 

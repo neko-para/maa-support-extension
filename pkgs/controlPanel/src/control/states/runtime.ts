@@ -120,7 +120,13 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
     })
   }
 
-  result.agent = data.agent
+  if (data.agent) {
+    result.agent = {
+      child_exec: data.agent.child_exec ? replaceVar(data.agent.child_exec) : undefined,
+      child_args: data.agent.child_args?.map(replaceVar),
+      identifier: data.agent.identifier
+    }
+  }
 
   return [result as InterfaceRuntime, null]
 })

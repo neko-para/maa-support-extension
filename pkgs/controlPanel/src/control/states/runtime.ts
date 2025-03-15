@@ -34,6 +34,8 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
 
   const result: Partial<InterfaceRuntime> = {}
 
+  result.root = root
+
   const ctrlInfo = controllerSt.currentProto.value
 
   if (!ctrlInfo) {

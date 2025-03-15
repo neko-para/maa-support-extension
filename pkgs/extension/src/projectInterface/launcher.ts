@@ -1,3 +1,4 @@
+import path from 'path'
 import * as vscode from 'vscode'
 
 import { InterfaceRuntime } from '@mse/types'
@@ -252,7 +253,15 @@ export class ProjectInterfaceLaunchProvider extends Service {
           'maa',
           new vscode.ShellExecution(
             runtime.agent.child_exec,
-            (runtime.agent.child_args ?? []).concat([identifier])
+            (runtime.agent.child_args ?? []).concat([identifier]),
+            {
+              cwd: runtime.root,
+              env: {
+                VSCODE_MAAFW_AGENT: '1',
+                VSCODE_MAAFW_AGENT_ROOT: runtime.root,
+                VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
+              }
+            }
           )
         )
         agent = await vscode.tasks.executeTask(task)

@@ -71,6 +71,7 @@ export type InterfaceConfig = {
 }
 
 export type InterfaceRuntime = {
+  root: string
   controller_param:
     | {
         ctype: 'adb'

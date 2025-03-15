@@ -1,7 +1,8 @@
 #!/bin/bash
 
 ver=`cat .maaver`
-echo "MaaNode version $ver"
+pkgver=`cat .maapkgver`
+echo "MaaNode version $ver as $pkgver"
 
 npm i -f @maaxyz/maa-node@${ver}
 
@@ -11,4 +12,4 @@ for os in win32 linux darwin; do
   done
 done
 
-npm pkg set version=${ver}
+npm pkg set version=${pkgver}

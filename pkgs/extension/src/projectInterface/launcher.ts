@@ -267,11 +267,24 @@ export class ProjectInterfaceLaunchProvider extends Service {
         agent = await vscode.tasks.executeTask(task)
       }
 
-      // 暂时提前connect触发错误, 否则死锁了
-      try {
-        client.connect()
-      } catch (err) {}
       client.bind_resource(resource)
+      logger.info(`AgentClient start connecting ${identifier}`)
+      if (
+        await client
+          .connect()
+          .then(
+            () => true,
+            () => false
+          )
+          .then(res => {
+            logger.info(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
+            return res
+          })
+      ) {
+        resource.destroy()
+        agent?.terminate()
+        return false
+      }
     }
 
     const tasker = new maa.Tasker()

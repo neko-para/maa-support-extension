@@ -267,8 +267,8 @@ export class ProjectInterfaceLaunchProvider extends Service {
         agent = await vscode.tasks.executeTask(task)
       }
 
-      client.connect()
       client.bind_resource(resource)
+      client.connect()
     }
 
     const tasker = new maa.Tasker()

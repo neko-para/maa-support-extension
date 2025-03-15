@@ -48,8 +48,8 @@ importers:
   pkgs/controlPanel:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.0.0-post.12-ci.13872713665
-        version: 4.0.0-post.12-ci.13872713665
+        specifier: 4.0.0-post.12-ci.13874239870
+        version: 4.0.0-post.12-ci.13874239870
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -93,8 +93,8 @@ importers:
   pkgs/extension:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.0.0-post.12-ci.13872713665
-        version: 4.0.0-post.12-ci.13872713665
+        specifier: 4.0.0-post.12-ci.13874239870
+        version: 4.0.0-post.12-ci.13874239870
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -129,8 +129,8 @@ importers:
   pkgs/types:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.0.0-post.12-ci.13872713665
-        version: 4.0.0-post.12-ci.13872713665
+        specifier: 4.0.0-post.12-ci.13874239870
+        version: 4.0.0-post.12-ci.13874239870
 
   pkgs/utils:
     devDependencies:
@@ -913,38 +913,38 @@ packages:
   '@lit/reactive-element@2.0.4':
     resolution: {integrity: sha512-GFn91inaUa2oHLak8awSIigYz0cU0Payr1rcFsrkf5OJ5eSPxElyZfKh0f2p9FsTiZWXQdWGJeXZICEfXXYSXQ==}
 
-  '@maaxyz/maa-node-darwin-arm64@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-UfWgWqgpp9ugoAXkBt37bnyIcYggY2kJ7+ozP5H/UgNGeZ17RjSVD06Mh1tDiQiOZV8tvXxqyMkPh5V7JDhacA==}
+  '@maaxyz/maa-node-darwin-arm64@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-TavPZRJA2YsuaPQSk2ytpltHWhT3pxKNp64vogvaA9Fzu1XUuG2EhBofslLR7qV6QcyKIcEbHdg8hvGWMNpgbQ==}
     cpu: [arm64]
     os: [darwin]
 
-  '@maaxyz/maa-node-darwin-x64@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-12cYUyuM/SKrd9h4L9zUZWCbANVdiZZgTwBHbdklkL+h2dyQS6z9IYuYqpAGDdw9m/ZvR4DbEi9/nwRQZGRS7w==}
+  '@maaxyz/maa-node-darwin-x64@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-qvu9MKZ4qvLFsTZlvzmcXPNDA7GCOgInIvmP8cbZEs6QK+KSmouYvzECT3avjlDp6FeBhTVu0nch+3vesm2DOg==}
     cpu: [x64]
     os: [darwin]
 
-  '@maaxyz/maa-node-linux-arm64@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-MU9pJoCL5nATZ4rUqRn4YQsksOqi0CDyeiu4sfCjgVsYF6ARzgdN3cK8VHuubM5GHjavlrf60nGtXFyzQ2jMSg==}
+  '@maaxyz/maa-node-linux-arm64@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-qY59B1tUMnIRryKWqg71v3jJAKm71N8134iCTVgOZWee50ZGQYQ9L5tIl+bw2Egyp01qVs5xJRql7l4+jC0YpQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@maaxyz/maa-node-linux-x64@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-JVMGv7Ze43p1dpUKDWEAh/VErANJnh+C/M3EtbSHPaCB6Vr+8tIzL+hijVEnCxlno/6bVd1joihUAiwO7tX0/Q==}
+  '@maaxyz/maa-node-linux-x64@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-LRabumT9NUF1Sq6jt6MONm33GS1/reZWhWLxPFrT8P6Ll0vnb4IC/QTtowYhUhwDwSbr/d6Btqb//vk9jXPQ6g==}
     cpu: [x64]
     os: [linux]
 
-  '@maaxyz/maa-node-win32-arm64@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-xLL2OVZRCSXgckFSmo6aukhSSYty9z/8UQKRKlSwx6DIFC/4Cwo+OxP44ImvXDv0Z96mQMejf8rl5VQznnutyQ==}
+  '@maaxyz/maa-node-win32-arm64@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-7j5zraEiXnq3sBfqL3tSBUcJbeB/FqAqZGxsMAiSQFKh4VdacMybMOYiutPseFBoqrIESRWMuSOw7nRf+QrA8A==}
     cpu: [arm64]
     os: [win32]
 
-  '@maaxyz/maa-node-win32-x64@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-uF2oOqLdlUoAsucs9K4T15STUOGMcOsRsD21XzTcFFlDkQV8OahC329rRevL7a5jitTWrvk90wyHIMR+2yF17w==}
+  '@maaxyz/maa-node-win32-x64@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-zt/ZfDgORsNMUCvZyzF/i1YdfrlP8gxkCCGBM/1T2evoBI0xUH3NawzHvS6ljkVpHLihi+tqKftL0o5QY1mxFg==}
     cpu: [x64]
     os: [win32]
 
-  '@maaxyz/maa-node@4.0.0-post.12-ci.13872713665':
-    resolution: {integrity: sha512-49IaBCkIw9Z0ydv8MQnncFdlfDdQKvlY6bjOvNai+CHQ+PeoV0F+CK+8FoxK2tJjeL8XwN4PT2yrMHHvElsSiQ==}
+  '@maaxyz/maa-node@4.0.0-post.12-ci.13874239870':
+    resolution: {integrity: sha512-mBpXkkRurbaKbuH+zqRAzzo96uqVcs15GTg0fyoyDWQplS9JNbSqEHaw511HhEgOOvo1TY1tJA5Zhg1MgbaM1g==}
     engines: {node: '>= 20.0.0'}
 
   '@nodelib/fs.scandir@2.1.5':
@@ -2727,32 +2727,32 @@ snapshots:
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.2.1
 
-  '@maaxyz/maa-node-darwin-arm64@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node-darwin-arm64@4.0.0-post.12-ci.13874239870':
     optional: true
 
-  '@maaxyz/maa-node-darwin-x64@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node-darwin-x64@4.0.0-post.12-ci.13874239870':
     optional: true
 
-  '@maaxyz/maa-node-linux-arm64@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node-linux-arm64@4.0.0-post.12-ci.13874239870':
     optional: true
 
-  '@maaxyz/maa-node-linux-x64@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node-linux-x64@4.0.0-post.12-ci.13874239870':
     optional: true
 
-  '@maaxyz/maa-node-win32-arm64@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node-win32-arm64@4.0.0-post.12-ci.13874239870':
     optional: true
 
-  '@maaxyz/maa-node-win32-x64@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node-win32-x64@4.0.0-post.12-ci.13874239870':
     optional: true
 
-  '@maaxyz/maa-node@4.0.0-post.12-ci.13872713665':
+  '@maaxyz/maa-node@4.0.0-post.12-ci.13874239870':
     optionalDependencies:
-      '@maaxyz/maa-node-darwin-arm64': 4.0.0-post.12-ci.13872713665
-      '@maaxyz/maa-node-darwin-x64': 4.0.0-post.12-ci.13872713665
-      '@maaxyz/maa-node-linux-arm64': 4.0.0-post.12-ci.13872713665
-      '@maaxyz/maa-node-linux-x64': 4.0.0-post.12-ci.13872713665
-      '@maaxyz/maa-node-win32-arm64': 4.0.0-post.12-ci.13872713665
-      '@maaxyz/maa-node-win32-x64': 4.0.0-post.12-ci.13872713665
+      '@maaxyz/maa-node-darwin-arm64': 4.0.0-post.12-ci.13874239870
+      '@maaxyz/maa-node-darwin-x64': 4.0.0-post.12-ci.13874239870
+      '@maaxyz/maa-node-linux-arm64': 4.0.0-post.12-ci.13874239870
+      '@maaxyz/maa-node-linux-x64': 4.0.0-post.12-ci.13874239870
+      '@maaxyz/maa-node-win32-arm64': 4.0.0-post.12-ci.13874239870
+      '@maaxyz/maa-node-win32-x64': 4.0.0-post.12-ci.13874239870
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

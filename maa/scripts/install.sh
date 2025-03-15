@@ -13,3 +13,4 @@ for os in win32 linux darwin; do
 done
 
 npm pkg set version=${pkgver}
+sed -i "s/%VERSION%/${ver}/g" README.md

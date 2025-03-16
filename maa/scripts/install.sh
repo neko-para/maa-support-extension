@@ -21,7 +21,7 @@ for os in win32 linux darwin; do
     sed -i "s/%VERSION%/${ver}/g" README.md
     sed -i "s/%TRIPLET%/${os}-${arch}/g" README.md
 
-    npm i -f @maaxyz/maa-node@${ver}
+    npm i --no-optional @maaxyz/maa-node@${ver}
     npm i -f @maaxyz/maa-node-${os}-${arch}@${ver}
 
     vsce package --target "${os}-${arch}"

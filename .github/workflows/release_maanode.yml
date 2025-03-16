@@ -36,7 +36,6 @@ jobs:
           npm i -g @vscode/vsce
           cd maa
           scripts/install.sh
-          vsce package
           mkdir vsix
           cp *.vsix vsix/
 

@@ -1,3 +1,3 @@
 # Maa Node Package
 
-MaaFramework version %VERSION%.
+MaaFramework version %VERSION% of %TRIPLET%.

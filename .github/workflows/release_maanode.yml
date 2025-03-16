@@ -41,7 +41,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: maa-node-package
           path: 'maa/vsix/*.vsix'
 
       - name: Publish

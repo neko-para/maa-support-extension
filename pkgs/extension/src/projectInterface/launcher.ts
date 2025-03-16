@@ -270,7 +270,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
       client.bind_resource(resource)
       logger.info(`AgentClient start connecting ${identifier}`)
       if (
-        await client
+        !(await client
           .connect()
           .then(
             () => true,
@@ -279,7 +279,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
           .then(res => {
             logger.info(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
             return res
-          })
+          }))
       ) {
         resource.destroy()
         agent?.terminate()

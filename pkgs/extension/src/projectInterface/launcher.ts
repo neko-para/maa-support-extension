@@ -78,21 +78,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
       return true
     })
-
-    this.defer = vscode.commands.registerCommand(commands.GenerateMSEIndex, async () => {
-      const mseDir = vscode.Uri.joinPath(
-        this.shared(PipelineRootStatusProvider).activateResource.value!.dirUri,
-        '.mse'
-      )
-      const mseIndex = vscode.Uri.joinPath(mseDir, 'index.js')
-      if (!(await vscfs.exists(mseIndex))) {
-        await vscfs.createDirectory(mseDir)
-        await vscfs.copy(
-          vscode.Uri.joinPath(this.context.extensionUri, 'data', 'index.js'),
-          mseIndex
-        )
-      }
-    })
   }
 
   async launchInterface(runtime: InterfaceRuntime) {
@@ -308,21 +293,6 @@ export class ProjectInterfaceLaunchProvider extends Service {
       controller,
       resource,
       agent
-    }
-
-    const mseDir = vscode.Uri.joinPath(
-      this.shared(PipelineRootStatusProvider).activateResource.value!.dirUri,
-      '.mse'
-    )
-    const mseIndex = vscode.Uri.joinPath(mseDir, 'index.js')
-    if (await vscfs.exists(mseIndex)) {
-      try {
-        delete require.cache[mseIndex.fsPath]
-        const module = require(mseIndex.fsPath)
-        module(controller, resource, tasker, logger)
-      } catch (err) {
-        logger.warn(`load mse failed, error ${err}`)
-      }
     }
 
     return true

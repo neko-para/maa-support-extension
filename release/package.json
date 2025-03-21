@@ -44,10 +44,6 @@
         "command": "maa.stop-launch"
       },
       {
-        "title": "%maa.command.generate-mse-index%",
-        "command": "maa.generate-mse-index"
-      },
-      {
         "title": "%maa.command.reveal-control-panel%",
         "command": "maa.reveal-control-panel"
       },

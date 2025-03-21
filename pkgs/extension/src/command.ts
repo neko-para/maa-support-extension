@@ -4,7 +4,6 @@ export const commands = {
 
   GotoTask: 'maa.goto-task',
   LaunchTask: 'maa.launch-task',
-  GenerateMSEIndex: 'maa.generate-mse-index',
 
   LaunchInterface: 'maa.launch-interface',
   RevealControlPanel: 'maa.reveal-control-panel',

@@ -83,18 +83,27 @@ class PipelineTaskIndexLayer extends Service implements PipelineLayer {
     this.needReflush = false
 
     vscode.workspace.onDidChangeTextDocument(event => {
-      if (event.document.uri.fsPath.startsWith(this.uri.fsPath)) {
+      if (
+        event.document.uri.fsPath.startsWith(this.uri.fsPath) &&
+        event.document.uri.fsPath.endsWith('.json')
+      ) {
         this.dirtyUri.add(event.document.uri.fsPath)
       }
     })
     this.watcher.onDidCreate(event => {
-      this.dirtyUri.add(event.fsPath)
+      if (event.fsPath.endsWith('.json')) {
+        this.dirtyUri.add(event.fsPath)
+      }
     })
     this.watcher.onDidDelete(event => {
-      this.dirtyUri.add(event.fsPath)
+      if (event.fsPath.endsWith('.json')) {
+        this.dirtyUri.add(event.fsPath)
+      }
     })
     this.watcher.onDidChange(event => {
-      this.dirtyUri.add(event.fsPath)
+      if (event.fsPath.endsWith('.json')) {
+        this.dirtyUri.add(event.fsPath)
+      }
     })
 
     this.loadTask(this.uri)

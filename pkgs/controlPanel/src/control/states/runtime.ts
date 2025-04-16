@@ -47,11 +47,14 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
       return [null, 'no adb config']
     }
 
+    const adb_config = ctrlInfo.adb?.config ?? {}
+    Object.assign(adb_config, config.adb.config ?? {})
+
     result.controller_param = {
       ctype: 'adb',
       adb_path: config.adb.adb_path,
       address: config.adb.address,
-      config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
+      config: JSON.stringify(adb_config),
       screencap: ctrlInfo.adb?.screencap ?? maaEnum.AdbScreencapMethod.Default,
       input: ctrlInfo.adb?.input ?? maaEnum.AdbInputMethod.Default
     }

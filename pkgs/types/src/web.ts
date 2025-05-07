@@ -136,7 +136,7 @@ export type RecoInfo = {
     algorithm: string
     hit: boolean
     box: maa.api.Rect
-    detail: string
+    detail: maa.RecoDetail
   }
 }
 

@@ -88,7 +88,7 @@ onMounted(() => {
             <vscode-label> Box </vscode-label>
             <span> {{ recoSt.recoInfo.value.info.box }} </span>
             <vscode-label> Detail </vscode-label>
-            <pre>{{ JSON.stringify(JSON.parse(recoSt.recoInfo.value.info.detail), null, 2) }}</pre>
+            <pre>{{ JSON.stringify(recoSt.recoInfo.value.info.detail, null, 2) }}</pre>
             <vscode-label> Raw </vscode-label>
             <image-view :src="recoSt.recoInfo.value.raw"></image-view>
             <vscode-label> Draws </vscode-label>

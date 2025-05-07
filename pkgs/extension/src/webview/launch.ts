@@ -37,7 +37,6 @@ export class ProjectInterfaceLaunchInstance {
             if (!detailInfo) {
               return
             }
-            detailInfo.detail = JSON.stringify(JSON.parse(detailInfo.detail), null, 4)
             post({
               cmd: 'showReco',
               raw: toPngDataUrl(detailInfo.raw),

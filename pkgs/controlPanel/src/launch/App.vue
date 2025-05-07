@@ -26,6 +26,14 @@ onMounted(() => {
       <vsc-button @click="taskSt.stop()" :disabled="taskSt.stopped.value"> stop </vsc-button>
     </div>
     <div class="flex gap-1 grow-0 min-h-0">
+      <div class="flex flex-col gap-1 w-40">
+        <vsc-scrollable>
+          <div class="flex flex-col gap-1 min-w-0">
+            <vscode-tree :data="taskSt.taskList.value.focus.map(label => ({ label }))">
+            </vscode-tree>
+          </div>
+        </vsc-scrollable>
+      </div>
       <div class="flex-1 flex flex-col gap-1 min-w-0">
         <vsc-scrollable>
           <div class="flex flex-col gap-1 min-w-0">

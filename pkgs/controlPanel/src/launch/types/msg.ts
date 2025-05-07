@@ -27,6 +27,7 @@ export type NextListMessage = {
   task_id: number
   name: string
   list: string[]
+  focus: unknown
 }
 
 export type RecognitionMessage = {

@@ -1,7 +1,7 @@
 {
   "name": "@mse/control-panel",
   "devDependencies": {
-    "@maaxyz/maa-node": "4.1.0",
+    "@maaxyz/maa-node": "4.2.0-alpha.1-post.9-ci.14933199166",
     "@mse/types": "workspace:*",
     "@mse/web-utils": "workspace:*",
     "@types/node": "^20.17.9",

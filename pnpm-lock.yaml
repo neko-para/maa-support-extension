@@ -44,6 +44,9 @@ importers:
       vite:
         specifier: ^5.4.11
         version: 5.4.11(@types/node@20.17.9)
+      vue-tsc:
+        specifier: ^2.2.10
+        version: 2.2.10(typescript@5.7.2)
 
   pkgs/controlPanel:
     devDependencies:
@@ -89,9 +92,6 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.13(typescript@5.7.2)
-      vue-tsc:
-        specifier: ^2.2.10
-        version: 2.2.10(typescript@5.7.2)
 
   pkgs/extension:
     devDependencies:

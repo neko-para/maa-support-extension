@@ -224,7 +224,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
     let agent: vscode.TaskExecution | undefined = undefined
     if (runtime.agent) {
       const client = new maa.AgentClient()
-      const identifier = client.create_socket(runtime.agent.identifier ?? null)
+      const identifier = client.identifier ?? 'vsc-no-identifier'
 
       logger.info(`AgentClient listening ${identifier}`)
 

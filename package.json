@@ -2,7 +2,8 @@
   "name": "maa-support",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "dev": "concurrently \"node scripts/watch.mjs\" \"node scripts/dev.mjs\""
+    "dev": "concurrently \"node scripts/watch.mjs\" \"node scripts/dev.mjs\"",
+    "lint": "tsc -p pkgs/extension --noEmit"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",

@@ -16,7 +16,7 @@ export function setupMaa() {
     vscode.window.showErrorMessage(
       `MaaFramework version mismatch. Expect ${ver.version}, but ${maa.Global.version} provided.`
     )
-    return false
+    // return false
   }
   return true
 }

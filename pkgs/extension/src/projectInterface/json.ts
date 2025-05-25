@@ -1,4 +1,5 @@
 import EventEmitter from 'events'
+import { parse } from 'jsonc-parser'
 import path from 'path'
 import { ComputedRef, Ref, computed, ref } from 'reactive-vscode'
 import * as vscode from 'vscode'
@@ -86,7 +87,7 @@ export class ProjectInterfaceJsonProvider extends Service {
         vscode.Uri.file(path.dirname(root.configUri.fsPath))
       )
       await vscfs.writeFile(root.configUri, Buffer.from(json))
-      this.interfaceConfigJson.value = JSON.parse(json)
+      this.interfaceConfigJson.value = parse(json)
       this.event.emit('interfaceChanged')
     }
   }
@@ -107,14 +108,14 @@ export class ProjectInterfaceJsonProvider extends Service {
       if (!json) {
         return
       }
-      this.interfaceJson.value = JSON.parse(json)
+      this.interfaceJson.value = parse(json)
     } catch (_) {
       return
     }
     try {
       let json = await this.interfaceConfigContent
       if (json) {
-        this.interfaceConfigJson.value = JSON.parse(json)
+        this.interfaceConfigJson.value = parse(json)
       }
     } catch (_) {
       return

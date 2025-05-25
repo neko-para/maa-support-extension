@@ -1,3 +1,4 @@
+import { parse } from 'jsonc-parser'
 import path from 'path'
 import { watch } from 'reactive-vscode'
 import vscode from 'vscode'
@@ -41,7 +42,7 @@ export function initControlPanel() {
 
   const tryParse = <T>(x?: string | null) => {
     try {
-      return x ? (JSON.parse(x) as T) : undefined
+      return x ? (parse(x) as T) : undefined
     } catch {
       return undefined
     }

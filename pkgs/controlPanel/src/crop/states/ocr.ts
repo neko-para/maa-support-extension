@@ -21,18 +21,15 @@ export const resultObject = computed(() => {
     return null
   }
 
-  const rawData = JSON.parse(result.value)
-  rawData.detail = rawData.detail ? JSON.parse(rawData.detail) : null
-
-  const data = rawData as {
-    detail: {
-      all: OcrDetailEntry[]
-      best: OcrDetailEntry
-      filtered: OcrDetailEntry[]
-    } | null
+  const rawData = JSON.parse(result.value) as {
+    name: string
+    algorithm: string
+    hit: boolean
+    box: maa.api.Rect
+    detail: maa.RecoDetail
   }
 
-  return data
+  return rawData
 })
 
 export function perform() {

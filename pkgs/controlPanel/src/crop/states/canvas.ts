@@ -1,3 +1,4 @@
+import type * as maa from '@maaxyz/maa-node'
 import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 
 import * as controlSt from '@/crop/states/control'
@@ -43,19 +44,20 @@ export function draw(ctx: CanvasRenderingContext2D) {
       if (info.detail) {
         ctx.font = settingsSt.fontWithDefault(settingsSt.ocrFont.value, '24pt consolas')
 
-        let entries = info.detail[ocrSt.drawType.value]
+        let entries = info.detail[ocrSt.drawType.value as keyof maa.RecoDetail] ?? [] // TODO: 等maa更新就改
         if (!Array.isArray(entries)) {
           entries = [entries]
         }
         for (const entry of entries) {
+          const entry_box = entry.box as unknown as maa.api.FlatRect // TODO: 等maa更新就改
           const box = controlSt.viewport.value.toView(
-            Box.from(Pos.from(entry.box[0], entry.box[1]), Size.from(entry.box[2], entry.box[3]))
+            Box.from(Pos.from(entry_box[0], entry_box[1]), Size.from(entry_box[2], entry_box[3]))
           )
 
           ctx.rect(...box.flat())
           ctx.stroke()
 
-          ctx.fillText(entry.text, ...box.rb.add(Size.from(5, 0)).flat())
+          ctx.fillText((entry as any).text, ...box.rb.add(Size.from(5, 0)).flat()) // TODO: 等maa更新就改
         }
       }
 
@@ -71,7 +73,10 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
   ctx.save()
   ctx.globalAlpha = settingsSt.toAlpha(settingsSt.helperAxesOpacity.value, 0.4)
-  const helperAxesStrokeColor = settingsSt.colorWithDefault(settingsSt.helperAxesStroke.value, 'white')
+  const helperAxesStrokeColor = settingsSt.colorWithDefault(
+    settingsSt.helperAxesStroke.value,
+    'white'
+  )
   ctx.strokeStyle = helperAxesStrokeColor
   ctx.beginPath()
   if (1 / controlSt.viewport.value.scale >= (settingsSt.helperAxesThreshold.value ?? 10)) {
@@ -91,7 +96,14 @@ export function draw(ctx: CanvasRenderingContext2D) {
     } else {
       const scaledPos = controlSt.viewport.value.toView(pos)
       const scaledRadius = radius * (1 / controlSt.viewport.value.scale)
-      const gradient = ctx.createRadialGradient(scaledPos.x, scaledPos.y, 0, scaledPos.x, scaledPos.y, scaledRadius)
+      const gradient = ctx.createRadialGradient(
+        scaledPos.x,
+        scaledPos.y,
+        0,
+        scaledPos.x,
+        scaledPos.y,
+        scaledRadius
+      )
       gradient.addColorStop(0.7, helperAxesStrokeColor)
       gradient.addColorStop(1, 'transparent')
       ctx.strokeStyle = gradient

@@ -13,7 +13,13 @@ import { useCropView } from '../web'
 import { toPngDataUrl } from './utils'
 
 export class ProjectInterfaceCropInstance {
+  __context: vscode.ExtensionContext
+
   post: (data: CropViewFromHost) => void = () => {}
+
+  constructor(context: vscode.ExtensionContext) {
+    this.__context = context
+  }
 
   async setup(initImage?: string) {
     const { onDidDispose, post, handler, context, awaked } = await useCropView()
@@ -84,6 +90,16 @@ export class ProjectInterfaceCropInstance {
         case 'requestSave':
           const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
           if (!root) {
+            vscode.window.showWarningMessage(t('maa.crop.warning.no-resource'))
+            const path = await vscode.window.showSaveDialog({
+              filters: {
+                Png: ['png']
+              },
+              defaultUri: vscode.workspace.workspaceFolders?.[0].uri
+            })
+            if (path) {
+              await vscode.workspace.fs.writeFile(path, Buffer.from(data.image, 'base64'))
+            }
             post({
               cmd: 'decreaseLoading'
             })

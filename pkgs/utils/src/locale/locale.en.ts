@@ -48,5 +48,7 @@ export default {
   'maa.pipeline.status.interface-not-configured': 'Maa: Interface Not Configured',
   'maa.pipeline.status.interface-configured': 'Maa: Interface Configured',
   'maa.pipeline.status.tooltip.click-select-interface': 'Click to select interface',
-  'maa.pipeline.status.tooltip.click-launch-interface': 'Click to launch interface'
+  'maa.pipeline.status.tooltip.click-launch-interface': 'Click to launch interface',
+
+  'maa.crop.warning.no-resource': 'resource of interface not configured, will save directly'
 } as const

@@ -73,7 +73,7 @@ async function setup(context: vscode.ExtensionContext) {
   })
 
   useCommand(commands.OpenCrop, () => {
-    new ProjectInterfaceCropInstance().setup()
+    new ProjectInterfaceCropInstance(context).setup()
   })
 
   loadServices([

@@ -48,5 +48,7 @@ export default {
   'maa.pipeline.status.interface-not-configured': 'Maa: interface 未配置',
   'maa.pipeline.status.interface-configured': 'Maa: interface 已配置',
   'maa.pipeline.status.tooltip.click-select-interface': '点击以选择 interface',
-  'maa.pipeline.status.tooltip.click-launch-interface': '点击以执行 interface'
+  'maa.pipeline.status.tooltip.click-launch-interface': '点击以执行 interface',
+
+  'maa.crop.warning.no-resource': '未配置interface的资源, 将直接保存'
 } as const

@@ -1,3 +1,5 @@
+import * as vscode from 'vscode'
+
 import { LaunchViewFromHost } from '@mse/types'
 
 import { Maa } from '../maa'
@@ -7,12 +9,15 @@ import { ProjectInterfaceCropInstance } from './crop'
 import { toPngDataUrl } from './utils'
 
 export class ProjectInterfaceLaunchInstance {
+  __context: vscode.ExtensionContext
+
   instance: TaskerInstance
   stopped: boolean = false
 
   post: (data: LaunchViewFromHost) => void = () => {}
 
-  constructor(inst: TaskerInstance) {
+  constructor(inst: TaskerInstance, context: vscode.ExtensionContext) {
+    this.__context = context
     this.instance = inst
 
     const oldNotify = inst.tasker.notify
@@ -49,7 +54,7 @@ export class ProjectInterfaceLaunchInstance {
           await this.stop()
           break
         case 'showCrop':
-          new ProjectInterfaceCropInstance().setup(data.image)
+          new ProjectInterfaceCropInstance(this.__context).setup(data.image)
           break
       }
     }

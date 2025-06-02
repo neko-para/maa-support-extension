@@ -44,12 +44,12 @@ export function draw(ctx: CanvasRenderingContext2D) {
       if (info.detail) {
         ctx.font = settingsSt.fontWithDefault(settingsSt.ocrFont.value, '24pt consolas')
 
-        let entries = info.detail[ocrSt.drawType.value as keyof maa.RecoDetail] ?? [] // TODO: 等maa更新就改
+        let entries = info.detail[ocrSt.drawType.value] ?? []
         if (!Array.isArray(entries)) {
           entries = [entries]
         }
         for (const entry of entries) {
-          const entry_box = entry.box as unknown as maa.api.FlatRect // TODO: 等maa更新就改
+          const entry_box = entry.box
           const box = controlSt.viewport.value.toView(
             Box.from(Pos.from(entry_box[0], entry_box[1]), Size.from(entry_box[2], entry_box[3]))
           )
@@ -57,7 +57,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
           ctx.rect(...box.flat())
           ctx.stroke()
 
-          ctx.fillText((entry as any).text, ...box.rb.add(Size.from(5, 0)).flat()) // TODO: 等maa更新就改
+          ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
         }
       }
 

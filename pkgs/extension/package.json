@@ -1,7 +1,7 @@
 {
   "name": "@mse/extension",
   "devDependencies": {
-    "@maaxyz/maa-node": "4.3.0",
+    "@maaxyz/maa-node": "4.3.2",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",
     "@tsconfig/node20": "^20.1.4",

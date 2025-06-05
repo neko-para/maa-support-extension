@@ -95,9 +95,15 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
       return [null, 'no task']
     }
 
-    const param: {} = {}
+    const param: Record<string, unknown> = {}
 
-    Object.assign(param, taskInfo.pipeline_override ?? {})
+    const mergeParam = (data?: unknown) => {
+      for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
+        param[task] = Object.assign(param[task] ?? {}, opt)
+      }
+    }
+
+    mergeParam(taskInfo.pipeline_override)
 
     for (const optName of taskInfo.option ?? []) {
       const optInfo = data.option?.[optName]
@@ -116,7 +122,7 @@ export const runtime = computed<[InterfaceRuntime, null] | [null, string]>(() =>
         return [null, 'no case']
       }
 
-      Object.assign(param, csInfo.pipeline_override ?? {})
+      mergeParam(csInfo.pipeline_override)
     }
 
     ipc.log.debug(`process taskInfo param result ${JSON.stringify(param)}`)

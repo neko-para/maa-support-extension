@@ -76,32 +76,33 @@ class PipelineTaskIndexLayer extends Service implements PipelineLayer {
     this.level = level
     this.taskIndex = {}
     this.defer = this.watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(this.uri, 'pipeline/**/*.json')
+      new vscode.RelativePattern(this.uri, 'pipeline/**/*.{json,jsonc}')
     )
     this.dirtyUri = new Set()
     this.flushing = false
     this.needReflush = false
 
+    const isJson = (uri: vscode.Uri) => {
+      return uri.fsPath.endsWith('.json') || uri.fsPath.endsWith('.jsonc')
+    }
+
     vscode.workspace.onDidChangeTextDocument(event => {
-      if (
-        event.document.uri.fsPath.startsWith(this.uri.fsPath) &&
-        event.document.uri.fsPath.endsWith('.json')
-      ) {
+      if (event.document.uri.fsPath.startsWith(this.uri.fsPath) && isJson(event.document.uri)) {
         this.dirtyUri.add(event.document.uri.fsPath)
       }
     })
     this.watcher.onDidCreate(event => {
-      if (event.fsPath.endsWith('.json')) {
+      if (isJson(event)) {
         this.dirtyUri.add(event.fsPath)
       }
     })
     this.watcher.onDidDelete(event => {
-      if (event.fsPath.endsWith('.json')) {
+      if (isJson(event)) {
         this.dirtyUri.add(event.fsPath)
       }
     })
     this.watcher.onDidChange(event => {
-      if (event.fsPath.endsWith('.json')) {
+      if (isJson(event)) {
         this.dirtyUri.add(event.fsPath)
       }
     })
@@ -227,7 +228,7 @@ class PipelineTaskIndexLayer extends Service implements PipelineLayer {
     for (const [name, type] of await vscode.workspace.fs.readDirectory(dir)) {
       const subUri = vscode.Uri.joinPath(dir, name)
       if (type === vscode.FileType.File) {
-        if (name.endsWith('.json')) {
+        if (name.endsWith('.json') || name.endsWith('.jsonc')) {
           await this.loadJson(subUri)
         }
       } else if (type === vscode.FileType.Directory) {

@@ -25,7 +25,7 @@ export class ProviderBase<T extends vscode.Disposable = vscode.Disposable> exten
         const root = this.shared(PipelineRootStatusProvider).activateResource.value
         this.provider = setupProvider([
           ...this.shared(ProjectInterfaceJsonProvider).resourcePaths.value.map(path => ({
-            pattern: new vscode.RelativePattern(path, 'pipeline/**/*.json')
+            pattern: new vscode.RelativePattern(path, 'pipeline/**/*.{json,jsonc}')
           })),
           ...(root
             ? [

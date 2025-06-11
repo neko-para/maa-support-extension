@@ -26,6 +26,10 @@ if (import.meta.env.DEV) {
   await import('@vscode-elements/webview-playground')
   document.body.append(document.createElement('vscode-dev-toolbar'))
   document.body.style.padding = '0'
+
+  document.addEventListener('keydown', e => {
+    window.parent.dispatchEvent(new KeyboardEvent('keydown', e))
+  })
 }
 
 export function useIpc<Context, TH extends IpcRest, FH extends IpcRest>(

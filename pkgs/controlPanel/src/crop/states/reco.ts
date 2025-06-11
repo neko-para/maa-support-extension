@@ -2,7 +2,6 @@ import type * as maa from '@maaxyz/maa-node'
 import { computed, ref } from 'vue'
 
 import { ipc } from '@/crop/main'
-import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
 
 export const loading = ref(false)
@@ -34,8 +33,7 @@ export function perform() {
   loading.value = true
 
   ipc.postMessage({
-    cmd: 'requestOCR',
-    image: imageSt.data.value,
-    roi: controlSt.cropBox.value.ceiled().flat()
+    cmd: 'requestReco',
+    image: imageSt.data.value
   })
 }

@@ -305,7 +305,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     const tasker = this.tasker
     this.tasker = null
-    await new ProjectInterfaceLaunchInstance(tasker).setup()
+    await new ProjectInterfaceLaunchInstance(tasker, this.context).setup()
     await tasker.tasker.post_task(task).wait()
   }
 
@@ -316,7 +316,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     const tasker = this.tasker
     this.tasker = null
-    await new ProjectInterfaceLaunchInstance(tasker).setup()
+    await new ProjectInterfaceLaunchInstance(tasker, this.context).setup()
     let last
     for (const task of runtime.task) {
       last = tasker.tasker.post_task(task.entry, task.pipeline_override as unknown as any).wait()

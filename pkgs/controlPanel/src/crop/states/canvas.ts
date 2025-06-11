@@ -5,6 +5,7 @@ import * as controlSt from '@/crop/states/control'
 import * as imageSt from '@/crop/states/image'
 import * as ocrSt from '@/crop/states/ocr'
 import * as pickSt from '@/crop/states/pick'
+import * as recoSt from '@/crop/states/reco'
 import * as settingsSt from '@/crop/states/settings'
 import { Box, Pos, Size } from '@/crop/utils/2d'
 
@@ -32,36 +33,41 @@ export function draw(ctx: CanvasRenderingContext2D) {
       pickSt.color.value = [clr[0], clr[1], clr[2]]
     }
 
-    if (ocrSt.draw.value && ocrSt.resultObject.value) {
-      ctx.save()
+    for (const [st, stroke, font] of [
+      [ocrSt, settingsSt.ocrStroke.value, settingsSt.ocrFont.value],
+      [recoSt, settingsSt.recoStroke.value, settingsSt.recoFont.value]
+    ] as const) {
+      if (st.draw.value && st.resultObject.value) {
+        ctx.save()
 
-      const info = ocrSt.resultObject.value
-      const color = settingsSt.colorWithDefault(settingsSt.ocrStroke.value, 'green')
+        const info = st.resultObject.value
+        const color = settingsSt.colorWithDefault(stroke, 'green')
 
-      ctx.fillStyle = color
-      ctx.strokeStyle = color
+        ctx.fillStyle = color
+        ctx.strokeStyle = color
 
-      if (info.detail) {
-        ctx.font = settingsSt.fontWithDefault(settingsSt.ocrFont.value, '24pt consolas')
+        if (info.detail) {
+          ctx.font = settingsSt.fontWithDefault(font, '24pt consolas')
 
-        let entries = info.detail[ocrSt.drawType.value] ?? []
-        if (!Array.isArray(entries)) {
-          entries = [entries]
+          let entries = info.detail[st.drawType.value] ?? []
+          if (!Array.isArray(entries)) {
+            entries = [entries]
+          }
+          for (const entry of entries) {
+            const entry_box = entry.box
+            const box = controlSt.viewport.value.toView(
+              Box.from(Pos.from(entry_box[0], entry_box[1]), Size.from(entry_box[2], entry_box[3]))
+            )
+
+            ctx.rect(...box.flat())
+            ctx.stroke()
+
+            ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
+          }
         }
-        for (const entry of entries) {
-          const entry_box = entry.box
-          const box = controlSt.viewport.value.toView(
-            Box.from(Pos.from(entry_box[0], entry_box[1]), Size.from(entry_box[2], entry_box[3]))
-          )
 
-          ctx.rect(...box.flat())
-          ctx.stroke()
-
-          ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
-        }
+        ctx.restore()
       }
-
-      ctx.restore()
     }
   }
 

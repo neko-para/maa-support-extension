@@ -9,6 +9,7 @@ import { PipelineRootStatusProvider } from '../pipeline/root'
 import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from '../projectInterface/launcher'
 import { performOcr } from '../tools/ocr'
+import { performReco } from '../tools/reco'
 import { useCropView } from '../web'
 import { toPngDataUrl } from './utils'
 
@@ -145,6 +146,30 @@ export class ProjectInterfaceCropInstance {
           }
           post({
             cmd: 'ocrResult',
+            data: result
+          })
+          break
+        }
+        case 'requestReco': {
+          const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
+          if (!root) {
+            post({
+              cmd: 'recoResult',
+              data: null
+            })
+            return
+          }
+          let result = null
+          try {
+            result = await performReco(
+              Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+              root.fsPath
+            )
+          } catch (err) {
+            logger.error(`ocr failed, error ${err}`)
+          }
+          post({
+            cmd: 'recoResult',
             data: result
           })
           break

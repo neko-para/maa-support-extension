@@ -182,6 +182,8 @@ export type CropViewContext = {
   helperAxesThreshold?: string
   ocrStroke?: string
   ocrFont?: string
+  recoStroke?: string
+  recoFont?: string
 }
 
 export type CropViewToHost =
@@ -202,6 +204,10 @@ export type CropViewToHost =
       image: string
       roi: maa.api.FlatRect
     }
+  | {
+      cmd: 'requestReco'
+      image: string
+    }
 
 export type CropViewFromHost =
   | {
@@ -213,5 +219,9 @@ export type CropViewFromHost =
     }
   | {
       cmd: 'ocrResult'
+      data: string | null
+    }
+  | {
+      cmd: 'recoResult'
       data: string | null
     }

@@ -4,7 +4,7 @@ import type { VscodeCheckbox } from '@vscode-elements/elements'
 import * as settingsSt from '@/crop/states/settings'
 import VPick from '@/crop/views/VPick.vue'
 
-import VOcr from './VOcr.vue'
+import VTools from './VTools.vue'
 </script>
 
 <template>
@@ -38,7 +38,11 @@ import VOcr from './VOcr.vue'
     <vscode-textfield v-model="settingsSt.ocrStroke.value"></vscode-textfield>
     <span class="mse-fixed-label"> ocr font </span>
     <vscode-textfield v-model="settingsSt.ocrFont.value"></vscode-textfield>
+    <span class="mse-fixed-label"> reco stroke </span>
+    <vscode-textfield v-model="settingsSt.recoStroke.value"></vscode-textfield>
+    <span class="mse-fixed-label"> reco font </span>
+    <vscode-textfield v-model="settingsSt.recoFont.value"></vscode-textfield>
     <v-pick></v-pick>
-    <v-ocr></v-ocr>
+    <v-tools></v-tools>
   </div>
 </template>

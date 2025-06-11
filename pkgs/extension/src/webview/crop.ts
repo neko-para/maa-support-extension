@@ -166,7 +166,7 @@ export class ProjectInterfaceCropInstance {
               root.fsPath
             )
           } catch (err) {
-            logger.error(`ocr failed, error ${err}`)
+            logger.error(`reco failed, error ${err}`)
           }
           post({
             cmd: 'recoResult',

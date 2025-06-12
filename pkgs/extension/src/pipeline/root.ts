@@ -1,4 +1,3 @@
-import EventEmitter from 'events'
 import { ShallowRef, shallowRef } from 'reactive-vscode'
 import * as vscode from 'vscode'
 
@@ -8,14 +7,12 @@ import { ResourceRoot, currentWorkspace, locateResourceRoot } from '../fs'
 export class PipelineRootStatusProvider extends Service {
   resourceRoot: ResourceRoot[]
   activateResource: ShallowRef<ResourceRoot | null>
-  selector: vscode.DocumentFilter[] | null
 
   constructor() {
     super()
 
     this.resourceRoot = []
     this.activateResource = shallowRef(null)
-    this.selector = null
   }
 
   async syncRootInfo(trySelect?: string) {

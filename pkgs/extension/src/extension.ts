@@ -23,6 +23,7 @@ import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 import { ProjectInterfaceReferenceProvider } from './projectInterface/reference'
+import { init } from './service'
 import { focusAndWaitPanel, initControlPanel, useControlPanel } from './web'
 import { ProjectInterfaceCropInstance } from './webview/crop'
 
@@ -43,6 +44,8 @@ async function setup(context: vscode.ExtensionContext) {
   if (!setupMaa()) {
     return
   }
+
+  await init(context)
 
   initControlPanel()
 

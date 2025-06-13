@@ -22,7 +22,11 @@ export class InterfaceCodeLensProvider
 
     this.didChangeCodeLenses = new vscode.EventEmitter()
 
-    interfaceService.onInterfaceChanged(() => {
+    this.defer = interfaceService.onInterfaceChanged(() => {
+      logger.debug('interface codelens refresh')
+      this.didChangeCodeLenses.fire()
+    })
+    this.defer = interfaceService.onInterfaceConfigChanged(() => {
       logger.debug('interface codelens refresh')
       this.didChangeCodeLenses.fire()
     })

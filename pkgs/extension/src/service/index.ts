@@ -15,6 +15,7 @@ import { PipelineDefinitionProvider } from './language/pipeline/definition'
 import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
 import { PipelineHoverProvider } from './language/pipeline/hover'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
+import { LaunchService } from './launch'
 import { RootService } from './root'
 import { StateService } from './state'
 import { TaskIndexService } from './taskIndex'
@@ -26,6 +27,7 @@ export let rootService: RootService
 export let interfaceService: InterfaceService
 export let taskIndexService: TaskIndexService
 export let interfaceIndexService: InterfaceIndexService
+export let launchService: LaunchService
 
 export let pipelineLanguageServices: PipelineLanguageProvider[]
 export let interfaceLanguageServices: InterfaceLanguageProvider[]
@@ -38,6 +40,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   interfaceService = new InterfaceService()
   taskIndexService = new TaskIndexService()
   interfaceIndexService = new InterfaceIndexService()
+  launchService = new LaunchService()
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),
@@ -60,8 +63,13 @@ export async function init(ctx: vscode.ExtensionContext) {
   await interfaceService.init()
   await taskIndexService.init()
   await interfaceIndexService.init()
+  await launchService.init()
 
   for (const service of pipelineLanguageServices) {
+    await service.init()
+  }
+
+  for (const service of interfaceLanguageServices) {
     await service.init()
   }
 }

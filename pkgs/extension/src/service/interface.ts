@@ -19,6 +19,11 @@ export class InterfaceService extends BaseService {
     return this.interfaceChanged.event
   }
 
+  interfaceConfigChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onInterfaceConfigChanged() {
+    return this.interfaceConfigChanged.event
+  }
+
   resourceChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
   get onResourceChanged() {
     return this.resourceChanged.event
@@ -36,18 +41,10 @@ export class InterfaceService extends BaseService {
     })
 
     this.defer = this.onInterfaceChanged(() => {
-      const resInfo = this.interfaceJson.resource?.find(
-        x => x.name === this.interfaceConfigJson.resource
-      )
-      const rootPath = rootService.activeResource?.dirUri.fsPath
-      if (!resInfo || !rootPath) {
-        this.resourcePaths = []
-      } else {
-        this.resourcePaths = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
-          .map(x => x.replace('{PROJECT_DIR}', rootPath))
-          .map(x => vscode.Uri.file(x))
-      }
-      this.resourceChanged.fire()
+      this.updateResource()
+    })
+    this.defer = this.onInterfaceConfigChanged(() => {
+      this.updateResource()
     })
   }
 
@@ -93,12 +90,31 @@ export class InterfaceService extends BaseService {
     await fs.writeFile(configPath, JSON.stringify(this.interfaceConfigJson, null, 4))
   }
 
-  async reduceConfig(config: Partial<InterfaceConfig>) {
+  async reduceConfig(config?: Partial<InterfaceConfig>) {
     this.interfaceConfigJson = {
       ...this.interfaceConfigJson,
       ...config
     }
     await this.saveInterfaceConfig()
-    this.interfaceChanged.fire()
+    this.interfaceConfigChanged.fire()
+  }
+
+  updateResource() {
+    const resInfo = this.interfaceJson.resource?.find(
+      x => x.name === this.interfaceConfigJson.resource
+    )
+    const rootPath = rootService.activeResource?.dirUri.fsPath
+    if (!resInfo || !rootPath) {
+      this.resourcePaths = []
+    } else {
+      this.resourcePaths = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
+        .map(x => x.replace('{PROJECT_DIR}', rootPath))
+        .map(x => vscode.Uri.file(x))
+    }
+    this.resourceChanged.fire()
+  }
+
+  suggestResource() {
+    return this.resourcePaths.length > 0 ? this.resourcePaths[this.resourcePaths.length - 1] : null
   }
 }

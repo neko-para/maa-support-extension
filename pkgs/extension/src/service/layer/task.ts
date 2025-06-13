@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
 import { PipelineLayer, TaskIndexInfo } from '../types'
-import { FSWatchFlushHelper } from './flush'
+import { FSWatchFlushHelper } from '../utils/flush'
 
 export function parsePipelineLiteral(
   value: string,

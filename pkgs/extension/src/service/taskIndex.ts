@@ -6,8 +6,8 @@ import { t } from '@mse/utils'
 
 import { interfaceService, rootService } from '.'
 import { BaseService } from './context'
-import { InterfaceLayer } from './pipeline/interface'
-import { TaskLayer } from './pipeline/task'
+import { InterfaceLayer } from './layer/interface'
+import { TaskLayer } from './layer/task'
 import { PipelineLayer, TaskIndexInfo, TaskQueryResult } from './types'
 
 export class TaskIndexService extends BaseService {

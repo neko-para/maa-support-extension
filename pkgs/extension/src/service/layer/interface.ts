@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
 import { PipelineLayer, TaskIndexInfo } from '../types'
-import { FSWatchFlushHelper } from './flush'
+import { FSWatchFlushHelper } from '../utils/flush'
 import { parsePipelineLiteral } from './task'
 
 export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer {

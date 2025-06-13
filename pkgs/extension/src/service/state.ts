@@ -1,4 +1,3 @@
-import { ResourceRoot } from '../fs'
 import { BaseService, context } from './context'
 
 export type State = {

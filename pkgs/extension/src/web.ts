@@ -20,10 +20,7 @@ import { createUseWebPanel, createUseWebView, logger, t } from '@mse/utils'
 
 import { sharedInstance } from './data'
 import { maa } from './maa'
-import { PipelineRootStatusProvider } from './pipeline/root'
-import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
-import { ProjectInterfaceJsonProvider } from './projectInterface/json'
-import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
+import { interfaceIndexService, interfaceService, launchService, rootService } from './service'
 import { isCropDev, isCtrlDev, isLaunchDev } from './webview/dev'
 
 export const useControlPanel = createUseWebView<
@@ -40,14 +37,6 @@ export function focusAndWaitPanel() {
 export function initControlPanel() {
   const { handler, context } = useControlPanel()
 
-  const tryParse = <T>(x?: string | null) => {
-    try {
-      return x ? (parse(x) as T) : undefined
-    } catch {
-      return undefined
-    }
-  }
-
   handler.value = async data => {
     logger.debug(`controlPanel ${data.cmd} ${JSON.stringify(data).slice(0, 200)}`)
 
@@ -55,65 +44,43 @@ export function initControlPanel() {
       case 'refreshInterface':
         context.value.interfaceRefreshing = true
 
-        await sharedInstance(PipelineRootStatusProvider).syncRootInfo(
-          context.value.interfaceCurrent
-        )
-        context.value.interfaceList = sharedInstance(PipelineRootStatusProvider).resourceRoot.map(
-          x => x.interfaceRelative
-        )
-        context.value.interfaceCurrent = sharedInstance(
-          PipelineRootStatusProvider
-        ).activateResource.value?.interfaceRelative
+        await rootService.refresh()
+        context.value.interfaceList = rootService.resourceRoot.map(x => x.interfaceRelative)
+        context.value.interfaceCurrent = rootService.activeResource?.interfaceRelative
 
-        await sharedInstance(ProjectInterfaceJsonProvider).loadInterface()
+        await interfaceService.loadInterface()
 
-        context.value.interfaceProjectDir = sharedInstance(
-          PipelineRootStatusProvider
-        ).activateResource.value?.dirUri.fsPath
-        context.value.interfaceObj =
-          tryParse<Interface>(
-            await sharedInstance(ProjectInterfaceJsonProvider).interfaceContent
-          ) ?? undefined
-        context.value.interfaceConfigObj =
-          tryParse<InterfaceConfig>(
-            await sharedInstance(ProjectInterfaceJsonProvider).interfaceConfigContent
-          ) ?? undefined
+        context.value.interfaceProjectDir = rootService.activeResource?.dirUri.fsPath
+        context.value.interfaceObj = interfaceService.interfaceJson
+        context.value.interfaceConfigObj = interfaceService.interfaceConfigJson
 
         context.value.interfaceRefreshing = false
         break
       case 'selectInterface': {
         context.value.interfaceRefreshing = true
-        const rootIndex = sharedInstance(PipelineRootStatusProvider).resourceRoot.findIndex(
+        const rootIndex = rootService.resourceRoot.findIndex(
           x => x.interfaceRelative === data.interface
         )
         if (rootIndex !== -1) {
-          const root = sharedInstance(PipelineRootStatusProvider).resourceRoot[rootIndex]
+          const root = rootService.resourceRoot[rootIndex]
           context.value.interfaceCurrent = root.interfaceRelative
-          sharedInstance(PipelineRootStatusProvider).selectRootInfo(rootIndex)
+          rootService.select(rootIndex)
 
-          await sharedInstance(ProjectInterfaceJsonProvider).loadInterface()
+          await interfaceService.loadInterface()
 
-          context.value.interfaceProjectDir = sharedInstance(
-            PipelineRootStatusProvider
-          ).activateResource.value?.dirUri.fsPath
-          context.value.interfaceObj =
-            tryParse<Interface>(
-              await sharedInstance(ProjectInterfaceJsonProvider).interfaceContent
-            ) ?? undefined
-          context.value.interfaceConfigObj =
-            tryParse<InterfaceConfig>(
-              await sharedInstance(ProjectInterfaceJsonProvider).interfaceConfigContent
-            ) ?? undefined
+          context.value.interfaceProjectDir = rootService.activeResource?.dirUri.fsPath
+          context.value.interfaceObj = interfaceService.interfaceJson
+          context.value.interfaceConfigObj = interfaceService.interfaceConfigJson
         }
         context.value.interfaceRefreshing = false
         break
       }
       case 'launchInterface':
         logger.debug(`Launch Interface, runtime ${JSON.stringify(data.runtime)}`)
-        await sharedInstance(ProjectInterfaceLaunchProvider).launchInterface(data.runtime)
+        await launchService.launchRuntime(data.runtime)
         break
       case 'stopInterface':
-        sharedInstance(ProjectInterfaceLaunchProvider).tasker?.tasker.post_stop()
+        launchService.tasker?.tasker.post_stop()
         break
       case 'refreshAdbDevice': {
         context.value.adbDeviceRefreshing = true
@@ -143,24 +110,20 @@ export function initControlPanel() {
 
         if (data.dest.type === 'entry') {
           const info = data.dest
-          const decl = sharedInstance(ProjectInterfaceIndexerProvider).entryDecl.find(
-            x => x.name === info.entry
-          )
+          const decl = interfaceIndexService.entryDecl.find(x => x.name === info.entry)
           range = decl?.range
         } else if (data.dest.type === 'option') {
           const info = data.dest
           const decl = info.case
-            ? sharedInstance(ProjectInterfaceIndexerProvider).caseDecl.find(
+            ? interfaceIndexService.caseDecl.find(
                 x => x.option === info.option && x.case === info.case
               )
-            : sharedInstance(ProjectInterfaceIndexerProvider).optionDecl.find(
-                x => x.option === info.option
-              )
+            : interfaceIndexService.optionDecl.find(x => x.option === info.option)
           range = decl?.range
         }
         if (range) {
           const doc = await vscode.workspace.openTextDocument(
-            sharedInstance(ProjectInterfaceIndexerProvider).interfaceUri!
+            rootService.activeResource!.interfaceUri
           )
           if (doc) {
             const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
@@ -187,9 +150,7 @@ export function initControlPanel() {
   watch(
     () => context.value.interfaceConfigObj,
     async v => {
-      await sharedInstance(ProjectInterfaceJsonProvider).saveConfig(
-        v ? JSON.stringify(v, null, 4) : undefined
-      )
+      await interfaceService.reduceConfig(v)
     },
     {
       deep: true
@@ -198,9 +159,6 @@ export function initControlPanel() {
 
   handler.value({
     cmd: '__updateMaaEnum'
-  })
-  handler.value({
-    cmd: 'refreshInterface'
   })
 }
 

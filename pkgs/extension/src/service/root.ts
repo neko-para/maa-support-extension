@@ -42,6 +42,18 @@ export class RootService extends BaseService {
     this.activeResourceChanged.fire()
   }
 
+  select(index: number) {
+    if (index < 0 || index >= this.resourceRoot.length) {
+      this.activeResource = null
+    } else {
+      this.activeResource = this.resourceRoot[index]
+    }
+    stateService.reduce({
+      activeInterface: this.activeResource?.dirRelative
+    })
+    this.activeResourceChanged.fire()
+  }
+
   relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {
     if (this.activeResource) {
       if (!root) {

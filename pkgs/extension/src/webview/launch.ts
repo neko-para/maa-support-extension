@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import { LaunchViewFromHost } from '@mse/types'
 
 import { Maa } from '../maa'
-import { TaskerInstance } from '../projectInterface/launcher'
+import { TaskerInstance } from '../service/launch'
 import { useLaunchView } from '../web'
 import { ProjectInterfaceCropInstance } from './crop'
 import { toPngDataUrl } from './utils'

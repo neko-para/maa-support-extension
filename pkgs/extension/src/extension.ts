@@ -6,13 +6,7 @@ import { logger, setupLogger } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
-import { loadServices } from './data'
 import { maa, setupMaa } from './maa'
-import { PipelineRootStatusProvider } from './pipeline/root'
-import { PipelineTaskIndexProvider } from './pipeline/task'
-import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
-import { ProjectInterfaceJsonProvider } from './projectInterface/json'
-import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
 import { init } from './service'
 import { focusAndWaitPanel, initControlPanel, useControlPanel } from './web'
 import { ProjectInterfaceCropInstance } from './webview/crop'
@@ -68,15 +62,6 @@ async function setup(context: vscode.ExtensionContext) {
   useCommand(commands.OpenCrop, () => {
     new ProjectInterfaceCropInstance(context).setup()
   })
-
-  loadServices([
-    PipelineRootStatusProvider,
-    PipelineTaskIndexProvider,
-
-    ProjectInterfaceJsonProvider,
-    ProjectInterfaceIndexerProvider,
-    ProjectInterfaceLaunchProvider
-  ])
 }
 
 export const { activate, deactivate } = defineExtension(context => {

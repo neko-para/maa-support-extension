@@ -9,7 +9,10 @@ esBuild({
   external: ['@maaxyz/maa-node', 'vscode'],
   platform: 'node',
   sourcemap: true,
-  mainFields: ['module', 'main']
+  mainFields: ['module', 'main'],
+  loader: {
+    '.html': 'text'
+  }
 })
 
 viteBuild({

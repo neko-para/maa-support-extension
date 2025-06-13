@@ -5,7 +5,7 @@ import { Maa, maa } from '../maa'
 export async function performOcr(
   image: ArrayBuffer,
   roi: Maa.api.FlatRect,
-  resource: string
+  resources: string[]
 ): Promise<string | null> {
   const ctrl = new maa.CustomController(
     new (class extends maa.CustomControllerActorDefaultImpl {
@@ -29,7 +29,9 @@ export async function performOcr(
   }
 
   const res = new maa.Resource()
-  await res.post_bundle(resource).wait()
+  for (const resource of resources) {
+    await res.post_bundle(resource).wait()
+  }
   if (!res.loaded) {
     logger.error('ocr res create failed')
     return null

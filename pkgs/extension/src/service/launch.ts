@@ -2,16 +2,14 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import { InterfaceRuntime } from '@mse/types'
-import { logger, loggerChannel, t, vscfs } from '@mse/utils'
+import { logger, loggerChannel, t } from '@mse/utils'
 
+import { interfaceService, taskIndexService } from '.'
 import { commands } from '../command'
-import { Service } from '../data'
 import { Maa, maa } from '../maa'
-import { PipelineRootStatusProvider } from '../pipeline/root'
-import { PipelineTaskIndexProvider } from '../pipeline/task'
 import { focusAndWaitPanel, useControlPanel } from '../web'
 import { ProjectInterfaceLaunchInstance } from '../webview/launch'
-import { ProjectInterfaceJsonProvider } from './json'
+import { BaseService, context } from './context'
 
 type InstanceCache = {
   controller: Maa.ControllerBase
@@ -24,21 +22,13 @@ export type TaskerInstance = {
   agent?: vscode.TaskExecution
 }
 
-function serializeRuntimeCache(runtime: InterfaceRuntime['controller_param']) {
-  return JSON.stringify(runtime)
-}
-
-export class ProjectInterfaceLaunchProvider extends Service {
-  cache: InstanceCache | null
-  cacheConfig: string | null
-  tasker: TaskerInstance | null
+export class LaunchService extends BaseService {
+  cache?: InstanceCache
+  cacheKey?: string
+  tasker?: TaskerInstance
 
   constructor() {
     super()
-
-    this.cache = null
-    this.cacheConfig = null
-    this.tasker = null
 
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
       // await this.launchInterface()
@@ -55,12 +45,9 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
       if (!task) {
-        const taskRes = await vscode.window.showQuickPick(
-          await this.shared(PipelineTaskIndexProvider).queryTaskList(),
-          {
-            title: t('maa.pi.title.select-task')
-          }
-        )
+        const taskRes = await vscode.window.showQuickPick(await taskIndexService.queryTaskList(), {
+          title: t('maa.pi.title.select-task')
+        })
         if (!taskRes) {
           return false
         }
@@ -80,21 +67,9 @@ export class ProjectInterfaceLaunchProvider extends Service {
     })
   }
 
-  async launchInterface(runtime: InterfaceRuntime) {
-    if (runtime) {
-      loggerChannel.show(true)
-      try {
-        await this.launchRuntime(runtime)
-      } catch (err) {
-        logger.error(`${err}`)
-      }
-    }
-  }
-
-  async prepareControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
-    const pip = this.shared(ProjectInterfaceJsonProvider)
-    const data = pip.interfaceJson.value
-    const config = pip.interfaceConfigJson.value
+  async buildControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
+    const data = interfaceService.interfaceJson
+    const config = interfaceService.interfaceConfigJson
     if (!data || !config) {
       return null
     }
@@ -150,20 +125,17 @@ export class ProjectInterfaceLaunchProvider extends Service {
     return null
   }
 
-  async updateCache(): Promise<boolean> {
-    const rt = await this.prepareControllerRuntime()
+  async updateCache() {
+    const runtime = await this.buildControllerRuntime()
 
-    if (!rt) {
+    if (!runtime) {
       return false
     }
 
-    const key = serializeRuntimeCache(rt)
-
-    if (key !== this.cacheConfig) {
-      // use auto release via gc. ProjectInterfaceLaunchInstance refer it
-      // this.cache?.controller?.destroy()
-      this.cache = null
-      this.cacheConfig = null
+    const key = JSON.stringify(runtime)
+    if (key !== this.cacheKey) {
+      this.cache = undefined
+      this.cacheKey = undefined
     }
 
     let controller: Maa.ControllerBase | undefined = this.cache?.controller
@@ -172,10 +144,16 @@ export class ProjectInterfaceLaunchProvider extends Service {
       return true
     }
 
-    if (rt.ctype === 'adb') {
-      controller = new maa.AdbController(rt.adb_path, rt.address, rt.screencap, rt.input, rt.config)
-    } else if (rt.ctype === 'win32') {
-      controller = new maa.Win32Controller(rt.hwnd, rt.screencap, rt.input)
+    if (runtime.ctype === 'adb') {
+      controller = new maa.AdbController(
+        runtime.adb_path,
+        runtime.address,
+        runtime.screencap,
+        runtime.input,
+        runtime.config
+      )
+    } else if (runtime.ctype === 'win32') {
+      controller = new maa.Win32Controller(runtime.hwnd, runtime.screencap, runtime.input)
     } else {
       return false
     }
@@ -188,7 +166,7 @@ export class ProjectInterfaceLaunchProvider extends Service {
 
     if (controller.connected) {
       this.cache = { controller }
-      this.cacheConfig = key
+      this.cacheKey = key
       return true
     } else {
       controller.destroy()
@@ -196,21 +174,9 @@ export class ProjectInterfaceLaunchProvider extends Service {
     }
   }
 
-  async setupInstance(runtime: InterfaceRuntime): Promise<boolean> {
-    this.tasker?.tasker.destroy()
-    this.tasker?.resource.destroy()
-    this.tasker = null
-
-    if (!(await this.updateCache())) {
-      return false
-    }
-
-    const controller = this.cache?.controller
-
-    if (!controller) {
-      return false
-    }
-
+  async setupResource(
+    runtime: InterfaceRuntime
+  ): Promise<[Maa.Resource | null, vscode.TaskExecution | undefined]> {
     const resource = new maa.Resource()
 
     resource.notify = (msg, detail) => {
@@ -268,8 +234,31 @@ export class ProjectInterfaceLaunchProvider extends Service {
       ) {
         resource.destroy()
         agent?.terminate()
-        return false
+        return [null, undefined]
       }
+    }
+
+    return [resource, agent]
+  }
+
+  async setupInstance(runtime: InterfaceRuntime): Promise<boolean> {
+    this.tasker?.tasker.destroy()
+    this.tasker?.resource.destroy()
+    this.tasker = undefined
+
+    if (!(await this.updateCache())) {
+      return false
+    }
+
+    const controller = this.cache?.controller
+
+    if (!controller) {
+      return false
+    }
+
+    const [resource, agent] = await this.setupResource(runtime)
+    if (!resource) {
+      return false
     }
 
     const tasker = new maa.Tasker()
@@ -298,28 +287,29 @@ export class ProjectInterfaceLaunchProvider extends Service {
     return true
   }
 
-  async launchTask(runtime: InterfaceRuntime, task: string) {
-    if (!(await this.setupInstance(runtime)) || !this.tasker) {
-      return
+  async launchRuntime(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
+    loggerChannel.show(true)
+    try {
+      await this.launchRuntimeImpl(runtime, tasks)
+    } catch (err) {
+      logger.error(`${err}`)
     }
-
-    const tasker = this.tasker
-    this.tasker = null
-    await new ProjectInterfaceLaunchInstance(tasker, this.context).setup()
-    await tasker.tasker.post_task(task).wait()
   }
 
-  async launchRuntime(runtime: InterfaceRuntime) {
+  async launchRuntimeImpl(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
     if (!(await this.setupInstance(runtime)) || !this.tasker) {
       return
     }
 
     const tasker = this.tasker
-    this.tasker = null
-    await new ProjectInterfaceLaunchInstance(tasker, this.context).setup()
+    this.tasker = undefined
+    await new ProjectInterfaceLaunchInstance(tasker, context).setup()
+
     let last
-    for (const task of runtime.task) {
-      last = tasker.tasker.post_task(task.entry, task.pipeline_override as unknown as any).wait()
+    for (const task of tasks ?? runtime.task) {
+      last = tasker.tasker
+        .post_task(task.entry, task.pipeline_override as Record<string, unknown>)
+        .wait()
     }
     await last
   }

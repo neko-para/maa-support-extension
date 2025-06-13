@@ -1,12 +1,15 @@
 import * as vscode from 'vscode'
 
-import { ProviderBase } from './providerBase'
-import { PipelineTaskIndexProvider } from './task'
+import { taskIndexService } from '../..'
+import { PipelineLanguageProvider } from './base'
 
-export class PipelineReferenceProvider extends ProviderBase implements vscode.ReferenceProvider {
+export class PipelineReferenceProvider
+  extends PipelineLanguageProvider
+  implements vscode.ReferenceProvider
+{
   constructor() {
-    super(selector => {
-      return vscode.languages.registerReferenceProvider(selector, this)
+    super(sel => {
+      return vscode.languages.registerReferenceProvider(sel, this)
     })
   }
 
@@ -16,10 +19,7 @@ export class PipelineReferenceProvider extends ProviderBase implements vscode.Re
     context: vscode.ReferenceContext,
     token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
-    const [info, _] = await this.shared(PipelineTaskIndexProvider).queryLocation(
-      document.uri,
-      position
-    )
+    const [info, _] = await taskIndexService.queryLocation(document.uri, position)
 
     if (!info) {
       return null
@@ -27,8 +27,8 @@ export class PipelineReferenceProvider extends ProviderBase implements vscode.Re
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       const result: vscode.Location[] = []
-      for (const layer of this.shared(PipelineTaskIndexProvider).layers) {
-        for (const taskInfo of Object.values(layer.taskIndex).flat()) {
+      for (const layer of taskIndexService.layers) {
+        for (const taskInfo of Object.values(layer.index).flat()) {
           for (const refInfo of taskInfo.taskRef) {
             if (refInfo.task === info.target) {
               result.push(new vscode.Location(taskInfo.uri, refInfo.range))

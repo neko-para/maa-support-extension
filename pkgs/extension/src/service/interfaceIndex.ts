@@ -2,27 +2,12 @@ import * as vscode from 'vscode'
 
 import { visitJsonDocument } from '@mse/utils'
 
-import { Service } from '../data'
-import { PipelineRootStatusProvider } from '../pipeline/root'
-import { ProjectInterfaceJsonProvider } from './json'
+import { interfaceService, rootService } from '.'
+import { BaseService } from './context'
+import { InterfaceQueryResult } from './types'
 
-export type QueryResult =
-  | {
-      type: 'option.ref'
-      range: vscode.Range
-      option: string
-    }
-  | {
-      type: 'case.ref'
-      range: vscode.Range
-      option: string
-      case: string
-    }
-
-export class ProjectInterfaceIndexerProvider extends Service {
-  interfaceUri: vscode.Uri | null = null
-
-  refs: QueryResult[] = []
+export class InterfaceIndexService extends BaseService {
+  refs: InterfaceQueryResult[] = []
   entryDecl: {
     range: vscode.Range
     name: string
@@ -40,7 +25,7 @@ export class ProjectInterfaceIndexerProvider extends Service {
   constructor() {
     super()
 
-    this.shared(ProjectInterfaceJsonProvider).event.on('interfaceChanged', () => {
+    this.defer = interfaceService.onInterfaceChanged(() => {
       this.flushDirty()
     })
   }
@@ -50,9 +35,9 @@ export class ProjectInterfaceIndexerProvider extends Service {
     if (!doc) {
       return
     }
-    this.interfaceUri = uri
 
     this.refs = []
+    this.entryDecl = []
     this.optionDecl = []
     this.caseDecl = []
 
@@ -144,16 +129,19 @@ export class ProjectInterfaceIndexerProvider extends Service {
   }
 
   async flushDirty() {
-    const root = this.shared(PipelineRootStatusProvider).activateResource.value
+    const root = rootService.activeResource
     if (root) {
       await this.loadJson(root.interfaceUri)
     }
   }
 
-  async queryLocation(document: vscode.Uri, pos: vscode.Position): Promise<QueryResult | null> {
+  async queryLocation(
+    document: vscode.Uri,
+    pos: vscode.Position
+  ): Promise<InterfaceQueryResult | null> {
     await this.flushDirty()
 
-    if (document.fsPath !== this.interfaceUri?.fsPath) {
+    if (document.fsPath !== rootService.activeResource?.interfaceUri.fsPath) {
       return null
     }
 

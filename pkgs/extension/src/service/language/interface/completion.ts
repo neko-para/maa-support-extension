@@ -1,15 +1,15 @@
 import * as vscode from 'vscode'
 
-import { ProjectInterfaceIndexerProvider } from './indexer'
-import { ProviderBase } from './providerBase'
+import { interfaceIndexService } from '../..'
+import { InterfaceLanguageProvider } from './base'
 
-export class ProjectInterfaceCompletionProvider
-  extends ProviderBase
+export class InterfaceCompletionProvider
+  extends InterfaceLanguageProvider
   implements vscode.CompletionItemProvider
 {
   constructor() {
-    super(selector => {
-      return vscode.languages.registerCompletionItemProvider(selector, this, '"')
+    super(sel => {
+      return vscode.languages.registerCompletionItemProvider(sel, this, '"')
     })
   }
 
@@ -19,17 +19,14 @@ export class ProjectInterfaceCompletionProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
-    const info = await this.shared(ProjectInterfaceIndexerProvider).queryLocation(
-      document.uri,
-      position
-    )
+    const info = await interfaceIndexService.queryLocation(document.uri, position)
 
     if (!info) {
       return null
     }
 
     if (info.type === 'option.ref') {
-      return this.shared(ProjectInterfaceIndexerProvider).optionDecl.map(decl => {
+      return interfaceIndexService.optionDecl.map(decl => {
         const esc = JSON.stringify(decl.option)
         return {
           label: esc,
@@ -41,12 +38,5 @@ export class ProjectInterfaceCompletionProvider
     }
 
     return null
-  }
-
-  resolveCompletionItem?(
-    item: vscode.CompletionItem,
-    token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.CompletionItem> {
-    return item
   }
 }

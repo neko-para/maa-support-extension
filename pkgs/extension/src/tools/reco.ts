@@ -6,7 +6,7 @@ import { maa } from '../maa'
 
 let prevTask: string | undefined = undefined
 
-export async function performReco(image: ArrayBuffer, resource: string): Promise<string | null> {
+export async function performReco(image: ArrayBuffer, resources: string[]): Promise<string | null> {
   const ctrl = new maa.CustomController(
     new (class extends maa.CustomControllerActorDefaultImpl {
       connect() {
@@ -29,7 +29,9 @@ export async function performReco(image: ArrayBuffer, resource: string): Promise
   }
 
   const res = new maa.Resource()
-  await res.post_bundle(resource).wait()
+  for (const resource of resources) {
+    await res.post_bundle(resource).wait()
+  }
   if (!res.loaded) {
     logger.error('quick reco res create failed')
     return null

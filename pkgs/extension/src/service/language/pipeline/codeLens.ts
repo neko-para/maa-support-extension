@@ -2,14 +2,17 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/utils'
 
-import { commands } from '../command'
-import { ProviderBase } from './providerBase'
-import { PipelineTaskIndexProvider } from './task'
+import { taskIndexService } from '../..'
+import { commands } from '../../../command'
+import { PipelineLanguageProvider } from './base'
 
-export class PipelineCodeLensProvider extends ProviderBase implements vscode.CodeLensProvider {
+export class PipelineCodeLensProvider
+  extends PipelineLanguageProvider
+  implements vscode.CodeLensProvider
+{
   constructor() {
-    super(selector => {
-      return vscode.languages.registerCodeLensProvider(selector, this)
+    super(sel => {
+      return vscode.languages.registerCodeLensProvider(sel, this)
     })
   }
 
@@ -17,13 +20,13 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
-    const layer = this.shared(PipelineTaskIndexProvider).getLayer(document.uri)
+    const layer = taskIndexService.getLayer(document.uri)
     if (!layer) {
       return []
     }
 
     const result: vscode.CodeLens[] = []
-    for (const [taskName, taskInfos] of Object.entries(layer.taskIndex)) {
+    for (const [taskName, taskInfos] of Object.entries(layer.index)) {
       for (const taskInfo of taskInfos) {
         if (taskInfo.uri.fsPath !== document.uri.fsPath) {
           continue
@@ -38,12 +41,5 @@ export class PipelineCodeLensProvider extends ProviderBase implements vscode.Cod
       }
     }
     return result
-  }
-
-  resolveCodeLens?(
-    codeLens: vscode.CodeLens,
-    token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.CodeLens> {
-    return codeLens
   }
 }

@@ -23,6 +23,7 @@ export function visitJsonDocument<State = unknown>(
   const positionStack: vscode.Position[] = []
 
   const states: (State | undefined)[] = [undefined]
+  let afterProp = false
 
   visit(doc.getText(), {
     onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
@@ -34,8 +35,11 @@ export function visitJsonDocument<State = unknown>(
         path
       )
       states.unshift(state)
+      afterProp = true
     },
     onObjectBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+      afterProp = false
+
       const pos = doc.positionAt(offset)
       positionStack.push(pos)
       visitor.onObjectBegin?.(pos, path, states[0])
@@ -64,6 +68,11 @@ export function visitJsonDocument<State = unknown>(
       }
     },
     onArrayBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+      if (afterProp) {
+        states.shift()
+        afterProp = false
+      }
+
       const pos = doc.positionAt(offset)
       positionStack.push(pos)
       visitor.onArrayBegin?.(pos, path)
@@ -79,6 +88,11 @@ export function visitJsonDocument<State = unknown>(
       }
     },
     onLiteralValue: (value, offset, length, startLine, startCharacter, pathSupplier) => {
+      if (afterProp) {
+        afterProp = false
+        states.shift()
+      }
+
       visitor.onLiteral?.(
         value,
         new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length)),

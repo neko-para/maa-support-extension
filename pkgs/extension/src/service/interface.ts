@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
 
-import { rootService, stateService } from '.'
+import { rootService } from '.'
 import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {
@@ -13,7 +13,6 @@ export class InterfaceService extends BaseService {
   interfaceConfigJson: Partial<InterfaceConfig> = {}
 
   resourcePaths: vscode.Uri[] = []
-  resourceKey: string = ''
 
   interfaceChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
   get onInterfaceChanged() {
@@ -25,7 +24,10 @@ export class InterfaceService extends BaseService {
     return this.resourceChanged.event
   }
 
-  async init() {
+  constructor() {
+    super()
+    console.log('construct InterfaceService')
+
     this.defer = this.interfaceChanged
     this.defer = this.resourceChanged
 
@@ -40,15 +42,17 @@ export class InterfaceService extends BaseService {
       const rootPath = rootService.activeResource?.dirUri.fsPath
       if (!resInfo || !rootPath) {
         this.resourcePaths = []
-        this.resourceKey = ''
       } else {
         this.resourcePaths = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
           .map(x => x.replace('{PROJECT_DIR}', rootPath))
           .map(x => vscode.Uri.file(x))
-        this.resourceKey = this.resourcePaths.map(x => x.fsPath).join(path.delimiter)
       }
       this.resourceChanged.fire()
     })
+  }
+
+  async init() {
+    console.log('init InterfaceService')
   }
 
   async loadInterface() {

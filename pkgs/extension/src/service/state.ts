@@ -10,8 +10,15 @@ const stateKey = 'stateService:state'
 export class StateService extends BaseService {
   state: State = {}
 
+  constructor() {
+    super()
+    console.log('construct StateService')
+
+    this.state = (context.workspaceState.get(stateKey) as State | undefined) ?? {}
+  }
+
   async init() {
-    this.state = context.workspaceState.get(stateKey) as State
+    console.log('init StateService')
   }
 
   reduce(change: Partial<State>) {

@@ -1,10 +1,82 @@
 import { existsSync } from 'fs'
+import path from 'path'
 import * as vscode from 'vscode'
 
-import { visitJsonDocument } from '@mse/utils'
+import { JSONPath, visitJsonDocument } from '@mse/utils'
 
+import { PipelineLayer, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from './flush'
-import { PipelineLayer, TaskIndexInfo } from './types'
+
+export function parsePipelineLiteral(
+  value: string,
+  range: vscode.Range,
+  path: JSONPath,
+  state: TaskIndexInfo
+) {
+  switch (path[1]) {
+    case 'next':
+    case 'interrupt':
+    case 'on_error':
+    case 'timeout_next':
+      if (path.length >= 2 && path.length <= 3) {
+        state.taskRef.push({
+          task: value,
+          range: range,
+          belong: 'next'
+        })
+      }
+      break
+    case 'target':
+    case 'begin':
+    case 'end':
+      if (path.length === 2) {
+        state.taskRef.push({
+          task: value,
+          range: range,
+          belong: 'target'
+        })
+      }
+      break
+    case 'template':
+      if (path.length >= 2 && path.length <= 3) {
+        state.imageRef.push({
+          path: value,
+          range: range
+        })
+      }
+      break
+    case 'pre_wait_freezes':
+    case 'post_wait_freezes':
+      switch (path[2]) {
+        case 'target':
+          if (path.length == 3) {
+            state.taskRef.push({
+              task: value,
+              range: range,
+              belong: 'target'
+            })
+          }
+          break
+      }
+      break
+    case 'swipes':
+      if (typeof path[2] === 'number') {
+        switch (path[3]) {
+          case 'begin':
+          case 'end':
+            if (path.length === 4) {
+              state.taskRef.push({
+                task: value,
+                range: range,
+                belong: 'target'
+              })
+            }
+            break
+        }
+      }
+      break
+  }
+}
 
 export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   uri: vscode.Uri
@@ -14,17 +86,18 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   constructor(uri: vscode.Uri, level: number) {
     super(new vscode.RelativePattern(uri, 'pipeline/**/*.{json,jsonc}'), u => {
       return (
-        u.fsPath.startsWith(uri.fsPath) &&
+        u.fsPath.startsWith(uri.fsPath + path.sep) &&
         (u.fsPath.endsWith('.json') || u.fsPath.endsWith('.jsonc'))
       )
     })
 
     this.uri = uri
     this.level = level
-
     this.index = {}
+  }
 
-    this.loadDir(this.uri)
+  async init() {
+    await this.loadDir(vscode.Uri.joinPath(this.uri, 'pipeline'))
   }
 
   async doUpdate(dirtyPath: string[]) {
@@ -85,7 +158,7 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
         state.taskBody = range
         state.taskContent = doc.getText(range)
         state.taskReferContent = doc.getText(
-          new vscode.Range(state.taskProp.start.line, 0, state.taskProp.end.line + 1, 0)
+          new vscode.Range(state.taskProp.start.line, 0, range.end.line + 1, 0)
         )
 
         addTask(path[0].toString(), state)
@@ -98,69 +171,7 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
           return
         }
 
-        switch (path[1]) {
-          case 'next':
-          case 'interrupt':
-          case 'on_error':
-          case 'timeout_next':
-            if (path.length >= 2 && path.length <= 3) {
-              state.taskRef.push({
-                task: value,
-                range: range,
-                belong: 'next'
-              })
-            }
-            break
-          case 'target':
-          case 'begin':
-          case 'end':
-            if (path.length === 2) {
-              state.taskRef.push({
-                task: value,
-                range: range,
-                belong: 'target'
-              })
-            }
-            break
-          case 'template':
-            if (path.length >= 2 && path.length <= 3) {
-              state.imageRef.push({
-                path: value,
-                range: range
-              })
-            }
-            break
-          case 'pre_wait_freezes':
-          case 'post_wait_freezes':
-            switch (path[2]) {
-              case 'target':
-                if (path.length == 3) {
-                  state.taskRef.push({
-                    task: value,
-                    range: range,
-                    belong: 'target'
-                  })
-                }
-                break
-            }
-            break
-          case 'swipes':
-            if (typeof path[2] === 'number') {
-              switch (path[3]) {
-                case 'begin':
-                case 'end':
-                  if (path.length === 4) {
-                    state.taskRef.push({
-                      task: value,
-                      range: range,
-                      belong: 'target'
-                    })
-                  }
-                  break
-              }
-            }
-            break
-        }
+        parsePipelineLiteral(value, range, path, state)
       }
     })
   }

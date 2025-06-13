@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-export type QueryResult =
+export type TaskQueryResult =
   | {
       type: 'task.prop'
       task: string
@@ -25,6 +25,19 @@ export type QueryResult =
       range: vscode.Range
     }
 
+export type InterfaceQueryResult =
+  | {
+      type: 'option.ref'
+      range: vscode.Range
+      option: string
+    }
+  | {
+      type: 'case.ref'
+      range: vscode.Range
+      option: string
+      case: string
+    }
+
 export type TaskIndexInfo = {
   uri: vscode.Uri
   taskContent: string
@@ -46,4 +59,6 @@ export interface PipelineLayer {
   uri: vscode.Uri
   level: number
   index: Record<string, TaskIndexInfo[]>
+
+  flushDirty(): Promise<void>
 }

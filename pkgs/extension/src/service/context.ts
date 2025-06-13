@@ -6,9 +6,21 @@ export function init(ctx: vscode.ExtensionContext) {
   context = ctx
 }
 
-export class DisposableHelper {
+export class DisposableHelper implements vscode.Disposable {
+  __dispose: (() => void)[] = []
+
+  constructor() {
+    context.subscriptions.push(this)
+  }
+
   set defer(v: vscode.Disposable) {
-    context.subscriptions.push(v)
+    this.__dispose.push(() => v.dispose())
+  }
+
+  dispose() {
+    const disp = this.__dispose
+    this.__dispose = []
+    disp.forEach(f => f())
   }
 }
 

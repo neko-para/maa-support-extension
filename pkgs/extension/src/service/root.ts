@@ -13,8 +13,15 @@ export class RootService extends BaseService {
     return this.activeResourceChanged.event
   }
 
-  async init() {
+  constructor() {
+    super()
+    console.log('construct RootService')
+
     this.defer = this.activeResourceChanged
+  }
+
+  async init() {
+    console.log('init RootService')
 
     await this.refresh()
   }
@@ -33,5 +40,19 @@ export class RootService extends BaseService {
       activeInterface: this.activeResource?.dirRelative
     })
     this.activeResourceChanged.fire()
+  }
+
+  relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {
+    if (this.activeResource) {
+      if (!root) {
+        root = this.activeResource.dirUri
+      }
+      if (sub) {
+        root = vscode.Uri.joinPath(root, sub)
+      }
+      return uri.fsPath.replace(root.fsPath, '')
+    } else {
+      return uri.fsPath
+    }
   }
 }

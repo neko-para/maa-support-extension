@@ -8,21 +8,11 @@ import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { loadServices } from './data'
 import { maa, setupMaa } from './maa'
-import { PipelineCodeLensProvider } from './pipeline/codeLens'
-import { PipelineCompletionProvider } from './pipeline/completion'
-import { PipelineDefinitionProvider } from './pipeline/definition'
-import { PipelineDocumentLinkProvider } from './pipeline/documentLink'
-import { PipelineHoverProvider } from './pipeline/hover'
-import { PipelineReferenceProvider } from './pipeline/reference'
 import { PipelineRootStatusProvider } from './pipeline/root'
 import { PipelineTaskIndexProvider } from './pipeline/task'
-import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
-import { ProjectInterfaceCompletionProvider } from './projectInterface/completion'
-import { ProjectInterfaceDefinitionProvider } from './projectInterface/definition'
 import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
 import { ProjectInterfaceJsonProvider } from './projectInterface/json'
 import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
-import { ProjectInterfaceReferenceProvider } from './projectInterface/reference'
 import { init } from './service'
 import { focusAndWaitPanel, initControlPanel, useControlPanel } from './web'
 import { ProjectInterfaceCropInstance } from './webview/crop'
@@ -82,19 +72,9 @@ async function setup(context: vscode.ExtensionContext) {
   loadServices([
     PipelineRootStatusProvider,
     PipelineTaskIndexProvider,
-    PipelineDefinitionProvider,
-    PipelineDocumentLinkProvider,
-    PipelineCompletionProvider,
-    PipelineReferenceProvider,
-    PipelineHoverProvider,
-    PipelineCodeLensProvider,
 
     ProjectInterfaceJsonProvider,
     ProjectInterfaceIndexerProvider,
-    ProjectInterfaceCodeLensProvider,
-    ProjectInterfaceCompletionProvider,
-    ProjectInterfaceDefinitionProvider,
-    ProjectInterfaceReferenceProvider,
     ProjectInterfaceLaunchProvider
   ])
 }

@@ -1,30 +1,67 @@
 import * as vscode from 'vscode'
 
-import { init as initContext } from './context'
+import { BaseService, init as initContext } from './context'
 import { InterfaceService } from './interface'
+import { InterfaceIndexService } from './interfaceIndex'
+import { InterfaceLanguageProvider } from './language/interface/base'
+import { InterfaceCodeLensProvider } from './language/interface/codeLens'
+import { InterfaceCompletionProvider } from './language/interface/completion'
+import { InterfaceDefinitionProvider } from './language/interface/definition'
+import { InterfaceReferenceProvider } from './language/interface/reference'
+import { PipelineLanguageProvider } from './language/pipeline/base'
+import { PipelineCodeLensProvider } from './language/pipeline/codeLens'
+import { PipelineCompletionProvider } from './language/pipeline/completion'
+import { PipelineDefinitionProvider } from './language/pipeline/definition'
+import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
+import { PipelineHoverProvider } from './language/pipeline/hover'
+import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { RootService } from './root'
 import { StateService } from './state'
-import { TaskService } from './task'
+import { TaskIndexService } from './taskIndex'
 
 export { context } from './context'
 
 export let stateService: StateService
 export let rootService: RootService
 export let interfaceService: InterfaceService
-export let taskService: TaskService
+export let taskIndexService: TaskIndexService
+export let interfaceIndexService: InterfaceIndexService
+
+export let pipelineLanguageServices: PipelineLanguageProvider[]
+export let interfaceLanguageServices: InterfaceLanguageProvider[]
 
 export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
 
   stateService = new StateService()
-  await stateService.init()
-
   rootService = new RootService()
-  await rootService.init()
-
   interfaceService = new InterfaceService()
-  await interfaceService.init()
+  taskIndexService = new TaskIndexService()
+  interfaceIndexService = new InterfaceIndexService()
 
-  taskService = new TaskService()
-  await taskService.init()
+  pipelineLanguageServices = [
+    new PipelineCodeLensProvider(),
+    new PipelineCompletionProvider(),
+    new PipelineDefinitionProvider(),
+    new PipelineDocumentLinkProvider(),
+    new PipelineHoverProvider(),
+    new PipelineReferenceProvider()
+  ]
+
+  interfaceLanguageServices = [
+    new InterfaceCodeLensProvider(),
+    new InterfaceCompletionProvider(),
+    new InterfaceDefinitionProvider(),
+    new InterfaceReferenceProvider()
+  ]
+
+  await stateService.init()
+  await rootService.init()
+  await interfaceService.init()
+  await taskIndexService.init()
+  await interfaceIndexService.init()
+
+  for (const service of pipelineLanguageServices) {
+    await service.init()
+  }
 }

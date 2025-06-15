@@ -3,38 +3,46 @@ import * as vscode from 'vscode'
 
 export { type JSONPath } from 'jsonc-parser'
 
-export function visitJsonDocument(
+export function visitJsonDocument<State = unknown>(
   doc: vscode.TextDocument,
   visitor: {
-    onObjectProp?: (prop: string, range: vscode.Range, path: JSONPath) => void
-    onObjectBegin?: (start: vscode.Position, path: JSONPath) => void
-    onObjectEnd?: (range: vscode.Range, path: JSONPath) => void
+    onObjectProp?: (prop: string, range: vscode.Range, path: JSONPath) => State | undefined
+    onObjectBegin?: (start: vscode.Position, path: JSONPath, state?: State) => void
+    onObjectEnd?: (range: vscode.Range, path: JSONPath, state?: State) => void
     onArrayBegin?: (start: vscode.Position, path: JSONPath) => void
     onArrayEnd?: (range: vscode.Range, path: JSONPath) => void
     onLiteral?: (
-      value: string | number | bigint | boolean | null,
+      value: string | number | boolean | null,
       range: vscode.Range,
-      path: JSONPath
+      path: JSONPath,
+      state?: State
     ) => void
   }
 ) {
   const path: JSONPath = []
   const positionStack: vscode.Position[] = []
 
+  const states: (State | undefined)[] = [undefined]
+  let afterProp = false
+
   visit(doc.getText(), {
     onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
       path[path.length - 1] = property
       //
-      visitor.onObjectProp?.(
+      const state = visitor.onObjectProp?.(
         property,
         new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length)),
         path
       )
+      states.unshift(state)
+      afterProp = true
     },
     onObjectBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+      afterProp = false
+
       const pos = doc.positionAt(offset)
       positionStack.push(pos)
-      visitor.onObjectBegin?.(pos, path)
+      visitor.onObjectBegin?.(pos, path, states[0])
       //
       path.push('')
     },
@@ -43,7 +51,12 @@ export function visitJsonDocument(
       //
       const pos = positionStack.pop()
       if (pos) {
-        visitor.onObjectEnd?.(new vscode.Range(pos, doc.positionAt(offset + length)), path)
+        visitor.onObjectEnd?.(
+          new vscode.Range(pos, doc.positionAt(offset + length)),
+          path,
+          states[0]
+        )
+        states.shift()
       }
     },
     onSeparator: (character, offset, length, startLine, startCharacter) => {
@@ -55,6 +68,11 @@ export function visitJsonDocument(
       }
     },
     onArrayBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+      if (afterProp) {
+        states.shift()
+        afterProp = false
+      }
+
       const pos = doc.positionAt(offset)
       positionStack.push(pos)
       visitor.onArrayBegin?.(pos, path)
@@ -70,10 +88,16 @@ export function visitJsonDocument(
       }
     },
     onLiteralValue: (value, offset, length, startLine, startCharacter, pathSupplier) => {
+      if (afterProp) {
+        afterProp = false
+        states.shift()
+      }
+
       visitor.onLiteral?.(
         value,
         new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length)),
-        path
+        path,
+        states[0]
       )
     },
     onError: (error, offset, length, startLine, startCharacter) => {}

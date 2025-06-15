@@ -67,6 +67,12 @@
           "name": "%maa.view.control-panel.title%",
           "visibility": "visible",
           "type": "webview"
+        },
+        {
+          "id": "maa.view.control-panel-new",
+          "name": "%maa.view.control-panel.title%",
+          "visibility": "visible",
+          "type": "webview"
         }
       ]
     },

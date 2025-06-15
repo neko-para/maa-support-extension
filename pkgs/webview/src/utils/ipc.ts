@@ -1,0 +1,71 @@
+import { ref } from 'vue'
+
+import type { HostToWeb, ImplType, WebToHost } from '@mse/types'
+
+if (import.meta.env.DEV) {
+  document.addEventListener('keydown', e => {
+    window.parent.dispatchEvent(new KeyboardEvent('keydown', e))
+  })
+}
+
+export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>() {
+  type ToWeb = HostToWeb<ToWebImpl>
+  type ToHost = WebToHost<ToHostImpl>
+
+  const api = typeof acquireVsCodeApi !== 'function' ? undefined : acquireVsCodeApi()
+
+  let send: (data: ToHost) => void = () => {}
+
+  send = api
+    ? (data: ToHost) => {
+        api.postMessage(JSON.stringify(data))
+      }
+    : (data: ToHost) => {
+        window.parent.postMessage(JSON.stringify(data), '*')
+      }
+
+  let seq = 0
+  const resps = new Map<number, (resp: unknown) => void>()
+  const call = (data: ToHost) => {
+    seq += 1
+    send({
+      ...data,
+      seq
+    })
+    return new Promise<unknown>(resolve => {
+      resps.set(seq, resolve)
+    })
+  }
+
+  const recv = ref<(data: ToWeb) => void>(() => {})
+
+  // const stateInner = ref<unknown>({})
+  // const state = computed(() => {
+  //   return stateInner.value
+  // })
+
+  window.addEventListener('message', event => {
+    const obj = JSON.parse(event.data) as ToWeb
+    if (obj.builtin) {
+      switch (obj.command) {
+        case '__updateBodyClass':
+          document.documentElement.setAttribute('style', obj.htmlStyle)
+          document.body.setAttribute('class', obj.bodyClass)
+          break
+        case '__response':
+          const resolve = resps.get(obj.seq)!
+          resps.delete(obj.seq)
+          resolve?.(obj.data)
+          break
+      }
+    } else {
+      recv.value(obj)
+    }
+  })
+
+  return {
+    send,
+    call,
+    recv
+  }
+}

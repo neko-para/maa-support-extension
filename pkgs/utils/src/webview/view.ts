@@ -1,7 +1,9 @@
 import * as fs from 'fs/promises'
 import * as vscode from 'vscode'
 
-import forwardHtml from './forwardHtml.html'
+import { HostToWeb, ImplType, WebToHost } from '@mse/types'
+
+import forwardHtml from './forward.html'
 
 const cspMeta = `<meta
   http-equiv="Content-Security-Policy"
@@ -16,7 +18,9 @@ export type WebviewOption = {
   dev: boolean
 }
 
-class WebviewProvider implements vscode.WebviewViewProvider {
+export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends ImplType>
+  implements vscode.WebviewViewProvider
+{
   option: WebviewOption
 
   webview?: vscode.Webview
@@ -26,11 +30,11 @@ class WebviewProvider implements vscode.WebviewViewProvider {
     this.option = option
   }
 
-  resolveWebviewView(
+  async resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
     token: vscode.CancellationToken
-  ): Thenable<void> | void {
+  ) {
     this.webview = webviewView.webview
 
     webviewView.webview.html = 'loading...'
@@ -54,7 +58,7 @@ class WebviewProvider implements vscode.WebviewViewProvider {
       })
     )
 
-    this.loadContent()
+    await this.loadContent()
   }
 
   async loadContent() {
@@ -65,7 +69,7 @@ class WebviewProvider implements vscode.WebviewViewProvider {
     if (this.option.dev) {
       this.webview.html = forwardHtml.replace(
         '%DEV_URL%',
-        `http://localhost:5173/${this.option.index}`
+        `http://localhost:5174/${this.option.index}`
       )
     } else {
       const webRoot = vscode.Uri.joinPath(this.option.context.extensionUri, this.option.folder)
@@ -83,19 +87,36 @@ class WebviewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  recv(data: unknown) {}
+  recv(data: WebToHost<ToHostImpl>) {}
 
-  send(data: unknown) {
+  send(data: HostToWeb<ToWebImpl>) {
     this.webview?.postMessage(JSON.stringify(data))
+  }
+
+  response(seq: number | undefined, data: unknown) {
+    if (seq) {
+      this.send({
+        command: '__response',
+        seq,
+        data,
+        builtin: true
+      })
+    }
   }
 }
 
-export function provideWebview(option: WebviewOption) {
+export function provideWebview<ToWebImpl extends ImplType, ToHostImpl extends ImplType>(
+  option: WebviewOption
+) {
+  const provider = new WebviewProvider<ToWebImpl, ToHostImpl>(option)
+
   option.context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(option.webId, new WebviewProvider(option), {
+    vscode.window.registerWebviewViewProvider(option.webId, provider, {
       webviewOptions: {
         retainContextWhenHidden: true
       }
     })
   )
+
+  return provider
 }

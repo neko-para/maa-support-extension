@@ -19,6 +19,7 @@ import { LaunchService } from './launch'
 import { RootService } from './root'
 import { StateService } from './state'
 import { TaskIndexService } from './taskIndex'
+import { WebviewControlService } from './webview/control'
 
 export { context } from './context'
 
@@ -31,6 +32,8 @@ export let launchService: LaunchService
 
 export let pipelineLanguageServices: PipelineLanguageProvider[]
 export let interfaceLanguageServices: InterfaceLanguageProvider[]
+
+export let webviewControlService: WebviewControlService
 
 export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
@@ -58,6 +61,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new InterfaceReferenceProvider()
   ]
 
+  webviewControlService = new WebviewControlService()
+
   await stateService.init()
   await rootService.init()
   await interfaceService.init()
@@ -72,4 +77,6 @@ export async function init(ctx: vscode.ExtensionContext) {
   for (const service of interfaceLanguageServices) {
     await service.init()
   }
+
+  await webviewControlService.init()
 }

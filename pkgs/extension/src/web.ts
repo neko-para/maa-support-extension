@@ -45,7 +45,7 @@ export function initControlPanel() {
         context.value.interfaceRefreshing = true
 
         await rootService.refresh()
-        context.value.interfaceList = rootService.resourceRoot.map(x => x.interfaceRelative)
+        context.value.interfaceList = rootService.resourceRoots.map(x => x.interfaceRelative)
         context.value.interfaceCurrent = rootService.activeResource?.interfaceRelative
 
         await interfaceService.loadInterface()
@@ -58,11 +58,11 @@ export function initControlPanel() {
         break
       case 'selectInterface': {
         context.value.interfaceRefreshing = true
-        const rootIndex = rootService.resourceRoot.findIndex(
+        const rootIndex = rootService.resourceRoots.findIndex(
           x => x.interfaceRelative === data.interface
         )
         if (rootIndex !== -1) {
-          const root = rootService.resourceRoot[rootIndex]
+          const root = rootService.resourceRoots[rootIndex]
           context.value.interfaceCurrent = root.interfaceRelative
           rootService.select(rootIndex)
 

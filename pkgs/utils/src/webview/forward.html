@@ -16,28 +16,60 @@
     <iframe id="container" src="%DEV_URL%"></iframe>
 
     <script>
+      console.log('FORWARD: loaded')
+
       const iframe = document.getElementById('container')
       const api = acquireVsCodeApi()
+
+      const syncStyle = () => {
+        const htmlStyle = document.documentElement.getAttribute('style')
+        const bodyClass = document.body.className
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ command: '__updateBodyClass', htmlStyle, bodyClass, builtin: true }),
+          '*'
+        )
+      }
+      const syncState = () => {
+        const state = api.getState()
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ command: '__updateState', state, builtin: true }),
+          '*'
+        )
+      }
+
       window.addEventListener('message', event => {
         if (event.source === iframe.contentWindow) {
+          const obj = JSON.parse(event.data)
+          if (obj.builtin) {
+            if (obj.command === '__init') {
+              syncStyle()
+              // syncState()
+            } else if (obj.command === '__setState') {
+              api.setState(obj.state)
+            }
+          }
           api.postMessage(event.data)
           return
-        } else {
-          iframe.contentWindow?.postMessage(event.data, '*')
         }
+        iframe.contentWindow?.postMessage(event.data, '*')
       })
-      const observer = new MutationObserver(mutations => {
+
+      const htmlObserver = new MutationObserver(mutations => {
         for (const mutation of mutations) {
-          if (mutation.attributeName === 'class') {
-            const className = document.body.className
-            iframe.contentWindow?.postMessage(
-              JSON.stringify({ command: '__updateBodyClass', className }),
-              '*'
-            )
+          if (mutation.attributeName === 'style') {
+            syncStyle()
           }
         }
       })
-      observer.observe(document.body, { attributes: true })
+      htmlObserver.observe(document.documentElement, { attributes: true })
+      const bodyObserver = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.attributeName === 'class') {
+            syncStyle()
+          }
+        }
+      })
+      bodyObserver.observe(document.body, { attributes: true })
     </script>
   </body>
 </html>

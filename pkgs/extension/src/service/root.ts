@@ -5,8 +5,15 @@ import { ResourceRoot, locateResourceRoot } from '../fs'
 import { BaseService } from './context'
 
 export class RootService extends BaseService {
-  resourceRoot: ResourceRoot[] = []
+  resourceRoots: ResourceRoot[] = []
   activeResource: ResourceRoot | null = null
+
+  refreshing: boolean = false
+
+  refreshingChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onRefreshingChanged() {
+    return this.refreshingChanged.event
+  }
 
   activeResourceChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
   get onActiveResourceChanged() {
@@ -23,18 +30,39 @@ export class RootService extends BaseService {
   async init() {
     console.log('init RootService')
 
-    await this.refresh()
+    this.refresh()
   }
 
   async refresh() {
+    if (this.refreshing) {
+      return
+    }
+    this.refreshing = true
+    this.refreshingChanged.fire()
+
     const old = this.activeResource?.interfaceRelative ?? stateService.state.activeInterface ?? null
     const roots = await locateResourceRoot()
     if (roots.length > 0) {
-      this.resourceRoot = roots
+      this.resourceRoots = roots
       this.activeResource = roots.find(res => res.interfaceRelative === old) ?? roots[0]
     } else {
-      this.resourceRoot = []
+      this.resourceRoots = []
       this.activeResource = null
+    }
+
+    stateService.reduce({
+      activeInterface: this.activeResource?.dirRelative
+    })
+    this.activeResourceChanged.fire()
+    this.refreshing = false
+    this.refreshingChanged.fire()
+  }
+
+  select(index: number) {
+    if (index < 0 || index >= this.resourceRoots.length) {
+      this.activeResource = null
+    } else {
+      this.activeResource = this.resourceRoots[index]
     }
     stateService.reduce({
       activeInterface: this.activeResource?.dirRelative
@@ -42,16 +70,9 @@ export class RootService extends BaseService {
     this.activeResourceChanged.fire()
   }
 
-  select(index: number) {
-    if (index < 0 || index >= this.resourceRoot.length) {
-      this.activeResource = null
-    } else {
-      this.activeResource = this.resourceRoot[index]
-    }
-    stateService.reduce({
-      activeInterface: this.activeResource?.dirRelative
-    })
-    this.activeResourceChanged.fire()
+  selectPath(path: string) {
+    const index = this.resourceRoots.findIndex(info => info.interfaceRelative === path)
+    this.select(index)
   }
 
   relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {

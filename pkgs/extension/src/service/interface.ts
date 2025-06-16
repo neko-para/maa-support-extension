@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises'
 import { parse } from 'jsonc-parser'
 import path from 'path'
+import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig } from '@mse/types'
@@ -89,9 +90,31 @@ export class InterfaceService extends BaseService {
         return
       }
       this.interfaceConfigJson = parse(doc.getText())
-      setTimeout(() => {
-        this.interfaceConfigChanged.fire()
-      }, 0)
+
+      let fixed = false
+      const tasks = this.interfaceConfigJson.task ?? []
+      const fixedTasks = tasks.map(task => {
+        if (!task.__vscKey) {
+          fixed = true
+          return {
+            ...task,
+            __vscKey: v4()
+          }
+        } else {
+          return task
+        }
+      })
+      if (fixed) {
+        setTimeout(() => {
+          this.reduceConfig({
+            task: fixedTasks
+          })
+        }, 0)
+      } else {
+        setTimeout(() => {
+          this.interfaceConfigChanged.fire()
+        }, 0)
+      }
     }
 
     this.watchInterface = vscode.workspace.onDidChangeTextDocument(event => {

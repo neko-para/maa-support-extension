@@ -45,6 +45,17 @@ export type Interface = {
   }
 }
 
+export type TaskConfig = {
+  name: string
+  option?: {
+    name: string
+    value: string
+  }[]
+
+  __vscKey?: string
+  __vscExpand?: boolean
+}
+
 export type InterfaceConfig = {
   controller: {
     name: string
@@ -58,15 +69,7 @@ export type InterfaceConfig = {
     hwnd?: maa.api.DesktopHandle | null
   }
   resource: string
-  task: {
-    name: string
-    option?: {
-      name: string
-      value: string
-    }[]
-
-    __vscExpand?: boolean
-  }[]
+  task: TaskConfig[]
   // gpu?: number
 }
 

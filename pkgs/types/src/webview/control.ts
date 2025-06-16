@@ -40,3 +40,17 @@ export type ControlWebToHost =
       address: string
       config: string
     }
+  | {
+      command: 'addTask'
+      task: string
+    }
+  | {
+      command: 'removeTask'
+      key: string
+    }
+  | {
+      command: 'configTask'
+      key: string
+      option: string
+      value: string
+    }

@@ -35,6 +35,7 @@ function refreshInterface() {
         :loading="hostState.refreshingInterface"
         :disabled="hostState.refreshingInterface"
         @click="refreshInterface"
+        size="small"
       >
         扫描
       </n-button>
@@ -44,6 +45,7 @@ function refreshInterface() {
       :value="hostState.activeInterface"
       :disabled="hostState.refreshingInterface"
       @update:value="switchInterface"
+      size="small"
     ></n-select>
   </n-card>
 </template>

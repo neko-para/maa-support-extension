@@ -90,6 +90,7 @@ function configAdb(index: number) {
       :options="controllerOptions"
       :value="currentController"
       @update:value="switchController"
+      size="small"
     ></n-select>
   </n-card>
 
@@ -98,14 +99,22 @@ function configAdb(index: number) {
       <template #header-extra>
         <n-flex>
           <n-dropdown
-            :disabled="refreshingAdb"
+            :disabled="refreshingAdb || adbOptions.length === 0"
             trigger="hover"
             :options="adbOptions"
             @select="configAdb"
+            size="small"
           >
-            <n-button :disabled="refreshingAdb"> 设备列表 </n-button>
+            <n-button :disabled="refreshingAdb || adbOptions.length === 0" size="small">
+              设备列表
+            </n-button>
           </n-dropdown>
-          <n-button :loading="refreshingAdb" :disabled="refreshingAdb" @click="refreshAdb">
+          <n-button
+            :loading="refreshingAdb"
+            :disabled="refreshingAdb"
+            @click="refreshAdb"
+            size="small"
+          >
             扫描
           </n-button>
         </n-flex>

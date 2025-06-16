@@ -35,6 +35,7 @@ function switchResource(index: number) {
       :options="resourceOptions"
       :value="currentResource"
       @update:value="switchResource"
+      size="small"
     ></n-select>
   </n-card>
 </template>

@@ -1,3 +1,5 @@
+import { v4 } from 'uuid'
+
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, provideWebview } from '@mse/utils'
 
@@ -48,6 +50,45 @@ export class WebviewControlService extends BaseService {
               config: data.config
             }
           })
+          break
+        case 'addTask':
+          interfaceService.reduceConfig({
+            task: (interfaceService.interfaceConfigJson.task ?? []).concat([
+              {
+                name: data.task,
+                option: [],
+                __vscKey: v4()
+              }
+            ])
+          })
+          break
+        case 'removeTask':
+          interfaceService.reduceConfig({
+            task:
+              interfaceService.interfaceConfigJson.task?.filter(
+                task => task.__vscKey !== data.key
+              ) ?? []
+          })
+          break
+        case 'configTask':
+          const tasks = interfaceService.interfaceConfigJson.task
+          const task = tasks?.find(info => info.__vscKey === data.key)
+          if (task) {
+            const option = task.option?.find(opt => opt.name === data.option)
+            if (option) {
+              option.value = data.value
+            } else {
+              task.option = (task.option ?? []).concat([
+                {
+                  name: data.option,
+                  value: data.value
+                }
+              ])
+            }
+            interfaceService.reduceConfig({
+              task: tasks
+            })
+          }
           break
       }
     }

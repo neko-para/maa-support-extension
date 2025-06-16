@@ -125,6 +125,7 @@ function configAdb(index: number) {
         <n-code
           language="json"
           :code="JSON.stringify(hostState.interfaceConfigJson.adb.config, null, 4)"
+          word-wrap
         ></n-code>
       </n-flex>
     </n-card>

@@ -173,7 +173,11 @@ export class InterfaceService extends BaseService {
     if (!rootService.activeResource) {
       return '无interface'
     }
-    const projectDir = rootService.activeResource.interfaceRelative
+    const projectDir = vscode.Uri.joinPath(
+      vscode.workspace.workspaceFolders![0].uri,
+      rootService.activeResource.dirRelative
+    ).fsPath
+
     const replaceVar = (x: string) => {
       return x.replaceAll('{PROJECT_DIR}', projectDir)
     }

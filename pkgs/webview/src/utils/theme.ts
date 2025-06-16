@@ -22,7 +22,8 @@ export function useTheme() {
       return styleMap.get(key)?.toString()
     }
 
-    console.log(getVar('--vscode-editorWidget-border'))
+    // const bgColor = getVar('--vscode-panel-background')
+    const bgColor = getVar('--vscode-sideBar-background')
 
     themeOverride.value = {
       common: {
@@ -31,7 +32,9 @@ export function useTheme() {
         borderColor: getVar('--vscode-editorWidget-border'),
         borderRadius: '0',
         cardColor: 'transparent',
-        inputColor: 'transparent'
+        inputColor: 'transparent',
+        popoverColor: bgColor,
+        hoverColor: getVar('--vscode-toolbar-hoverBackground')
       },
       Card: {
         borderColor: getVar('--vscode-editorWidget-border')

@@ -15,11 +15,17 @@ const resourceOptions = computed(() => {
   })
 })
 
-function switchResource(path: string) {
-  // ipc.send({
-  //   command: 'selectInterface',
-  //   path
-  // })
+const currentResource = computed(() => {
+  const curr = hostState.value.interfaceConfigJson?.resource
+  const index = hostState.value.interfaceJson?.resource?.findIndex(info => info.name === curr) ?? -1
+  return index === -1 ? null : index
+})
+
+function switchResource(index: number) {
+  ipc.send({
+    command: 'selectResource',
+    index
+  })
 }
 </script>
 
@@ -27,7 +33,7 @@ function switchResource(path: string) {
   <n-card title="资源" size="small">
     <n-select
       :options="resourceOptions"
-      :value="hostState.interfaceConfigJson?.resource"
+      :value="currentResource"
       @update:value="switchResource"
     ></n-select>
   </n-card>

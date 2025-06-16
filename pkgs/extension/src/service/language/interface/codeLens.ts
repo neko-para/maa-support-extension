@@ -1,9 +1,10 @@
 import * as vscode from 'vscode'
 
-import { logger, visitJsonDocument } from '@mse/utils'
+import { visitJsonDocument } from '@mse/utils'
 
 import { interfaceService } from '../..'
 import { commands } from '../../../command'
+import { debounce } from '../../utils/debounce'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceCodeLensProvider
@@ -15,6 +16,8 @@ export class InterfaceCodeLensProvider
     return this.didChangeCodeLenses.event
   }
 
+  fireChangeCodeLenses: () => void
+
   constructor() {
     super(sel => {
       return vscode.languages.registerCodeLensProvider(sel, this)
@@ -22,13 +25,15 @@ export class InterfaceCodeLensProvider
 
     this.didChangeCodeLenses = new vscode.EventEmitter()
 
-    this.defer = interfaceService.onInterfaceChanged(() => {
-      logger.debug('interface codelens refresh')
+    this.fireChangeCodeLenses = debounce(() => {
       this.didChangeCodeLenses.fire()
     })
+
+    this.defer = interfaceService.onInterfaceChanged(() => {
+      this.fireChangeCodeLenses()
+    })
     this.defer = interfaceService.onInterfaceConfigChanged(() => {
-      logger.debug('interface codelens refresh')
-      this.didChangeCodeLenses.fire()
+      this.fireChangeCodeLenses()
     })
   }
 

@@ -2,6 +2,7 @@ import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types
 import { WebviewProvider, provideWebview } from '@mse/utils'
 
 import { interfaceService, rootService } from '..'
+import { maa } from '../../maa'
 import { BaseService, context } from '../context'
 
 export class WebviewControlService extends BaseService {
@@ -30,6 +31,23 @@ export class WebviewControlService extends BaseService {
           break
         case 'selectInterface':
           rootService.selectPath(data.path)
+          break
+        case 'selectResource':
+          interfaceService.reduceConfig({
+            resource: interfaceService.interfaceJson.resource?.[data.index].name
+          })
+          break
+        case 'refreshAdb':
+          this.provider?.response(data.seq, await maa.AdbController.find())
+          break
+        case 'configAdb':
+          interfaceService.reduceConfig({
+            adb: {
+              adb_path: data.adb,
+              address: data.address,
+              config: data.config
+            }
+          })
           break
       }
     }

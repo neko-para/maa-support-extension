@@ -14,6 +14,8 @@ export class InterfaceService extends BaseService {
 
   resourcePaths: vscode.Uri[] = []
 
+  watchInterface?: vscode.Disposable
+
   interfaceChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
   get onInterfaceChanged() {
     return this.interfaceChanged.event
@@ -36,6 +38,12 @@ export class InterfaceService extends BaseService {
     this.defer = this.interfaceChanged
     this.defer = this.resourceChanged
 
+    this.defer = {
+      dispose: () => {
+        this.watchInterface?.dispose()
+      }
+    }
+
     this.defer = rootService.onActiveResourceChanged(() => {
       this.loadInterface()
     })
@@ -43,6 +51,7 @@ export class InterfaceService extends BaseService {
     this.defer = this.onInterfaceChanged(() => {
       this.updateResource()
     })
+
     this.defer = this.onInterfaceConfigChanged(() => {
       this.updateResource()
     })
@@ -53,11 +62,8 @@ export class InterfaceService extends BaseService {
   }
 
   async loadInterface() {
-    await this.loadInterfaceImpl()
-    this.interfaceChanged.fire()
-  }
+    this.watchInterface?.dispose()
 
-  async loadInterfaceImpl() {
     this.interfaceJson = {}
     this.interfaceConfigJson = {}
 
@@ -66,17 +72,38 @@ export class InterfaceService extends BaseService {
       return
     }
 
-    const iDoc = await vscode.workspace.openTextDocument(root.interfaceUri)
-    if (!iDoc) {
-      return
+    const doLoadInterface = async () => {
+      const doc = await vscode.workspace.openTextDocument(root.interfaceUri)
+      if (!doc) {
+        return
+      }
+      this.interfaceJson = parse(doc.getText())
+      setTimeout(() => {
+        this.interfaceChanged.fire()
+      }, 0)
     }
-    this.interfaceJson = parse(iDoc.getText())
 
-    const cDoc = await vscode.workspace.openTextDocument(root.configUri)
-    if (!cDoc) {
-      return
+    const doLoadInterfaceConfig = async () => {
+      const doc = await vscode.workspace.openTextDocument(root.configUri)
+      if (!doc) {
+        return
+      }
+      this.interfaceConfigJson = parse(doc.getText())
+      setTimeout(() => {
+        this.interfaceConfigChanged.fire()
+      }, 0)
     }
-    this.interfaceConfigJson = parse(cDoc.getText())
+
+    this.watchInterface = vscode.workspace.onDidChangeTextDocument(event => {
+      if (event.document.uri.fsPath === root.interfaceUri.fsPath) {
+        doLoadInterface()
+      } else if (event.document.uri.fsPath === root.configUri.fsPath) {
+        doLoadInterfaceConfig()
+      }
+    })
+
+    await doLoadInterface()
+    await doLoadInterfaceConfig()
   }
 
   async saveInterfaceConfig() {

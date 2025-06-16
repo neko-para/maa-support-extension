@@ -16,10 +16,27 @@ export type ControlHostToWeb = {
 
 export type ControlWebToHost =
   | {
-      // return
       command: 'refreshInterface'
     }
   | {
       command: 'selectInterface'
       path: string
+    }
+  | {
+      command: 'selectResource'
+      index: number
+    }
+  | {
+      command: 'selectController'
+      index: number
+    }
+  | {
+      // return [name: string, adb_path: string, address: string, screencap_methods: maa.Uint64, input_methods: maa.Uint64, config: string][] | null
+      command: 'refreshAdb'
+    }
+  | {
+      command: 'configAdb'
+      adb: string
+      address: string
+      config: string
     }

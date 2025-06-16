@@ -2,17 +2,38 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/utils'
 
-import { taskIndexService } from '../..'
+import { interfaceService, taskIndexService } from '../..'
 import { commands } from '../../../command'
+import { debounce } from '../../utils/debounce'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineCodeLensProvider
   extends PipelineLanguageProvider
   implements vscode.CodeLensProvider
 {
+  didChangeCodeLenses: vscode.EventEmitter<void>
+  get onDidChangeCodeLenses() {
+    return this.didChangeCodeLenses.event
+  }
+
+  fireChangeCodeLenses: () => void
+
   constructor() {
     super(sel => {
       return vscode.languages.registerCodeLensProvider(sel, this)
+    })
+
+    this.didChangeCodeLenses = new vscode.EventEmitter()
+
+    this.fireChangeCodeLenses = debounce(() => {
+      this.didChangeCodeLenses.fire()
+    })
+
+    this.defer = interfaceService.onInterfaceChanged(() => {
+      this.fireChangeCodeLenses()
+    })
+    this.defer = interfaceService.onInterfaceConfigChanged(() => {
+      this.fireChangeCodeLenses()
     })
   }
 

@@ -169,7 +169,7 @@ export class InterfaceService extends BaseService {
     return this.resourcePaths.length > 0 ? this.resourcePaths[this.resourcePaths.length - 1] : null
   }
 
-  buildRuntime() {
+  buildRuntime(skipTask = false) {
     if (!rootService.activeResource) {
       return '无interface'
     }
@@ -222,49 +222,51 @@ export class InterfaceService extends BaseService {
       replaceVar
     )
 
-    result.task = []
-    for (const task of config.task ?? []) {
-      const taskInfo = data.task?.find(x => x.name === task.name)
+    if (!skipTask) {
+      result.task = []
+      for (const task of config.task ?? []) {
+        const taskInfo = data.task?.find(x => x.name === task.name)
 
-      if (!taskInfo) {
-        return `未找到任务 ${task.name}`
-      }
-
-      const param: Record<string, unknown> = {}
-
-      const mergeParam = (data?: unknown) => {
-        for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
-          param[task] = Object.assign(param[task] ?? {}, opt)
-        }
-      }
-
-      mergeParam(taskInfo.pipeline_override)
-
-      for (const optName of taskInfo.option ?? []) {
-        const optInfo = data.option?.[optName]
-
-        if (!optInfo) {
-          return `未找到选项组 ${optName}`
+        if (!taskInfo) {
+          return `未找到任务 ${task.name}`
         }
 
-        const optEntry = task.option?.find(x => x.name === optName)
+        const param: Record<string, unknown> = {}
 
-        const optValue = optEntry?.value ?? optInfo.default_case ?? optInfo.cases[0].name
-
-        const csInfo = optInfo.cases.find(x => x.name === optValue)
-
-        if (!csInfo) {
-          return `未找到选项值 ${optValue}`
+        const mergeParam = (data?: unknown) => {
+          for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
+            param[task] = Object.assign(param[task] ?? {}, opt)
+          }
         }
 
-        mergeParam(csInfo.pipeline_override)
-      }
+        mergeParam(taskInfo.pipeline_override)
 
-      result.task.push({
-        name: task.name,
-        entry: taskInfo.entry,
-        pipeline_override: param
-      })
+        for (const optName of taskInfo.option ?? []) {
+          const optInfo = data.option?.[optName]
+
+          if (!optInfo) {
+            return `未找到选项组 ${optName}`
+          }
+
+          const optEntry = task.option?.find(x => x.name === optName)
+
+          const optValue = optEntry?.value ?? optInfo.default_case ?? optInfo.cases[0].name
+
+          const csInfo = optInfo.cases.find(x => x.name === optValue)
+
+          if (!csInfo) {
+            return `未找到选项值 ${optValue}`
+          }
+
+          mergeParam(csInfo.pipeline_override)
+        }
+
+        result.task.push({
+          name: task.name,
+          entry: taskInfo.entry,
+          pipeline_override: param
+        })
+      }
     }
 
     if (data.agent) {

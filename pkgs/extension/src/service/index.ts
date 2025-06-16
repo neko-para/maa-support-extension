@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 
+import { CommandService } from './command'
 import { BaseService, init as initContext } from './context'
 import { InterfaceService } from './interface'
 import { InterfaceIndexService } from './interfaceIndex'
@@ -29,6 +30,7 @@ export let interfaceService: InterfaceService
 export let taskIndexService: TaskIndexService
 export let interfaceIndexService: InterfaceIndexService
 export let launchService: LaunchService
+export let commandService: CommandService
 
 export let pipelineLanguageServices: PipelineLanguageProvider[]
 export let interfaceLanguageServices: InterfaceLanguageProvider[]
@@ -44,6 +46,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   taskIndexService = new TaskIndexService()
   interfaceIndexService = new InterfaceIndexService()
   launchService = new LaunchService()
+  commandService = new CommandService()
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),
@@ -69,6 +72,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await taskIndexService.init()
   await interfaceIndexService.init()
   await launchService.init()
+  await commandService.init()
 
   for (const service of pipelineLanguageServices) {
     await service.init()

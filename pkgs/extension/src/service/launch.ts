@@ -29,42 +29,11 @@ export class LaunchService extends BaseService {
 
   constructor() {
     super()
+    console.log('construct LaunchService')
+  }
 
-    this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
-      // await this.launchInterface()
-      const { post } = useControlPanel()
-      await focusAndWaitPanel()
-
-      logger.info(`Send launch interface request`)
-      post({
-        cmd: 'launchInterface'
-      })
-
-      return true
-    })
-
-    this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
-      if (!task) {
-        const taskRes = await vscode.window.showQuickPick(await taskIndexService.queryTaskList(), {
-          title: t('maa.pi.title.select-task')
-        })
-        if (!taskRes) {
-          return false
-        }
-        task = taskRes
-      }
-
-      const { post } = useControlPanel()
-      await focusAndWaitPanel()
-
-      logger.info(`Send launch task request ${task}`)
-      post({
-        cmd: 'launchTask',
-        task
-      })
-
-      return true
-    })
+  async init() {
+    console.log('init LaunchService')
   }
 
   async buildControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {

@@ -47,14 +47,6 @@ async function setup(context: vscode.ExtensionContext) {
     })
   }
 
-  useCommand(commands.PISwitchResource, (res: string) => {
-    const { context } = useControlPanel()
-    const cfg = context.value.interfaceConfigObj
-    if (cfg) {
-      cfg.resource = res
-    }
-  })
-
   useCommand(commands.RevealControlPanel, () => {
     focusAndWaitPanel()
   })

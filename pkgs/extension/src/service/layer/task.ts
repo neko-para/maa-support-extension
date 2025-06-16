@@ -103,7 +103,7 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   async doUpdate(dirtyPath: string[]) {
     const newIndex: Record<string, TaskIndexInfo[]> = {}
     for (const [task, infos] of Object.entries(this.index)) {
-      newIndex[task] = infos.filter(info => dirtyPath.includes(info.uri.fsPath))
+      newIndex[task] = infos.filter(info => !dirtyPath.includes(info.uri.fsPath))
     }
     this.index = newIndex
     for (const file of dirtyPath) {

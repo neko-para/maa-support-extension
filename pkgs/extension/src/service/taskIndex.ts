@@ -44,6 +44,7 @@ export class TaskIndexService extends BaseService {
       for (const layer of this.layers) {
         await layer.init()
       }
+      console.log(this.layers)
     })
   }
 

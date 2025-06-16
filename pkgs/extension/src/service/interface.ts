@@ -4,9 +4,10 @@ import path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import { Interface, InterfaceConfig } from '@mse/types'
+import { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 
 import { rootService } from '.'
+import { maa } from '../maa'
 import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {
@@ -166,5 +167,110 @@ export class InterfaceService extends BaseService {
 
   suggestResource() {
     return this.resourcePaths.length > 0 ? this.resourcePaths[this.resourcePaths.length - 1] : null
+  }
+
+  buildRuntime() {
+    if (!rootService.activeResource) {
+      return '无interface'
+    }
+    const projectDir = rootService.activeResource.interfaceRelative
+    const replaceVar = (x: string) => {
+      return x.replaceAll('{PROJECT_DIR}', projectDir)
+    }
+
+    const data = this.interfaceJson
+    const config = this.interfaceConfigJson
+
+    const result: Partial<InterfaceRuntime> = {}
+
+    result.root = projectDir
+
+    const ctrlInfo = data.controller?.find(info => info.name === config.controller?.name)
+    if (!ctrlInfo) {
+      return `未找到控制器 ${config.controller?.name}`
+    }
+
+    if (ctrlInfo.type === 'Adb') {
+      if (!config.adb) {
+        return '无Adb配置'
+      }
+      const adb_config = ctrlInfo.adb?.config ?? {}
+      Object.assign(adb_config, config.adb?.config ?? {})
+
+      result.controller_param = {
+        ctype: 'adb',
+        adb_path: config.adb.adb_path,
+        address: config.adb.address,
+        config: JSON.stringify(adb_config),
+        screencap: ctrlInfo.adb?.screencap ?? maa.api.AdbScreencapMethod.Default,
+        input: ctrlInfo.adb?.input ?? maa.api.AdbInputMethod.Default
+      }
+    } else {
+      return '暂不支持win32'
+    }
+
+    const resInfo = data.resource?.find(info => info.name === config.resource)
+    if (!resInfo) {
+      return `未找到资源 ${config.resource}`
+    }
+
+    result.resource_path = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path).map(
+      replaceVar
+    )
+
+    result.task = []
+    for (const task of config.task ?? []) {
+      const taskInfo = data.task?.find(x => x.name === task.name)
+
+      if (!taskInfo) {
+        return `未找到任务 ${task.name}`
+      }
+
+      const param: Record<string, unknown> = {}
+
+      const mergeParam = (data?: unknown) => {
+        for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
+          param[task] = Object.assign(param[task] ?? {}, opt)
+        }
+      }
+
+      mergeParam(taskInfo.pipeline_override)
+
+      for (const optName of taskInfo.option ?? []) {
+        const optInfo = data.option?.[optName]
+
+        if (!optInfo) {
+          return `未找到选项组 ${optName}`
+        }
+
+        const optEntry = task.option?.find(x => x.name === optName)
+
+        const optValue = optEntry?.value ?? optInfo.default_case ?? optInfo.cases[0].name
+
+        const csInfo = optInfo.cases.find(x => x.name === optValue)
+
+        if (!csInfo) {
+          return `未找到选项值 ${optValue}`
+        }
+
+        mergeParam(csInfo.pipeline_override)
+      }
+
+      result.task.push({
+        name: task.name,
+        entry: taskInfo.entry,
+        pipeline_override: param
+      })
+    }
+
+    if (data.agent) {
+      result.agent = {
+        child_exec: data.agent.child_exec ? replaceVar(data.agent.child_exec) : undefined,
+        child_args: data.agent.child_args?.map(replaceVar),
+        identifier: data.agent.identifier
+      }
+    }
+
+    return result as InterfaceRuntime
   }
 }

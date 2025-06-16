@@ -54,3 +54,6 @@ export type ControlWebToHost =
       option: string
       value: string
     }
+  | {
+      command: 'launch'
+    }

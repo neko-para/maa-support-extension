@@ -1,9 +1,10 @@
 import { v4 } from 'uuid'
+import * as vscode from 'vscode'
 
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, provideWebview } from '@mse/utils'
 
-import { interfaceService, rootService } from '..'
+import { interfaceService, launchService, rootService } from '..'
 import { maa } from '../../maa'
 import { BaseService, context } from '../context'
 
@@ -89,6 +90,14 @@ export class WebviewControlService extends BaseService {
               task: tasks
             })
           }
+          break
+        case 'launch':
+          const runtime = interfaceService.buildRuntime()
+          if (typeof runtime === 'string') {
+            vscode.window.showErrorMessage(`生成配置失败: ${runtime}`)
+            break
+          }
+          launchService.launchRuntime(runtime)
           break
       }
     }

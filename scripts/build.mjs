@@ -18,3 +18,7 @@ esBuild({
 viteBuild({
   root: path.join(import.meta.dirname, '../pkgs/controlPanel')
 })
+
+viteBuild({
+  root: path.join(import.meta.dirname, '../pkgs/webview')
+})

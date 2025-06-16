@@ -23,3 +23,10 @@ viteBuild({
     watch: {}
   }
 })
+
+viteBuild({
+  root: path.join(import.meta.dirname, '../pkgs/webview'),
+  build: {
+    watch: {}
+  }
+})

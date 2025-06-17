@@ -46,19 +46,56 @@ function configTask(option: string, value: string) {
     value
   })
 }
+
+function revealEntry() {
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'entry',
+      entry: props.task.name
+    }
+  })
+}
+
+function revealOption(opt: string) {
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'option',
+      option: opt
+    }
+  })
+}
+
+function revealCase(opt: string) {
+  const value =
+    props.task.option?.find(info => info.name === opt)?.value ??
+    hostState.value.interfaceJson?.option?.[opt].default_case ??
+    hostState.value.interfaceJson?.option?.[opt].cases[0].name
+  if (value) {
+    ipc.send({
+      command: 'revealInterface',
+      dest: {
+        type: 'case',
+        option: opt,
+        case: value
+      }
+    })
+  }
+}
 </script>
 
 <template>
-  <n-card :title="task.name" size="small" closable @close="removeTask">
-    <template #header-extra>
-      <n-flex>
-        <!-- <n-button> 删除 </n-button> -->
-      </n-flex>
+  <n-card size="small" closable @close="removeTask">
+    <template #header>
+      <n-button size="large" @click="revealEntry" text> {{ task.name }} </n-button>
     </template>
-
     <n-flex vertical>
       <template v-for="opt in taskMeta?.option ?? []" :key="opt">
-        <n-text> {{ opt }} </n-text>
+        <n-flex>
+          <n-button @click="revealOption(opt)" text> {{ opt }} </n-button>
+          <n-button @click="revealCase(opt)" text> 当前值 </n-button>
+        </n-flex>
         <n-select
           :options="
             hostState.interfaceJson?.option?.[opt].cases.map(cs => ({

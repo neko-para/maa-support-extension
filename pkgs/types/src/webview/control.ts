@@ -55,5 +55,22 @@ export type ControlWebToHost =
       value: string
     }
   | {
+      command: 'revealInterface'
+      dest:
+        | {
+            type: 'entry'
+            entry: string
+          }
+        | {
+            type: 'option'
+            option: string
+          }
+        | {
+            type: 'case'
+            option: string
+            case: string
+          }
+    }
+  | {
       command: 'launch'
     }

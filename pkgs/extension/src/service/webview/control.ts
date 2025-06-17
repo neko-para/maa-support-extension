@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, provideWebview } from '@mse/utils'
 
-import { interfaceService, launchService, rootService } from '..'
+import { interfaceIndexService, interfaceService, launchService, rootService } from '..'
 import { maa } from '../../maa'
 import { BaseService, context } from '../context'
 
@@ -89,6 +89,39 @@ export class WebviewControlService extends BaseService {
             interfaceService.reduceConfig({
               task: tasks
             })
+          }
+          break
+        case 'revealInterface':
+          let range: vscode.Range | undefined = undefined
+          switch (data.dest.type) {
+            case 'entry': {
+              const info = data.dest
+              range = interfaceIndexService.entryDecl.find(x => x.name === info.entry)?.range
+              break
+            }
+            case 'option': {
+              const info = data.dest
+              range = interfaceIndexService.optionDecl.find(x => x.option === info.option)?.range
+              break
+            }
+            case 'case': {
+              const info = data.dest
+              range = interfaceIndexService.caseDecl.find(
+                x => x.option === info.option && x.case === info.case
+              )?.range
+            }
+          }
+          if (range) {
+            const doc = await vscode.workspace.openTextDocument(
+              rootService.activeResource!.interfaceUri
+            )
+            if (doc) {
+              const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
+              if (editor) {
+                editor.revealRange(range)
+                editor.selection = new vscode.Selection(range.start, range.end)
+              }
+            }
           }
           break
         case 'launch':

@@ -8,7 +8,6 @@ import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { maa, setupMaa } from './maa'
 import { init } from './service'
-import { focusAndWaitPanel, initControlPanel, useControlPanel } from './web'
 import { ProjectInterfaceCropInstance } from './webview/crop'
 
 sms.install()
@@ -31,8 +30,6 @@ async function setup(context: vscode.ExtensionContext) {
 
   await init(context)
 
-  initControlPanel()
-
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
   logger.info(`MaaFramework version ${maa.Global.version}`)
   maa.Global.debug_mode = true
@@ -46,10 +43,6 @@ async function setup(context: vscode.ExtensionContext) {
       }
     })
   }
-
-  useCommand(commands.RevealControlPanel, () => {
-    focusAndWaitPanel()
-  })
 
   useCommand(commands.OpenCrop, () => {
     new ProjectInterfaceCropInstance(context).setup()

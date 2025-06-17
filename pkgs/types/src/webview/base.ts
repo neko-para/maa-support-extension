@@ -1,4 +1,4 @@
-export type ImplType = { command: string; builtin?: never }
+export type ImplType = { command: string }
 export type HostToWeb<Impl extends ImplType> =
   | {
       command: '__updateBodyClass'
@@ -17,7 +17,9 @@ export type HostToWeb<Impl extends ImplType> =
       data: unknown
       builtin: true
     }
-  | Impl
+  | (Impl & {
+      builtin?: never
+    })
 
 export type WebToHost<Impl extends ImplType> = (
   | {
@@ -29,7 +31,14 @@ export type WebToHost<Impl extends ImplType> = (
   //     state: unknown
   //     builtin: true
   //   }
-  | Impl
+  | {
+      command: '__keyDown'
+      data: Record<string, unknown>
+      builtin: true
+    }
+  | (Impl & {
+      builtin?: never
+    })
 ) & {
   seq?: number
 }

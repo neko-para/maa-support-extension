@@ -135,7 +135,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
       })
       const port = (server.address() as AddressInfo).port
       // const show = () => {
-      //   vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
+      //   vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5174/${index}?msePort=${port}`))
       // }
       // focus = () => {
       //   return new Promise<void>(resolve => {
@@ -157,7 +157,7 @@ export function createUseWebView<Context, TH extends IpcRest, FH extends IpcRest
 
       watch(view, async v => {
         if (v) {
-          html.value = forwardIframe(`http://localhost:5173/${index}?msePort=${port}`)
+          html.value = forwardIframe(`http://localhost:5174/${index}?msePort=${port}`)
 
           v.onDidChangeVisibility(e => {
             logger.debug(`webview ${id} change visibility ${v.visible}`)
@@ -338,7 +338,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
       })
       const port = (server.address() as AddressInfo).port
       // const show = () => {
-      //   vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5173/${index}?msePort=${port}`))
+      //   vscode.env.openExternal(vscode.Uri.parse(`http://localhost:5174/${index}?msePort=${port}`))
       // }
       // show()
 
@@ -357,7 +357,7 @@ export function createUseWebPanel<Context, TH extends IpcRest, FH extends IpcRes
         }
       )
 
-      html.value = forwardIframe(`http://localhost:5173/${index}?msePort=${port}`)
+      html.value = forwardIframe(`http://localhost:5174/${index}?msePort=${port}`)
       panel.onDidDispose(() => {
         realPost = () => {}
         stopSyncContext()

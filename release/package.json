@@ -44,10 +44,6 @@
         "command": "maa.stop-launch"
       },
       {
-        "title": "%maa.command.reveal-control-panel%",
-        "command": "maa.reveal-control-panel"
-      },
-      {
         "title": "%maa.command.open-crop%",
         "command": "maa.open-crop"
       },
@@ -64,12 +60,6 @@
       "explorer": [
         {
           "id": "maa.view.control-panel",
-          "name": "%maa.view.control-panel.title%",
-          "visibility": "visible",
-          "type": "webview"
-        },
-        {
-          "id": "maa.view.control-panel-new",
           "name": "%maa.view.control-panel.title%",
           "visibility": "visible",
           "type": "webview"

@@ -4,7 +4,6 @@
   "maa.command.goto-task": "Maa: goto task",
   "maa.command.launch-task": "Maa: launch task",
   "maa.command.launch-interface": "Maa: launch interface",
-  "maa.command.reveal-control-panel": "Maa: reveal control panel",
   "maa.command.open-crop": "Maa: open crop tool",
   "maa.view.control-panel.title": "Maa Control Panel",
   "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)"

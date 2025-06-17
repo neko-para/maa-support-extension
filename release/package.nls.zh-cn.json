@@ -4,7 +4,6 @@
   "maa.command.goto-task": "Maa: 跳转到任务",
   "maa.command.launch-task": "Maa: 执行任务",
   "maa.command.launch-interface": "Maa: 执行interface",
-  "maa.command.reveal-control-panel": "Maa: 展示控制面板",
   "maa.command.open-crop": "Maa: 打开截图工具",
   "maa.view.control-panel.title": "Maa 控制面板",
   "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)"

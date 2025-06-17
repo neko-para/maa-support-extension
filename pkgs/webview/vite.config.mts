@@ -9,7 +9,7 @@ export default defineConfig({
   root: __dirname,
   base: './',
   server: {
-    port: 5174
+    port: 5173
   },
   build: {
     outDir: '../../release/webview',
@@ -17,8 +17,8 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
-        control: resolve(__dirname, 'control.html')
-        // launch: resolve(__dirname, 'launch.html'),
+        control: resolve(__dirname, 'control.html'),
+        launch: resolve(__dirname, 'launch.html')
         // crop: resolve(__dirname, 'crop.html')
       },
       output: {

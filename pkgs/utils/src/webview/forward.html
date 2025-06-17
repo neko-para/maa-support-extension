@@ -46,6 +46,19 @@
               // syncState()
             } else if (obj.command === '__setState') {
               api.setState(obj.state)
+            } else if (obj.command === '__keyDown') {
+              const keyboardEvent = new KeyboardEvent('keydown', {
+                key: obj.data.key,
+                code: obj.data.code,
+                altKey: obj.data.altKey,
+                ctrlKey: obj.data.ctrlKey,
+                shiftKey: obj.data.shiftKey,
+                metaKey: obj.data.metaKey,
+                repeat: obj.data.repeat,
+                bubbles: true,
+                cancelable: true
+              })
+              document.dispatchEvent(keyboardEvent)
             }
           }
           api.postMessage(event.data)

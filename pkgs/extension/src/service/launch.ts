@@ -4,12 +4,11 @@ import * as vscode from 'vscode'
 import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t } from '@mse/utils'
 
-import { interfaceService, taskIndexService } from '.'
-import { commands } from '../command'
+import { interfaceService } from '.'
 import { Maa, maa } from '../maa'
-import { focusAndWaitPanel, useControlPanel } from '../web'
 import { ProjectInterfaceLaunchInstance } from '../webview/launch'
 import { BaseService, context } from './context'
+import { WebviewLaunchPanel } from './webview/launch'
 
 type InstanceCache = {
   controller: Maa.ControllerBase
@@ -272,7 +271,9 @@ export class LaunchService extends BaseService {
 
     const tasker = this.tasker
     this.tasker = undefined
-    await new ProjectInterfaceLaunchInstance(tasker, context).setup()
+    // await new ProjectInterfaceLaunchInstance(tasker, context).setup()
+    const panel = new WebviewLaunchPanel(tasker, 'Maa launch')
+    await panel.init()
 
     let last
     for (const task of tasks ?? runtime.task) {
@@ -281,5 +282,6 @@ export class LaunchService extends BaseService {
         .wait()
     }
     await last
+    panel.finish()
   }
 }

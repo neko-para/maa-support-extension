@@ -6,7 +6,6 @@ export const commands = {
   LaunchTask: 'maa.launch-task',
 
   LaunchInterface: 'maa.launch-interface',
-  RevealControlPanel: 'maa.reveal-control-panel',
   OpenCrop: 'maa.open-crop',
 
   PISwitchResource: 'maa.pi.switch-resource',

@@ -10,7 +10,7 @@ import LaunchView from './views/LaunchView.vue'
 import ResourceView from './views/ResourceView.vue'
 import TaskView from './views/TaskView.vue'
 
-const { theme, themeOverride } = useTheme()
+const { theme, themeOverride } = useTheme('view')
 
 hljs.registerLanguage('json', json)
 </script>

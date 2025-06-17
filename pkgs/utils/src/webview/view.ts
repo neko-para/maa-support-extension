@@ -3,12 +3,8 @@ import * as vscode from 'vscode'
 
 import { HostToWeb, ImplType, WebToHost } from '@mse/types'
 
+import { cspMeta } from './data'
 import forwardHtml from './forward.html'
-
-const cspMeta = `<meta
-  http-equiv="Content-Security-Policy"
-  content="default-src 'none'; font-src %{cspSource}; style-src 'unsafe-inline' %{cspSource}; script-src %{cspSource}; img-src %{cspSource} data:; connect-src %{cspSource} data:;"
-/>`
 
 export type WebviewOption = {
   context: vscode.ExtensionContext
@@ -69,7 +65,7 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
     if (this.option.dev) {
       this.webview.html = forwardHtml.replace(
         '%DEV_URL%',
-        `http://localhost:5174/${this.option.index}`
+        `http://localhost:5173/${this.option.index}`
       )
     } else {
       const webRoot = vscode.Uri.joinPath(this.option.context.extensionUri, this.option.folder)

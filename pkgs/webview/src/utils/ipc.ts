@@ -2,12 +2,6 @@ import { ref } from 'vue'
 
 import type { HostToWeb, ImplType, WebToHost } from '@mse/types'
 
-if (import.meta.env.DEV) {
-  document.addEventListener('keydown', e => {
-    window.parent.dispatchEvent(new KeyboardEvent('keydown', e))
-  })
-}
-
 export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>() {
   type ToWeb = HostToWeb<ToWebImpl>
   type ToHost = WebToHost<ToHostImpl>
@@ -62,6 +56,24 @@ export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>(
       recv.value(obj)
     }
   })
+
+  if (import.meta.env.DEV) {
+    document.addEventListener('keydown', e => {
+      send({
+        command: '__keyDown',
+        data: {
+          key: e.key,
+          code: e.code,
+          altKey: e.altKey,
+          ctrlKey: e.ctrlKey,
+          shiftKey: e.shiftKey,
+          metaKey: e.metaKey,
+          repeat: e.repeat
+        },
+        builtin: true
+      })
+    })
+  }
 
   return {
     send,

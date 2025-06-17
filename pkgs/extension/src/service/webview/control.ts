@@ -7,6 +7,7 @@ import { WebviewProvider, provideWebview } from '@mse/utils'
 import { interfaceIndexService, interfaceService, launchService, rootService } from '..'
 import { maa } from '../../maa'
 import { BaseService, context } from '../context'
+import { isCtrlDev } from './dev'
 
 export class WebviewControlService extends BaseService {
   provider?: WebviewProvider<ControlHostToWeb, ControlWebToHost>
@@ -20,8 +21,8 @@ export class WebviewControlService extends BaseService {
       context,
       folder: 'webview',
       index: 'control',
-      webId: 'maa.view.control-panel-new',
-      dev: true
+      webId: 'maa.view.control-panel',
+      dev: isCtrlDev
     })
 
     this.provider.recv = async data => {

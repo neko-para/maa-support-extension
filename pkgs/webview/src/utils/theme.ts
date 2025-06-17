@@ -1,7 +1,7 @@
 import { type GlobalTheme, type GlobalThemeOverrides, darkTheme, lightTheme } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
-export function useTheme() {
+export function useTheme(type: 'view' | 'panel') {
   const theme = ref<GlobalTheme>(lightTheme)
   const themeOverride = ref<GlobalThemeOverrides>({})
 
@@ -22,8 +22,8 @@ export function useTheme() {
       return styleMap.get(key)?.toString()
     }
 
-    // const bgColor = getVar('--vscode-panel-background')
-    const bgColor = getVar('--vscode-sideBar-background')
+    const panelBgColor = getVar('--vscode-panel-background')
+    const viewBgColor = getVar('--vscode-sideBar-background')
 
     themeOverride.value = {
       common: {
@@ -33,7 +33,7 @@ export function useTheme() {
         borderRadius: '0',
         cardColor: 'transparent',
         inputColor: 'transparent',
-        popoverColor: bgColor,
+        popoverColor: type === 'view' ? viewBgColor : panelBgColor,
         hoverColor: getVar('--vscode-toolbar-hoverBackground')
       },
       Card: {

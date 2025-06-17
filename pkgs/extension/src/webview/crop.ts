@@ -4,7 +4,6 @@ import * as vscode from 'vscode'
 import { CropViewFromHost } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
-import { sharedInstance } from '../data'
 import { interfaceService, launchService, rootService } from '../service'
 import { performOcr } from '../tools/ocr'
 import { performReco } from '../tools/reco'

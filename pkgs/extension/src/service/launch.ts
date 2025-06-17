@@ -6,7 +6,6 @@ import { logger, loggerChannel, t } from '@mse/utils'
 
 import { interfaceService } from '.'
 import { Maa, maa } from '../maa'
-import { ProjectInterfaceLaunchInstance } from '../webview/launch'
 import { BaseService, context } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
 
@@ -271,7 +270,6 @@ export class LaunchService extends BaseService {
 
     const tasker = this.tasker
     this.tasker = undefined
-    // await new ProjectInterfaceLaunchInstance(tasker, context).setup()
     const panel = new WebviewLaunchPanel(tasker, 'Maa launch')
     await panel.init()
 

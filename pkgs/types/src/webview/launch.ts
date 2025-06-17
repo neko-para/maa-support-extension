@@ -1,4 +1,4 @@
-import type { Interface, InterfaceConfig } from '../pi'
+import * as maa from '@maaxyz/maa-node'
 
 export type LaunchHostState = {
   stopped?: boolean
@@ -15,6 +15,24 @@ export type LaunchHostToWeb =
       details: string
     }
 
-export type LaunchWebToHost = {
-  command: 'requestStop'
+export type LaunchWebToHost =
+  | {
+      command: 'requestStop'
+    }
+  | {
+      // return RecoInfo | null
+      command: 'requestReco'
+      reco_id: number
+    }
+
+export type RecoInfo = {
+  raw: string
+  draws: string[]
+  info: {
+    name: string
+    algorithm: string
+    hit: boolean
+    box: maa.api.Rect
+    detail: maa.RecoDetail
+  }
 }

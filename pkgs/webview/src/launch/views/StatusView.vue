@@ -37,12 +37,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <n-card
-    title="流程"
-    content-class="card-content"
-    style="height: 100vh"
-    content-style="display: flex; flex-direction: column"
-  >
+  <n-card title="流程" style="height: 100vh" content-style="display: flex; flex-direction: column">
     <template #header-extra>
       <n-flex>
         <n-button @click="followLast = !followLast"> 跟随 </n-button>

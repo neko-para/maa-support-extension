@@ -5,6 +5,7 @@ import { NCard, NConfigProvider, NSplit } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useTheme } from '../utils/theme'
+import DetailView from './views/DetailView.vue'
 import StatusView from './views/StatusView.vue'
 
 const { theme, themeOverride } = useTheme('panel')
@@ -21,7 +22,7 @@ const splitSize = ref(0.6)
         <status-view></status-view>
       </template>
       <template #2>
-        <n-card title="详情"></n-card>
+        <detail-view></detail-view>
       </template>
     </n-split>
   </n-config-provider>

@@ -3,6 +3,8 @@ import * as vscode from 'vscode'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
 
+import { Maa } from '../../maa'
+import { toPngDataUrl } from '../../webview/utils'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
 import { isLaunchDev } from './dev'
@@ -52,6 +54,19 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         await this.stop()
         this.pushState()
         break
+      case 'requestReco': {
+        const detailInfo = this.instance.tasker.recognition_detail(data.reco_id as Maa.api.RecoId)
+        if (!detailInfo) {
+          this.response(data.seq, null)
+          break
+        }
+        this.response(data.seq, {
+          raw: toPngDataUrl(detailInfo.raw),
+          draws: detailInfo.draws.map(toPngDataUrl),
+          info: detailInfo
+        })
+        break
+      }
     }
     if (data.builtin) {
       super.recv(data)

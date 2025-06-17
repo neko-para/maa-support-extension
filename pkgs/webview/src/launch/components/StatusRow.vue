@@ -1,12 +1,31 @@
 <script setup lang="ts">
 import { CheckOutlined, CloseOutlined } from '@vicons/material'
-import { NButton, NCard, NCode, NFlex, NText } from 'naive-ui'
+import { NButton, NCard, NFlex } from 'naive-ui'
+import { ref } from 'vue'
 
+import type { RecoInfo } from '@mse/types'
+
+import { ipc } from '../ipc'
+import { recoInfo } from '../states/reco'
 import type { NextListScope } from '../states/task'
 
 const props = defineProps<{
   item: NextListScope
 }>()
+
+const querying = ref(false)
+
+async function requestReco(reco_id: number) {
+  if (querying.value) {
+    return
+  }
+  querying.value = true
+  recoInfo.value = (await ipc.call({
+    command: 'requestReco',
+    reco_id
+  })) as RecoInfo | null
+  querying.value = false
+}
 </script>
 
 <template>
@@ -20,6 +39,7 @@ const props = defineProps<{
           :type="
             reco.state === 'success' ? 'success' : reco.state === 'failed' ? 'warning' : undefined
           "
+          @click="requestReco(reco.info.reco_id)"
         >
           <template #icon>
             <close-outlined v-if="reco.state === 'failed'"></close-outlined>

@@ -8,6 +8,7 @@ import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { maa, setupMaa } from './maa'
 import { init } from './service'
+import { WebviewCropPanel } from './service/webview/crop'
 import { ProjectInterfaceCropInstance } from './webview/crop'
 
 sms.install()
@@ -46,6 +47,7 @@ async function setup(context: vscode.ExtensionContext) {
 
   useCommand(commands.OpenCrop, () => {
     new ProjectInterfaceCropInstance(context).setup()
+    new WebviewCropPanel('Maa Crop').init()
   })
 }
 

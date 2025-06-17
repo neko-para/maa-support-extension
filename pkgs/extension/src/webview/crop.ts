@@ -5,10 +5,10 @@ import { CropViewFromHost } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, rootService } from '../service'
+import { toPngDataUrl } from '../service/utils/png'
 import { performOcr } from '../tools/ocr'
 import { performReco } from '../tools/reco'
 import { useCropView } from '../web'
-import { toPngDataUrl } from './utils'
 
 export class ProjectInterfaceCropInstance {
   __context: vscode.ExtensionContext

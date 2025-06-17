@@ -2,6 +2,8 @@ import { BaseService, context } from './context'
 
 export type State = {
   activeInterface?: string
+
+  uploadDir?: string
 }
 
 const stateKey = 'stateService:state'

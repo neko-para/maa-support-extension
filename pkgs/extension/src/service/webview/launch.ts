@@ -4,9 +4,9 @@ import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@m
 import { WebviewPanelProvider } from '@mse/utils'
 
 import { Maa } from '../../maa'
-import { toPngDataUrl } from '../../webview/utils'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
+import { toPngDataUrl } from '../utils/png'
 import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {

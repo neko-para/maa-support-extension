@@ -18,8 +18,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         control: resolve(__dirname, 'control.html'),
-        launch: resolve(__dirname, 'launch.html')
-        // crop: resolve(__dirname, 'crop.html')
+        launch: resolve(__dirname, 'launch.html'),
+        crop: resolve(__dirname, 'crop.html')
       },
       output: {
         entryFileNames: `assets/[name].js`,

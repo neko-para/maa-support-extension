@@ -5,6 +5,7 @@ import { logger, t } from '@mse/utils'
 import { interfaceService, launchService, taskIndexService } from '.'
 import { commands } from '../command'
 import { BaseService } from './context'
+import { WebviewCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
   constructor() {
@@ -51,6 +52,10 @@ export class CommandService extends BaseService {
       interfaceService.reduceConfig({
         resource
       })
+    })
+
+    this.defer = vscode.commands.registerCommand(commands.OpenCrop, () => {
+      new WebviewCropPanel('Maa Crop').init()
     })
   }
 

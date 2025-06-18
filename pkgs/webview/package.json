@@ -3,7 +3,6 @@
   "devDependencies": {
     "@maaxyz/maa-node": "4.3.2",
     "@mse/types": "workspace:*",
-    "@mse/web-utils": "workspace:*",
     "@types/node": "^20.17.9",
     "@types/vscode-webview": "^1.57.5",
     "@vicons/material": "^0.13.0",

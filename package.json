@@ -2,14 +2,14 @@
   "name": "maa-support",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "dev": "concurrently \"node scripts/watch.mjs\" \"node scripts/dev.mjs\"",
+    "dev": "node scripts/dev.mjs",
+    "watch": "node scripts/watch.mjs",
     "lint": "tsc -p pkgs/extension --noEmit && vue-tsc -p pkgs/webview --noEmit"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@tsconfig/node20": "^20.1.5",
     "@vitejs/plugin-vue": "^5.2.4",
-    "concurrently": "^9.1.2",
     "esbuild": "^0.20.2",
     "jsonc-parser": "^3.3.1",
     "prettier": "^3.5.3",

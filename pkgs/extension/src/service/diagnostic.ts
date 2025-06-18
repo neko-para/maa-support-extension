@@ -21,6 +21,8 @@ class DiagnosticScanner extends FlushHelper {
   }
 
   async doFlush() {
+    await taskIndexService.flushDirty()
+
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
     for (const layer of taskIndexService.allLayers) {
       for (const [task, taskInfos] of Object.entries(layer.index)) {

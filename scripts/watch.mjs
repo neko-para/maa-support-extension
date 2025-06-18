@@ -9,13 +9,23 @@ esContext({
   external: ['@maaxyz/maa-node', 'vscode'],
   platform: 'node',
   sourcemap: true,
-  mainFields: ['module', 'main']
+  mainFields: ['module', 'main'],
+  loader: {
+    '.html': 'text'
+  }
 }).then(ctx => {
   ctx.watch()
 })
 
 viteBuild({
   root: path.join(import.meta.dirname, '../pkgs/controlPanel'),
+  build: {
+    watch: {}
+  }
+})
+
+viteBuild({
+  root: path.join(import.meta.dirname, '../pkgs/webview'),
   build: {
     watch: {}
   }

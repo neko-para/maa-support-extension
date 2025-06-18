@@ -44,10 +44,6 @@
         "command": "maa.stop-launch"
       },
       {
-        "title": "%maa.command.reveal-control-panel%",
-        "command": "maa.reveal-control-panel"
-      },
-      {
         "title": "%maa.command.open-crop%",
         "command": "maa.open-crop"
       },

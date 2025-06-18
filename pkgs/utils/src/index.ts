@@ -1,6 +1,7 @@
-export * from './locale'
-
 export * from './fs'
 export * from './json'
+export * from './locale'
 export * from './logger'
 export * from './web'
+export * from './webview/view'
+export * from './webview/panel'

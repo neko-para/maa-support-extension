@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
+::selection {
+  background-color: var(--vscode-selection-background);
+}

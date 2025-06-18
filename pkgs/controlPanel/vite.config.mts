@@ -9,7 +9,7 @@ export default defineConfig({
   root: __dirname,
   base: './',
   server: {
-    port: 5173
+    port: 5174
   },
   build: {
     outDir: '../../release/controlPanel',

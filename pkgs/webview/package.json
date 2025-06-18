@@ -1,0 +1,21 @@
+{
+  "name": "@mse/webview",
+  "devDependencies": {
+    "@maaxyz/maa-node": "4.3.2",
+    "@mse/types": "workspace:*",
+    "@mse/web-utils": "workspace:*",
+    "@types/node": "^20.17.9",
+    "@types/vscode-webview": "^1.57.5",
+    "@vicons/material": "^0.13.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue-jsx": "^4.1.1",
+    "@vue/tsconfig": "^0.5.1",
+    "highlight.js": "^11.11.1",
+    "jimp": "^1.6.0",
+    "naive-ui": "^2.41.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vue": "^3.5.13",
+    "vue-virtual-scroller": "2.0.0-beta.8"
+  }
+}

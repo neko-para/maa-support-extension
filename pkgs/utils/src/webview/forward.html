@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <style>
+      body {
+        padding: 0;
+      }
+      iframe {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        border-width: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="container" src="%DEV_URL%"></iframe>
+
+    <script>
+      console.log('FORWARD: loaded')
+
+      const iframe = document.getElementById('container')
+      const api = acquireVsCodeApi()
+
+      const syncStyle = () => {
+        const htmlStyle = document.documentElement.getAttribute('style')
+        const bodyClass = document.body.className
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ command: '__updateBodyClass', htmlStyle, bodyClass, builtin: true }),
+          '*'
+        )
+      }
+      const syncState = () => {
+        const state = api.getState()
+        iframe.contentWindow?.postMessage(
+          JSON.stringify({ command: '__updateState', state, builtin: true }),
+          '*'
+        )
+      }
+
+      window.addEventListener('message', event => {
+        if (event.source === iframe.contentWindow) {
+          const obj = JSON.parse(event.data)
+          if (obj.builtin) {
+            if (obj.command === '__init') {
+              syncStyle()
+              // syncState()
+            } else if (obj.command === '__setState') {
+              api.setState(obj.state)
+            } else if (obj.command === '__keyDown') {
+              const keyboardEvent = new KeyboardEvent('keydown', {
+                key: obj.data.key,
+                code: obj.data.code,
+                altKey: obj.data.altKey,
+                ctrlKey: obj.data.ctrlKey,
+                shiftKey: obj.data.shiftKey,
+                metaKey: obj.data.metaKey,
+                repeat: obj.data.repeat,
+                bubbles: true,
+                cancelable: true
+              })
+              document.dispatchEvent(keyboardEvent)
+            }
+          }
+          api.postMessage(event.data)
+          return
+        }
+        iframe.contentWindow?.postMessage(event.data, '*')
+      })
+
+      const htmlObserver = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.attributeName === 'style') {
+            syncStyle()
+          }
+        }
+      })
+      htmlObserver.observe(document.documentElement, { attributes: true })
+      const bodyObserver = new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.attributeName === 'class') {
+            syncStyle()
+          }
+        }
+      })
+      bodyObserver.observe(document.body, { attributes: true })
+    </script>
+  </body>
+</html>

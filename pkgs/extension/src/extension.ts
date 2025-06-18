@@ -6,24 +6,9 @@ import { logger, setupLogger } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
-import { loadServices } from './data'
 import { maa, setupMaa } from './maa'
-import { PipelineCodeLensProvider } from './pipeline/codeLens'
-import { PipelineCompletionProvider } from './pipeline/completion'
-import { PipelineDefinitionProvider } from './pipeline/definition'
-import { PipelineDocumentLinkProvider } from './pipeline/documentLink'
-import { PipelineHoverProvider } from './pipeline/hover'
-import { PipelineReferenceProvider } from './pipeline/reference'
-import { PipelineRootStatusProvider } from './pipeline/root'
-import { PipelineTaskIndexProvider } from './pipeline/task'
-import { ProjectInterfaceCodeLensProvider } from './projectInterface/codeLens'
-import { ProjectInterfaceCompletionProvider } from './projectInterface/completion'
-import { ProjectInterfaceDefinitionProvider } from './projectInterface/definition'
-import { ProjectInterfaceIndexerProvider } from './projectInterface/indexer'
-import { ProjectInterfaceJsonProvider } from './projectInterface/json'
-import { ProjectInterfaceLaunchProvider } from './projectInterface/launcher'
-import { ProjectInterfaceReferenceProvider } from './projectInterface/reference'
-import { focusAndWaitPanel, initControlPanel, useControlPanel } from './web'
+import { init } from './service'
+import { WebviewCropPanel } from './service/webview/crop'
 import { ProjectInterfaceCropInstance } from './webview/crop'
 
 sms.install()
@@ -44,7 +29,7 @@ async function setup(context: vscode.ExtensionContext) {
     return
   }
 
-  initControlPanel()
+  await init(context)
 
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
   logger.info(`MaaFramework version ${maa.Global.version}`)
@@ -60,40 +45,10 @@ async function setup(context: vscode.ExtensionContext) {
     })
   }
 
-  useCommand(commands.PISwitchResource, (res: string) => {
-    const { context } = useControlPanel()
-    const cfg = context.value.interfaceConfigObj
-    if (cfg) {
-      cfg.resource = res
-    }
-  })
-
-  useCommand(commands.RevealControlPanel, () => {
-    focusAndWaitPanel()
-  })
-
   useCommand(commands.OpenCrop, () => {
     new ProjectInterfaceCropInstance(context).setup()
+    new WebviewCropPanel('Maa Crop').init()
   })
-
-  loadServices([
-    PipelineRootStatusProvider,
-    PipelineTaskIndexProvider,
-    PipelineDefinitionProvider,
-    PipelineDocumentLinkProvider,
-    PipelineCompletionProvider,
-    PipelineReferenceProvider,
-    PipelineHoverProvider,
-    PipelineCodeLensProvider,
-
-    ProjectInterfaceJsonProvider,
-    ProjectInterfaceIndexerProvider,
-    ProjectInterfaceCodeLensProvider,
-    ProjectInterfaceCompletionProvider,
-    ProjectInterfaceDefinitionProvider,
-    ProjectInterfaceReferenceProvider,
-    ProjectInterfaceLaunchProvider
-  ])
 }
 
 export const { activate, deactivate } = defineExtension(context => {

@@ -4,14 +4,11 @@ import * as vscode from 'vscode'
 import { CropViewFromHost } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
-import { sharedInstance } from '../data'
-import { PipelineRootStatusProvider } from '../pipeline/root'
-import { ProjectInterfaceJsonProvider } from '../projectInterface/json'
-import { ProjectInterfaceLaunchProvider } from '../projectInterface/launcher'
+import { interfaceService, launchService, rootService } from '../service'
+import { toPngDataUrl } from '../service/utils/png'
 import { performOcr } from '../tools/ocr'
 import { performReco } from '../tools/reco'
 import { useCropView } from '../web'
-import { toPngDataUrl } from './utils'
 
 export class ProjectInterfaceCropInstance {
   __context: vscode.ExtensionContext
@@ -32,17 +29,15 @@ export class ProjectInterfaceCropInstance {
     handler.value = async data => {
       switch (data.cmd) {
         case 'requestScreencap': {
-          if (!sharedInstance(PipelineRootStatusProvider).activateResource.value) {
+          if (!rootService.activeResource) {
             post({
               cmd: 'decreaseLoading'
             })
             break
           }
-          const pilp = sharedInstance(ProjectInterfaceLaunchProvider)
-
-          if ((await pilp.updateCache()) && pilp.cache) {
-            await pilp.cache.controller.post_screencap().wait()
-            const image = pilp.cache.controller.cached_image
+          if ((await launchService.updateCache()) && launchService.cache) {
+            await launchService.cache.controller.post_screencap().wait()
+            const image = launchService.cache.controller.cached_image
             if (!image) {
               return
             }
@@ -89,8 +84,8 @@ export class ProjectInterfaceCropInstance {
           break
         }
         case 'requestSave':
-          const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
-          if (!root) {
+          const resource = interfaceService.suggestResource()
+          if (!resource) {
             vscode.window.showWarningMessage(t('maa.crop.warning.no-resource'))
             const path = await vscode.window.showSaveDialog({
               filters: {
@@ -106,7 +101,7 @@ export class ProjectInterfaceCropInstance {
             })
             return
           }
-          const imageRoot = vscode.Uri.joinPath(root, 'image')
+          const imageRoot = vscode.Uri.joinPath(resource, 'image')
           const name = await vscode.window.showInputBox({
             title: t('maa.pi.title.input-image')
           })
@@ -126,8 +121,8 @@ export class ProjectInterfaceCropInstance {
           })
           break
         case 'requestOCR': {
-          const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
-          if (!root) {
+          const resources = interfaceService.resourcePaths
+          if (!resources.length) {
             post({
               cmd: 'ocrResult',
               data: null
@@ -139,7 +134,7 @@ export class ProjectInterfaceCropInstance {
             result = await performOcr(
               Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
               data.roi,
-              root.fsPath
+              resources.map(u => u.fsPath)
             )
           } catch (err) {
             logger.error(`ocr failed, error ${err}`)
@@ -151,8 +146,8 @@ export class ProjectInterfaceCropInstance {
           break
         }
         case 'requestReco': {
-          const root = sharedInstance(ProjectInterfaceJsonProvider).suggestResource()
-          if (!root) {
+          const resources = interfaceService.resourcePaths
+          if (!resources.length) {
             post({
               cmd: 'recoResult',
               data: null
@@ -163,7 +158,7 @@ export class ProjectInterfaceCropInstance {
           try {
             result = await performReco(
               Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
-              root.fsPath
+              resources.map(u => u.fsPath)
             )
           } catch (err) {
             logger.error(`reco failed, error ${err}`)

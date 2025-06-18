@@ -1,7 +1,6 @@
 import type * as maa from '@maaxyz/maa-node'
 
 import type { LogCategory } from './logger'
-import type { Interface, InterfaceConfig, InterfaceRuntime } from './pi'
 
 export type IpcRest = {
   __builtin?: false
@@ -44,129 +43,6 @@ export type IpcToHostBuiltin<Context> =
 export type IpcFromHost<Context, Rest extends IpcRest> = IpcFromHostBuiltin<Context> | Rest
 
 export type IpcToHost<Context, Rest extends IpcRest> = IpcToHostBuiltin<Context> | Rest
-
-export type MaaEnumForward =
-  | 'Status'
-  | 'AdbScreencapMethod'
-  | 'AdbInputMethod'
-  | 'Win32ScreencapMethod'
-  | 'Win32InputMethod'
-
-export type ControlPanelContext = {
-  maaEnum?: Pick<typeof maa.api, MaaEnumForward>
-
-  interfaceList?: string[]
-  interfaceCurrent?: string
-  interfaceRefreshing?: boolean
-
-  interfaceProjectDir?: string
-  interfaceObj?: Partial<Interface>
-  interfaceConfigObj?: Partial<InterfaceConfig>
-
-  interfaceAddTask?: string
-
-  adbDeviceList?: {
-    name: string
-    adb_path: string
-    address: string
-    config: unknown
-  }[]
-  adbDeviceRefreshing?: boolean
-
-  desktopWindowList?: {
-    window_name: string
-    class_name: string
-    hwnd: maa.api.DesktopHandle
-  }[]
-  desktopWindowRefreshing?: boolean
-}
-
-export type ControlPanelToHost =
-  | {
-      cmd: 'refreshInterface'
-    }
-  | {
-      cmd: 'selectInterface'
-      interface: string
-    }
-  | {
-      cmd: 'launchInterface'
-      runtime: InterfaceRuntime
-    }
-  | {
-      cmd: 'stopInterface'
-    }
-  | {
-      cmd: 'refreshAdbDevice'
-    }
-  | {
-      cmd: 'refreshDesktopWindow'
-    }
-  | {
-      cmd: 'revealInterfaceAt'
-      dest:
-        | {
-            type: 'entry'
-            entry: string
-          }
-        | {
-            type: 'option'
-            option: string
-            case?: string
-          }
-    }
-  | {
-      cmd: '__updateMaaEnum'
-    }
-
-export type ControlPanelFromHost =
-  | {
-      cmd: 'launchInterface'
-    }
-  | {
-      cmd: 'launchTask'
-      task: string
-    }
-
-export type RecoInfo = {
-  raw: string
-  draws: string[]
-  info: {
-    name: string
-    algorithm: string
-    hit: boolean
-    box: maa.api.Rect
-    detail: maa.RecoDetail
-  }
-}
-
-export type LaunchViewContext = {}
-
-export type LaunchViewToHost =
-  | {
-      cmd: 'queryReco'
-      reco: number
-    }
-  | {
-      cmd: 'stopLaunch'
-    }
-  | {
-      cmd: 'showCrop'
-      image: string
-    }
-
-export type LaunchViewFromHost =
-  | {
-      cmd: 'notify'
-      msg: string
-      details: string
-    }
-  | {
-      cmd: 'stopped'
-    }
-  | ({
-      cmd: 'showReco'
-    } & RecoInfo)
 
 export type CropViewContext = {
   uploadDir?: string

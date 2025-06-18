@@ -62,7 +62,9 @@ export function draw(ctx: CanvasRenderingContext2D) {
             ctx.rect(...box.flat())
             ctx.stroke()
 
-            ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
+            if (entry.text) {
+              ctx.fillText(entry.text, ...box.rb.add(Size.from(5, 0)).flat())
+            }
           }
         }
 

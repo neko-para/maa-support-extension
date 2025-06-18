@@ -209,9 +209,13 @@ export class TaskIndexService extends BaseService {
     const result: string[] = []
     for (const layer of this.layers.slice(0, level)) {
       const pattern = new vscode.RelativePattern(layer.uri, 'image/**/*.png')
+      const files = await vscode.workspace.findFiles(pattern)
       result.push(
-        ...(await vscode.workspace.findFiles(pattern)).map(uri =>
-          rootService.relativePathToRoot(uri, 'image', layer.uri).replace(/^[\\/]/, '')
+        ...files.map(uri =>
+          rootService
+            .relativePathToRoot(uri, 'image', layer.uri)
+            .replace(/^[\\/]/, '')
+            .replaceAll(/[\\/]/g, '/')
         )
       )
     }

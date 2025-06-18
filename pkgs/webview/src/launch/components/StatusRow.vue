@@ -31,7 +31,7 @@ async function requestReco(reco_id: number) {
 <template>
   <n-card :title="item.info.name" size="small">
     <n-flex>
-      <template v-for="(reco, idx) in item.recos" :key="idx">
+      <template v-for="(reco, idx) in item.recos" :key="`reco-${idx}`">
         <n-button
           size="small"
           ghost
@@ -48,8 +48,8 @@ async function requestReco(reco_id: number) {
           {{ reco.info.name }}
         </n-button>
       </template>
-      <template v-for="(reco, idx) in item.info.list.slice(item.recos.length)" :key="idx">
-        <n-button size="small" disabled>
+      <template v-for="(reco, idx) in item.info.list.slice(item.recos.length)" :key="`wait-${idx}`">
+        <n-button size="small" ghost disabled>
           {{ reco }}
         </n-button>
       </template>

@@ -2,6 +2,7 @@
 import { NButton, NCard, NCode, NFlex, NSelect, NSwitch, NText } from 'naive-ui'
 
 import * as ocrSt from '../states/ocr'
+import * as pickSt from '../states/pick'
 import * as recoSt from '../states/reco'
 
 const drawOptions = ['all', 'best', 'filter'].map(x => ({ value: x, label: x }))
@@ -9,6 +10,29 @@ const drawOptions = ['all', 'best', 'filter'].map(x => ({ value: x, label: x }))
 
 <template>
   <n-flex vertical>
+    <n-card title="取色" size="small">
+      <template #header-extra>
+        <n-button v-if="!pickSt.picking.value" size="small" @click="pickSt.start()">
+          开始
+        </n-button>
+        <n-button v-else size="small" @click="pickSt.picking.value = false"> 停止 </n-button>
+      </template>
+
+      <template v-if="pickSt.color.value">
+        <n-flex>
+          <div
+            :style="`width: 28px; height: 28px; background-color: rgb(${pickSt.color.value.join(',')});`"
+          ></div>
+          <n-button size="small" @click="pickSt.copyCss()">
+            {{ pickSt.cssText() }}
+          </n-button>
+          <n-button size="small" @click="pickSt.copyArray()">
+            {{ pickSt.arrayText() }}
+          </n-button>
+        </n-flex>
+      </template>
+    </n-card>
+
     <n-card title="快速OCR" size="small">
       <template #header-extra>
         <n-button size="small" :loading="ocrSt.loading.value" @click="ocrSt.perform()">

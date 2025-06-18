@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NButton, NCard, NCode, NFlex, NSelect, NSwitch, NText } from 'naive-ui'
 
+import JsonCode from '../../components/JsonCode.vue'
 import * as ocrSt from '../states/ocr'
 import * as pickSt from '../states/pick'
 import * as recoSt from '../states/reco'
@@ -52,11 +53,7 @@ const drawOptions = ['all', 'best', 'filter'].map(x => ({ value: x, label: x }))
             :options="drawOptions"
             size="small"
           ></n-select>
-          <n-code
-            language="json"
-            :code="JSON.stringify(ocrSt.resultObject.value, null, 4)"
-            word-wrap
-          ></n-code>
+          <json-code :code="ocrSt.result.value ?? ''"></json-code>
         </n-flex>
       </template>
     </n-card>
@@ -80,11 +77,7 @@ const drawOptions = ['all', 'best', 'filter'].map(x => ({ value: x, label: x }))
             :options="drawOptions"
             size="small"
           ></n-select>
-          <n-code
-            language="json"
-            :code="JSON.stringify(recoSt.resultObject.value, null, 4)"
-            word-wrap
-          ></n-code>
+          <json-code :code="recoSt.result.value ?? ''"></json-code>
         </n-flex>
       </template>
     </n-card>

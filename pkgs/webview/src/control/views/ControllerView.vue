@@ -5,6 +5,7 @@ import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
+import JsonCode from '../../components/JsonCode.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 
@@ -122,11 +123,9 @@ function configAdb(index: number) {
       <n-flex v-if="hostState.interfaceConfigJson?.adb" vertical>
         <span> {{ hostState.interfaceConfigJson.adb.adb_path }} </span>
         <span> {{ hostState.interfaceConfigJson.adb.address }} </span>
-        <n-code
-          language="json"
+        <json-code
           :code="JSON.stringify(hostState.interfaceConfigJson.adb.config, null, 4)"
-          word-wrap
-        ></n-code>
+        ></json-code>
       </n-flex>
     </n-card>
   </template>

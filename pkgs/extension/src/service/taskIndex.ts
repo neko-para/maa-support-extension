@@ -44,7 +44,6 @@ export class TaskIndexService extends BaseService {
       for (const layer of this.layers) {
         await layer.init()
       }
-      console.log(this.layers)
     })
   }
 
@@ -137,10 +136,12 @@ export class TaskIndexService extends BaseService {
     return [null, null]
   }
 
-  async queryTask(task: string, level?: number, pos?: vscode.Position) {
-    const allLayers = this.allLayers
+  async queryTask(task: string, level?: number, pos?: vscode.Position, flush = true) {
+    if (flush) {
+      await this.flushDirty()
+    }
 
-    await this.flushDirty()
+    const allLayers = this.allLayers
     if (level === undefined) {
       level = allLayers.length
     }
@@ -162,10 +163,12 @@ export class TaskIndexService extends BaseService {
     return result
   }
 
-  async queryImage(image: string, level?: number) {
-    const allLayers = this.allLayers
+  async queryImage(image: string, level?: number, flush = true) {
+    if (flush) {
+      await this.flushDirty()
+    }
 
-    await this.flushDirty()
+    const allLayers = this.allLayers
     if (level === undefined) {
       level = allLayers.length
     }

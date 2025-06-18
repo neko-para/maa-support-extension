@@ -46,7 +46,12 @@ class DiagnosticScanner extends FlushHelper {
         for (const taskInfo of taskInfos) {
           // check missing task
           for (const ref of taskInfo.taskRef) {
-            const taskRes = await taskIndexService.queryTask(ref.task, layer.level + 1)
+            const taskRes = await taskIndexService.queryTask(
+              ref.task,
+              layer.level + 1,
+              undefined,
+              false
+            )
             if (taskRes.length === 0) {
               result.push([
                 taskInfo.uri,
@@ -73,7 +78,7 @@ class DiagnosticScanner extends FlushHelper {
               ])
               imagePath = imagePath.replaceAll('\\', '/')
             }
-            const imageRes = await taskIndexService.queryImage(imagePath, layer.level + 1)
+            const imageRes = await taskIndexService.queryImage(imagePath, layer.level + 1, false)
             if (imageRes.length === 0) {
               result.push([
                 taskInfo.uri,

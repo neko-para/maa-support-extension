@@ -2,9 +2,10 @@ import * as vscode from 'vscode'
 
 import { logger, t } from '@mse/utils'
 
-import { interfaceService, launchService, taskIndexService } from '.'
+import { interfaceService, launchService, rootService, taskIndexService } from '.'
 import { commands } from '../command'
 import { BaseService } from './context'
+import { TaskIndexInfo } from './types'
 import { WebviewCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
@@ -56,6 +57,38 @@ export class CommandService extends BaseService {
 
     this.defer = vscode.commands.registerCommand(commands.OpenCrop, () => {
       new WebviewCropPanel('Maa Crop').init()
+    })
+
+    this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
+      const taskList = await taskIndexService.queryTaskList()
+      const result = await vscode.window.showQuickPick(taskList)
+      if (result) {
+        const infos = await taskIndexService.queryTask(result)
+        let info: TaskIndexInfo
+        if (infos.length > 1) {
+          const res = await vscode.window.showQuickPick(
+            infos.map((info, index) => ({
+              label: rootService.relativePathToRoot(info.info.uri),
+              index: index
+            }))
+          )
+          if (!res) {
+            return
+          }
+          info = infos[res.index].info
+        } else if (infos.length === 1) {
+          info = infos[0].info
+        } else {
+          return
+        }
+        const doc = await vscode.workspace.openTextDocument(info.uri)
+        if (doc) {
+          const editor = await vscode.window.showTextDocument(doc)
+          const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
+          editor.selection = targetSelection
+          editor.revealRange(targetSelection)
+        }
+      }
     })
   }
 

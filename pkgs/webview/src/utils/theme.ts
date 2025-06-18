@@ -41,7 +41,7 @@ export function useTheme(type: 'view' | 'panel') {
       }
     }
 
-    if (document.body.className === 'vscode-dark') {
+    if (document.body.className.indexOf('vscode-dark') !== -1) {
       theme.value = darkTheme
     } else {
       theme.value = lightTheme

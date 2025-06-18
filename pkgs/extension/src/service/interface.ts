@@ -160,6 +160,7 @@ export class InterfaceService extends BaseService {
     } else {
       this.resourcePaths = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
         .map(x => x.replace('{PROJECT_DIR}', rootPath))
+        .map(x => path.resolve(x)) // 移除路径结尾的sep, 防止后续比较的时候加多了
         .map(x => vscode.Uri.file(x))
     }
     this.resourceChanged.fire()

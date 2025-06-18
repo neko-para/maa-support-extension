@@ -7,9 +7,10 @@ import { ref } from 'vue'
 import { useTheme } from '../utils/theme'
 import * as canvasSt from './states/canvas'
 import * as controlSt from './states/control'
-import * as settingsSt from './states/settings'
+import { showTab } from './states/visible'
 import ControlView from './views/ControlView.vue'
 import SettingsView from './views/SettingsView.vue'
+import ToolView from './views/ToolView.vue'
 
 const { theme, themeOverride } = useTheme('panel')
 
@@ -32,7 +33,7 @@ canvasSt.setup(canvasSizeEl, canvasEl)
         <control-view></control-view>
       </template>
 
-      <n-flex style="flex: 1">
+      <n-flex style="flex: 1; min-height: 0">
         <div ref="canvasSizeEl" style="position: relative; flex: 1">
           <canvas
             ref="canvasEl"
@@ -49,8 +50,9 @@ canvasSt.setup(canvasSizeEl, canvasEl)
             @contextmenu.prevent="controlSt.onContextMenu"
           ></canvas>
         </div>
-        <n-scrollbar v-show="settingsSt.show.value" style="width: 20vw; height: 70vh">
-          <settings-view></settings-view>
+        <n-scrollbar v-if="showTab" style="width: 40vw">
+          <settings-view v-if="showTab === 'settings'"></settings-view>
+          <tool-view v-else-if="showTab === 'tool'"></tool-view>
         </n-scrollbar>
       </n-flex>
     </n-card>

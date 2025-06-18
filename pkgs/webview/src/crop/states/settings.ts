@@ -1,11 +1,5 @@
 import { ref } from 'vue'
 
-export const show = ref(false)
-
-export function toggleShow() {
-  show.value = !show.value
-}
-
 export const isColor = (color: string | undefined): color is string => {
   if (!color) {
     return false

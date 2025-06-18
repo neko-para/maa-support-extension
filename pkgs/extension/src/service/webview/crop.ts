@@ -2,10 +2,12 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
-import { WebviewPanelProvider, t } from '@mse/utils'
+import { WebviewPanelProvider, logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, rootService, stateService } from '..'
 import { Maa } from '../../maa'
+import { performOcr } from '../../tools/ocr'
+import { performReco } from '../../tools/reco'
 import { context } from '../context'
 import { toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
@@ -104,6 +106,43 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         )
         await vscode.workspace.fs.writeFile(resultPath, Buffer.from(data.image, 'base64'))
         this.response(data.seq, null)
+        break
+      }
+      case 'requestOCR': {
+        const resources = interfaceService.resourcePaths
+        if (!resources.length) {
+          this.response(data.seq, null)
+          return
+        }
+        let result = null
+        try {
+          result = await performOcr(
+            Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+            data.roi,
+            resources.map(u => u.fsPath)
+          )
+        } catch (err) {
+          logger.error(`ocr failed, error ${err}`)
+        }
+        this.response(data.seq, result)
+        break
+      }
+      case 'requestReco': {
+        const resources = interfaceService.resourcePaths
+        if (!resources.length) {
+          this.response(data.seq, null)
+          return
+        }
+        let result = null
+        try {
+          result = await performReco(
+            Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+            resources.map(u => u.fsPath)
+          )
+        } catch (err) {
+          logger.error(`reco failed, error ${err}`)
+        }
+        this.response(data.seq, result)
         break
       }
       case 'writeClipboard':

@@ -6,11 +6,7 @@ import { recoInfo } from '../states/reco'
 
 <template>
   <n-scrollbar style="height: 100vh">
-    <n-card
-      title="详情"
-      style="height: 100vh"
-      content-style="display: flex; flex-direction: column"
-    >
+    <n-card title="详情" content-style="display: flex; flex-direction: column">
       <template v-if="recoInfo">
         <n-flex vertical>
           <n-code language="json" :code="JSON.stringify(recoInfo.info, null, 2)" word-wrap></n-code>

@@ -13,6 +13,6 @@ function launch() {
 
 <template>
   <n-card title="执行" size="small">
-    <n-button :disabled="!canLaunch" @click="launch"> 启动 </n-button>
+    <n-button :disabled="!canLaunch" @click="launch" size="small"> 启动 </n-button>
   </n-card>
 </template>

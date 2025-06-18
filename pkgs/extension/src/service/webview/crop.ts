@@ -106,6 +106,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         this.response(data.seq, null)
         break
       }
+      case 'writeClipboard':
+        vscode.env.clipboard.writeText(data.text)
+        break
     }
     if (data.builtin) {
       super.recv(data)

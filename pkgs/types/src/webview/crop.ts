@@ -37,3 +37,18 @@ export type CropWebToHost =
       roi: maa.api.FlatRect
       expandRoi: maa.api.FlatRect
     }
+  | {
+      // return string | null
+      command: 'requestOCR'
+      image: string
+      roi: maa.api.FlatRect
+    }
+  | {
+      // return string | null
+      command: 'requestReco'
+      image: string
+    }
+  | {
+      command: 'writeClipboard'
+      text: string
+    }

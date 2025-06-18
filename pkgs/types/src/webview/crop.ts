@@ -3,13 +3,13 @@ import * as maa from '@maaxyz/maa-node'
 export type CropHostState = {
   backgroundFill?: string
   selectFill?: string
-  selectOpacity?: string
+  selectOpacity?: number
   pointerAxesStroke?: string
   helperAxesStroke?: string
-  helperAxesOpacity?: string
-  helperAxesOverflow?: string
-  helperAxesRadius?: string
-  helperAxesThreshold?: string
+  helperAxesOpacity?: number
+  helperAxesOverflow?: boolean
+  helperAxesRadius?: number
+  helperAxesThreshold?: number
   ocrStroke?: string
   ocrFont?: string
   recoStroke?: string
@@ -51,4 +51,9 @@ export type CropWebToHost =
   | {
       command: 'writeClipboard'
       text: string
+    }
+  | {
+      command: 'updateSettings'
+      key: string
+      value: unknown
     }

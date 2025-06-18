@@ -1,9 +1,12 @@
+import { CropHostState } from '@mse/types'
+
 import { BaseService, context } from './context'
 
 export type State = {
   activeInterface?: string
 
   uploadDir?: string
+  cropSettings?: CropHostState
 }
 
 const stateKey = 'stateService:state'

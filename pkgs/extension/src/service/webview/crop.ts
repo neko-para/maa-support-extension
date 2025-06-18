@@ -109,6 +109,15 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       case 'writeClipboard':
         vscode.env.clipboard.writeText(data.text)
         break
+      case 'updateSettings':
+        stateService.reduce({
+          cropSettings: {
+            ...stateService.state.cropSettings,
+            [data.key]: data.value
+          }
+        })
+        this.pushState()
+        break
     }
     if (data.builtin) {
       super.recv(data)
@@ -116,7 +125,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
   }
 
   get state(): CropHostState {
-    return {}
+    return stateService.state.cropSettings ?? {}
   }
 
   pushState() {

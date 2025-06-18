@@ -1,6 +1,7 @@
 import type * as maa from '@maaxyz/maa-node'
 import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 
+import { hostState } from '../state'
 import { Box, Pos, Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as imageSt from './image'
@@ -14,7 +15,7 @@ export const size = ref<Size>(Size.from(0, 0))
 export function draw(ctx: CanvasRenderingContext2D) {
   ctx.reset()
 
-  ctx.fillStyle = settingsSt.colorWithDefault(settingsSt.backgroundFill.value, 'white')
+  ctx.fillStyle = settingsSt.colorWithDefault(hostState.value.backgroundFill, 'white')
   ctx.fillRect(0, 0, ...size.value.flat())
 
   if (imageSt.element.value) {
@@ -34,8 +35,8 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     for (const [st, stroke, font] of [
-      [ocrSt, settingsSt.ocrStroke.value, settingsSt.ocrFont.value],
-      [recoSt, settingsSt.recoStroke.value, settingsSt.recoFont.value]
+      [ocrSt, hostState.value.ocrStroke, hostState.value.ocrFont],
+      [recoSt, hostState.value.recoStroke, hostState.value.recoFont]
     ] as const) {
       if (st.draw.value && st.resultObject.value) {
         ctx.save()
@@ -72,23 +73,23 @@ export function draw(ctx: CanvasRenderingContext2D) {
   }
 
   ctx.save()
-  ctx.globalAlpha = settingsSt.toAlpha(settingsSt.selectOpacity.value, 0.3)
-  ctx.fillStyle = settingsSt.colorWithDefault(settingsSt.selectFill.value, 'wheat')
+  ctx.globalAlpha = settingsSt.toAlpha(hostState.value.selectOpacity, 0.3)
+  ctx.fillStyle = settingsSt.colorWithDefault(hostState.value.selectFill, 'wheat')
   ctx.fillRect(...controlSt.cropBoxInView.value.flat())
   ctx.restore()
 
   ctx.save()
-  ctx.globalAlpha = settingsSt.toAlpha(settingsSt.helperAxesOpacity.value, 0.4)
+  ctx.globalAlpha = settingsSt.toAlpha(hostState.value.helperAxesOpacity, 0.4)
   const helperAxesStrokeColor = settingsSt.colorWithDefault(
-    settingsSt.helperAxesStroke.value,
+    hostState.value.helperAxesStroke,
     'white'
   )
   ctx.strokeStyle = helperAxesStrokeColor
   ctx.beginPath()
-  if (1 / controlSt.viewport.value.scale >= (settingsSt.helperAxesThreshold.value ?? 10)) {
+  if (1 / controlSt.viewport.value.scale >= (hostState.value.helperAxesThreshold ?? 10)) {
     const pos = controlSt.viewport.value.fromView(controlSt.current.value).round()
-    const radius = Math.max(0, settingsSt.helperAxesRadius.value ?? 20)
-    if (settingsSt.helperAxesOverflow.value) {
+    const radius = Math.max(0, hostState.value.helperAxesRadius ?? 20)
+    if (hostState.value.helperAxesOverflow) {
       for (let dx = -radius; dx <= radius; dx += 1) {
         const dposX = controlSt.viewport.value.toView(pos.add(Size.from(dx, 0))).x
         ctx.moveTo(dposX, 0)
@@ -132,7 +133,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.restore()
 
   ctx.strokeStyle = settingsSt.colorWithDefault(
-    settingsSt.pointerAxesStroke.value,
+    hostState.value.pointerAxesStroke,
     'rgba(255, 127, 127, 1)'
   )
   ctx.beginPath()

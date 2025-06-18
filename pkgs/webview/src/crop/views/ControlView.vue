@@ -3,6 +3,7 @@ import { NButton, NFlex, NTooltip } from 'naive-ui'
 
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
+import * as settingsSt from '../states/settings'
 </script>
 
 <template>
@@ -28,5 +29,7 @@ import * as imageSt from '../states/image'
 
       {{ controlSt.roiExpandText() }}
     </n-tooltip>
+
+    <n-button @click="settingsSt.show.value = !settingsSt.show.value"> 设置 </n-button>
   </n-flex>
 </template>

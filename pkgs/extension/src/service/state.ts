@@ -7,6 +7,8 @@ export type State = {
 
   uploadDir?: string
   cropSettings?: CropHostState
+
+  breakTasks?: string[]
 }
 
 const stateKey = 'stateService:state'

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NTab, NTabs } from 'naive-ui'
+import { NButton, NCard, NDynamicTags, NFlex, NPopselect, NTab, NTabs, NText } from 'naive-ui'
+import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { DynamicScroller, DynamicScrollerItem } from '../../utils/vvs'
@@ -50,10 +51,34 @@ async function toggleStop() {
   }
   pauseLoading.value = false
 }
+
+const taskOptions = computed(() => {
+  return (hostState.value.knownTasks ?? []).map((info, index) => {
+    return {
+      value: info,
+      label: info
+    } satisfies SelectMixedOption
+  })
+})
+
+function addBreak(task: string) {
+  updateBreak([...(hostState.value.breakTasks ?? []), task])
+}
+
+function updateBreak(tasks: string[]) {
+  ipc.send({
+    command: 'updateBreakTasks',
+    tasks: [...new Set(tasks)]
+  })
+}
 </script>
 
 <template>
-  <n-card title="流程" style="height: 100vh" content-style="display: flex; flex-direction: column">
+  <n-card
+    title="流程"
+    style="height: 100vh"
+    content-style="display: flex; flex-direction: column; gap: 10px"
+  >
     <template #header-extra>
       <n-flex>
         <n-button
@@ -67,6 +92,19 @@ async function toggleStop() {
         <n-button :disabled="hostState.stopped" @click="requestStop"> 停止 </n-button>
       </n-flex>
     </template>
+
+    <n-flex>
+      <n-popselect
+        trigger="hover"
+        :options="taskOptions"
+        @update:value="addBreak"
+        size="small"
+        scrollable
+      >
+        <n-button size="small"> 添加断点 </n-button>
+      </n-popselect>
+      <n-dynamic-tags :value="hostState.breakTasks" @update:value="updateBreak"></n-dynamic-tags>
+    </n-flex>
 
     <n-tabs v-model:value="activeTask">
       <n-tab

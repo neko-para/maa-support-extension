@@ -3,6 +3,9 @@ import * as maa from '@maaxyz/maa-node'
 export type LaunchHostState = {
   stopped?: boolean
   paused?: boolean
+
+  knownTasks?: string[]
+  breakTasks?: string[]
 }
 
 export type LaunchHostToWeb =
@@ -35,6 +38,10 @@ export type LaunchWebToHost =
     }
   | {
       command: 'requestContinue'
+    }
+  | {
+      command: 'updateBreakTasks'
+      tasks: string[]
     }
 
 export type RecoInfo = {

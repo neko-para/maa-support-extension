@@ -42,7 +42,7 @@ export function useTheme(type: 'view' | 'panel') {
       Select: {
         peers: {
           InternalSelection: {
-            border: `${getVar('--vscode-editorWidget-border')} solid`,
+            border: `${getVar('--vscode-editorWidget-border')} solid 1px`,
             borderRadius: '0'
           }
         }

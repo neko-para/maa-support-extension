@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
 
+import { stateService } from '..'
 import { Maa } from '../../maa'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
@@ -11,9 +12,10 @@ import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
   instance: TaskerInstance
+  knownTasks: string[]
   stopped: boolean = false
-  paused: boolean = false
 
+  paused: boolean = false
   pausedResolve?: () => void
 
   constructor(instance: TaskerInstance, title: string, viewColumn?: vscode.ViewColumn) {
@@ -29,6 +31,8 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     })
 
     this.instance = instance
+    this.knownTasks = this.instance.resource.task_list ?? []
+    this.knownTasks.sort()
 
     const oldNotify = this.instance.tasker.notify
     this.instance.tasker.notify = async (msg, detail) => {
@@ -89,18 +93,24 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.cont()
         this.response(data.seq, null)
         break
+      case 'updateBreakTasks':
+        stateService.reduce({
+          breakTasks: data.tasks
+        })
+        this.pushState()
+        break
     }
     if (data.builtin) {
       super.recv(data)
     }
   }
 
-  async pause() {
+  pause() {
     this.paused = true
     this.pushState()
   }
 
-  async cont() {
+  cont() {
     if (this.pausedResolve) {
       setTimeout(this.pausedResolve, 0)
       this.pausedResolve = undefined
@@ -132,6 +142,12 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       msg,
       details
     })
+    if (msg === 'Node.NextList.Starting') {
+      const task = JSON.parse(details).name as string
+      if (stateService.state.breakTasks?.includes(task)) {
+        this.pause()
+      }
+    }
     if (this.paused) {
       await new Promise<void>(resolve => {
         this.pausedResolve = resolve
@@ -142,7 +158,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
   get state(): LaunchHostState {
     return {
       stopped: this.stopped,
-      paused: this.paused
+      paused: this.paused,
+      knownTasks: this.knownTasks,
+      breakTasks: stateService.state.breakTasks
     }
   }
 

@@ -2,7 +2,7 @@
 
 ver=`cat maa/.maaver`
 
-for dir in controlPanel extension types; do
+for dir in webview extension types; do
   cd pkgs/$dir
   pnpm i -D @maaxyz/maa-node@$ver
   cd -

@@ -1,3 +1,4 @@
+import semverCompare from 'semver/functions/compare'
 import * as vscode from 'vscode'
 
 import ver from '../../../maa/maaver.json'
@@ -12,11 +13,19 @@ export function setupMaa() {
     vscode.window.showErrorMessage(`Acquire MaaFramework failed.`)
     return false
   }
-  if (maa.Global.version !== ver.version) {
-    vscode.window.showErrorMessage(
-      `MaaFramework version mismatch. Expect ${ver.version}, but ${maa.Global.version} provided.`
-    )
-    // return false
+  const res = semverCompare(maa.Global.version, ver.version)
+  switch (res) {
+    case 0:
+      return true
+    case 1: // 比预期更高
+      vscode.window.showInformationMessage(
+        `MaaFramework 版本不同. 预期 ${ver.version}, 当前 ${maa.Global.version}.`
+      )
+      return true
+    case -1: // 比预期更低
+      vscode.window.showInformationMessage(
+        `MaaFramework 版本不同. 预期 ${ver.version}, 当前 ${maa.Global.version}. 当前版本较低, 功能可能出现问题.`
+      )
+      return true
   }
-  return true
 }

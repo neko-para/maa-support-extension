@@ -53,6 +53,9 @@ importers:
       '@types/node':
         specifier: ^20.17.9
         version: 20.17.9
+      '@types/semver':
+        specifier: ^7.7.0
+        version: 7.7.0
       '@types/source-map-support':
         specifier: ^0.5.10
         version: 0.5.10
@@ -62,6 +65,9 @@ importers:
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
+      semver:
+        specifier: ^7.7.2
+        version: 7.7.2
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -1184,6 +1190,9 @@ packages:
   '@types/node@20.17.9':
     resolution: {integrity: sha512-0JOXkRyLanfGPE2QRCwgxhzlBAvaRdCNMcvbd7jFfpmD4eEXll7LRwy5ymJmyeZqk7Nh7eD2LeUyQ68BbndmXw==}
 
+  '@types/semver@7.7.0':
+    resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
+
   '@types/source-map-support@0.5.10':
     resolution: {integrity: sha512-tgVP2H469x9zq34Z0m/fgPewGhg/MLClalNOiPIzQlXrSS2YrKu/xCdSCKnEDwkFha51VKEKB6A9wW26/ZNwzA==}
 
@@ -1652,6 +1661,11 @@ packages:
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
+    hasBin: true
+
+  semver@7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
+    engines: {node: '>=10'}
     hasBin: true
 
   simple-swizzle@0.2.2:
@@ -2770,6 +2784,8 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
+  '@types/semver@7.7.0': {}
+
   '@types/source-map-support@0.5.10':
     dependencies:
       source-map: 0.6.1
@@ -3369,6 +3385,8 @@ snapshots:
   seemly@0.3.10: {}
 
   semver@6.3.1: {}
+
+  semver@7.7.2: {}
 
   simple-swizzle@0.2.2:
     dependencies:

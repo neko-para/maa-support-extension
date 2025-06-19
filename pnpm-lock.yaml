@@ -39,8 +39,8 @@ importers:
   pkgs/extension:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.4.0-alpha.3
-        version: 4.4.0-alpha.3
+        specifier: 4.4.0-alpha.3-post.9-ci.15759971318
+        version: 4.4.0-alpha.3-post.9-ci.15759971318
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -81,8 +81,8 @@ importers:
   pkgs/types:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.4.0-alpha.3
-        version: 4.4.0-alpha.3
+        specifier: 4.4.0-alpha.3-post.9-ci.15759971318
+        version: 4.4.0-alpha.3-post.9-ci.15759971318
 
   pkgs/utils:
     devDependencies:
@@ -126,8 +126,8 @@ importers:
   pkgs/webview:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.4.0-alpha.3
-        version: 4.4.0-alpha.3
+        specifier: 4.4.0-alpha.3-post.9-ci.15759971318
+        version: 4.4.0-alpha.3-post.9-ci.15759971318
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -922,38 +922,38 @@ packages:
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
 
-  '@maaxyz/maa-node-darwin-arm64@4.4.0-alpha.3':
-    resolution: {integrity: sha512-nDg5B0+tkWgQKxurG3HAP1Kwx4tuHLUJl7KLLTLYd3Gvzgj7AMQoP6hQItYW7dKkxIZiAWuDZDD5fyBhqqkBbg==}
+  '@maaxyz/maa-node-darwin-arm64@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-2h5XT+OubbIFUWBxCqv7WARyQu580bqu0IjIQMVB91c/tX8C0EaktMPiae9LEBuDXaDXuozG4ZIUtD2Tym/g2A==}
     cpu: [arm64]
     os: [darwin]
 
-  '@maaxyz/maa-node-darwin-x64@4.4.0-alpha.3':
-    resolution: {integrity: sha512-qgO+/WtIYVGQGT0asWFdBVAq76dbbAQngJUsXJKaqr8MbMaUbswPIXbuv+U2xTINNN6VLdVwrCBfzNz/w0QlJA==}
+  '@maaxyz/maa-node-darwin-x64@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-EtcFDYSo2qn+4VWnfYZd7Pf7Bed4lavfa0S1ieQFyg3b4A9fvZjBT+mcEEF7OszDa6A3aJDUaX7bPdj2VghMKA==}
     cpu: [x64]
     os: [darwin]
 
-  '@maaxyz/maa-node-linux-arm64@4.4.0-alpha.3':
-    resolution: {integrity: sha512-GwQfOPzk8OkN3UfiFV4rYaewFxJbdxhj0lhXSRRngDJy09zn8K9Uf7rLGOXzNzs4ZCqk5CKQPwJVs7A2XvW2Wg==}
+  '@maaxyz/maa-node-linux-arm64@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-EmdBnWb1XkBscYxSReAC5xQ5y0UrUoGRMwdkvO7sIF+SdY1NEpGpJ9j1wqusJ96/FdFH1RwZAvPEavDSVtKD9g==}
     cpu: [arm64]
     os: [linux]
 
-  '@maaxyz/maa-node-linux-x64@4.4.0-alpha.3':
-    resolution: {integrity: sha512-gHtF0uXUGJ37j9e936uwNn32CqhZQjzjecXm/IA3afcKrbkpTvJrXHyR4O1MYzhb419F33JIAzEkMA42typUcA==}
+  '@maaxyz/maa-node-linux-x64@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-t75hwiRss1GU88vw3FLcjsuMr0TXX797pbN/qV1/wbQ3NEnJyHgqH9W9uxVW4x35agtqm8mJB00ZIUzYn9NDvg==}
     cpu: [x64]
     os: [linux]
 
-  '@maaxyz/maa-node-win32-arm64@4.4.0-alpha.3':
-    resolution: {integrity: sha512-6ra7sbnsG1PwcgU+ZqjnjTp9IYHAcFIi4I1fwau1+PPl3vDrDaOg7Q5wsghqAkjNxHUUhFg0QWx8+pOt/RxZBw==}
+  '@maaxyz/maa-node-win32-arm64@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-JY9pI2jghHx4Vms9I9/P/bK/tgUTvBwPGuFH/qK9SEdjtNCnwAJRr0Z9nIQAzY5JJxTaUex0sjlkS+AZk12Uig==}
     cpu: [arm64]
     os: [win32]
 
-  '@maaxyz/maa-node-win32-x64@4.4.0-alpha.3':
-    resolution: {integrity: sha512-EgaYvUeUaySeMr1bjqH74wgPB3m5gf05BaL/hJduMeM1jhrtSAIQTKbAyRwzwC0j3B22q1/hp7HsW/Yw1HaBXw==}
+  '@maaxyz/maa-node-win32-x64@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-KSKtesf2f4FMR7ORxeFTDYlNyLrZUJZBYPtS6xrD31FsTj2s6rutUhMxI+s6XvagiZ34gK23uv8cpuZRCEPlCQ==}
     cpu: [x64]
     os: [win32]
 
-  '@maaxyz/maa-node@4.4.0-alpha.3':
-    resolution: {integrity: sha512-b6n6sEnvTtwBlwtLn4Eu7jg2DR/9SfjI8iKCxN19c7cEvpJ9HVwINZqOiqguM7XVRLdr5k6EfnmdiA8GGtk1ow==}
+  '@maaxyz/maa-node@4.4.0-alpha.3-post.9-ci.15759971318':
+    resolution: {integrity: sha512-r1kEFKmEim9ipe8StD9vCDfwtwAB/3Iec7os1jex5Dx61L6N7MLa3r2KkzOX23y3EQjOjmqqZtwl0XDbrVH5vA==}
     engines: {node: '>= 20.0.0'}
 
   '@rollup/rollup-android-arm-eabi@4.28.1':
@@ -2602,32 +2602,32 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@maaxyz/maa-node-darwin-arm64@4.4.0-alpha.3':
+  '@maaxyz/maa-node-darwin-arm64@4.4.0-alpha.3-post.9-ci.15759971318':
     optional: true
 
-  '@maaxyz/maa-node-darwin-x64@4.4.0-alpha.3':
+  '@maaxyz/maa-node-darwin-x64@4.4.0-alpha.3-post.9-ci.15759971318':
     optional: true
 
-  '@maaxyz/maa-node-linux-arm64@4.4.0-alpha.3':
+  '@maaxyz/maa-node-linux-arm64@4.4.0-alpha.3-post.9-ci.15759971318':
     optional: true
 
-  '@maaxyz/maa-node-linux-x64@4.4.0-alpha.3':
+  '@maaxyz/maa-node-linux-x64@4.4.0-alpha.3-post.9-ci.15759971318':
     optional: true
 
-  '@maaxyz/maa-node-win32-arm64@4.4.0-alpha.3':
+  '@maaxyz/maa-node-win32-arm64@4.4.0-alpha.3-post.9-ci.15759971318':
     optional: true
 
-  '@maaxyz/maa-node-win32-x64@4.4.0-alpha.3':
+  '@maaxyz/maa-node-win32-x64@4.4.0-alpha.3-post.9-ci.15759971318':
     optional: true
 
-  '@maaxyz/maa-node@4.4.0-alpha.3':
+  '@maaxyz/maa-node@4.4.0-alpha.3-post.9-ci.15759971318':
     optionalDependencies:
-      '@maaxyz/maa-node-darwin-arm64': 4.4.0-alpha.3
-      '@maaxyz/maa-node-darwin-x64': 4.4.0-alpha.3
-      '@maaxyz/maa-node-linux-arm64': 4.4.0-alpha.3
-      '@maaxyz/maa-node-linux-x64': 4.4.0-alpha.3
-      '@maaxyz/maa-node-win32-arm64': 4.4.0-alpha.3
-      '@maaxyz/maa-node-win32-x64': 4.4.0-alpha.3
+      '@maaxyz/maa-node-darwin-arm64': 4.4.0-alpha.3-post.9-ci.15759971318
+      '@maaxyz/maa-node-darwin-x64': 4.4.0-alpha.3-post.9-ci.15759971318
+      '@maaxyz/maa-node-linux-arm64': 4.4.0-alpha.3-post.9-ci.15759971318
+      '@maaxyz/maa-node-linux-x64': 4.4.0-alpha.3-post.9-ci.15759971318
+      '@maaxyz/maa-node-win32-arm64': 4.4.0-alpha.3-post.9-ci.15759971318
+      '@maaxyz/maa-node-win32-x64': 4.4.0-alpha.3-post.9-ci.15759971318
 
   '@rollup/rollup-android-arm-eabi@4.28.1':
     optional: true

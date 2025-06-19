@@ -60,11 +60,22 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
           this.response(data.seq, null)
           break
         }
+        const info = {
+          ...detailInfo
+        } as Partial<typeof detailInfo>
+        delete info.raw
+        delete info.draws
         this.response(data.seq, {
           raw: toPngDataUrl(detailInfo.raw),
           draws: detailInfo.draws.map(toPngDataUrl),
-          info: detailInfo
+          info
         })
+        break
+      }
+      case 'requestNode': {
+        // v4.4.0-alpha.3 intro
+        const nodeData = this.instance.tasker.resource?.get_node_data?.(data.node) ?? null
+        this.response(data.seq, nodeData)
         break
       }
     }

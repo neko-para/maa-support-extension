@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NTab, NTabs, NVirtualList } from 'naive-ui'
+import { NButton, NCard, NFlex, NTab, NTabs } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { DynamicScroller, DynamicScrollerItem } from '../../utils/vvs'

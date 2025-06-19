@@ -6,7 +6,7 @@ import { ref } from 'vue'
 import type { RecoInfo } from '@mse/types'
 
 import { ipc } from '../ipc'
-import { recoInfo } from '../states/reco'
+import { recoInfo, taskInfo } from '../states/info'
 import type { NextListScope } from '../states/task'
 
 const props = defineProps<{
@@ -26,10 +26,30 @@ async function requestReco(reco_id: number) {
   })) as RecoInfo | null
   querying.value = false
 }
+
+async function requestNode() {
+  if (querying.value) {
+    return
+  }
+  querying.value = true
+  taskInfo.value = [
+    props.item.info.name,
+    (await ipc.call({
+      command: 'requestNode',
+      node: props.item.info.name
+    })) as string | null
+  ]
+  querying.value = false
+}
 </script>
 
 <template>
-  <n-card :title="item.info.name" size="small">
+  <n-card size="small">
+    <template #header>
+      <n-button @click="requestNode" size="small">
+        {{ item.info.name }}
+      </n-button>
+    </template>
     <n-flex>
       <template v-for="(reco, idx) in item.recos" :key="`reco-${idx}`">
         <n-button

@@ -24,6 +24,11 @@ export type LaunchWebToHost =
       command: 'requestReco'
       reco_id: number
     }
+  | {
+      // return string | null
+      command: 'requestNode'
+      node: string
+    }
 
 export type RecoInfo = {
   raw: string

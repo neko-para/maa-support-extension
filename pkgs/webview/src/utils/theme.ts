@@ -38,6 +38,14 @@ export function useTheme(type: 'view' | 'panel') {
       },
       Card: {
         borderColor: getVar('--vscode-editorWidget-border')
+      },
+      Select: {
+        peers: {
+          InternalSelection: {
+            border: `${getVar('--vscode-editorWidget-border')} solid`,
+            borderRadius: '0'
+          }
+        }
       }
     }
 

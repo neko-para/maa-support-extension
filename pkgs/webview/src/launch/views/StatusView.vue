@@ -8,12 +8,6 @@ import { ipc } from '../ipc'
 import { hostState } from '../state'
 import { activeTask, followLast, taskList } from '../states/task'
 
-function requestStop() {
-  ipc.send({
-    command: 'requestStop'
-  })
-}
-
 let resizeObs: ResizeObserver
 const sizingEl = ref<HTMLDivElement | null>(null)
 const size = ref<[number, number]>([0, 0])
@@ -34,13 +28,42 @@ onMounted(() => {
 onUnmounted(() => {
   resizeObs.disconnect()
 })
+
+function requestStop() {
+  ipc.send({
+    command: 'requestStop'
+  })
+}
+
+const pauseLoading = ref(false)
+
+async function toggleStop() {
+  pauseLoading.value = true
+  if (hostState.value.paused) {
+    await ipc.call({
+      command: 'requestContinue'
+    })
+  } else {
+    await ipc.call({
+      command: 'requestPause'
+    })
+  }
+  pauseLoading.value = false
+}
 </script>
 
 <template>
   <n-card title="流程" style="height: 100vh" content-style="display: flex; flex-direction: column">
     <template #header-extra>
       <n-flex>
-        <n-button @click="followLast = !followLast"> 跟随 </n-button>
+        <n-button
+          :loading="pauseLoading"
+          :disabled="pauseLoading || hostState.stopped"
+          @click="toggleStop"
+        >
+          {{ hostState.paused ? '继续' : '暂停' }}
+        </n-button>
+        <n-button :disabled="hostState.stopped" @click="followLast = !followLast"> 跟随 </n-button>
         <n-button :disabled="hostState.stopped" @click="requestStop"> 停止 </n-button>
       </n-flex>
     </template>

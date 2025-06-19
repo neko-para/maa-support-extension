@@ -2,6 +2,7 @@ import * as maa from '@maaxyz/maa-node'
 
 export type LaunchHostState = {
   stopped?: boolean
+  paused?: boolean
 }
 
 export type LaunchHostToWeb =
@@ -28,6 +29,12 @@ export type LaunchWebToHost =
       // return string | null
       command: 'requestNode'
       node: string
+    }
+  | {
+      command: 'requestPause'
+    }
+  | {
+      command: 'requestContinue'
     }
 
 export type RecoInfo = {

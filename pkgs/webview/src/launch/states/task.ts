@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 
+import { hostState } from '../state'
 import {
   type ActionMessage,
   Message,
@@ -186,7 +187,7 @@ export const followLast = ref(true)
 const selectTask = ref(0)
 export const activeTask = computed<string | number | undefined>({
   get() {
-    if (followLast.value) {
+    if (followLast.value && !hostState.value.stopped) {
       return taskList.value.info.length > 0 ? taskList.value.info.length - 1 : undefined
     } else {
       return selectTask.value

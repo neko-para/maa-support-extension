@@ -12,6 +12,9 @@ import { isLaunchDev } from './dev'
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
   instance: TaskerInstance
   stopped: boolean = false
+  paused: boolean = false
+
+  pausedResolve?: () => void
 
   constructor(instance: TaskerInstance, title: string, viewColumn?: vscode.ViewColumn) {
     super({
@@ -78,10 +81,32 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.response(data.seq, nodeData)
         break
       }
+      case 'requestPause':
+        this.pause()
+        this.response(data.seq, null)
+        break
+      case 'requestContinue':
+        this.cont()
+        this.response(data.seq, null)
+        break
     }
     if (data.builtin) {
       super.recv(data)
     }
+  }
+
+  async pause() {
+    this.paused = true
+    this.pushState()
+  }
+
+  async cont() {
+    if (this.pausedResolve) {
+      setTimeout(this.pausedResolve, 0)
+      this.pausedResolve = undefined
+    }
+    this.paused = false
+    this.pushState()
   }
 
   async stop() {
@@ -89,6 +114,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       return
     }
     this.stopped = true
+    this.cont()
     await this.instance.tasker.post_stop().wait()
   }
 
@@ -106,11 +132,17 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       msg,
       details
     })
+    if (this.paused) {
+      await new Promise<void>(resolve => {
+        this.pausedResolve = resolve
+      })
+    }
   }
 
   get state(): LaunchHostState {
     return {
-      stopped: this.stopped
+      stopped: this.stopped,
+      paused: this.paused
     }
   }
 

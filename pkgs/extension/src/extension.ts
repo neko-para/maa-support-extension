@@ -25,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     })
   )
-  if (!setupMaa()) {
+  if (!(await setupMaa())) {
     return
   }
 

@@ -7,7 +7,7 @@ export type * as Maa from '@maaxyz/maa-node'
 
 export let maa: typeof import('@maaxyz/maa-node')
 
-export function setupMaa() {
+export async function setupMaa() {
   maa = vscode.extensions.getExtension('nekosu.maa-node')?.exports
   if (!maa) {
     vscode.window.showErrorMessage(`Acquire MaaFramework failed.`)

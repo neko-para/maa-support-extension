@@ -2,7 +2,15 @@
 import { NCard, NFlex, NScrollbar, NText } from 'naive-ui'
 
 import JsonCode from '../../components/JsonCode.vue'
+import { ipc } from '../ipc'
 import { recoInfo, taskInfo } from '../states/info'
+
+function openCrop(image: string) {
+  ipc.send({
+    command: 'openCrop',
+    image
+  })
+}
 </script>
 
 <template>
@@ -18,8 +26,14 @@ import { recoInfo, taskInfo } from '../states/info'
           <n-flex vertical>
             <json-code :code="JSON.stringify(recoInfo.info, null, 2)"></json-code>
 
-            <img :src="recoInfo.raw" />
-            <img v-for="(draw, idx) in recoInfo.draws" :key="idx" :src="draw" />
+            <n-text> 双击图片以在截图工具中打开 </n-text>
+            <img :src="recoInfo.raw" @dblclick="openCrop(recoInfo.raw)" />
+            <img
+              v-for="(draw, idx) in recoInfo.draws"
+              :key="idx"
+              :src="draw"
+              @dblclick="openCrop(draw)"
+            />
           </n-flex>
         </template>
       </n-card>

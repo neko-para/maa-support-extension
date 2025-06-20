@@ -43,6 +43,10 @@ export type LaunchWebToHost =
       command: 'updateBreakTasks'
       tasks: string[]
     }
+  | {
+      command: 'openCrop'
+      image: string
+    }
 
 export type RecoInfo = {
   raw: string

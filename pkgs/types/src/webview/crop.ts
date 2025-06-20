@@ -16,10 +16,15 @@ export type CropHostState = {
   recoFont?: string
 }
 
-export type CropHostToWeb = {
-  command: 'updateState'
-  state: CropHostState
-}
+export type CropHostToWeb =
+  | {
+      command: 'updateState'
+      state: CropHostState
+    }
+  | {
+      command: 'setImage'
+      image: string
+    }
 
 export type CropWebToHost =
   | {

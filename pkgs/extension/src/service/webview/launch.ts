@@ -8,6 +8,7 @@ import { Maa } from '../../maa'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
 import { toPngDataUrl } from '../utils/png'
+import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
@@ -99,6 +100,15 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         })
         this.pushState()
         break
+      case 'openCrop': {
+        const panel = new WebviewCropPanel('Maa Crop')
+        await panel.init()
+        panel.send({
+          command: 'setImage',
+          image: data.image
+        })
+        break
+      }
     }
     if (data.builtin) {
       super.recv(data)

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NButton, NCard, NDynamicTags, NFlex, NPopselect, NTab, NTabs, NText } from 'naive-ui'
-import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
+import { NButton, NCard, NDynamicTags, NFlex, NTab, NTabs, NText } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { DynamicScroller, DynamicScrollerItem } from '../../utils/vvs'
+import InputTask from '../components/InputTask.vue'
 import StatusRow from '../components/StatusRow.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
@@ -52,15 +52,6 @@ async function toggleStop() {
   pauseLoading.value = false
 }
 
-const taskOptions = computed(() => {
-  return (hostState.value.knownTasks ?? []).map((info, index) => {
-    return {
-      value: info,
-      label: info
-    } satisfies SelectMixedOption
-  })
-})
-
 function addBreak(task: string) {
   updateBreak([...(hostState.value.breakTasks ?? []), task])
 }
@@ -93,17 +84,13 @@ function updateBreak(tasks: string[]) {
       </n-flex>
     </template>
 
-    <n-flex>
-      <n-popselect
-        trigger="hover"
-        :options="taskOptions"
-        @update:value="addBreak"
-        size="small"
-        scrollable
-      >
-        <n-button size="small"> 添加断点 </n-button>
-      </n-popselect>
-      <n-dynamic-tags :value="hostState.breakTasks" @update:value="updateBreak"></n-dynamic-tags>
+    <n-flex vertical>
+      <n-text size="small"> 添加断点 </n-text>
+      <n-dynamic-tags :value="hostState.breakTasks" @update:value="updateBreak">
+        <template #input="{ submit, deactivate }">
+          <input-task @submit="submit" @deactivate="deactivate"></input-task>
+        </template>
+      </n-dynamic-tags>
     </n-flex>
 
     <n-tabs v-model:value="activeTask">

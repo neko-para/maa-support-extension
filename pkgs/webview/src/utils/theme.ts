@@ -46,6 +46,13 @@ export function useTheme(type: 'view' | 'panel') {
             borderRadius: '0'
           }
         }
+      },
+      DynamicTags: {
+        peers: {
+          Tag: {
+            color: 'red'
+          }
+        }
       }
     }
 

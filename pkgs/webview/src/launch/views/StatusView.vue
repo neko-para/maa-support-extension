@@ -86,7 +86,11 @@ function updateBreak(tasks: string[]) {
 
     <n-flex vertical>
       <n-text size="small"> 添加断点 </n-text>
-      <n-dynamic-tags :value="hostState.breakTasks" @update:value="updateBreak">
+      <n-dynamic-tags
+        :value="hostState.breakTasks"
+        @update:value="updateBreak"
+        :color="{ color: 'transparent' }"
+      >
         <template #input="{ submit, deactivate }">
           <input-task @submit="submit" @deactivate="deactivate"></input-task>
         </template>

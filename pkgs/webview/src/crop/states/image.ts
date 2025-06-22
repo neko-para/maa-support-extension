@@ -1,4 +1,4 @@
-import { Jimp } from 'jimp'
+import type { api } from '@maaxyz/maa-node'
 import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '../ipc'
@@ -65,9 +65,9 @@ export async function upload() {
   loadingCounter.value -= 1
 }
 
-export async function cropImage() {
+export async function cropImage(): Promise<[string | null, api.FlatRect | null]> {
   if (!data.value) {
-    return null
+    return [null, null]
   }
 
   controlSt.cropCeil()
@@ -75,26 +75,17 @@ export async function cropImage() {
 
   const cropPos = controlSt.cropBox.value.flat()
   if (cropPos[2] === 0 || cropPos[3] === 0) {
-    return null
+    return [null, null]
   }
 
-  const fullBuf = await (await fetch(data.value)).arrayBuffer()
-  const full = await Jimp.read(fullBuf)
-  const cropped = full.crop({
-    x: cropPos[0],
-    y: cropPos[1],
-    w: cropPos[2],
-    h: cropPos[3]
-  })
-  const croppedBuf = await cropped.getBuffer('image/png')
-  return croppedBuf.toString('base64')
+  return [data.value, cropPos]
 }
 
 export async function download() {
   loadingCounter.value += 1
 
-  const data = await cropImage()
-  if (!data) {
+  const [data, crop] = await cropImage()
+  if (!data || !crop) {
     loadingCounter.value -= 1
     return
   }
@@ -102,6 +93,7 @@ export async function download() {
   await ipc.call({
     command: 'requestSave',
     image: data,
+    crop,
     roi: controlSt.cropBox.value.flat(),
     expandRoi: controlSt.cropBoxExpand.value.flat()
   })

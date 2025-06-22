@@ -14,6 +14,7 @@ export type WebviewPanelOption = {
   title: string
   viewColumn: vscode.ViewColumn
   preserveFocus: boolean
+  iconPath: string
   dev: boolean
 }
 
@@ -43,6 +44,10 @@ export class WebviewPanelProvider<ToWebImpl extends ImplType, ToHostImpl extends
       this.initResolve = resolve
     })
 
+    this.panel.iconPath = vscode.Uri.joinPath(
+      this.option.context.extensionUri,
+      this.option.iconPath
+    )
     this.option.context.subscriptions.push(
       this.panel.onDidDispose(() => {
         this.dispose()

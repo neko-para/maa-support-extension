@@ -39,6 +39,7 @@ export type CropWebToHost =
       // return void
       command: 'requestSave'
       image: string
+      crop: maa.api.FlatRect
       roi: maa.api.FlatRect
       expandRoi: maa.api.FlatRect
     }

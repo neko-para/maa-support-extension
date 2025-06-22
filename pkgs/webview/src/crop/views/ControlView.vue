@@ -10,7 +10,7 @@ import { toggleShow } from '../states/visible'
   <n-flex>
     <n-button :loading="imageSt.loading.value" @click="imageSt.screencap()"> 截图 </n-button>
     <n-button :loading="imageSt.loading.value" @click="imageSt.upload()"> 上传 </n-button>
-    <n-button @click="imageSt.download()"> 下载 </n-button>
+    <n-button :loading="imageSt.loading.value" @click="imageSt.download()"> 下载 </n-button>
     <n-button @click="controlSt.viewport.value.reset()"> 重置视野 </n-button>
     <n-button @click="controlSt.cropCeil()"> 取整 </n-button>
     <n-button @click="controlSt.cropBound()"> 边界 </n-button>

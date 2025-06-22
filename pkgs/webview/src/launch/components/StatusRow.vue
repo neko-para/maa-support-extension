@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CheckOutlined, CloseOutlined } from '@vicons/material'
+import { default as CheckOutlined } from '@vicons/material/es/CheckOutlined'
+import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
 import { NButton, NCard, NFlex } from 'naive-ui'
 import { ref } from 'vue'
 

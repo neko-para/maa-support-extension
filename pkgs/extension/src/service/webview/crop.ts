@@ -5,7 +5,7 @@ import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/typ
 import { WebviewPanelProvider, logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, rootService, stateService } from '..'
-import { Maa } from '../../maa'
+import { Jimp } from '../../tools/jimp'
 import { performOcr } from '../../tools/ocr'
 import { performReco } from '../../tools/reco'
 import { context } from '../context'
@@ -22,6 +22,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       title,
       viewColumn: viewColumn ?? vscode.ViewColumn.Active,
       preserveFocus: false,
+      iconPath: 'images/logo.png',
       dev: isCropDev
     })
   }
@@ -77,6 +78,16 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         this.response(data.seq, toPngDataUrl(await vscode.workspace.fs.readFile(files[0])))
         break
       case 'requestSave': {
+        const image = Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64')
+        const jimpImage = await Jimp.read(image)
+        jimpImage.crop({
+          x: data.crop[0],
+          y: data.crop[1],
+          w: data.crop[2],
+          h: data.crop[3]
+        })
+        const finalImage = await jimpImage.getBuffer('image/png')
+
         const resource = interfaceService.suggestResource()
         if (!resource) {
           vscode.window.showWarningMessage(t('maa.crop.warning.no-resource'))
@@ -87,7 +98,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri
           })
           if (path) {
-            await vscode.workspace.fs.writeFile(path, Buffer.from(data.image, 'base64'))
+            await vscode.workspace.fs.writeFile(path, finalImage)
           }
           this.response(data.seq, null)
           break
@@ -104,7 +115,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           imageRoot,
           `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
         )
-        await vscode.workspace.fs.writeFile(resultPath, Buffer.from(data.image, 'base64'))
+        await vscode.workspace.fs.writeFile(resultPath, finalImage)
+        vscode.commands.executeCommand('revealInExplorer', resultPath)
         this.response(data.seq, null)
         break
       }

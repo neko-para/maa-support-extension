@@ -1,6 +1,9 @@
 {
   "name": "@mse/extension",
   "devDependencies": {
+    "@jimp/core": "^1.6.0",
+    "@jimp/js-png": "^1.6.0",
+    "@jimp/plugin-crop": "^1.6.0",
     "@maaxyz/maa-node": "4.4.0-alpha.3-post.9-ci.15759971318",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",

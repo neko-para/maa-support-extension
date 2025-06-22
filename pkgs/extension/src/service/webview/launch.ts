@@ -28,6 +28,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       title,
       viewColumn: viewColumn ?? vscode.ViewColumn.Active,
       preserveFocus: false,
+      iconPath: 'images/logo.png',
       dev: isLaunchDev
     })
 

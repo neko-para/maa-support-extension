@@ -91,6 +91,7 @@ function configAdb(index: number) {
       :options="controllerOptions"
       :value="currentController"
       @update:value="switchController"
+      placeholder="选择控制器"
       size="small"
     ></n-select>
   </n-card>

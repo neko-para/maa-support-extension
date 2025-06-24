@@ -41,6 +41,16 @@ export class WebviewControlService extends BaseService {
             resource: interfaceService.interfaceJson.resource?.[data.index].name
           })
           break
+        case 'selectController':
+          const name = interfaceService.interfaceJson.controller?.[data.index].name
+          interfaceService.reduceConfig({
+            controller: name
+              ? {
+                  name
+                }
+              : undefined
+          })
+          break
         case 'refreshAdb':
           this.provider?.response(data.seq, await maa.AdbController.find())
           break

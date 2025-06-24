@@ -35,6 +35,7 @@ function switchResource(index: number) {
       :options="resourceOptions"
       :value="currentResource"
       @update:value="switchResource"
+      placeholder="选择资源"
       size="small"
     ></n-select>
   </n-card>

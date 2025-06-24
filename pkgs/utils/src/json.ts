@@ -97,7 +97,7 @@ export function visitJsonDocument<State = unknown>(
         value,
         new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + length)),
         path,
-        states[0]
+        states.find(x => x !== undefined)
       )
     },
     onError: (error, offset, length, startLine, startCharacter) => {}

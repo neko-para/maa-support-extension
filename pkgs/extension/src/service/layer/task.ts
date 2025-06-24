@@ -7,28 +7,9 @@ import { JSONPath, visitJsonDocument } from '@mse/utils'
 import { PipelineLayer, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
 
-export function parsePipelineLiteral(
-  value: string,
-  range: vscode.Range,
-  path: JSONPath,
-  state: TaskIndexInfo
-) {
+function parseReco(value: string, range: vscode.Range, path: JSONPath, state: TaskIndexInfo) {
   switch (path[1]) {
-    case 'next':
-    case 'interrupt':
-    case 'on_error':
-    case 'timeout_next':
-      if (path.length >= 2 && path.length <= 3) {
-        state.taskRef.push({
-          task: value,
-          range: range,
-          belong: 'next'
-        })
-      }
-      break
-    case 'target':
-    case 'begin':
-    case 'end':
+    case 'roi':
       if (path.length === 2) {
         state.taskRef.push({
           task: value,
@@ -45,18 +26,20 @@ export function parsePipelineLiteral(
         })
       }
       break
-    case 'pre_wait_freezes':
-    case 'post_wait_freezes':
-      switch (path[2]) {
-        case 'target':
-          if (path.length == 3) {
-            state.taskRef.push({
-              task: value,
-              range: range,
-              belong: 'target'
-            })
-          }
-          break
+  }
+}
+
+function parseAct(value: string, range: vscode.Range, path: JSONPath, state: TaskIndexInfo) {
+  switch (path[1]) {
+    case 'target':
+    case 'begin':
+    case 'end':
+      if (path.length === 2) {
+        state.taskRef.push({
+          task: value,
+          range: range,
+          belong: 'target'
+        })
       }
       break
     case 'swipes':
@@ -75,6 +58,49 @@ export function parsePipelineLiteral(
         }
       }
       break
+  }
+}
+
+export function parsePipelineLiteral(
+  value: string,
+  range: vscode.Range,
+  path: JSONPath,
+  state: TaskIndexInfo
+) {
+  switch (path[1]) {
+    case 'next':
+    case 'interrupt':
+    case 'on_error':
+      if (path.length >= 2 && path.length <= 3) {
+        state.taskRef.push({
+          task: value,
+          range: range,
+          belong: 'next'
+        })
+      }
+      break
+    case 'pre_wait_freezes':
+    case 'post_wait_freezes':
+      switch (path[2]) {
+        case 'target':
+          if (path.length == 3) {
+            state.taskRef.push({
+              task: value,
+              range: range,
+              belong: 'target'
+            })
+          }
+          break
+      }
+      break
+  }
+  parseReco(value, range, path, state)
+  parseAct(value, range, path, state)
+  if (path[1] === 'recognition' && path[2] === 'param') {
+    parseReco(value, range, path.slice(2), state)
+  }
+  if (path[1] === 'action' && path[2] === 'param') {
+    parseAct(value, range, path.slice(2), state)
   }
 }
 

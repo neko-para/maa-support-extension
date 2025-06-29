@@ -85,8 +85,5 @@
         }
       }
     }
-  },
-  "extensionDependencies": [
-    "nekosu.maa-node"
-  ]
+  }
 }

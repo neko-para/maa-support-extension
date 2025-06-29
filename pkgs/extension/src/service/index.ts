@@ -18,6 +18,7 @@ import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
 import { PipelineHoverProvider } from './language/pipeline/hover'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { LaunchService } from './launch'
+import { NativeService } from './native'
 import { RootService } from './root'
 import { StateService } from './state'
 import { TaskIndexService } from './taskIndex'
@@ -26,6 +27,7 @@ import { WebviewControlService } from './webview/control'
 export { context } from './context'
 
 export let stateService: StateService
+export let nativeService: NativeService
 export let rootService: RootService
 export let interfaceService: InterfaceService
 export let taskIndexService: TaskIndexService
@@ -43,6 +45,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
 
   stateService = new StateService()
+  nativeService = new NativeService()
   rootService = new RootService()
   interfaceService = new InterfaceService()
   taskIndexService = new TaskIndexService()
@@ -70,6 +73,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   webviewControlService = new WebviewControlService()
 
   await stateService.init()
+  await nativeService.init()
   await rootService.init()
   await interfaceService.init()
   await taskIndexService.init()

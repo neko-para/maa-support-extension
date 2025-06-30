@@ -40,10 +40,6 @@
         "command": "maa.launch-interface"
       },
       {
-        "title": "%maa.command.stop-launch%",
-        "command": "maa.stop-launch"
-      },
-      {
         "title": "%maa.command.open-crop%",
         "command": "maa.open-crop"
       },
@@ -56,8 +52,17 @@
         "command": "maa.debug.query-location"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "maa-view-container",
+          "title": "MaaFramework Support",
+          "icon": "images/logo.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "maa-view-container": [
         {
           "id": "maa.view.control-panel",
           "name": "%maa.view.control-panel.title%",

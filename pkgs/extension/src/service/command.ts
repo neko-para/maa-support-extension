@@ -81,13 +81,13 @@ export class CommandService extends BaseService {
         } else {
           return
         }
-        const doc = await vscode.workspace.openTextDocument(info.uri)
-        if (doc) {
+        try {
+          const doc = await vscode.workspace.openTextDocument(info.uri)
           const editor = await vscode.window.showTextDocument(doc)
           const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
           editor.selection = targetSelection
           editor.revealRange(targetSelection)
-        }
+        } catch {}
       }
     })
   }

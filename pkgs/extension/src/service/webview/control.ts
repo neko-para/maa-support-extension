@@ -123,16 +123,16 @@ export class WebviewControlService extends BaseService {
             }
           }
           if (range) {
-            const doc = await vscode.workspace.openTextDocument(
-              rootService.activeResource!.interfaceUri
-            )
-            if (doc) {
+            try {
+              const doc = await vscode.workspace.openTextDocument(
+                rootService.activeResource!.interfaceUri
+              )
               const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
               if (editor) {
                 editor.revealRange(range)
                 editor.selection = new vscode.Selection(range.start, range.end)
               }
-            }
+            } catch {}
           }
           break
         case 'launch':

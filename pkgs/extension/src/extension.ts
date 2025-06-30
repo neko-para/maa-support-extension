@@ -19,9 +19,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(commands.OpenExtLog, async () => {
-      const doc = await vscode.workspace.openTextDocument(logFile)
-      if (doc) {
+      try {
+        const doc = await vscode.workspace.openTextDocument(logFile)
         await vscode.window.showTextDocument(doc)
+      } catch {
+        vscode.window.showErrorMessage(`无法找到文件: ${logFile}`)
       }
     })
   )
@@ -40,9 +42,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
       vscode.commands.registerCommand(commands.OpenMaaLog, async () => {
-        const doc = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(logPath, 'maa.log'))
-        if (doc) {
+        const maaLogFile = vscode.Uri.joinPath(logPath, 'maa.log')
+        try {
+          const doc = await vscode.workspace.openTextDocument(maaLogFile)
           await vscode.window.showTextDocument(doc)
+        } catch {
+          vscode.window.showErrorMessage(`无法找到文件: ${maaLogFile}`)
         }
       })
     )

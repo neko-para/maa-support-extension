@@ -31,8 +31,10 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
   }
 
   async loadJson() {
-    const doc = await vscode.workspace.openTextDocument(this.uri)
-    if (!doc) {
+    let doc: vscode.TextDocument | null = null
+    try {
+      doc = await vscode.workspace.openTextDocument(this.uri)
+    } catch {
       return
     }
 

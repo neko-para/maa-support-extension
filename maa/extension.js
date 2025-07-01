@@ -1,8 +1,8 @@
-const maa = require('@maaxyz/maa-node')
+// const maa = require('@maaxyz/maa-node')
 
 module.exports = {
   activate() {
-    return maa
+    return undefined
   },
   deactivate() {}
 }

@@ -1,9 +1,9 @@
 {
   "name": "maa-node",
-  "displayName": "Maa Node Package",
+  "displayName": "Maa Node Package (Deprecated)",
   "version": "0.0.0-dev",
   "publisher": "nekosu",
-  "description": "This package is used by Maa Pipeline Support",
+  "description": "This package is previously used by Maa Pipeline Support. No longer needed.",
   "repository": "https://github.com/neko-para/maa-support-extension",
   "license": "MIT",
   "icon": "images/logo.png",

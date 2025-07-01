@@ -38,6 +38,10 @@ export function visitJsonDocument<State = unknown>(
       afterProp = true
     },
     onObjectBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+      if (!afterProp) {
+        // 数组中的对象
+        states.unshift(undefined)
+      }
       afterProp = false
 
       const pos = doc.positionAt(offset)

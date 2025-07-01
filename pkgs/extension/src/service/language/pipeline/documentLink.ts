@@ -17,14 +17,14 @@ export class PipelineDocumentLinkProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
+    await taskIndexService.flushDirty()
+
     const result: vscode.DocumentLink[] = []
 
     const layer = taskIndexService.getLayer(document.uri)
     if (!layer) {
       return result
     }
-
-    await layer.flushDirty()
 
     for (const [task, infos] of Object.entries(layer.index)) {
       for (const info of infos) {

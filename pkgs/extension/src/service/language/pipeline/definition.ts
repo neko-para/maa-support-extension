@@ -18,6 +18,8 @@ export class PipelineDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
+    await taskIndexService.flushDirty()
+
     const [info, layer] = await taskIndexService.queryLocation(document.uri, position)
 
     if (!info || !layer) {

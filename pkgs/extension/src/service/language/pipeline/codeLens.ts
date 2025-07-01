@@ -41,7 +41,10 @@ export class PipelineCodeLensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
+    await taskIndexService.flushDirty()
+
     const layer = taskIndexService.getLayer(document.uri)
+
     if (!layer) {
       return []
     }

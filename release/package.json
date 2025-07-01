@@ -44,8 +44,20 @@
         "command": "maa.open-crop"
       },
       {
+        "title": "%maa.command.reveal-control-panel%",
+        "command": "maa.reveal-control-panel"
+      },
+      {
         "title": "Maa(PI): switch resource",
         "command": "maa.pi.switch-resource"
+      },
+      {
+        "title": "%maa.command.native.select-maa%",
+        "command": "maa.native.select-maa"
+      },
+      {
+        "title": "%maa.command.native.select-registry%",
+        "command": "maa.native.select-registry"
       },
       {
         "title": "Maa(debug): query location",
@@ -90,8 +102,5 @@
         }
       }
     }
-  },
-  "extensionDependencies": [
-    "nekosu.maa-node"
-  ]
+  }
 }

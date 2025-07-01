@@ -6,7 +6,7 @@ import { logger, loggerChannel, t } from '@mse/utils'
 
 import { interfaceService } from '.'
 import { Maa, maa } from '../maa'
-import { BaseService, context } from './context'
+import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
 
 type InstanceCache = {

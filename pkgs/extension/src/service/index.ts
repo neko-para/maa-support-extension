@@ -18,14 +18,17 @@ import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
 import { PipelineHoverProvider } from './language/pipeline/hover'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { LaunchService } from './launch'
+import { NativeService } from './native'
 import { RootService } from './root'
 import { StateService } from './state'
+import { StatusBarService } from './statusBar'
 import { TaskIndexService } from './taskIndex'
 import { WebviewControlService } from './webview/control'
 
 export { context } from './context'
 
 export let stateService: StateService
+export let nativeService: NativeService
 export let rootService: RootService
 export let interfaceService: InterfaceService
 export let taskIndexService: TaskIndexService
@@ -33,6 +36,7 @@ export let interfaceIndexService: InterfaceIndexService
 export let launchService: LaunchService
 export let commandService: CommandService
 export let diagnosticService: DiagnosticService
+export let statusBarService: StatusBarService
 
 export let pipelineLanguageServices: PipelineLanguageProvider[]
 export let interfaceLanguageServices: InterfaceLanguageProvider[]
@@ -43,6 +47,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
 
   stateService = new StateService()
+  nativeService = new NativeService()
   rootService = new RootService()
   interfaceService = new InterfaceService()
   taskIndexService = new TaskIndexService()
@@ -50,6 +55,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   launchService = new LaunchService()
   commandService = new CommandService()
   diagnosticService = new DiagnosticService()
+  statusBarService = new StatusBarService()
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),
@@ -70,6 +76,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   webviewControlService = new WebviewControlService()
 
   await stateService.init()
+  await nativeService.init()
   await rootService.init()
   await interfaceService.init()
   await taskIndexService.init()
@@ -77,6 +84,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await launchService.init()
   await commandService.init()
   await diagnosticService.init()
+  await statusBarService.init()
 
   for (const service of pipelineLanguageServices) {
     await service.init()

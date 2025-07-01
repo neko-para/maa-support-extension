@@ -6,7 +6,7 @@ import { logger, setupLogger } from '@mse/utils'
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { maa } from './maa'
-import { init, nativeService } from './service'
+import { init, nativeService, statusBarService } from './service'
 
 sms.install()
 
@@ -30,8 +30,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   if (!(await nativeService.load())) {
     vscode.window.showErrorMessage('加载 MaaFramework 失败')
+    statusBarService.showMaaStatus(null)
     return
   }
+
+  statusBarService.showMaaStatus(nativeService.version)
 
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
   logger.info(`MaaFramework version ${maa.Global.version}`)

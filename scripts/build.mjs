@@ -6,7 +6,7 @@ esBuild({
   entryPoints: ['pkgs/extension/src/extension.ts'],
   bundle: true,
   outdir: 'release/out',
-  external: ['@maaxyz/maa-node', 'vscode'],
+  external: ['@maaxyz/maa-node', 'vscode', 'node-gyp/bin/node-gyp.js'],
   platform: 'node',
   sourcemap: true,
   mainFields: ['module', 'main'],

@@ -8,7 +8,12 @@ export const commands = {
   LaunchInterface: 'maa.launch-interface',
   OpenCrop: 'maa.open-crop',
 
+  RevealControlPanel: 'maa.reveal-control-panel',
+
   PISwitchResource: 'maa.pi.switch-resource',
+
+  NativeSelectMaa: 'maa.native.select-maa',
+  NativeSelectRegistry: 'maa.native.select-registry',
 
   DebugQueryLocation: 'maa.debug.query-location'
 }

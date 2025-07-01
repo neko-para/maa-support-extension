@@ -5,6 +5,9 @@
   "maa.command.launch-task": "Maa: launch task",
   "maa.command.launch-interface": "Maa: launch interface",
   "maa.command.open-crop": "Maa: open crop tool",
+  "maa.command.reveal-control-panel": "Maa: reveal control panel",
+  "maa.command.native.select-maa": "Maa: select MaaFramework version",
+  "maa.command.native.select-registry": "Maa: select fetch registry",
   "maa.view.control-panel.title": "Maa Control Panel",
   "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)"
 }

@@ -40,16 +40,24 @@
         "command": "maa.launch-interface"
       },
       {
-        "title": "%maa.command.stop-launch%",
-        "command": "maa.stop-launch"
-      },
-      {
         "title": "%maa.command.open-crop%",
         "command": "maa.open-crop"
       },
       {
+        "title": "%maa.command.reveal-control-panel%",
+        "command": "maa.reveal-control-panel"
+      },
+      {
         "title": "Maa(PI): switch resource",
         "command": "maa.pi.switch-resource"
+      },
+      {
+        "title": "%maa.command.native.select-maa%",
+        "command": "maa.native.select-maa"
+      },
+      {
+        "title": "%maa.command.native.select-registry%",
+        "command": "maa.native.select-registry"
       },
       {
         "title": "Maa(debug): query location",

@@ -232,12 +232,18 @@ export class NativeService extends BaseService {
   }
 
   async prepare(version: string) {
+    const versionFolder = this.versionFolder(version)
+
     const release = await this.lock()
     if (!release) {
       return false
     }
 
-    if (existsSync(this.versionFolder(version).fsPath)) {
+    if (existsSync(versionFolder.fsPath)) {
+      await fs.writeFile(
+        vscode.Uri.joinPath(versionFolder, 'timestamp').fsPath,
+        Date.now().toString()
+      )
       await release()
       return true
     }
@@ -277,21 +283,22 @@ export class NativeService extends BaseService {
           increment: 40
         })
 
-        await fs.mkdir(
-          vscode.Uri.joinPath(this.installUri, version, 'node_modules', '@maaxyz').fsPath,
-          { recursive: true }
+        await fs.mkdir(vscode.Uri.joinPath(versionFolder, 'node_modules', '@maaxyz').fsPath, {
+          recursive: true
+        })
+        await fs.writeFile(
+          vscode.Uri.joinPath(versionFolder, 'timestamp').fsPath,
+          Date.now().toString()
         )
 
         await fs.rename(
           loaderTemp,
-          vscode.Uri.joinPath(this.installUri, version, 'node_modules', '@maaxyz', 'maa-node')
-            .fsPath
+          vscode.Uri.joinPath(versionFolder, 'node_modules', '@maaxyz', 'maa-node').fsPath
         )
         await fs.rename(
           binaryTemp,
           vscode.Uri.joinPath(
-            this.installUri,
-            version,
+            versionFolder,
             'node_modules',
             '@maaxyz',
             `maa-node-${process.platform}-${process.arch}`
@@ -327,6 +334,37 @@ export class NativeService extends BaseService {
       return false
     }
 
+    this.cleanUnused()
+
     return true
+  }
+
+  async cleanUnused() {
+    let release = await this.lock()
+    if (!release) {
+      return
+    }
+
+    for (const info of await fs.readdir(this.installUri.fsPath, { withFileTypes: true })) {
+      if (!info.isDirectory()) {
+        continue
+      }
+      if (info.name == this.version) {
+        continue
+      }
+      const versionFolder = this.versionFolder(info.name)
+      const timestampFile = vscode.Uri.joinPath(versionFolder, 'timestamp').fsPath
+      if (existsSync(timestampFile)) {
+        const content = await fs.readFile(timestampFile, 'utf8')
+        const delta = Date.now() - parseInt(content)
+
+        if (delta > 7 * 24 * 60 * 60 * 1000) {
+          await fs.rm(versionFolder.fsPath, { recursive: true })
+        }
+      } else {
+        await fs.rm(versionFolder.fsPath, { recursive: true })
+      }
+    }
+    await release()
   }
 }

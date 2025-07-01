@@ -46,7 +46,7 @@ jobs:
             ver=${{ github.ref_name }}
             ver=${ver:1}
           else
-            ver=`git describe --tags --match "v*" --long | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/'`-`git rev-parse --abbrev-ref HEAD`
+            ver=`git describe --tags --match "v*" --long | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/'`-`git rev-parse --abbrev-ref HEAD | sed 's#/#-#'`
           fi
           echo "Change version to ${ver}"
           npm --prefix release pkg set version=${ver}

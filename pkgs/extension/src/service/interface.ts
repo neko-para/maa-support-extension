@@ -75,46 +75,48 @@ export class InterfaceService extends BaseService {
     }
 
     const doLoadInterface = async () => {
-      const doc = await vscode.workspace.openTextDocument(root.interfaceUri)
-      if (!doc) {
-        return
-      }
-      this.interfaceJson = parse(doc.getText())
-      setTimeout(() => {
+      try {
+        const doc = await vscode.workspace.openTextDocument(root.interfaceUri)
+        this.interfaceJson = parse(doc.getText())
+        setTimeout(() => {
+          this.interfaceChanged.fire()
+        }, 0)
+      } catch {
         this.interfaceChanged.fire()
-      }, 0)
+      }
     }
 
     const doLoadInterfaceConfig = async () => {
-      const doc = await vscode.workspace.openTextDocument(root.configUri)
-      if (!doc) {
-        return
-      }
-      this.interfaceConfigJson = parse(doc.getText())
+      try {
+        const doc = await vscode.workspace.openTextDocument(root.configUri)
+        this.interfaceConfigJson = parse(doc.getText())
 
-      let fixed = false
-      const tasks = this.interfaceConfigJson.task ?? []
-      const fixedTasks = tasks.map(task => {
-        if (!task.__vscKey) {
-          fixed = true
-          return {
-            ...task,
-            __vscKey: v4()
+        let fixed = false
+        const tasks = this.interfaceConfigJson.task ?? []
+        const fixedTasks = tasks.map(task => {
+          if (!task.__vscKey) {
+            fixed = true
+            return {
+              ...task,
+              __vscKey: v4()
+            }
+          } else {
+            return task
           }
+        })
+        if (fixed) {
+          setTimeout(() => {
+            this.reduceConfig({
+              task: fixedTasks
+            })
+          }, 0)
         } else {
-          return task
+          setTimeout(() => {
+            this.interfaceConfigChanged.fire()
+          }, 0)
         }
-      })
-      if (fixed) {
-        setTimeout(() => {
-          this.reduceConfig({
-            task: fixedTasks
-          })
-        }, 0)
-      } else {
-        setTimeout(() => {
-          this.interfaceConfigChanged.fire()
-        }, 0)
+      } catch {
+        this.interfaceConfigChanged.fire()
       }
     }
 

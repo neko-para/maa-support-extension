@@ -12,7 +12,7 @@ import ControlView from './views/ControlView.vue'
 import SettingsView from './views/SettingsView.vue'
 import ToolView from './views/ToolView.vue'
 
-const { theme, themeOverride } = useTheme('panel')
+const { loaded, theme, themeOverride } = useTheme('panel')
 
 hljs.registerLanguage('json', json)
 
@@ -23,38 +23,40 @@ canvasSt.setup(canvasSizeEl, canvasEl)
 </script>
 
 <template>
-  <n-config-provider :theme="theme" :theme-overrides="themeOverride" :hljs="hljs">
-    <n-card
-      title="编辑"
-      style="height: 100vh"
-      content-style="display: flex; flex-direction: column; gap: 10px; min-height: 0"
-    >
-      <template #header-extra>
-        <control-view></control-view>
-      </template>
+  <template v-if="loaded">
+    <n-config-provider :theme="theme" :theme-overrides="themeOverride" :hljs="hljs">
+      <n-card
+        title="编辑"
+        style="height: 100vh"
+        content-style="display: flex; flex-direction: column; gap: 10px; min-height: 0"
+      >
+        <template #header-extra>
+          <control-view></control-view>
+        </template>
 
-      <n-flex style="flex: 1; min-height: 0">
-        <div ref="canvasSizeEl" style="position: relative; flex: 1">
-          <canvas
-            ref="canvasEl"
-            :style="{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              cursor: controlSt.cursor.value
-            }"
-            @wheel.prevent="controlSt.onWheel"
-            @pointerdown.prevent="controlSt.onPointerDown"
-            @pointermove.prevent="controlSt.onPointerMove"
-            @pointerup.prevent="controlSt.onPointerUp"
-            @contextmenu.prevent="controlSt.onContextMenu"
-          ></canvas>
-        </div>
-        <n-scrollbar v-if="showTab" style="width: 40vw">
-          <settings-view v-if="showTab === 'settings'"></settings-view>
-          <tool-view v-else-if="showTab === 'tool'"></tool-view>
-        </n-scrollbar>
-      </n-flex>
-    </n-card>
-  </n-config-provider>
+        <n-flex style="flex: 1; min-height: 0">
+          <div ref="canvasSizeEl" style="position: relative; flex: 1">
+            <canvas
+              ref="canvasEl"
+              :style="{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                cursor: controlSt.cursor.value
+              }"
+              @wheel.prevent="controlSt.onWheel"
+              @pointerdown.prevent="controlSt.onPointerDown"
+              @pointermove.prevent="controlSt.onPointerMove"
+              @pointerup.prevent="controlSt.onPointerUp"
+              @contextmenu.prevent="controlSt.onContextMenu"
+            ></canvas>
+          </div>
+          <n-scrollbar v-if="showTab" style="width: 40vw">
+            <settings-view v-if="showTab === 'settings'"></settings-view>
+            <tool-view v-else-if="showTab === 'tool'"></tool-view>
+          </n-scrollbar>
+        </n-flex>
+      </n-card>
+    </n-config-provider>
+  </template>
 </template>

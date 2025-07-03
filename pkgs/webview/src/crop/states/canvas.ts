@@ -1,5 +1,4 @@
-import type * as maa from '@maaxyz/maa-node'
-import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
+import { type ShallowRef, onBeforeUnmount, onUnmounted, ref, watch } from 'vue'
 
 import { hostState } from '../state'
 import { Box, Pos, Size } from '../utils/2d'
@@ -151,21 +150,27 @@ export function setup(
   let resizeObs: ResizeObserver
   let drawTimer: ReturnType<typeof setInterval>
 
-  onMounted(() => {
-    const ctx = canvasEl.value!.getContext('2d')!
+  watch(
+    () => canvasEl.value,
+    () => {
+      const ctx = canvasEl.value!.getContext('2d')!
 
-    const resize = () => {
-      const rec = sizeEl.value!.getBoundingClientRect()
-      size.value.set(rec.width, rec.height)
-      canvasEl.value!.width = rec.width
-      canvasEl.value!.height = rec.height
-      draw(ctx)
+      const resize = () => {
+        const rec = sizeEl.value!.getBoundingClientRect()
+        size.value.set(rec.width, rec.height)
+        canvasEl.value!.width = rec.width
+        canvasEl.value!.height = rec.height
+        draw(ctx)
+      }
+      resizeObs = new ResizeObserver(resize)
+      resizeObs.observe(sizeEl.value!)
+      resize()
+      drawTimer = setInterval(() => draw(ctx), 20)
+    },
+    {
+      once: true
     }
-    resizeObs = new ResizeObserver(resize)
-    resizeObs.observe(sizeEl.value!)
-    resize()
-    drawTimer = setInterval(() => draw(ctx), 20)
-  })
+  )
 
   onBeforeUnmount(() => {
     resizeObs.unobserve(sizeEl.value!)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NDynamicTags, NFlex, NTab, NTabs, NText } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { DynamicScroller, DynamicScrollerItem } from '../../utils/vvs'
 import InputTask from '../components/InputTask.vue'
@@ -16,15 +16,21 @@ const sizeStyle = computed(() => {
   return `position: absolute; left: 0; top: 0; width: ${size.value[0]}px; height: ${size.value[1]}px`
 })
 
-onMounted(() => {
-  const resize = () => {
-    const rec = sizingEl.value!.getBoundingClientRect()
-    size.value = [rec.width, rec.height]
+watch(
+  () => sizingEl.value,
+  () => {
+    const resize = () => {
+      const rec = sizingEl.value!.getBoundingClientRect()
+      size.value = [rec.width, rec.height]
+    }
+    resizeObs = new ResizeObserver(resize)
+    resizeObs.observe(sizingEl.value!)
+    resize()
+  },
+  {
+    once: true
   }
-  resizeObs = new ResizeObserver(resize)
-  resizeObs.observe(sizingEl.value!)
-  resize()
-})
+)
 
 onUnmounted(() => {
   resizeObs.disconnect()

@@ -2,6 +2,8 @@ import { type GlobalTheme, type GlobalThemeOverrides, darkTheme, lightTheme } fr
 import { onMounted, onUnmounted, ref } from 'vue'
 
 export function useTheme(type: 'view' | 'panel') {
+  const loaded = ref<boolean>(false)
+
   const theme = ref<GlobalTheme>(lightTheme)
   const themeOverride = ref<GlobalThemeOverrides>({})
 
@@ -33,6 +35,7 @@ export function useTheme(type: 'view' | 'panel') {
         borderRadius: '0',
         cardColor: 'transparent',
         inputColor: 'transparent',
+        inputColorDisabled: 'transparent',
         popoverColor: type === 'view' ? viewBgColor : panelBgColor,
         hoverColor: getVar('--vscode-toolbar-hoverBackground')
       },
@@ -56,11 +59,13 @@ export function useTheme(type: 'view' | 'panel') {
       }
     }
 
-    if (document.body.className.indexOf('vscode-dark') !== -1) {
-      theme.value = darkTheme
-    } else {
-      theme.value = lightTheme
-    }
+    const isLight =
+      document.body.className.indexOf('vscode-light') !== -1 ||
+      document.body.className.indexOf('vscode-high-contrast') !== -1
+    const isDark = document.body.className.indexOf('vscode-dark') !== -1
+
+    theme.value = isLight ? lightTheme : darkTheme
+    loaded.value = isLight || isDark
   }
 
   const htmlObserver = new MutationObserver(mutations => {
@@ -81,7 +86,7 @@ export function useTheme(type: 'view' | 'panel') {
   onMounted(() => {
     htmlObserver.observe(document.documentElement, { attributes: true })
     bodyObserver.observe(document.body, { attributes: true })
-    updateTheme()
+    updateThemeImpl()
   })
 
   onUnmounted(() => {
@@ -94,6 +99,7 @@ export function useTheme(type: 'view' | 'panel') {
   })
 
   return {
+    loaded,
     theme,
     themeOverride
   }

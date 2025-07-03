@@ -47,6 +47,7 @@ export type IpcToHost<Context, Rest extends IpcRest> = IpcToHostBuiltin<Context>
 export type CropViewContext = {
   uploadDir?: string
 
+  saveAddRoiInfo?: boolean
   backgroundFill?: string
   selectFill?: string
   selectOpacity?: string

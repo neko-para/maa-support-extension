@@ -1,6 +1,7 @@
 import * as maa from '@maaxyz/maa-node'
 
 export type CropHostState = {
+  saveAddRoiInfo?: boolean
   backgroundFill?: string
   selectFill?: string
   selectOpacity?: number

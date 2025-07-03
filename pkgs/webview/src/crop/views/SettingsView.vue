@@ -17,6 +17,14 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
 
 <template>
   <n-flex vertical>
+    <n-text> 保存时文件名中附带ROI </n-text>
+    <n-flex>
+      <n-switch
+        :value="hostState.saveAddRoiInfo"
+        @update:value="v => update('saveAddRoiInfo', v)"
+      ></n-switch>
+      <n-text> {{ hostState.saveAddRoiInfo ? '附带ROI' : '不附带ROI' }} </n-text>
+    </n-flex>
     <n-text> 背景色 </n-text>
     <n-input
       :value="hostState.backgroundFill"

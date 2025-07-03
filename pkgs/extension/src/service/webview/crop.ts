@@ -113,7 +113,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         }
         const resultPath = vscode.Uri.joinPath(
           imageRoot,
-          `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
+          stateService.state.cropSettings?.saveAddRoiInfo
+            ? `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
+            : `${name}.png`
         )
         await vscode.workspace.fs.writeFile(resultPath, finalImage)
         vscode.commands.executeCommand('revealInExplorer', resultPath)

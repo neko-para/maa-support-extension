@@ -101,6 +101,12 @@
           "default": "info"
         }
       }
-    }
+    },
+    "debuggers": [
+      {
+        "type": "maa-launch",
+        "label": "Maa Launch (Inner Use Only)"
+      }
+    ]
   }
 }

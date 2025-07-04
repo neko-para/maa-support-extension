@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 
 import { CommandService } from './command'
 import { BaseService, init as initContext } from './context'
+import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
 import { InterfaceIndexService } from './interfaceIndex'
@@ -34,6 +35,7 @@ export let interfaceService: InterfaceService
 export let taskIndexService: TaskIndexService
 export let interfaceIndexService: InterfaceIndexService
 export let launchService: LaunchService
+export let debugService: DebugService
 export let commandService: CommandService
 export let diagnosticService: DiagnosticService
 export let statusBarService: StatusBarService
@@ -53,6 +55,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   taskIndexService = new TaskIndexService()
   interfaceIndexService = new InterfaceIndexService()
   launchService = new LaunchService()
+  debugService = new DebugService()
   commandService = new CommandService()
   diagnosticService = new DiagnosticService()
   statusBarService = new StatusBarService()
@@ -82,6 +85,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await taskIndexService.init()
   await interfaceIndexService.init()
   await launchService.init()
+  await debugService.init()
   await commandService.init()
   await diagnosticService.init()
   await statusBarService.init()

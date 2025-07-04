@@ -77,6 +77,12 @@ importers:
       '@types/vscode':
         specifier: ^1.95.0
         version: 1.95.0
+      '@vscode/debugadapter':
+        specifier: ^1.68.0
+        version: 1.68.0
+      '@vscode/debugprotocol':
+        specifier: ^1.68.0
+        version: 1.68.0
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
@@ -1265,6 +1271,13 @@ packages:
 
   '@volar/typescript@2.4.14':
     resolution: {integrity: sha512-p8Z6f/bZM3/HyCdRNFZOEEzts51uV8WHeN8Tnfnm2EBv6FDB2TQLzfVx7aJvnl8ofKAOnS64B2O8bImBFaauRw==}
+
+  '@vscode/debugadapter@1.68.0':
+    resolution: {integrity: sha512-D6gk5Fw2y4FV8oYmltoXpj+VAZexxJFopN/mcZ6YcgzQE9dgq2L45Aj3GLxScJOD6GeLILcxJIaA8l3v11esGg==}
+    engines: {node: '>=14'}
+
+  '@vscode/debugprotocol@1.68.0':
+    resolution: {integrity: sha512-2J27dysaXmvnfuhFGhfeuxfHRXunqNPxtBoR3koiTOA9rdxWNDTa1zIFLCFMSHJ9MPTPKFcBeblsyaCJCIlQxg==}
 
   '@vue/babel-helper-vue-transform-on@1.2.5':
     resolution: {integrity: sha512-lOz4t39ZdmU4DJAa2hwPYmKc8EsuGa2U0L9KaZaOJUt0UwQNjNA3AZTq6uEivhOKhhG1Wvy96SvYBoFmCg3uuw==}
@@ -3289,6 +3302,12 @@ snapshots:
       '@volar/language-core': 2.4.14
       path-browserify: 1.0.1
       vscode-uri: 3.1.0
+
+  '@vscode/debugadapter@1.68.0':
+    dependencies:
+      '@vscode/debugprotocol': 1.68.0
+
+  '@vscode/debugprotocol@1.68.0': {}
 
   '@vue/babel-helper-vue-transform-on@1.2.5': {}
 

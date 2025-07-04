@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t } from '@mse/utils'
 
-import { interfaceService } from '.'
+import { debugService, interfaceService } from '.'
 import { Maa, maa } from '../maa'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -208,24 +208,24 @@ export class LaunchService extends BaseService {
     return [resource, agent]
   }
 
-  async setupInstance(runtime: InterfaceRuntime): Promise<boolean> {
+  async setupInstance(runtime: InterfaceRuntime): Promise<[false, string] | [true, null]> {
     this.tasker?.tasker.destroy()
     this.tasker?.resource.destroy()
     this.tasker = undefined
 
     if (!(await this.updateCache())) {
-      return false
+      return [false, '初始化控制器失败']
     }
 
     const controller = this.cache?.controller
 
     if (!controller) {
-      return false
+      return [false, '初始化控制器失败']
     }
 
     const [resource, agent] = await this.setupResource(runtime)
     if (!resource) {
-      return false
+      return [false, '初始化资源失败']
     }
 
     const tasker = new maa.Tasker()
@@ -241,7 +241,7 @@ export class LaunchService extends BaseService {
       tasker.destroy()
       resource.destroy()
       agent?.terminate()
-      return false
+      return [false, '初始化实例失败']
     }
 
     this.tasker = {
@@ -251,7 +251,7 @@ export class LaunchService extends BaseService {
       agent
     }
 
-    return true
+    return [true, null]
   }
 
   async launchRuntime(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
@@ -264,22 +264,47 @@ export class LaunchService extends BaseService {
   }
 
   async launchRuntimeImpl(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
-    if (!(await this.setupInstance(runtime)) || !this.tasker) {
+    const session = await debugService.startSession()
+
+    const [setupSuccess, setupError] = await this.setupInstance(runtime)
+
+    if (!setupSuccess) {
+      session.pushMessage(setupError)
+      session.pushTerminated()
       return
     }
+
+    if (!this.tasker) {
+      session.pushMessage('初始化实例失败')
+      session.pushTerminated()
+      return
+    }
+
+    session.pushMessage('初始化实例成功')
+    session.pushContinued()
 
     const tasker = this.tasker
     this.tasker = undefined
     const panel = new WebviewLaunchPanel(tasker, 'Maa launch')
     await panel.init()
 
-    let last
-    for (const task of tasks ?? runtime.task) {
-      last = tasker.tasker
-        .post_task(task.entry, task.pipeline_override as Record<string, unknown>)
-        .wait()
+    session.handlePause = async () => {
+      panel.pause()
     }
-    await last
+
+    session.handleContinue = async () => {
+      panel.cont()
+    }
+
+    for (const task of tasks ?? runtime.task) {
+      session.pushMessage(`任务开始 ${task.name} - ${task.entry}`)
+      const succeed = await tasker.tasker
+        .post_task(task.entry, task.pipeline_override as Record<string, unknown>)
+        .wait().succeeded
+      session.pushMessage(`任务${succeed ? '完成' : '失败'} ${task.name} - ${task.entry}`)
+    }
     panel.finish()
+
+    session.pushExited()
   }
 }

@@ -19,6 +19,8 @@ export class InterfaceCompletionProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
+    await interfaceIndexService.flushDirty()
+
     const info = await interfaceIndexService.queryLocation(document.uri, position)
 
     if (!info) {

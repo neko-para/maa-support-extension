@@ -18,6 +18,8 @@ export class InterfaceDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
+    await interfaceIndexService.flushDirty()
+
     const info = await interfaceIndexService.queryLocation(document.uri, position)
 
     if (!info) {

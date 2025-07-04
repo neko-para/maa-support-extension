@@ -1,8 +1,6 @@
 import * as vscode from 'vscode'
 
-import { visitJsonDocument } from '@mse/utils'
-
-import { interfaceService } from '../..'
+import { interfaceIndexService, interfaceService } from '../..'
 import { commands } from '../../../command'
 import { debounce } from '../../utils/debounce'
 import { InterfaceLanguageProvider } from './base'
@@ -27,7 +25,7 @@ export class InterfaceCodeLensProvider
 
     this.fireChangeCodeLenses = debounce(() => {
       this.didChangeCodeLenses.fire()
-    })
+    }, 50)
 
     this.defer = interfaceService.onInterfaceChanged(() => {
       this.fireChangeCodeLenses()
@@ -37,36 +35,28 @@ export class InterfaceCodeLensProvider
     })
   }
 
-  provideCodeLenses(
+  async provideCodeLenses(
     document: vscode.TextDocument,
     token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.CodeLens[]> {
+  ): Promise<vscode.CodeLens[]> {
+    await interfaceIndexService.flushDirty()
+
     const result: vscode.CodeLens[] = []
-    visitJsonDocument(document, {
-      onObjectProp: (prop, range, path) => {},
-      onLiteral: (value, range, path) => {
-        if (
-          path.length === 3 &&
-          path[0] === 'resource' &&
-          typeof path[1] === 'number' &&
-          path[2] === 'name'
-        ) {
-          const activated = interfaceService.interfaceConfigJson.resource === value
-          result.push(
-            activated
-              ? new vscode.CodeLens(range, {
-                  title: '已激活',
-                  command: ''
-                })
-              : new vscode.CodeLens(range, {
-                  title: '切换',
-                  command: commands.PISwitchResource,
-                  arguments: [value]
-                })
-          )
-        }
-      }
-    })
+    for (const decl of interfaceIndexService.resourceDecl) {
+      const activated = interfaceService.interfaceConfigJson.resource === decl.name
+      result.push(
+        activated
+          ? new vscode.CodeLens(decl.range, {
+              title: '已激活',
+              command: ''
+            })
+          : new vscode.CodeLens(decl.range, {
+              title: '切换',
+              command: commands.PISwitchResource,
+              arguments: [decl.name]
+            })
+      )
+    }
     return result
   }
 }

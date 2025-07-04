@@ -19,6 +19,8 @@ export class InterfaceReferenceProvider
     context: vscode.ReferenceContext,
     token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
+    await interfaceIndexService.flushDirty()
+
     const info = await interfaceIndexService.queryLocation(document.uri, position)
 
     if (!info) {

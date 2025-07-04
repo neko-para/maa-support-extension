@@ -8,6 +8,10 @@ import { InterfaceQueryResult } from './types'
 
 export class InterfaceIndexService extends BaseService {
   refs: InterfaceQueryResult[] = []
+  resourceDecl: {
+    range: vscode.Range
+    name: string
+  }[] = []
   entryDecl: {
     range: vscode.Range
     name: string
@@ -39,6 +43,7 @@ export class InterfaceIndexService extends BaseService {
     }
 
     this.refs = []
+    this.resourceDecl = []
     this.entryDecl = []
     this.optionDecl = []
     this.caseDecl = []
@@ -47,6 +52,14 @@ export class InterfaceIndexService extends BaseService {
       onLiteral: (value, range, path) => {
         if (typeof value === 'string') {
           switch (path[0]) {
+            case 'resource':
+              if (typeof path[1] === 'number' && path[2] === 'name') {
+                this.resourceDecl.push({
+                  range,
+                  name: value
+                })
+              }
+              break
             case 'task':
               if (typeof path[1] === 'number') {
                 switch (path[2]) {

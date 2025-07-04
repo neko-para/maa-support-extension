@@ -37,6 +37,7 @@ export class MaaDebugSession extends DebugSession {
 
   async handlePause() {}
   async handleContinue() {}
+  async handleTerminate() {}
 
   protected initializeRequest(
     response: DebugProtocol.InitializeResponse,
@@ -45,7 +46,6 @@ export class MaaDebugSession extends DebugSession {
     console.log('initialize', args)
 
     response.body = response.body || {}
-    // response.body.supportsPauseContinue = true
     this.sendResponse(response)
     this.sendEvent(new InitializedEvent())
   }
@@ -94,11 +94,13 @@ export class MaaDebugSession extends DebugSession {
     this.sendEvent(new ContinuedEvent(1))
   }
 
-  protected disconnectRequest(
+  protected async disconnectRequest(
     response: DebugProtocol.DisconnectResponse,
     args: DebugProtocol.DisconnectArguments
-  ): void {
+  ): Promise<void> {
     console.log('disconnect', args)
+
+    await this.handleTerminate()
 
     this.sendResponse(response)
     this.sendEvent(new TerminatedEvent())

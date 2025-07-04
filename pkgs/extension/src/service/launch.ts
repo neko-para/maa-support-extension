@@ -296,6 +296,10 @@ export class LaunchService extends BaseService {
       panel.cont()
     }
 
+    session.handleTerminate = async () => {
+      await panel.stop()
+    }
+
     for (const task of tasks ?? runtime.task) {
       session.pushMessage(`任务开始 ${task.name} - ${task.entry}`)
       const succeed = await tasker.tasker

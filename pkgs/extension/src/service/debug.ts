@@ -20,7 +20,7 @@ export class MaaDebugSession extends DebugSession {
   }
 
   pushMessage(message: string) {
-    this.sendEvent(new OutputEvent(message))
+    this.sendEvent(new OutputEvent(message + '\n'))
   }
 
   pushContinued() {
@@ -28,7 +28,7 @@ export class MaaDebugSession extends DebugSession {
   }
 
   pushExited() {
-    this.sendEvent(new ExitedEvent(0))
+    this.sendEvent(new TerminatedEvent())
   }
 
   pushTerminated() {

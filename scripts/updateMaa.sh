@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ver=`cat maa/.maaver`
+ver=`cat scripts/.maaver`
 
 for dir in webview extension types; do
   cd pkgs/$dir

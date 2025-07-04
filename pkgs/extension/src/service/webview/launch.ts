@@ -83,7 +83,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       }
       case 'requestNode': {
         // v4.4.0-alpha.3 intro
-        const nodeData = this.instance.tasker.resource?.get_node_data?.(data.node) ?? null
+        const nodeData = this.instance.tasker.resource?.get_node_data(data.node) ?? null
         this.response(data.seq, nodeData)
         break
       }

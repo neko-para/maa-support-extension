@@ -5,11 +5,12 @@ import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/typ
 import { WebviewPanelProvider, logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, rootService, stateService } from '..'
+import { currentWorkspace } from '../../fs'
 import { Jimp } from '../../tools/jimp'
 import { performOcr } from '../../tools/ocr'
 import { performReco } from '../../tools/reco'
 import { context } from '../context'
-import { toPngDataUrl } from '../utils/png'
+import { fromPngDataUrl, toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
 
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
@@ -95,7 +96,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
             filters: {
               Png: ['png']
             },
-            defaultUri: vscode.workspace.workspaceFolders?.[0].uri
+            defaultUri: currentWorkspace() ?? undefined
           })
           if (path) {
             await vscode.workspace.fs.writeFile(path, finalImage)
@@ -131,7 +132,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         let result = null
         try {
           result = await performOcr(
-            Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+            fromPngDataUrl(data.image),
             data.roi,
             resources.map(u => u.fsPath)
           )

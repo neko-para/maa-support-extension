@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 import { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 
 import { rootService } from '.'
+import { currentWorkspace } from '../fs'
 import { maa } from '../maa'
 import { BaseService } from './context'
 
@@ -177,7 +178,7 @@ export class InterfaceService extends BaseService {
       return '无interface'
     }
     const projectDir = vscode.Uri.joinPath(
-      vscode.workspace.workspaceFolders![0].uri,
+      currentWorkspace()!,
       rootService.activeResource.dirRelative
     ).fsPath
 

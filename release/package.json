@@ -77,6 +77,7 @@
       "maa-view-container": [
         {
           "id": "maa.view.control-panel",
+          "icon": "images/logo.svg",
           "name": "%maa.view.control-panel.title%",
           "visibility": "visible",
           "type": "webview"

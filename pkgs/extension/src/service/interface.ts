@@ -7,8 +7,8 @@ import * as vscode from 'vscode'
 import { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 
 import { rootService } from '.'
-import { currentWorkspace } from '../fs'
 import { maa } from '../maa'
+import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {

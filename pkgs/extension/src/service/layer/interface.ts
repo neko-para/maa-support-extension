@@ -12,6 +12,13 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
   level: number
   index: Record<string, TaskIndexInfo[]>
 
+  images: {
+    uri: vscode.Uri
+    relative: string
+  }[] = []
+
+  interfaceUri: vscode.Uri
+
   constructor(uri: vscode.Uri, level: number) {
     super(
       new vscode.RelativePattern(vscode.Uri.file(path.dirname(uri.fsPath)), 'interface.json'),
@@ -20,10 +27,13 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
       }
     )
 
-    this.uri = uri
+    this.uri = vscode.Uri.file(path.dirname(uri.fsPath))
     this.level = level
     this.index = {}
+    this.interfaceUri = uri
   }
+
+  async flushImage() {}
 
   async doUpdate() {
     this.index = {}
@@ -33,7 +43,7 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
   async loadJson() {
     let doc: vscode.TextDocument | null = null
     try {
-      doc = await vscode.workspace.openTextDocument(this.uri)
+      doc = await vscode.workspace.openTextDocument(this.interfaceUri)
     } catch {
       return
     }
@@ -60,7 +70,7 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
     }
 
     const entryTaskInfo: TaskIndexInfo = {
-      uri: this.uri,
+      uri: this.interfaceUri,
       taskContent: '',
       taskReferContent: '',
       taskProp: new vscode.Range(0, 0, 0, 0),
@@ -79,7 +89,7 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
 
         if (path.length === 1) {
           return {
-            uri: this.uri,
+            uri: this.interfaceUri,
             taskContent: '',
             taskReferContent: '',
             taskProp: range,

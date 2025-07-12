@@ -59,6 +59,11 @@ export interface PipelineLayer {
   uri: vscode.Uri
   level: number
   index: Record<string, TaskIndexInfo[]>
+  images: {
+    uri: vscode.Uri
+    relative: string // abc/def/ghi.png
+  }[]
 
   flushDirty(): Promise<void>
+  flushImage(): Promise<void>
 }

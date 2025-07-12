@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 
 import { taskIndexService } from '../..'
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDocumentLinkProvider
@@ -18,6 +19,9 @@ export class PipelineDocumentLinkProvider
     token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
     await taskIndexService.flushDirty()
+    if (isMaaAssistantArknights) {
+      await taskIndexService.flushImage()
+    }
 
     const result: vscode.DocumentLink[] = []
 

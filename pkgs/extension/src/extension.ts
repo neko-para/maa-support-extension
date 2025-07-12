@@ -7,6 +7,7 @@ import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { maa } from './maa'
 import { init, nativeService, statusBarService } from './service'
+import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()
 
@@ -27,6 +28,12 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     })
   )
+
+  checkMaaAssistantArknights()
+
+  if (isMaaAssistantArknights) {
+    logger.info('MaaAssistantArknights mode')
+  }
 
   await init(context)
 

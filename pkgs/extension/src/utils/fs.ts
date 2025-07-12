@@ -1,3 +1,4 @@
+import { existsSync } from 'fs'
 import * as vscode from 'vscode'
 
 export function currentWorkspace() {
@@ -47,4 +48,17 @@ export async function locateResourceRoot() {
   await travel(root)
 
   return result
+}
+
+export let isMaaAssistantArknights = false
+export let pipelineSuffix = 'pipeline'
+export let imageSuffix = 'image'
+export function checkMaaAssistantArknights() {
+  const root = currentWorkspace()
+  // 很蠢，但是能用
+  if (root && existsSync(vscode.Uri.joinPath(root, 'MAA.sln').fsPath)) {
+    isMaaAssistantArknights = true
+    pipelineSuffix = 'tasks'
+    imageSuffix = 'template'
+  }
 }

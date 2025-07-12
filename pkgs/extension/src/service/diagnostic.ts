@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 import { t } from '@mse/utils'
 
 import { rootService, taskIndexService } from '.'
+import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { FlushHelper } from './utils/flush'
 
@@ -24,6 +25,12 @@ class DiagnosticScanner extends FlushHelper {
     await taskIndexService.flushDirty()
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
+
+    if (isMaaAssistantArknights) {
+      // MAA的template支持后缀搜索，先构建个索引，不然太慢了
+      await taskIndexService.flushImage()
+    }
+
     for (const layer of taskIndexService.allLayers) {
       for (const [task, taskInfos] of Object.entries(layer.index)) {
         // check conflict task

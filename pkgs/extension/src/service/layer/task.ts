@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
+import { imageSuffix, pipelineSuffix } from '../../utils/fs'
 import { PipelineLayer, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
 
@@ -108,9 +109,16 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   uri: vscode.Uri
   level: number
   index: Record<string, TaskIndexInfo[]>
+  images: {
+    uri: vscode.Uri
+    relative: string
+  }[]
+
+  acceptRefresh: boolean = true
+  previousRefresh?: Promise<void>
 
   constructor(uri: vscode.Uri, level: number) {
-    super(new vscode.RelativePattern(uri, 'pipeline/**/*.{json,jsonc}'), u => {
+    super(new vscode.RelativePattern(uri, pipelineSuffix + '/**/*.{json,jsonc}'), u => {
       return (
         u.fsPath.startsWith(uri.fsPath + path.sep) &&
         (u.fsPath.endsWith('.json') || u.fsPath.endsWith('.jsonc'))
@@ -120,10 +128,11 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
     this.uri = uri
     this.level = level
     this.index = {}
+    this.images = []
   }
 
   async init() {
-    await this.loadDir(vscode.Uri.joinPath(this.uri, 'pipeline'))
+    await this.loadDir(vscode.Uri.joinPath(this.uri, pipelineSuffix))
   }
 
   async doUpdate(dirtyPath: string[]) {
@@ -140,16 +149,18 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   }
 
   async loadDir(dir: vscode.Uri) {
-    for (const [name, type] of await vscode.workspace.fs.readDirectory(dir)) {
-      const subUri = vscode.Uri.joinPath(dir, name)
-      if (type === vscode.FileType.File) {
-        if (name.endsWith('.json') || name.endsWith('.jsonc')) {
-          await this.loadJson(subUri)
+    try {
+      for (const [name, type] of await vscode.workspace.fs.readDirectory(dir)) {
+        const subUri = vscode.Uri.joinPath(dir, name)
+        if (type === vscode.FileType.File) {
+          if (name.endsWith('.json') || name.endsWith('.jsonc')) {
+            await this.loadJson(subUri)
+          }
+        } else if (type === vscode.FileType.Directory) {
+          await this.loadDir(subUri)
         }
-      } else if (type === vscode.FileType.Directory) {
-        await this.loadDir(subUri)
       }
-    }
+    } catch {}
   }
 
   async loadJson(uri: vscode.Uri) {
@@ -202,5 +213,44 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
         parsePipelineLiteral(value, range, path, state)
       }
     })
+  }
+
+  async buildImageIndex(dir: vscode.Uri, rel: string) {
+    const result: {
+      uri: vscode.Uri
+      relative: string
+    }[] = []
+    for (const [file, type] of await vscode.workspace.fs.readDirectory(dir)) {
+      if (type === vscode.FileType.Directory) {
+        result.push(
+          ...(await this.buildImageIndex(vscode.Uri.joinPath(dir, file), path.join(rel, file)))
+        )
+      } else if (type === vscode.FileType.File) {
+        if (file.endsWith('.png')) {
+          result.push({
+            uri: vscode.Uri.joinPath(dir, file),
+            relative: path.join(rel, file)
+          })
+        }
+      }
+    }
+    return result
+  }
+
+  async flushImageImpl() {
+    this.images = await this.buildImageIndex(vscode.Uri.joinPath(this.uri, imageSuffix), '')
+  }
+
+  flushImage() {
+    if (!this.acceptRefresh) {
+      return this.previousRefresh ?? Promise.resolve()
+    }
+    this.acceptRefresh = false
+    this.previousRefresh = this.flushImageImpl()
+    setTimeout(() => {
+      this.acceptRefresh = true
+      this.previousRefresh = undefined
+    }, 10000)
+    return this.previousRefresh
   }
 }

@@ -4,6 +4,7 @@ import { t } from '@mse/utils'
 
 import { interfaceService, taskIndexService } from '../..'
 import { commands } from '../../../command'
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { debounce } from '../../utils/debounce'
 import { PipelineLanguageProvider } from './base'
 
@@ -41,6 +42,10 @@ export class PipelineCodeLensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
+    if (isMaaAssistantArknights) {
+      return []
+    }
+
     await taskIndexService.flushDirty()
 
     const layer = taskIndexService.getLayer(document.uri)

@@ -4,6 +4,7 @@ import json from 'highlight.js/lib/languages/json'
 import { NConfigProvider, NFlex, NScrollbar } from 'naive-ui'
 
 import { useTheme } from '../utils/theme'
+import { hostState } from './state'
 import ControllerView from './views/ControllerView.vue'
 import InterfaceView from './views/InterfaceView.vue'
 import LaunchView from './views/LaunchView.vue'
@@ -23,8 +24,8 @@ hljs.registerLanguage('json', json)
           <interface-view></interface-view>
           <resource-view></resource-view>
           <controller-view></controller-view>
-          <task-view></task-view>
-          <launch-view></launch-view>
+          <task-view v-if="!hostState.isMAA"></task-view>
+          <launch-view v-if="!hostState.isMAA"></launch-view>
         </n-flex>
       </n-config-provider>
     </n-scrollbar>

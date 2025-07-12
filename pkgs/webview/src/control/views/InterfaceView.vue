@@ -45,6 +45,7 @@ function refreshInterface() {
       :value="hostState.activeInterface"
       :disabled="hostState.refreshingInterface"
       @update:value="switchInterface"
+      placeholder="选择配置"
       size="small"
     ></n-select>
   </n-card>

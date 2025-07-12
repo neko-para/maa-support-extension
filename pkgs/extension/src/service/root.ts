@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 import { stateService } from '.'
-import { ResourceRoot, locateResourceRoot } from '../fs'
+import { ResourceRoot, locateResourceRoot } from '../utils/fs'
 import { BaseService } from './context'
 
 export class RootService extends BaseService {

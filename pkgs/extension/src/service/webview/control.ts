@@ -6,6 +6,7 @@ import { WebviewProvider, provideWebview } from '@mse/utils'
 
 import { interfaceIndexService, interfaceService, launchService, rootService } from '..'
 import { maa } from '../../maa'
+import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
 import { isCtrlDev } from './dev'
 
@@ -165,6 +166,8 @@ export class WebviewControlService extends BaseService {
 
   get state(): ControlHostState {
     return {
+      isMAA: isMaaAssistantArknights,
+
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),
       activeInterface: rootService.activeResource?.interfaceRelative,
       refreshingInterface: rootService.refreshing,

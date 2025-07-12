@@ -5,6 +5,7 @@ import * as vscode from 'vscode'
 import { t } from '@mse/utils'
 
 import { interfaceService, rootService } from '.'
+import { imageSuffix, isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { InterfaceLayer } from './layer/interface'
 import { TaskLayer } from './layer/task'
@@ -53,6 +54,10 @@ export class TaskIndexService extends BaseService {
 
   async flushDirty() {
     return Promise.all(this.allLayers.map(layer => layer.flushDirty()))
+  }
+
+  async flushImage() {
+    return Promise.all(this.allLayers.map(layer => layer.flushImage()))
   }
 
   get allLayers(): PipelineLayer[] {
@@ -176,17 +181,41 @@ export class TaskIndexService extends BaseService {
       uri: vscode.Uri
       info: {
         uri: vscode.Uri
+        rel: string
+        allUris: vscode.Uri[] // MAA
       }
     }[] = []
     for (const layer of allLayers.slice(0, level)) {
-      const iu = vscode.Uri.joinPath(layer.uri, 'image', image)
-      if (existsSync(iu.fsPath)) {
-        result.push({
-          uri: layer.uri,
-          info: {
-            uri: iu
+      if (isMaaAssistantArknights) {
+        // MAA可以允许省略前置路径
+        const allUris = layer.images.filter(({ relative }) => {
+          if (relative === image || relative.endsWith(path.sep + image)) {
+            return true
           }
+          return false
         })
+        if (allUris.length > 0) {
+          result.push({
+            uri: layer.uri,
+            info: {
+              uri: allUris[0].uri,
+              rel: allUris[0].relative,
+              allUris: allUris.map(x => x.uri)
+            }
+          })
+        }
+      } else {
+        const iu = vscode.Uri.joinPath(layer.uri, imageSuffix, image)
+        if (existsSync(iu.fsPath)) {
+          result.push({
+            uri: layer.uri,
+            info: {
+              uri: iu,
+              rel: image,
+              allUris: [iu]
+            }
+          })
+        }
       }
     }
     return result
@@ -211,12 +240,12 @@ export class TaskIndexService extends BaseService {
     }
     const result: string[] = []
     for (const layer of this.layers.slice(0, level)) {
-      const pattern = new vscode.RelativePattern(layer.uri, 'image/**/*.png')
+      const pattern = new vscode.RelativePattern(layer.uri, imageSuffix + '/**/*.png')
       const files = await vscode.workspace.findFiles(pattern)
       result.push(
         ...files.map(uri =>
           rootService
-            .relativePathToRoot(uri, 'image', layer.uri)
+            .relativePathToRoot(uri, imageSuffix, layer.uri)
             .replace(/^[\\/]/, '')
             .replaceAll(/[\\/]/g, '/')
         )
@@ -246,11 +275,19 @@ export class TaskIndexService extends BaseService {
   }
 
   async queryImageDoc(image: string): Promise<vscode.MarkdownString> {
+    if (isMaaAssistantArknights) {
+      for (const layer of this.allLayers) {
+        await layer.flushImage()
+      }
+    }
+
     const result = await this.queryImage(image)
     if (result.length > 0) {
       return new vscode.MarkdownString(
         result
-          .map(x => `${rootService.relativePathToRoot(x.uri)}\n\n![](${x.info.uri})`)
+          .map(
+            x => `${rootService.relativePathToRoot(x.uri)} - ${x.info.rel}\n\n![](${x.info.uri})`
+          )
           .join('\n\n')
       )
     } else {

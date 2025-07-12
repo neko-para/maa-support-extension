@@ -87,6 +87,16 @@ class DiagnosticScanner extends FlushHelper {
               ])
               imagePath = imagePath.replaceAll('\\', '/')
             }
+            if (isMaaAssistantArknights && !imagePath.endsWith('.png')) {
+              result.push([
+                taskInfo.uri,
+                new vscode.Diagnostic(
+                  ref.range,
+                  '图片不应省略.png',
+                  vscode.DiagnosticSeverity.Warning
+                )
+              ])
+            }
             const imageRes = await taskIndexService.queryImage(imagePath, layer.level + 1, false)
             if (imageRes.length === 0) {
               result.push([
@@ -101,20 +111,22 @@ class DiagnosticScanner extends FlushHelper {
           }
 
           // check duplicate next task
-          const nextRefs = taskInfo.taskRef.filter(x => x.belong === 'next')
-          const nextFirst: Set<string> = new Set()
-          for (const ref of nextRefs) {
-            if (nextFirst.has(ref.task)) {
-              result.push([
-                taskInfo.uri,
-                new vscode.Diagnostic(
-                  ref.range,
-                  t('maa.pipeline.error.duplicate-next', ref.task),
-                  vscode.DiagnosticSeverity.Error
-                )
-              ])
-            } else {
-              nextFirst.add(ref.task)
+          if (!isMaaAssistantArknights) {
+            const nextRefs = taskInfo.taskRef.filter(x => x.belong === 'next')
+            const nextFirst: Set<string> = new Set()
+            for (const ref of nextRefs) {
+              if (nextFirst.has(ref.task)) {
+                result.push([
+                  taskInfo.uri,
+                  new vscode.Diagnostic(
+                    ref.range,
+                    t('maa.pipeline.error.duplicate-next', ref.task),
+                    vscode.DiagnosticSeverity.Error
+                  )
+                ])
+              } else {
+                nextFirst.add(ref.task)
+              }
             }
           }
         }

@@ -4,19 +4,53 @@ import * as vscode from 'vscode'
 
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
-import { imageSuffix, pipelineSuffix } from '../../utils/fs'
-import { PipelineLayer, TaskIndexInfo } from '../types'
+import { imageSuffix, isMaaAssistantArknights, pipelineSuffix } from '../../utils/fs'
+import { PipelineLayer, TaskBelong, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
+
+function addTaskRef(state: TaskIndexInfo, task: string, range: vscode.Range, belong: TaskBelong) {
+  if (!isMaaAssistantArknights) {
+    state.taskRef.push({
+      task,
+      range,
+      belong
+    })
+    return
+  }
+
+  const line = range.start.line
+  const base = range.start.character + 1
+  const makeRange = (left: number, right: number) => {
+    return new vscode.Range(line, base + left, line, base + right)
+  }
+
+  const regex = /[ ()+^*]*([^ ()+^*]+)/dg
+  let match: RegExpExecArray | null = null
+  while ((match = regex.exec(task))) {
+    if (/^[0-9]+$/.test(match[1])) {
+      continue
+    }
+    let [left, right] = match.indices![1]
+    const [main, suffix] = match[1].split('#')
+    if (!main || main.endsWith('@')) {
+      continue
+    }
+    if (suffix) {
+      right -= suffix.length + 1
+    }
+    state.taskRef.push({
+      task: main,
+      range: makeRange(left, right),
+      belong
+    })
+  }
+}
 
 function parseReco(value: string, range: vscode.Range, path: JSONPath, state: TaskIndexInfo) {
   switch (path[1]) {
     case 'roi':
       if (path.length === 2) {
-        state.taskRef.push({
-          task: value,
-          range: range,
-          belong: 'target'
-        })
+        addTaskRef(state, value, range, 'target')
       }
       break
     case 'template':
@@ -36,11 +70,7 @@ function parseAct(value: string, range: vscode.Range, path: JSONPath, state: Tas
     case 'begin':
     case 'end':
       if (path.length === 2) {
-        state.taskRef.push({
-          task: value,
-          range: range,
-          belong: 'target'
-        })
+        addTaskRef(state, value, range, 'target')
       }
       break
     case 'swipes':
@@ -49,11 +79,7 @@ function parseAct(value: string, range: vscode.Range, path: JSONPath, state: Tas
           case 'begin':
           case 'end':
             if (path.length === 4) {
-              state.taskRef.push({
-                task: value,
-                range: range,
-                belong: 'target'
-              })
+              addTaskRef(state, value, range, 'target')
             }
             break
         }
@@ -69,15 +95,28 @@ export function parsePipelineLiteral(
   state: TaskIndexInfo
 ) {
   switch (path[1]) {
+    case 'baseTask':
+      if (isMaaAssistantArknights) {
+        if (path.length === 2) {
+          addTaskRef(state, value, range, 'maa.custom')
+        }
+      }
+      break
+    case 'sub':
+    case 'onErrorNext':
+    case 'exceededNext':
+    case 'reduceOtherTimes':
+      if (isMaaAssistantArknights) {
+        if (path.length >= 2 && path.length <= 3) {
+          addTaskRef(state, value, range, 'maa.custom')
+        }
+      }
+      break
     case 'next':
     case 'interrupt':
     case 'on_error':
       if (path.length >= 2 && path.length <= 3) {
-        state.taskRef.push({
-          task: value,
-          range: range,
-          belong: 'next'
-        })
+        addTaskRef(state, value, range, 'next')
       }
       break
     case 'pre_wait_freezes':
@@ -85,11 +124,7 @@ export function parsePipelineLiteral(
       switch (path[2]) {
         case 'target':
           if (path.length == 3) {
-            state.taskRef.push({
-              task: value,
-              range: range,
-              belong: 'target'
-            })
+            addTaskRef(state, value, range, 'target')
           }
           break
       }
@@ -229,7 +264,7 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
         if (file.endsWith('.png')) {
           result.push({
             uri: vscode.Uri.joinPath(dir, file),
-            relative: path.join(rel, file)
+            relative: path.join(rel, file).replace(path.sep, '/')
           })
         }
       }

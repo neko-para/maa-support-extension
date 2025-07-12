@@ -1,5 +1,7 @@
 import * as vscode from 'vscode'
 
+export type TaskBelong = 'target' | 'next' | 'maa.custom'
+
 export type TaskQueryResult =
   | {
       type: 'task.prop'
@@ -47,7 +49,7 @@ export type TaskIndexInfo = {
   taskRef: {
     task: string
     range: vscode.Range
-    belong: 'next' | 'target'
+    belong: TaskBelong
   }[]
   imageRef: {
     path: string

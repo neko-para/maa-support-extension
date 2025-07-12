@@ -154,21 +154,37 @@ export class TaskIndexService extends BaseService {
       uri: vscode.Uri
       info: TaskIndexInfo
     }[] = []
-    for (const layer of allLayers.slice(0, level)) {
-      for (const info of layer.index[task] ?? []) {
-        if (layer.index[task].length > 1 && pos && !info.taskProp.contains(pos)) {
-          continue
+
+    const search = (task: string) => {
+      for (const layer of allLayers.slice(0, level)) {
+        for (const info of layer.index[task] ?? []) {
+          if (layer.index[task].length > 1 && pos && !info.taskProp.contains(pos)) {
+            continue
+          }
+          result.push({
+            uri: layer.uri,
+            info: info
+          })
         }
-        result.push({
-          uri: layer.uri,
-          info: info
-        })
+      }
+    }
+    search(task)
+    if (isMaaAssistantArknights) {
+      while (/@/.test(task)) {
+        task = task.replace(/^[^@]+@/, '')
+        search(task)
       }
     }
     return result
   }
 
   async queryImage(image: string, level?: number, flush = true) {
+    if (isMaaAssistantArknights) {
+      if (!image.endsWith('.png')) {
+        image = image + '.png'
+      }
+    }
+
     if (flush) {
       await this.flushDirty()
     }

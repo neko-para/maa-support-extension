@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
+import { context, diagnosticService } from '..'
 import { imageSuffix, isMaaAssistantArknights, pipelineSuffix } from '../../utils/fs'
 import { PipelineLayer, TaskBelong, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
@@ -171,17 +172,85 @@ export function parsePipelineLiteral(
   }
 }
 
-export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
+class ImageIndex {
   uri: vscode.Uri
-  level: number
-  index: Record<string, TaskIndexInfo[]>
   images: {
     uri: vscode.Uri
     relative: string
   }[]
-
   acceptRefresh: boolean = true
   previousRefresh?: Promise<void>
+
+  watcher: vscode.FileSystemWatcher
+
+  constructor(uri: vscode.Uri) {
+    this.uri = uri
+    this.images = []
+    this.watcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(uri, imageSuffix + '/**/*.png')
+    )
+    context.subscriptions.push(this.watcher)
+
+    this.watcher.onDidCreate(uri => {
+      this.flushImage()
+    })
+
+    this.watcher.onDidDelete(uri => {
+      this.flushImage()
+    })
+
+    this.watcher.onDidChange(uri => {
+      this.flushImage()
+    })
+  }
+
+  async buildImageIndex(dir: vscode.Uri, rel: string) {
+    const result: {
+      uri: vscode.Uri
+      relative: string
+    }[] = []
+    for (const [file, type] of await vscode.workspace.fs.readDirectory(dir)) {
+      if (type === vscode.FileType.Directory) {
+        result.push(
+          ...(await this.buildImageIndex(vscode.Uri.joinPath(dir, file), path.join(rel, file)))
+        )
+      } else if (type === vscode.FileType.File) {
+        if (file.endsWith('.png')) {
+          result.push({
+            uri: vscode.Uri.joinPath(dir, file),
+            relative: path.join(rel, file).replace(path.sep, '/')
+          })
+        }
+      }
+    }
+    return result
+  }
+
+  async flushImageImpl() {
+    this.images = await this.buildImageIndex(vscode.Uri.joinPath(this.uri, imageSuffix), '')
+
+    diagnosticService.scanner.scheduleFlush()
+  }
+
+  flushImage() {
+    if (!this.acceptRefresh) {
+      return this.previousRefresh ?? Promise.resolve()
+    }
+    this.acceptRefresh = false
+    this.previousRefresh = this.flushImageImpl()
+    setTimeout(() => {
+      this.acceptRefresh = true
+      this.previousRefresh = undefined
+    }, 10000)
+    return this.previousRefresh
+  }
+}
+
+export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
+  uri: vscode.Uri
+  level: number
+  index: Record<string, TaskIndexInfo[]>
+  imageIndex: ImageIndex
 
   constructor(uri: vscode.Uri, level: number) {
     super(new vscode.RelativePattern(uri, pipelineSuffix + '/**/*.{json,jsonc}'), u => {
@@ -194,7 +263,8 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
     this.uri = uri
     this.level = level
     this.index = {}
-    this.images = []
+
+    this.imageIndex = new ImageIndex(this.uri)
   }
 
   async init() {
@@ -202,6 +272,10 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   }
 
   async doUpdate(dirtyPath: string[]) {
+    if (dirtyPath.length === 0) {
+      return
+    }
+
     const newIndex: Record<string, TaskIndexInfo[]> = {}
     for (const [task, infos] of Object.entries(this.index)) {
       newIndex[task] = infos.filter(info => !dirtyPath.includes(info.uri.fsPath))
@@ -209,9 +283,11 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
     this.index = newIndex
     for (const file of dirtyPath) {
       if (existsSync(file)) {
-        this.loadJson(vscode.Uri.file(file))
+        await this.loadJson(vscode.Uri.file(file))
       }
     }
+
+    diagnosticService.scanner.scheduleFlush()
   }
 
   async loadDir(dir: vscode.Uri) {
@@ -281,42 +357,11 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
     })
   }
 
-  async buildImageIndex(dir: vscode.Uri, rel: string) {
-    const result: {
-      uri: vscode.Uri
-      relative: string
-    }[] = []
-    for (const [file, type] of await vscode.workspace.fs.readDirectory(dir)) {
-      if (type === vscode.FileType.Directory) {
-        result.push(
-          ...(await this.buildImageIndex(vscode.Uri.joinPath(dir, file), path.join(rel, file)))
-        )
-      } else if (type === vscode.FileType.File) {
-        if (file.endsWith('.png')) {
-          result.push({
-            uri: vscode.Uri.joinPath(dir, file),
-            relative: path.join(rel, file).replace(path.sep, '/')
-          })
-        }
-      }
-    }
-    return result
-  }
-
-  async flushImageImpl() {
-    this.images = await this.buildImageIndex(vscode.Uri.joinPath(this.uri, imageSuffix), '')
+  get images() {
+    return this.imageIndex.images
   }
 
   flushImage() {
-    if (!this.acceptRefresh) {
-      return this.previousRefresh ?? Promise.resolve()
-    }
-    this.acceptRefresh = false
-    this.previousRefresh = this.flushImageImpl()
-    setTimeout(() => {
-      this.acceptRefresh = true
-      this.previousRefresh = undefined
-    }, 10000)
-    return this.previousRefresh
+    return this.imageIndex.flushImage()
   }
 }

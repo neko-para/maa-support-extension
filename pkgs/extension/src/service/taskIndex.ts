@@ -196,7 +196,7 @@ export class TaskIndexService extends BaseService {
     search(task)
     if (isMaaAssistantArknights) {
       while (/@/.test(task)) {
-        task = task.replace(/^[^@]+@/, '')
+        task = task.replace(/^[^@]*@/, '')
         search(task)
       }
     }

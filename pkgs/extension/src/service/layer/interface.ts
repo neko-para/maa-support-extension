@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
+import { diagnosticService } from '..'
 import { PipelineLayer, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
 import { parsePipelineLiteral } from './task'
@@ -35,9 +36,15 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
 
   async flushImage() {}
 
-  async doUpdate() {
+  async doUpdate(dirtyPath: string[]) {
+    if (dirtyPath.length === 0) {
+      return
+    }
+
     this.index = {}
     await this.loadJson()
+
+    diagnosticService.scanner.scheduleFlush()
   }
 
   async loadJson() {

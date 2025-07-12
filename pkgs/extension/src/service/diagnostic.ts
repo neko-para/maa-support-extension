@@ -5,23 +5,35 @@ import { t } from '@mse/utils'
 import { rootService, taskIndexService } from '.'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
+import { debounce } from './utils/debounce'
 import { FlushHelper } from './utils/flush'
 
 class DiagnosticScanner extends FlushHelper {
   diagnostic: vscode.DiagnosticCollection
   currentDiagnosticUris: vscode.Uri[] = []
 
+  scheduleFlush: () => void
+
   constructor() {
     super()
 
     this.diagnostic = vscode.languages.createDiagnosticCollection('maa')
 
+    this.scheduleFlush = debounce(() => {
+      this.flushDirty()
+    }, 1000)
+
     setInterval(() => {
+      this.flushDirty()
+    }, 60000)
+
+    // 启动之后刷一次
+    setTimeout(() => {
       this.flushDirty()
     }, 5000)
   }
 
-  async doFlush() {
+  async doFlushImpl() {
     await taskIndexService.flushDirty()
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
@@ -134,7 +146,10 @@ class DiagnosticScanner extends FlushHelper {
           }
         }
       }
+
+      await new Promise(resolve => setTimeout(resolve, 0))
     }
+
     if (result.length === 0) {
       this.diagnostic.clear()
       this.currentDiagnosticUris = []
@@ -157,6 +172,18 @@ class DiagnosticScanner extends FlushHelper {
 
       this.diagnostic.set(diagResult)
     }
+  }
+
+  async doFlush() {
+    await vscode.window.withProgress(
+      {
+        title: 'MaaSupport 检查任务中',
+        location: vscode.ProgressLocation.Window
+      },
+      async () => {
+        await this.doFlushImpl()
+      }
+    )
   }
 }
 

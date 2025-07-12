@@ -18,6 +18,16 @@ function addTaskRef(state: TaskIndexInfo, task: string, range: vscode.Range, bel
     return
   }
 
+  // 提供给自动补全使用
+  if (task === '') {
+    state.taskRef.push({
+      task,
+      range,
+      belong
+    })
+    return
+  }
+
   const line = range.start.line
   const base = range.start.character + 1
   const makeRange = (left: number, right: number) => {
@@ -27,11 +37,32 @@ function addTaskRef(state: TaskIndexInfo, task: string, range: vscode.Range, bel
   const regex = /[ ()+^*]*([^ ()+^*]+)/dg
   let match: RegExpExecArray | null = null
   while ((match = regex.exec(task))) {
-    if (/^[0-9]+$/.test(match[1])) {
+    const sec = match[1]
+    if (/^[0-9]+$/.test(sec)) {
       continue
     }
     let [left, right] = match.indices![1]
-    const [main, suffix] = match[1].split('#')
+
+    // #@触发补全，添加一个假task
+    if (sec.endsWith('#')) {
+      state.taskRef.push({
+        task: '__VSCE__MAA__SUFFIX__',
+        range: makeRange(right, right),
+        belong: 'maa.custom',
+        fake: 'maa.#'
+      })
+      return
+    } else if (sec.endsWith('@')) {
+      state.taskRef.push({
+        task: '__VSCE__MAA__EXTEND__',
+        range: makeRange(right, right),
+        belong: 'maa.custom',
+        fake: 'maa.@'
+      })
+      return
+    }
+
+    const [main, suffix] = sec.split('#')
     if (!main || main.endsWith('@')) {
       continue
     }

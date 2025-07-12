@@ -78,7 +78,7 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
       taskRef: [],
       imageRef: []
     }
-    this.index['@VSCEXT_INTERFACE'] = [entryTaskInfo]
+    this.index['__VSCE__INTERFACE__'] = [entryTaskInfo]
 
     visitJsonDocument<TaskIndexInfo>(doc, {
       onObjectProp: (prop, range, full_path) => {

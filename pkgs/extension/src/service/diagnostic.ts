@@ -55,6 +55,9 @@ class DiagnosticScanner extends FlushHelper {
         for (const taskInfo of taskInfos) {
           // check missing task
           for (const ref of taskInfo.taskRef) {
+            if (ref.task.startsWith('__VSCE__')) {
+              continue
+            }
             const taskRes = await taskIndexService.queryTask(
               ref.task,
               layer.level + 1,

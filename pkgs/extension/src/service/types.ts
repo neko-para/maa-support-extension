@@ -26,6 +26,18 @@ export type TaskQueryResult =
       task: string
       range: vscode.Range
     }
+  | {
+      type: 'task.ref.maa.#'
+      task: string
+      range: vscode.Range
+      target: string
+    }
+  | {
+      type: 'task.ref.maa.@'
+      task: string
+      range: vscode.Range
+      target: string
+    }
 
 export type InterfaceQueryResult =
   | {
@@ -50,6 +62,7 @@ export type TaskIndexInfo = {
     task: string
     range: vscode.Range
     belong: TaskBelong
+    fake?: 'maa.#' | 'maa.@' // 虚假任务，供补全
   }[]
   imageRef: {
     path: string

@@ -103,15 +103,40 @@ export class TaskIndexService extends BaseService {
         } else if (info.taskBody.contains(pos)) {
           for (const ref of info.taskRef) {
             if (ref.range.contains(pos)) {
-              return [
-                {
-                  type: 'task.ref',
-                  task: task,
-                  range: ref.range,
-                  target: ref.task
-                },
-                layer
-              ]
+              if (ref.fake) {
+                switch (ref.fake) {
+                  case 'maa.#':
+                    return [
+                      {
+                        type: 'task.ref.maa.#',
+                        task: task,
+                        range: ref.range,
+                        target: ref.task
+                      },
+                      layer
+                    ]
+                  case 'maa.@':
+                    return [
+                      {
+                        type: 'task.ref.maa.@',
+                        task: task,
+                        range: ref.range,
+                        target: ref.task
+                      },
+                      layer
+                    ]
+                }
+              } else {
+                return [
+                  {
+                    type: 'task.ref',
+                    task: task,
+                    range: ref.range,
+                    target: ref.task
+                  },
+                  layer
+                ]
+              }
             }
           }
           for (const ref of info.imageRef) {

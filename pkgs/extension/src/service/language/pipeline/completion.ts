@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 
 import { taskIndexService } from '../..'
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineCompletionProvider
@@ -9,7 +10,8 @@ export class PipelineCompletionProvider
 {
   constructor() {
     super(sel => {
-      return vscode.languages.registerCompletionItemProvider(sel, this, '"')
+      const trigger = isMaaAssistantArknights ? '"#@' : '"'
+      return vscode.languages.registerCompletionItemProvider(sel, this, ...trigger.split(''))
     })
   }
 
@@ -34,14 +36,39 @@ export class PipelineCompletionProvider
         taskList.map(async task => {
           const esc = JSON.stringify(task)
           return {
-            label: esc,
+            label: esc.substring(1, esc.length - 1),
             kind: vscode.CompletionItemKind.Reference,
-            insertText: esc.substring(0, esc.length - 1),
-            range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
+            insertText: esc.substring(1, esc.length - 1),
+            range: new vscode.Range(
+              info.range.start.translate(0, 1),
+              info.range.end.translate(0, -1)
+            ),
             documentation: await taskIndexService.queryTaskDoc(task, layer.level + 1, position)
           }
         })
       )
+    } else if (info.type === 'task.ref.maa.#') {
+      return ['self', 'back', 'sub', 'next'].map(key => {
+        return {
+          label: key,
+          kind: vscode.CompletionItemKind.Constant,
+          insertText: key,
+          range: new vscode.Range(info.range.start, info.range.end)
+        }
+      })
+    } else if (info.type === 'task.ref.maa.@') {
+      const taskList = (await taskIndexService.queryTaskList(layer.level + 1)).filter(
+        x => !/@/.test(x)
+      )
+
+      return taskList.map(task => {
+        return {
+          label: task,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: task,
+          range: new vscode.Range(info.range.start, info.range.end)
+        }
+      })
     } else if (info.type === 'image.ref') {
       const imageList = await taskIndexService.queryImageList(layer.level + 1)
 

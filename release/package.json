@@ -3,7 +3,7 @@
   "displayName": "Maa Pipeline Support",
   "version": "0.0.0-dev",
   "publisher": "nekosu",
-  "description": "Maa framework support",
+  "description": "MaaFramework & MaaArknightsAssistant support",
   "repository": "https://github.com/neko-para/maa-support-extension",
   "license": "MIT",
   "icon": "images/logo.png",

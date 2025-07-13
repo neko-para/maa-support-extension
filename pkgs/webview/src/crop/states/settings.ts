@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 export const isColor = (color: string | undefined): color is string => {
   if (!color) {
     return false

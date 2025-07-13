@@ -2,6 +2,7 @@
 import { NCard, NFlex, NScrollbar, NText } from 'naive-ui'
 
 import JsonCode from '../../components/JsonCode.vue'
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { recoInfo, taskInfo } from '../states/info'
 
@@ -17,7 +18,7 @@ function openCrop(image: string) {
   <n-scrollbar style="height: 100vh">
     <n-flex vertical>
       <n-card
-        title="识别详情"
+        :title="t('maa.launch.reco-detail')"
         content-style="display: flex; flex-direction: column"
         :closable="!!recoInfo"
         @close="recoInfo = null"
@@ -26,7 +27,7 @@ function openCrop(image: string) {
           <n-flex vertical>
             <json-code :code="JSON.stringify(recoInfo.info, null, 2)"></json-code>
 
-            <n-text> 双击图片以在截图工具中打开 </n-text>
+            <n-text> {{ t('maa.launch.dbclick-to-open-in-crop') }} </n-text>
             <img :src="recoInfo.raw" @dblclick="openCrop(recoInfo.raw)" />
             <img
               v-for="(draw, idx) in recoInfo.draws"
@@ -38,7 +39,7 @@ function openCrop(image: string) {
         </template>
       </n-card>
       <n-card
-        title="任务定义"
+        :title="t('maa.launch.task-definition')"
         content-style="display: flex; flex-direction: column"
         :closable="!!taskInfo"
         @close="taskInfo = null"

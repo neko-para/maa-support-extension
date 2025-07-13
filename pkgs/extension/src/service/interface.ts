@@ -5,6 +5,7 @@ import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
+import { t } from '@mse/utils'
 
 import { rootService } from '.'
 import { maa } from '../maa'
@@ -195,12 +196,12 @@ export class InterfaceService extends BaseService {
 
     const ctrlInfo = data.controller?.find(info => info.name === config.controller?.name)
     if (!ctrlInfo) {
-      return `未找到控制器 ${config.controller?.name}`
+      return t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '')
     }
 
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
-        return '无Adb配置'
+        return t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '')
       }
       const adb_config = ctrlInfo.adb?.config ?? {}
       Object.assign(adb_config, config.adb?.config ?? {})
@@ -219,7 +220,7 @@ export class InterfaceService extends BaseService {
 
     const resInfo = data.resource?.find(info => info.name === config.resource)
     if (!resInfo) {
-      return `未找到资源 ${config.resource}`
+      return t('maa.pi.error.cannot-find-resource', config.resource ?? '')
     }
 
     result.resource_path = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path).map(
@@ -232,7 +233,7 @@ export class InterfaceService extends BaseService {
         const taskInfo = data.task?.find(x => x.name === task.name)
 
         if (!taskInfo) {
-          return `未找到任务 ${task.name}`
+          return t('maa.pi.error.cannot-find-task', task.name)
         }
 
         const param: Record<string, unknown> = {}
@@ -249,7 +250,7 @@ export class InterfaceService extends BaseService {
           const optInfo = data.option?.[optName]
 
           if (!optInfo) {
-            return `未找到选项组 ${optName}`
+            return t('maa.pi.error.cannot-find-option', optName)
           }
 
           const optEntry = task.option?.find(x => x.name === optName)
@@ -259,7 +260,7 @@ export class InterfaceService extends BaseService {
           const csInfo = optInfo.cases.find(x => x.name === optValue)
 
           if (!csInfo) {
-            return `未找到选项值 ${optValue}`
+            return t('maa.pi.error.cannot-find-case-for-option', optName, optValue)
           }
 
           mergeParam(csInfo.pipeline_override)

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { NButton, NCard, NSelect } from 'naive-ui'
+import { computed } from 'vue'
 
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 
@@ -29,7 +30,7 @@ function refreshInterface() {
 </script>
 
 <template>
-  <n-card title="配置" size="small">
+  <n-card :title="t('maa.control.interface.interface')" size="small">
     <template #header-extra>
       <n-button
         :loading="hostState.refreshingInterface"
@@ -37,7 +38,7 @@ function refreshInterface() {
         @click="refreshInterface"
         size="small"
       >
-        扫描
+        {{ t('maa.control.scan') }}
       </n-button>
     </template>
     <n-select
@@ -45,7 +46,7 @@ function refreshInterface() {
       :value="hostState.activeInterface"
       :disabled="hostState.refreshingInterface"
       @update:value="switchInterface"
-      placeholder="选择配置"
+      :placeholder="t('maa.control.interface.select-interface')"
       size="small"
     ></n-select>
   </n-card>

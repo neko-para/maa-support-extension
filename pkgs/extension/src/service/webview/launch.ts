@@ -1,10 +1,11 @@
 import * as vscode from 'vscode'
 
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
-import { WebviewPanelProvider } from '@mse/utils'
+import { WebviewPanelProvider, locale } from '@mse/utils'
 
 import { stateService } from '..'
 import { Maa } from '../../maa'
+import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
 import { toPngDataUrl } from '../utils/png'
@@ -168,6 +169,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
 
   get state(): LaunchHostState {
     return {
+      isMAA: isMaaAssistantArknights,
+      locale,
+
       stopped: this.stopped,
       paused: this.paused,
       knownTasks: this.knownTasks,

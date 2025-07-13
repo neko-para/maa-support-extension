@@ -16,7 +16,7 @@ export class CommandService extends BaseService {
     this.defer = vscode.commands.registerCommand(commands.LaunchInterface, async () => {
       const runtime = interfaceService.buildRuntime()
       if (typeof runtime === 'string') {
-        vscode.window.showErrorMessage(`生成配置失败: ${runtime}`)
+        vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
         return false
       }
       launchService.launchRuntime(runtime)
@@ -36,7 +36,7 @@ export class CommandService extends BaseService {
 
       const runtime = interfaceService.buildRuntime(true)
       if (typeof runtime === 'string') {
-        vscode.window.showErrorMessage(`生成配置失败: ${runtime}`)
+        vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
         return false
       }
       launchService.launchRuntime(runtime, [

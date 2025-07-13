@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { TaskConfig } from '@mse/types'
 
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 
@@ -13,16 +14,6 @@ const props = defineProps<{
 
 const taskMeta = computed(() => {
   return hostState.value.interfaceJson?.task?.find(info => info.name === props.task.name) ?? null
-})
-
-const optionsMetas = computed(() => {
-  return (
-    taskMeta.value?.option
-      ?.map(opt => {
-        return hostState.value.interfaceJson?.option?.[opt]
-      })
-      .filter(x => !!x) ?? []
-  )
 })
 
 function removeTask() {
@@ -94,7 +85,9 @@ function revealCase(opt: string) {
       <template v-for="opt in taskMeta?.option ?? []" :key="opt">
         <n-flex>
           <n-button @click="revealOption(opt)" text> {{ opt }} </n-button>
-          <n-button @click="revealCase(opt)" text> 当前值 </n-button>
+          <n-button @click="revealCase(opt)" text>
+            {{ t('maa.control.task.current-case') }}
+          </n-button>
         </n-flex>
         <n-select
           :options="

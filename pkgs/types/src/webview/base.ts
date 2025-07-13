@@ -42,3 +42,8 @@ export type WebToHost<Impl extends ImplType> = (
 ) & {
   seq?: number
 }
+
+export type HostStateBase = {
+  isMAA?: boolean
+  locale?: 'zh' | 'en'
+}

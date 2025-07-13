@@ -1,6 +1,8 @@
 import * as maa from '@maaxyz/maa-node'
 
-export type CropHostState = {
+import type { HostStateBase } from './base'
+
+export type CropHostState = HostStateBase & {
   saveAddRoiInfo?: boolean
   backgroundFill?: string
   selectFill?: string

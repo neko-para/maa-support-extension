@@ -4,6 +4,7 @@ import json from 'highlight.js/lib/languages/json'
 import { NCard, NConfigProvider, NFlex, NScrollbar } from 'naive-ui'
 import { ref } from 'vue'
 
+import { t } from '../utils/locale'
 import { useTheme } from '../utils/theme'
 import * as canvasSt from './states/canvas'
 import * as controlSt from './states/control'
@@ -26,7 +27,7 @@ canvasSt.setup(canvasSizeEl, canvasEl)
   <template v-if="loaded">
     <n-config-provider :theme="theme" :theme-overrides="themeOverride" :hljs="hljs">
       <n-card
-        title="编辑"
+        :title="t('maa.crop.crop-tool')"
         style="height: 100vh"
         content-style="display: flex; flex-direction: column; gap: 10px; min-height: 0"
       >

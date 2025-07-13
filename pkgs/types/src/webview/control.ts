@@ -1,8 +1,7 @@
 import type { Interface, InterfaceConfig } from '../pi'
+import type { HostStateBase } from './base'
 
-export type ControlHostState = {
-  isMAA?: boolean
-
+export type ControlHostState = HostStateBase & {
   interface?: string[]
   activeInterface?: string
   refreshingInterface?: boolean

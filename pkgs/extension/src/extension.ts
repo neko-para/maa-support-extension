@@ -1,7 +1,7 @@
 import sms from 'source-map-support'
 import vscode from 'vscode'
 
-import { logger, setupLogger } from '@mse/utils'
+import { logger, setupLogger, t } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
@@ -24,7 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const doc = await vscode.workspace.openTextDocument(logFile)
         await vscode.window.showTextDocument(doc)
       } catch {
-        vscode.window.showErrorMessage(`无法找到文件: ${logFile}`)
+        vscode.window.showErrorMessage(t('maa.core.cannot-find-log', logFile.fsPath))
       }
     })
   )
@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
   await init(context)
 
   if (!(await nativeService.load())) {
-    vscode.window.showErrorMessage('加载 MaaFramework 失败')
+    vscode.window.showErrorMessage(t('maa.core.load-maafw-failed'))
     statusBarService.showMaaStatus(null)
     return
   }
@@ -59,7 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
           const doc = await vscode.workspace.openTextDocument(maaLogFile)
           await vscode.window.showTextDocument(doc)
         } catch {
-          vscode.window.showErrorMessage(`无法找到文件: ${maaLogFile}`)
+          vscode.window.showErrorMessage(t('maa.core.cannot-find-log', maaLogFile.fsPath))
         }
       })
     )

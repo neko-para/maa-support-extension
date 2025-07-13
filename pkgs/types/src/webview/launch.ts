@@ -1,6 +1,8 @@
 import * as maa from '@maaxyz/maa-node'
 
-export type LaunchHostState = {
+import type { HostStateBase } from './base'
+
+export type LaunchHostState = HostStateBase & {
   stopped?: boolean
   paused?: boolean
 

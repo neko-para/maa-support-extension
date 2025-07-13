@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
+import { NCard, NSelect } from 'naive-ui'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 
@@ -30,12 +31,12 @@ function switchResource(index: number) {
 </script>
 
 <template>
-  <n-card title="资源" size="small">
+  <n-card :title="t('maa.control.resource.resource')" size="small">
     <n-select
       :options="resourceOptions"
       :value="currentResource"
       @update:value="switchResource"
-      placeholder="选择资源"
+      :placeholder="t('maa.control.resource.select-resource')"
       size="small"
     ></n-select>
   </n-card>

@@ -2,13 +2,13 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
-import { WebviewPanelProvider, logger, t } from '@mse/utils'
+import { WebviewPanelProvider, locale, logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
 import { performOcr } from '../../tools/ocr'
 import { performReco } from '../../tools/reco'
-import { currentWorkspace, imageSuffix } from '../../utils/fs'
+import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { fromPngDataUrl, toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
@@ -179,7 +179,12 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
   }
 
   get state(): CropHostState {
-    return stateService.state.cropSettings ?? {}
+    return {
+      isMAA: isMaaAssistantArknights,
+      locale,
+
+      ...stateService.state.cropSettings
+    }
   }
 
   pushState() {

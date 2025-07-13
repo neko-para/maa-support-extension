@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { NButton, NCard, NDynamicTags, NFlex, NTab, NTabs, NText } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
+import { t } from '../../utils/locale'
 import { DynamicScroller, DynamicScrollerItem } from '../../utils/vvs'
 import InputTask from '../components/InputTask.vue'
 import StatusRow from '../components/StatusRow.vue'
@@ -58,10 +59,6 @@ async function toggleStop() {
   pauseLoading.value = false
 }
 
-function addBreak(task: string) {
-  updateBreak([...(hostState.value.breakTasks ?? []), task])
-}
-
 function updateBreak(tasks: string[]) {
   ipc.send({
     command: 'updateBreakTasks',
@@ -72,7 +69,7 @@ function updateBreak(tasks: string[]) {
 
 <template>
   <n-card
-    title="流程"
+    :title="t('maa.launch.process')"
     style="height: 100vh"
     content-style="display: flex; flex-direction: column; gap: 10px"
   >
@@ -83,15 +80,19 @@ function updateBreak(tasks: string[]) {
           :disabled="pauseLoading || hostState.stopped"
           @click="toggleStop"
         >
-          {{ hostState.paused ? '继续' : '暂停' }}
+          {{ hostState.paused ? t('maa.launch.continue') : t('maa.launch.pause') }}
         </n-button>
-        <n-button :disabled="hostState.stopped" @click="followLast = !followLast"> 跟随 </n-button>
-        <n-button :disabled="hostState.stopped" @click="requestStop"> 停止 </n-button>
+        <n-button :disabled="hostState.stopped" @click="followLast = !followLast">
+          {{ t('maa.launch.follow') }}
+        </n-button>
+        <n-button :disabled="hostState.stopped" @click="requestStop">
+          {{ t('maa.launch.stop') }}
+        </n-button>
       </n-flex>
     </template>
 
     <n-flex vertical>
-      <n-text size="small"> 添加断点 </n-text>
+      <n-text size="small"> {{ t('maa.launch.add-breakpoint') }} </n-text>
       <n-dynamic-tags
         :value="hostState.breakTasks"
         @update:value="updateBreak"

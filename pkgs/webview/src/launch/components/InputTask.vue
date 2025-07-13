@@ -2,6 +2,7 @@
 import { type AutoCompleteOption, NAutoComplete } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
+import { t } from '../../utils/locale'
 import { hostState } from '../state'
 
 const inputTask = ref('')
@@ -58,6 +59,6 @@ onMounted(() => {
     @blur="onBlur"
     @select="onSelect"
     size="small"
-    placeholder="输入空格以唤起所有任务"
+    :placeholder="t('maa.launch.input-space-to-show-tasks')"
   ></n-auto-complete>
 </template>

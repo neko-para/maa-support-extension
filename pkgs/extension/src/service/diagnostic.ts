@@ -96,7 +96,7 @@ class DiagnosticScanner extends FlushHelper {
                 taskInfo.uri,
                 new vscode.Diagnostic(
                   ref.range,
-                  '图片路径中包含反斜杠, 应使用正斜杠',
+                  t('maa.pipeline.warning.image-path-backslash'),
                   vscode.DiagnosticSeverity.Warning
                 )
               ])
@@ -107,7 +107,7 @@ class DiagnosticScanner extends FlushHelper {
                 taskInfo.uri,
                 new vscode.Diagnostic(
                   ref.range,
-                  '图片不应省略.png',
+                  t('maa.pipeline.warning.image-path-missing-png'),
                   vscode.DiagnosticSeverity.Warning
                 )
               ])
@@ -177,7 +177,7 @@ class DiagnosticScanner extends FlushHelper {
   async doFlush() {
     await vscode.window.withProgress(
       {
-        title: 'MaaSupport 检查任务中',
+        title: t('maa.status.checking-task'),
         location: vscode.ProgressLocation.Window
       },
       async () => {

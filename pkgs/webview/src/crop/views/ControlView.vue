@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { NButton, NFlex, NTooltip } from 'naive-ui'
 
+import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
 import { toggleShow } from '../states/visible'
@@ -8,12 +9,20 @@ import { toggleShow } from '../states/visible'
 
 <template>
   <n-flex>
-    <n-button :loading="imageSt.loading.value" @click="imageSt.screencap()"> 截图 </n-button>
-    <n-button :loading="imageSt.loading.value" @click="imageSt.upload()"> 上传 </n-button>
-    <n-button :loading="imageSt.loading.value" @click="imageSt.download()"> 下载 </n-button>
-    <n-button @click="controlSt.viewport.value.reset()"> 重置视野 </n-button>
-    <n-button @click="controlSt.cropCeil()"> 取整 </n-button>
-    <n-button @click="controlSt.cropBound()"> 边界 </n-button>
+    <n-button :loading="imageSt.loading.value" @click="imageSt.screencap()">
+      {{ t('maa.crop.screencap') }}
+    </n-button>
+    <n-button :loading="imageSt.loading.value" @click="imageSt.upload()">
+      {{ t('maa.crop.upload') }}
+    </n-button>
+    <n-button :loading="imageSt.loading.value" @click="imageSt.download()">
+      {{ t('maa.crop.download') }}
+    </n-button>
+    <n-button @click="controlSt.viewport.value.reset()">
+      {{ t('maa.crop.reset-viewport') }}
+    </n-button>
+    <n-button @click="controlSt.cropCeil()"> {{ t('maa.crop.ceil') }} </n-button>
+    <n-button @click="controlSt.cropBound()"> {{ t('maa.crop.bound') }} </n-button>
 
     <n-tooltip trigger="hover">
       <template #trigger>
@@ -30,7 +39,7 @@ import { toggleShow } from '../states/visible'
       {{ controlSt.roiExpandText() }}
     </n-tooltip>
 
-    <n-button @click="toggleShow('settings')"> 设置 </n-button>
-    <n-button @click="toggleShow('tool')"> 工具 </n-button>
+    <n-button @click="toggleShow('settings')"> {{ t('maa.crop.settings') }} </n-button>
+    <n-button @click="toggleShow('tool')"> {{ t('maa.crop.tools') }} </n-button>
   </n-flex>
 </template>

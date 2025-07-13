@@ -214,18 +214,18 @@ export class LaunchService extends BaseService {
     this.tasker = undefined
 
     if (!(await this.updateCache())) {
-      return [false, '初始化控制器失败']
+      return [false, t('maa.debug.init-controller-failed')]
     }
 
     const controller = this.cache?.controller
 
     if (!controller) {
-      return [false, '初始化控制器失败']
+      return [false, t('maa.debug.init-controller-failed')]
     }
 
     const [resource, agent] = await this.setupResource(runtime)
     if (!resource) {
-      return [false, '初始化资源失败']
+      return [false, t('maa.debug.init-resource-failed')]
     }
 
     const tasker = new maa.Tasker()
@@ -241,7 +241,7 @@ export class LaunchService extends BaseService {
       tasker.destroy()
       resource.destroy()
       agent?.terminate()
-      return [false, '初始化实例失败']
+      return [false, t('maa.debug.init-instance-failed')]
     }
 
     this.tasker = {
@@ -275,12 +275,12 @@ export class LaunchService extends BaseService {
     }
 
     if (!this.tasker) {
-      session.pushMessage('初始化实例失败')
+      session.pushMessage(t('maa.debug.init-instance-failed'))
       session.pushTerminated()
       return
     }
 
-    session.pushMessage('初始化实例成功')
+    session.pushMessage(t('maa.debug.init-instance-succeeded'))
     session.pushContinued()
 
     const tasker = this.tasker
@@ -301,11 +301,15 @@ export class LaunchService extends BaseService {
     }
 
     for (const task of tasks ?? runtime.task) {
-      session.pushMessage(`任务开始 ${task.name} - ${task.entry}`)
-      const succeed = await tasker.tasker
+      session.pushMessage(t('maa.debug.task-started', task.name, task.entry))
+      const succeeded = await tasker.tasker
         .post_task(task.entry, task.pipeline_override as Record<string, unknown>)
         .wait().succeeded
-      session.pushMessage(`任务${succeed ? '完成' : '失败'} ${task.name} - ${task.entry}`)
+      session.pushMessage(
+        succeeded
+          ? t('maa.debug.task-finished', task.name, task.entry)
+          : t('maa.debug.task-failed', task.name, task.entry)
+      )
     }
     panel.finish()
 

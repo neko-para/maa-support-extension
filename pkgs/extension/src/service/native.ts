@@ -5,6 +5,8 @@ import { lock } from 'proper-lockfile'
 import semVerCompare from 'semver/functions/compare'
 import * as vscode from 'vscode'
 
+import { t } from '@mse/utils'
+
 import { commands } from '../command'
 import { maa, setMaa } from '../maa'
 import { BaseService, context } from './context'
@@ -60,7 +62,7 @@ export class NativeService extends BaseService {
           .map(type => {
             const descTags: string[] = []
             if (this.registry === registries[type]) {
-              descTags.push('正在使用')
+              descTags.push(t('maa.native.in-use'))
             }
             if (type === previous) {
               descTags.push('$(check)')
@@ -76,7 +78,7 @@ export class NativeService extends BaseService {
           })
 
       const result = await vscode.window.showQuickPick(options, {
-        title: '切换下载源(重启生效)'
+        title: t('maa.native.switch-mirror')
       })
       if (result) {
         this.registryType = result.value
@@ -90,7 +92,7 @@ export class NativeService extends BaseService {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Window,
-          title: '获取索引中'
+          title: t('maa.native.fetching-index')
         },
         async progress => {
           progress.report({
@@ -99,9 +101,6 @@ export class NativeService extends BaseService {
           allLocal = await this.fetchAllLocalVersions()
           allRemote = (await this.fetchAllVersions()).map(x => x[0])
           allRemote.sort((a, b) => -semVerCompare(a, b))
-          progress.report({
-            increment: 100
-          })
         }
       )
 
@@ -110,10 +109,10 @@ export class NativeService extends BaseService {
       const options: (vscode.QuickPickItem & { value: string | null })[] = allRemote.map(ver => {
         const descTags: string[] = []
         if (allLocal.includes(ver)) {
-          descTags.push('已下载')
+          descTags.push(t('maa.native.downloaded'))
         }
         if (this.version === ver) {
-          descTags.push('正在使用')
+          descTags.push(t('maa.native.in-use'))
         }
         if (ver === previous) {
           descTags.push('$(check)')
@@ -121,19 +120,19 @@ export class NativeService extends BaseService {
         return {
           label: ver,
           description: descTags.join(' '),
-          detail: ver == defaultMaaVersion ? '插件预期版本' : '',
+          detail: ver == defaultMaaVersion ? t('maa.native.extension-expected-version') : '',
           value: ver
         }
       })
       options.unshift({
-        label: `自动`,
+        label: t('maa.native.auto'),
         description: null === previous ? '$(check)' : '',
-        detail: `自动使用插件预期版本`,
+        detail: t('maa.native.use-extension-expected-version'),
         value: null
       })
 
       const result = await vscode.window.showQuickPick(options, {
-        title: '切换 MaaFramework 版本(重启生效)'
+        title: t('maa.native.switch-maafw')
       })
       if (result) {
         this.explicitVersion = result.value
@@ -254,12 +253,12 @@ export class NativeService extends BaseService {
       },
       async progress => {
         progress.report({
-          message: '准备目录中'
+          message: t('maa.native.download.preparing-folder')
         })
         const loaderTemp = await fs.mkdtemp(vscode.Uri.joinPath(this.downloadUri, 'loader-').fsPath)
         const binaryTemp = await fs.mkdtemp(vscode.Uri.joinPath(this.downloadUri, 'binary-').fsPath)
         progress.report({
-          message: '下载 MaaFramework ${version} 脚本中',
+          message: t('maa.native.download.downloading-scripts', version),
           increment: 10
         })
         await pacote.extract(`@maaxyz/maa-node@${version}`, loaderTemp, {
@@ -267,7 +266,7 @@ export class NativeService extends BaseService {
           cache: this.cacheUri.fsPath
         })
         progress.report({
-          message: '下载 MaaFramework ${version} 二进制中',
+          message: t('maa.native.download.downloading-binary', version),
           increment: 40
         })
         await pacote.extract(
@@ -279,7 +278,7 @@ export class NativeService extends BaseService {
           }
         )
         progress.report({
-          message: '移动目录中',
+          message: t('maa.native.download.moving-folder'),
           increment: 40
         })
 

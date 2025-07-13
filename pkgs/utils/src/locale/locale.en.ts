@@ -30,8 +30,19 @@ export default {
   'maa.pi.error.no-devices-found': 'No devices found',
   'maa.pi.error.no-win32-config-provided': 'No win32 config provided',
   'maa.pi.error.load-interface-failed': 'Failed to load interface',
+  'maa.pi.error.generate-runtime-failed': 'Generate runtime failed: {0}',
+
+  'maa.debug.init-controller-failed': 'Init controller failed',
+  'maa.debug.init-resource-failed': 'Init resource failed',
+  'maa.debug.init-instance-failed': 'Init instance failed',
+  'maa.debug.init-instance-succeeded': 'Init instance succeeded',
+  'maa.debug.task-started': 'Task started {0} - {1}',
+  'maa.debug.task-finished': 'Task finished {0} - {1}',
+  'maa.debug.task-failed': 'Task failed {0} - {1}',
 
   'maa.pipeline.codelens.launch': 'Launch',
+  'maa.pipeline.codelens.resource-switch': 'Switch',
+  'maa.pipeline.codelens.resource-activated': 'Activated',
 
   'maa.pipeline.error.no-interface-found': 'No interface found',
   'maa.pipeline.error.not-exists': '{0} not exists',
@@ -39,16 +50,28 @@ export default {
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
   'maa.pipeline.error.duplicate-next': 'Duplicate route {0}',
-  'maa.pipeline.error.rename-not-allowed': 'Rename: not allowed',
-  'maa.pipeline.error.rename-already-exists': 'Rename: already exists',
+  'maa.pipeline.warning.image-path-backslash':
+    'Image path contains backslash, shall use forward slash instead',
+  'maa.pipeline.warning.image-path-missing-png': 'Image path shall not omit .png',
 
-  'maa.pipeline.status.no-interface-found': 'Maa: No Interface Found',
-  'maa.pipeline.status.using-interface': 'Maa: Using {0}',
-  'maa.pipeline.status.load-interface-failed': 'Maa: Load Interface Failed',
-  'maa.pipeline.status.interface-not-configured': 'Maa: Interface Not Configured',
-  'maa.pipeline.status.interface-configured': 'Maa: Interface Configured',
-  'maa.pipeline.status.tooltip.click-select-interface': 'Click to select interface',
-  'maa.pipeline.status.tooltip.click-launch-interface': 'Click to launch interface',
+  'maa.native.in-use': 'In use',
+  'maa.native.downloaded': 'Downloaded',
+  'maa.native.extension-expected-version': 'Expected version for extension',
+  'maa.native.auto': 'Auto',
+  'maa.native.use-extension-expected-version': 'Use expected version for extension automatically',
+  'maa.native.switch-mirror': 'Switch download mirror (restart to take effect)',
+  'maa.native.switch-maafw': 'Switch MaaFramework version (restart to take effect)',
+  'maa.native.fetching-index': 'Fetching index',
+  'maa.native.download.preparing-folder': 'Preparing folder',
+  'maa.native.download.downloading-scripts': 'Downloading MaaFramework {0} scripts',
+  'maa.native.download.downloading-binary': 'Downloading MaaFramework {0} binary',
+  'maa.native.download.moving-folder': 'Moving folder',
+
+  'maa.status.checking-task': 'MaaSupport checking task',
+  'maa.status.not-loaded': 'Not loaded',
+
+  'maa.core.cannot-find-log': 'Cannot find log file: {0}',
+  'maa.core.load-maafw-failed': 'Load MaaFramework failed',
 
   'maa.crop.warning.no-resource': 'resource of interface not configured, will save directly'
 } as const

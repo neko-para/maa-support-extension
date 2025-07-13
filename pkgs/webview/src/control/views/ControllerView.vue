@@ -6,6 +6,7 @@ import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 
@@ -86,12 +87,12 @@ function configAdb(index: number) {
 </script>
 
 <template>
-  <n-card title="控制" size="small">
+  <n-card :title="t('maa.control.controller.controller')" size="small">
     <n-select
       :options="controllerOptions"
       :value="currentController"
       @update:value="switchController"
-      placeholder="选择控制器"
+      :placeholder="t('maa.control.controller.select-controller')"
       size="small"
     ></n-select>
   </n-card>
@@ -108,7 +109,7 @@ function configAdb(index: number) {
             size="small"
           >
             <n-button :disabled="refreshingAdb || adbOptions.length === 0" size="small">
-              设备列表
+              {{ t('maa.control.controller.device-list') }}
             </n-button>
           </n-dropdown>
           <n-button
@@ -117,7 +118,7 @@ function configAdb(index: number) {
             @click="refreshAdb"
             size="small"
           >
-            扫描
+            {{ t('maa.control.scan') }}
           </n-button>
         </n-flex>
       </template>
@@ -130,5 +131,5 @@ function configAdb(index: number) {
       </n-flex>
     </n-card>
   </template>
-  <template v-if="currentType === 'Win32'"> win32! </template>
+  <template v-if="currentType === 'Win32'"> win32 not impl yet </template>
 </template>

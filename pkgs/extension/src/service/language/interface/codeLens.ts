@@ -1,5 +1,7 @@
 import * as vscode from 'vscode'
 
+import { t } from '@mse/utils'
+
 import { interfaceIndexService, interfaceService } from '../..'
 import { commands } from '../../../command'
 import { debounce } from '../../utils/debounce'
@@ -47,11 +49,11 @@ export class InterfaceCodeLensProvider
       result.push(
         activated
           ? new vscode.CodeLens(decl.range, {
-              title: '已激活',
+              title: t('maa.pipeline.codelens.resource-activated'),
               command: ''
             })
           : new vscode.CodeLens(decl.range, {
-              title: '切换',
+              title: t('maa.pipeline.codelens.resource-switch'),
               command: commands.PISwitchResource,
               arguments: [decl.name]
             })

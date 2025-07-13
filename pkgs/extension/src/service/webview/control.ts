@@ -2,7 +2,7 @@ import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
-import { WebviewProvider, provideWebview } from '@mse/utils'
+import { WebviewProvider, locale, provideWebview, t } from '@mse/utils'
 
 import { interfaceIndexService, interfaceService, launchService, rootService } from '..'
 import { maa } from '../../maa'
@@ -139,7 +139,7 @@ export class WebviewControlService extends BaseService {
         case 'launch':
           const runtime = interfaceService.buildRuntime()
           if (typeof runtime === 'string') {
-            vscode.window.showErrorMessage(`生成配置失败: ${runtime}`)
+            vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
             break
           }
           launchService.launchRuntime(runtime)
@@ -167,6 +167,7 @@ export class WebviewControlService extends BaseService {
   get state(): ControlHostState {
     return {
       isMAA: isMaaAssistantArknights,
+      locale,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),
       activeInterface: rootService.activeResource?.interfaceRelative,

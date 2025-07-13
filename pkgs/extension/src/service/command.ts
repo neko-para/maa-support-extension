@@ -59,11 +59,13 @@ export class CommandService extends BaseService {
       new WebviewCropPanel('Maa Crop').init()
     })
 
-    this.defer = vscode.commands.registerCommand(commands.GotoTask, async () => {
-      const taskList = await taskIndexService.queryTaskList()
-      const result = await vscode.window.showQuickPick(taskList)
-      if (result) {
-        const infos = await taskIndexService.queryTask(result)
+    this.defer = vscode.commands.registerCommand(commands.GotoTask, async (task?: string) => {
+      if (!task) {
+        const taskList = await taskIndexService.queryTaskList()
+        task = await vscode.window.showQuickPick(taskList)
+      }
+      if (task) {
+        const infos = await taskIndexService.queryTask(task)
         let info: TaskIndexInfo
         if (infos.length > 1) {
           const res = await vscode.window.showQuickPick(

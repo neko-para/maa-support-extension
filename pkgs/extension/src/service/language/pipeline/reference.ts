@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 
 import { taskIndexService } from '../..'
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineReferenceProvider
@@ -30,10 +31,22 @@ export class PipelineReferenceProvider
     if (info.type === 'task.ref' || info.type === 'task.prop') {
       const result: vscode.Location[] = []
       for (const layer of taskIndexService.layers) {
-        for (const taskInfo of Object.values(layer.index).flat()) {
-          for (const refInfo of taskInfo.taskRef) {
-            if (refInfo.task === info.target) {
-              result.push(new vscode.Location(taskInfo.uri, refInfo.range))
+        for (const [task, taskInfos] of Object.entries(layer.index)) {
+          for (const taskInfo of taskInfos) {
+            for (const refInfo of taskInfo.taskRef) {
+              if (refInfo.task === info.target) {
+                result.push(new vscode.Location(taskInfo.uri, refInfo.range))
+              }
+              if (isMaaAssistantArknights) {
+                if (refInfo.task.endsWith('@' + info.target)) {
+                  result.push(new vscode.Location(taskInfo.uri, refInfo.range))
+                }
+              }
+            }
+            if (isMaaAssistantArknights) {
+              if (task.endsWith('@' + info.target)) {
+                result.push(new vscode.Location(taskInfo.uri, taskInfo.taskProp))
+              }
             }
           }
         }

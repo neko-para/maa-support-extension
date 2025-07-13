@@ -337,7 +337,8 @@ export class TaskIndexService extends BaseService {
       return new vscode.MarkdownString(
         result
           .map(
-            x => `${rootService.relativePathToRoot(x.uri)} - ${x.info.rel}\n\n![](${x.info.uri})`
+            x =>
+              `${rootService.relativePathToRoot(x.uri)} - [${x.info.rel}](${x.info.uri.toString()})\n\n![](${x.info.uri})`
           )
           .join('\n\n')
       )

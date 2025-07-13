@@ -156,7 +156,7 @@ export class InterfaceService extends BaseService {
 
   updateResource() {
     const resInfo = this.interfaceJson.resource?.find(
-      x => x.name === this.interfaceConfigJson.resource
+      x => x.name === this.interfaceConfigJson?.resource
     )
     const rootPath = rootService.activeResource?.dirUri.fsPath
     if (!resInfo || !rootPath) {
@@ -214,8 +214,22 @@ export class InterfaceService extends BaseService {
         screencap: ctrlInfo.adb?.screencap ?? maa.api.AdbScreencapMethod.Default,
         input: ctrlInfo.adb?.input ?? maa.api.AdbInputMethod.Default
       }
+    } else if (ctrlInfo.type === 'Win32') {
+      if (!config.win32) {
+        return t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '')
+      }
+      if (!config.win32.hwnd) {
+        return t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '')
+      }
+
+      result.controller_param = {
+        ctype: 'win32',
+        hwnd: config.win32.hwnd,
+        screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.GDI,
+        input: ctrlInfo.win32?.input ?? maa.api.Win32InputMethod.SendMessage
+      }
     } else {
-      return '暂不支持win32'
+      return '???'
     }
 
     const resInfo = data.resource?.find(info => info.name === config.resource)

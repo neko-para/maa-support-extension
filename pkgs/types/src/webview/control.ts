@@ -1,3 +1,5 @@
+import type * as maa from '@maaxyz/maa-node'
+
 import type { Interface, InterfaceConfig } from '../pi'
 import type { HostStateBase } from './base'
 
@@ -36,10 +38,18 @@ export type ControlWebToHost =
       command: 'refreshAdb'
     }
   | {
+      // return [handle: string, class_name: string, window_name: string][] | null
+      command: 'refreshDesktop'
+    }
+  | {
       command: 'configAdb'
       adb: string
       address: string
       config: string
+    }
+  | {
+      command: 'configDesktop'
+      handle: maa.api.DesktopHandle
     }
   | {
       command: 'addTask'

@@ -23,8 +23,13 @@ export const controllerConfigured = computed(() => {
       return false
     }
   } else {
-    // TODO: win32
-    return false
+    const win32 = hostState.value.interfaceConfigJson.win32
+    if (!win32) {
+      return false
+    }
+    if (!win32.hwnd) {
+      return false
+    }
   }
   return true
 })
@@ -56,5 +61,6 @@ export const taskConfigured = computed(() => {
 })
 
 export const canLaunch = computed(() => {
+  console.log(controllerConfigured.value, resourceConfigured.value, taskConfigured.value)
   return controllerConfigured.value && resourceConfigured.value && taskConfigured.value
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type * as maa from '@maaxyz/maa-node'
-import { NButton, NCard, NCode, NDropdown, NFlex, NSelect } from 'naive-ui'
+import { NButton, NCard, NDropdown, NFlex, NPopselect, NSelect } from 'naive-ui'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
@@ -84,6 +84,70 @@ function configAdb(index: number) {
     config: JSON.parse(opt[5])
   })
 }
+
+type DesktopDevice = [handle: maa.api.DesktopHandle, class_name: string, window_name: string]
+
+const desktopDevices = ref<DesktopDevice[]>([])
+const currDevice = computed(() => {
+  return desktopDevices.value.find(
+    info => info[0] === hostState.value.interfaceConfigJson?.win32?.hwnd
+  )
+})
+
+const refreshingDesktop = ref(false)
+
+const makeBrief = (dev: DesktopDevice) => {
+  return dev
+    .map(x => {
+      if (x.length > 10) {
+        x = x.substring(0, 4) + '..' + x.substring(x.length - 4)
+      }
+      return x
+    })
+    .join('-')
+}
+
+const desktopOptions = computed(() => {
+  return desktopDevices.value.map((info, index) => {
+    return {
+      value: index,
+      label: makeBrief(info)
+    } satisfies SelectMixedOption
+  })
+})
+
+async function refreshDesktop() {
+  const filters: ((info: DesktopDevice) => boolean)[] = []
+  if (currentControllerMeta.value?.win32?.class_regex) {
+    const reg = new RegExp(currentControllerMeta.value?.win32?.class_regex)
+    filters.push(info => {
+      return reg.test(info[1])
+    })
+  }
+  if (currentControllerMeta.value?.win32?.window_regex) {
+    const reg = new RegExp(currentControllerMeta.value?.win32?.window_regex)
+    filters.push(info => {
+      return reg.test(info[2])
+    })
+  }
+  refreshingDesktop.value = true
+  desktopDevices.value = (
+    ((await ipc.call({
+      command: 'refreshDesktop'
+    })) as DesktopDevice[] | null) ?? []
+  ).filter(info => {
+    return filters.map(f => f(info)).reduce((a, b) => a && b, true)
+  })
+  refreshingDesktop.value = false
+}
+
+function configDesktop(index: number) {
+  const opt = desktopDevices.value[index]
+  ipc.send({
+    command: 'configDesktop',
+    handle: opt[0]
+  })
+}
 </script>
 
 <template>
@@ -131,5 +195,39 @@ function configAdb(index: number) {
       </n-flex>
     </n-card>
   </template>
-  <template v-if="currentType === 'Win32'"> win32 not impl yet </template>
+  <template v-if="currentType === 'Win32'">
+    <n-card title="Win32" size="small">
+      <template #header-extra>
+        <n-flex>
+          <n-popselect
+            :disabled="refreshingDesktop || desktopOptions.length === 0"
+            trigger="hover"
+            :options="desktopOptions"
+            @update:value="configDesktop"
+            size="small"
+            scrollable
+          >
+            <n-button :disabled="refreshingDesktop || desktopOptions.length === 0" size="small">
+              {{ t('maa.control.controller.window-list') }}
+            </n-button>
+          </n-popselect>
+          <n-button
+            :loading="refreshingDesktop"
+            :disabled="refreshingDesktop"
+            @click="refreshDesktop"
+            size="small"
+          >
+            {{ t('maa.control.scan') }}
+          </n-button>
+        </n-flex>
+      </template>
+      <n-flex v-if="hostState.interfaceConfigJson?.win32" vertical>
+        <span> {{ hostState.interfaceConfigJson.win32.hwnd }} </span>
+        <template v-if="currDevice">
+          <span> {{ currDevice[1] }} </span>
+          <span> {{ currDevice[2] }} </span>
+        </template>
+      </n-flex>
+    </n-card>
+  </template>
 </template>

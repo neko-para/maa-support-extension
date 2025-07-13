@@ -55,12 +55,22 @@ export class WebviewControlService extends BaseService {
         case 'refreshAdb':
           this.provider?.response(data.seq, await maa.AdbController.find())
           break
+        case 'refreshDesktop':
+          this.provider?.response(data.seq, await maa.Win32Controller.find())
+          break
         case 'configAdb':
           interfaceService.reduceConfig({
             adb: {
               adb_path: data.adb,
               address: data.address,
               config: data.config
+            }
+          })
+          break
+        case 'configDesktop':
+          interfaceService.reduceConfig({
+            win32: {
+              hwnd: data.handle
             }
           })
           break

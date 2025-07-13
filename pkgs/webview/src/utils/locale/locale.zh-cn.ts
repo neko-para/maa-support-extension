@@ -11,6 +11,7 @@ export default {
   'maa.control.controller.controller': '控制器',
   'maa.control.controller.select-controller': '选择控制器',
   'maa.control.controller.device-list': '设备列表',
+  'maa.control.controller.window-list': '窗口列表',
   'maa.control.task.task': '任务',
   'maa.control.task.add-task': '添加',
   'maa.control.task.current-case': '当前值',

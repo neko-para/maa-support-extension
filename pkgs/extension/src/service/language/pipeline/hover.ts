@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 
 import { taskIndexService } from '../..'
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineHoverProvider
@@ -27,11 +28,21 @@ export class PipelineHoverProvider
     }
 
     if (info.type === 'task.ref' || info.type === 'task.prop') {
-      return new vscode.Hover(
-        await taskIndexService.queryTaskDoc(info.target, layer.level + 1, position)
-      )
+      const result = await taskIndexService.queryTaskDoc(info.target, layer.level + 1, position)
+      if (isMaaAssistantArknights) {
+        const image = await taskIndexService.queryImageDoc(
+          info.target + '.png',
+          layer.level + 1,
+          true
+        )
+        if (image) {
+          result.appendMarkdown('\n\n' + image.value)
+        }
+      }
+
+      return new vscode.Hover(result)
     } else if (info.type === 'image.ref') {
-      return new vscode.Hover(await taskIndexService.queryImageDoc(info.target))
+      return new vscode.Hover(await taskIndexService.queryImageDoc(info.target, layer.level + 1))
     }
 
     return null

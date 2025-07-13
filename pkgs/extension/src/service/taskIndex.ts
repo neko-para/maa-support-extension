@@ -315,14 +315,24 @@ export class TaskIndexService extends BaseService {
     }
   }
 
-  async queryImageDoc(image: string): Promise<vscode.MarkdownString> {
+  queryImageDoc(image: string, level?: number, nullable?: false): Promise<vscode.MarkdownString>
+  queryImageDoc(image: string, level: number, nullable: true): Promise<vscode.MarkdownString | null>
+  async queryImageDoc(
+    image: string,
+    level?: number,
+    nullable = false
+  ): Promise<vscode.MarkdownString | null> {
+    const allLayers = this.allLayers
+    if (level === undefined) {
+      level = allLayers.length
+    }
     if (isMaaAssistantArknights) {
-      for (const layer of this.allLayers) {
+      for (const layer of allLayers.slice(0, level)) {
         await layer.flushImage()
       }
     }
 
-    const result = await this.queryImage(image)
+    const result = await this.queryImage(image, level)
     if (result.length > 0) {
       return new vscode.MarkdownString(
         result
@@ -332,7 +342,9 @@ export class TaskIndexService extends BaseService {
           .join('\n\n')
       )
     } else {
-      return new vscode.MarkdownString(t('maa.pipeline.error.unknown-image', image))
+      return nullable
+        ? null
+        : new vscode.MarkdownString(t('maa.pipeline.error.unknown-image', image))
     }
   }
 }

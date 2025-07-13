@@ -80,7 +80,7 @@ export class PipelineCompletionProvider
             kind: vscode.CompletionItemKind.File,
             insertText: esc.substring(0, esc.length - 1),
             range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
-            documentation: await taskIndexService.queryImageDoc(path)
+            documentation: await taskIndexService.queryImageDoc(path, layer.level + 1)
           }
         })
       )

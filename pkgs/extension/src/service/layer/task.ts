@@ -218,7 +218,7 @@ class ImageIndex {
         if (file.endsWith('.png')) {
           result.push({
             uri: vscode.Uri.joinPath(dir, file),
-            relative: path.join(rel, file).replace(path.sep, '/')
+            relative: path.join(rel, file).replaceAll(path.sep, '/')
           })
         }
       }

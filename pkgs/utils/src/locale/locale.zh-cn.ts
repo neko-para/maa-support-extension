@@ -51,7 +51,7 @@ export default {
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
   'maa.pipeline.error.duplicate-next': '重复路由 {0}',
   'maa.pipeline.warning.image-path-backslash': '图片路径中包含反斜杠, 应使用正斜杠',
-  'maa.pipeline.warning.image-path-missing-png': '图片路径不应省略.pn',
+  'maa.pipeline.warning.image-path-missing-png': '图片路径不应省略.png',
 
   'maa.native.in-use': '正在使用',
   'maa.native.downloaded': '已下载',

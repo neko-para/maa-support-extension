@@ -230,7 +230,7 @@ export class TaskIndexService extends BaseService {
       if (isMaaAssistantArknights) {
         // MAA可以允许省略前置路径
         const allUris = layer.images.filter(({ relative }) => {
-          if (relative === image || relative.endsWith(path.sep + image)) {
+          if (relative === image || relative.endsWith('/' + image)) {
             return true
           }
           return false

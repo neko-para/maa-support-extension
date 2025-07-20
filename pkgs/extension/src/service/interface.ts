@@ -92,33 +92,44 @@ export class InterfaceService extends BaseService {
       try {
         const doc = await vscode.workspace.openTextDocument(root.configUri)
         this.interfaceConfigJson = parse(doc.getText())
+      } catch {}
 
-        let fixed = false
-        const tasks = this.interfaceConfigJson.task ?? []
-        const fixedTasks = tasks.map(task => {
-          if (!task.__vscKey) {
-            fixed = true
-            return {
-              ...task,
-              __vscKey: v4()
-            }
-          } else {
-            return task
+      const fixConfig: Partial<InterfaceConfig> = {}
+
+      let resFixed = false
+      const prevRes = this.interfaceJson.resource?.find(
+        x => x.name === this.interfaceConfigJson.resource
+      )
+      if (!prevRes && this.interfaceJson.resource) {
+        resFixed = true
+        fixConfig.resource = this.interfaceJson.resource[0].name
+      }
+
+      let taskFixed = false
+      const tasks = this.interfaceConfigJson.task ?? []
+      const fixedTasks = tasks.map(task => {
+        if (!task.__vscKey) {
+          taskFixed = true
+          return {
+            ...task,
+            __vscKey: v4()
           }
-        })
-        if (fixed) {
-          setTimeout(() => {
-            this.reduceConfig({
-              task: fixedTasks
-            })
-          }, 0)
         } else {
-          setTimeout(() => {
-            this.interfaceConfigChanged.fire()
-          }, 0)
+          return task
         }
-      } catch {
-        this.interfaceConfigChanged.fire()
+      })
+      if (taskFixed) {
+        fixConfig.task = fixedTasks
+      }
+
+      if (resFixed || taskFixed) {
+        setTimeout(() => {
+          this.reduceConfig(fixConfig)
+        }, 0)
+      } else {
+        setTimeout(() => {
+          this.interfaceConfigChanged.fire()
+        }, 0)
       }
     }
 

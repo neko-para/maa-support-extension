@@ -1,5 +1,6 @@
 export default {
   'maa.control.scan': 'Scan',
+  'maa.control.reveal-config': 'Reveal Config',
   'maa.control.start': 'Start',
   'maa.control.stop': 'Stop',
   'maa.control.launch': 'Launch',

@@ -37,6 +37,9 @@ export class WebviewControlService extends BaseService {
         case 'selectInterface':
           rootService.selectPath(data.path)
           break
+        case 'revealConfig':
+          rootService.revealConfig()
+          break
         case 'selectResource':
           interfaceService.reduceConfig({
             resource: interfaceService.interfaceJson.resource?.[data.index].name

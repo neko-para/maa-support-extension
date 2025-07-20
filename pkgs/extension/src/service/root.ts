@@ -75,6 +75,16 @@ export class RootService extends BaseService {
     this.select(index)
   }
 
+  async revealConfig() {
+    const config = this.activeResource?.configUri
+    if (config) {
+      try {
+        const doc = await vscode.workspace.openTextDocument(config)
+        vscode.window.showTextDocument(doc)
+      } catch {}
+    }
+  }
+
   relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {
     if (this.activeResource) {
       if (!root) {

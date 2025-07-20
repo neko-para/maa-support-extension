@@ -26,6 +26,9 @@ export type ControlWebToHost =
       path: string
     }
   | {
+      command: 'revealConfig'
+    }
+  | {
       command: 'selectResource'
       index: number
     }

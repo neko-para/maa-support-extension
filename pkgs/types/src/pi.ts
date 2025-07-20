@@ -3,7 +3,7 @@ import type * as maa from '@maaxyz/maa-node'
 export type Interface = {
   controller: {
     name: string
-    type: 'Adb' | 'Win32'
+    type: 'Adb' | 'Win32' | 'VscFixed'
     adb?: {
       screencap?: maa.api.ScreencapOrInputMethods
       input?: maa.api.ScreencapOrInputMethods
@@ -68,6 +68,9 @@ export type InterfaceConfig = {
   win32?: {
     hwnd?: maa.api.DesktopHandle | null
   }
+  vscFixed?: {
+    image?: string
+  }
   resource: string
   task: TaskConfig[]
   // gpu?: number
@@ -89,6 +92,10 @@ export type InterfaceRuntime = {
         hwnd: maa.api.DesktopHandle
         screencap: maa.api.ScreencapOrInputMethods
         input: maa.api.ScreencapOrInputMethods
+      }
+    | {
+        ctype: 'vscFixed'
+        image: string
       }
   resource_path: string[]
   task: {

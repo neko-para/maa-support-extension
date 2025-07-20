@@ -239,6 +239,18 @@ export class InterfaceService extends BaseService {
         screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.GDI,
         input: ctrlInfo.win32?.input ?? maa.api.Win32InputMethod.SendMessage
       }
+    } else if (ctrlInfo.type === 'VscFixed') {
+      if (!config.vscFixed) {
+        return 'No vscFixed for controller'
+      }
+      if (!config.vscFixed.image) {
+        return 'No vscFixed image for controller'
+      }
+
+      result.controller_param = {
+        ctype: 'vscFixed',
+        image: config.vscFixed.image
+      }
     } else {
       return '???'
     }

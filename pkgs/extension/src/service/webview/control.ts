@@ -1,10 +1,17 @@
+import fs from 'fs/promises'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, locale, provideWebview, t } from '@mse/utils'
 
-import { interfaceIndexService, interfaceService, launchService, rootService } from '..'
+import {
+  interfaceIndexService,
+  interfaceService,
+  launchService,
+  rootService,
+  stateService
+} from '..'
 import { maa } from '../../maa'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
@@ -77,6 +84,33 @@ export class WebviewControlService extends BaseService {
             }
           })
           break
+        case 'uploadImage': {
+          const options: vscode.OpenDialogOptions = {
+            canSelectMany: false,
+            openLabel: 'Upload',
+            filters: {
+              'Png files': ['png']
+            },
+            defaultUri: stateService.state.uploadDir
+              ? vscode.Uri.file(stateService.state.uploadDir)
+              : undefined
+          }
+          const files = await vscode.window.showOpenDialog(options)
+          if (!files || files.length === 0) {
+            break
+          }
+
+          const folder = vscode.Uri.joinPath(context.storageUri!, 'fixed')
+          await fs.mkdir(folder.fsPath, { recursive: true })
+          const target = vscode.Uri.joinPath(folder, v4() + '.png')
+          await fs.copyFile(files[0].fsPath, target.fsPath)
+          await interfaceService.reduceConfig({
+            vscFixed: {
+              image: target.fsPath
+            }
+          })
+          break
+        }
         case 'addTask':
           interfaceService.reduceConfig({
             task: (interfaceService.interfaceConfigJson.task ?? []).concat([

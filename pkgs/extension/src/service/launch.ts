@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises'
 import path from 'path'
 import * as vscode from 'vscode'
 
@@ -44,7 +45,7 @@ export class LaunchService extends BaseService {
     const ctrlInfo = data.controller?.find(x => x.name === config.controller?.name)
 
     if (!ctrlInfo) {
-      await vscode.window.showErrorMessage(
+      vscode.window.showErrorMessage(
         t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '<unknown>')
       )
       return null
@@ -52,7 +53,7 @@ export class LaunchService extends BaseService {
 
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
-        await vscode.window.showErrorMessage(
+        vscode.window.showErrorMessage(
           t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '<unknown>')
         )
         return null
@@ -68,14 +69,14 @@ export class LaunchService extends BaseService {
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
-        await vscode.window.showErrorMessage(
+        vscode.window.showErrorMessage(
           t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '<unknown>')
         )
         return null
       }
 
       if (!config.win32.hwnd) {
-        await vscode.window.showErrorMessage(
+        vscode.window.showErrorMessage(
           t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
         )
         return null
@@ -86,6 +87,21 @@ export class LaunchService extends BaseService {
         hwnd: config.win32.hwnd,
         screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.DXGI_DesktopDup,
         input: ctrlInfo.win32?.input ?? maa.api.Win32InputMethod.Seize
+      }
+    } else if (ctrlInfo.type === 'VscFixed') {
+      if (!config.vscFixed) {
+        vscode.window.showErrorMessage('No vscFixed for controller')
+        return null
+      }
+
+      if (!config.vscFixed.image) {
+        vscode.window.showErrorMessage('No vscFixed image for controller')
+        return null
+      }
+
+      return {
+        ctype: 'vscFixed',
+        image: config.vscFixed.image
       }
     }
 
@@ -121,6 +137,23 @@ export class LaunchService extends BaseService {
       )
     } else if (runtime.ctype === 'win32') {
       controller = new maa.Win32Controller(runtime.hwnd, runtime.screencap, runtime.input)
+    } else if (runtime.ctype === 'vscFixed') {
+      const image = (await readFile(runtime.image)).buffer
+      controller = new maa.CustomController(
+        new (class extends maa.CustomControllerActorDefaultImpl {
+          connect() {
+            return true
+          }
+
+          request_uuid() {
+            return '0'
+          }
+
+          screencap() {
+            return image
+          }
+        })()
+      )
     } else {
       return false
     }

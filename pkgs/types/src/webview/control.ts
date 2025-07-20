@@ -55,6 +55,9 @@ export type ControlWebToHost =
       handle: maa.api.DesktopHandle
     }
   | {
+      command: 'uploadImage'
+    }
+  | {
       command: 'addTask'
       task: string
     }

@@ -148,6 +148,12 @@ function configDesktop(index: number) {
     handle: opt[0]
   })
 }
+
+function uploadImage() {
+  ipc.send({
+    command: 'uploadImage'
+  })
+}
 </script>
 
 <template>
@@ -227,6 +233,18 @@ function configDesktop(index: number) {
           <span> {{ currDevice[1] }} </span>
           <span> {{ currDevice[2] }} </span>
         </template>
+      </n-flex>
+    </n-card>
+  </template>
+  <template v-if="currentType === 'VscFixed'">
+    <n-card title="VscFixed" size="small">
+      <template #header-extra>
+        <n-button @click="uploadImage" size="small">
+          {{ t('maa.control.upload') }}
+        </n-button>
+      </template>
+      <n-flex v-if="hostState.interfaceConfigJson?.vscFixed" vertical>
+        <span> {{ hostState.interfaceConfigJson.vscFixed.image }} </span>
       </n-flex>
     </n-card>
   </template>

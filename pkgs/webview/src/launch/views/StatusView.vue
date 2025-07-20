@@ -1,41 +1,13 @@
 <script setup lang="ts">
-import { NButton, NCard, NDynamicTags, NFlex, NTab, NTabs, NText } from 'naive-ui'
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { NButton, NCard, NDynamicTags, NFlex, NScrollbar, NTab, NTabs, NText } from 'naive-ui'
+import { ref } from 'vue'
 
 import { t } from '../../utils/locale'
-import { DynamicScroller, DynamicScrollerItem } from '../../utils/vvs'
 import InputTask from '../components/InputTask.vue'
-import StatusRow from '../components/StatusRow.vue'
+import NextList from '../components/NextList.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 import { activeTask, followLast, taskList } from '../states/task'
-
-let resizeObs: ResizeObserver
-const sizingEl = ref<HTMLDivElement | null>(null)
-const size = ref<[number, number]>([0, 0])
-const sizeStyle = computed(() => {
-  return `position: absolute; left: 0; top: 0; width: ${size.value[0]}px; height: ${size.value[1]}px`
-})
-
-watch(
-  () => sizingEl.value,
-  () => {
-    const resize = () => {
-      const rec = sizingEl.value!.getBoundingClientRect()
-      size.value = [rec.width, rec.height]
-    }
-    resizeObs = new ResizeObserver(resize)
-    resizeObs.observe(sizingEl.value!)
-    resize()
-  },
-  {
-    once: true
-  }
-)
-
-onUnmounted(() => {
-  resizeObs.disconnect()
-})
 
 function requestStop() {
   ipc.send({
@@ -71,7 +43,7 @@ function updateBreak(tasks: string[]) {
   <n-card
     :title="t('maa.launch.process')"
     style="height: 100vh"
-    content-style="display: flex; flex-direction: column; gap: 10px"
+    content-style="display: flex; flex-direction: column; gap: 10px; min-height: 0"
   >
     <template #header-extra>
       <n-flex>
@@ -114,39 +86,11 @@ function updateBreak(tasks: string[]) {
       </n-tab>
     </n-tabs>
 
-    <div ref="sizingEl" style="flex: 1; position: relative; margin-top: 10px">
-      <template v-if="activeTask !== undefined">
-        <!-- <n-virtual-list
-          item-resizable
-          :item-size="100"
-          :items="taskList.info[activeTask as number].nexts"
-          :style="sizeStyle"
-        >
-          <template #default="{ item, index }">
-            <div :key="index">
-              <status-row :item="item"></status-row>
-            </div>
-          </template>
-        </n-virtual-list> -->
-        <dynamic-scroller
-          :items="taskList.info[activeTask as number].nexts"
-          :min-item-size="120"
-          :style="sizeStyle"
-        >
-          <template #default="{ item, index, active }">
-            <dynamic-scroller-item
-              :item="item"
-              :active="active"
-              :size-dependencies="[item.recos.length, !!item.act]"
-              :data-index="index"
-            >
-              <div style="padding-bottom: 10px">
-                <status-row :item="item"></status-row>
-              </div>
-            </dynamic-scroller-item>
-          </template>
-        </dynamic-scroller>
-      </template>
-    </div>
+    <n-scrollbar>
+      <next-list
+        style="min-height: 0"
+        :items="taskList.info[activeTask as number].nexts"
+      ></next-list>
+    </n-scrollbar>
   </n-card>
 </template>

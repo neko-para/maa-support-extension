@@ -62,5 +62,7 @@ export default {
   'maa.launch.pause': '暂停',
   'maa.launch.follow': '跟随',
   'maa.launch.stop': '停止',
-  'maa.launch.add-breakpoint': '添加断点'
+  'maa.launch.add-breakpoint': '添加断点',
+  'maa.launch.show': '显示',
+  'maa.launch.hide': '隐藏'
 } as const

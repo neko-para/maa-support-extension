@@ -62,5 +62,7 @@ export default {
   'maa.launch.pause': 'Pause',
   'maa.launch.follow': 'Follow',
   'maa.launch.stop': 'Stop',
-  'maa.launch.add-breakpoint': 'Add Breakpoint'
+  'maa.launch.add-breakpoint': 'Add Breakpoint',
+  'maa.launch.show': 'Show',
+  'maa.launch.hide': 'Hide'
 } as const

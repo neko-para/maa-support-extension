@@ -22,7 +22,7 @@ export const controllerConfigured = computed(() => {
     if (!adb.adb_path || !adb.address || !adb.config) {
       return false
     }
-  } else {
+  } else if (controller.type === 'Win32') {
     const win32 = hostState.value.interfaceConfigJson.win32
     if (!win32) {
       return false
@@ -30,6 +30,12 @@ export const controllerConfigured = computed(() => {
     if (!win32.hwnd) {
       return false
     }
+  } else if (controller.type === 'VscFixed') {
+    if (!hostState.value.interfaceConfigJson.vscFixed?.image) {
+      return false
+    }
+  } else {
+    return false
   }
   return true
 })

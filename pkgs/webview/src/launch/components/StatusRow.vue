@@ -8,7 +8,8 @@ import type { RecoInfo } from '@mse/types'
 
 import { ipc } from '../ipc'
 import { recoInfo, taskInfo } from '../states/info'
-import type { NextListScope } from '../states/task'
+import { type NextListScope } from '../states/task'
+import NextListHolder from './NextListHolder.vue'
 
 const props = defineProps<{
   item: NextListScope
@@ -53,21 +54,23 @@ async function requestNode() {
     </template>
     <n-flex>
       <template v-for="(reco, idx) in item.recos" :key="`reco-${idx}`">
-        <n-button
-          size="small"
-          ghost
-          :loading="reco.state === 'running'"
-          :type="
-            reco.state === 'success' ? 'success' : reco.state === 'failed' ? 'warning' : undefined
-          "
-          @click="requestReco(reco.info.reco_id)"
-        >
-          <template #icon>
-            <close-outlined v-if="reco.state === 'failed'"></close-outlined>
-            <check-outlined v-else-if="reco.state === 'success'"></check-outlined>
-          </template>
-          {{ reco.info.name }}
-        </n-button>
+        <next-list-holder :items="reco.scopes">
+          <n-button
+            size="small"
+            ghost
+            :loading="reco.state === 'running'"
+            :type="
+              reco.state === 'success' ? 'success' : reco.state === 'failed' ? 'warning' : undefined
+            "
+            @click="requestReco(reco.info.reco_id)"
+          >
+            <template #icon>
+              <close-outlined v-if="reco.state === 'failed'"></close-outlined>
+              <check-outlined v-else-if="reco.state === 'success'"></check-outlined>
+            </template>
+            {{ reco.info.name }}
+          </n-button>
+        </next-list-holder>
       </template>
       <template v-for="(reco, idx) in item.info.list.slice(item.recos.length)" :key="`wait-${idx}`">
         <n-button size="small" ghost disabled>
@@ -77,24 +80,26 @@ async function requestNode() {
     </n-flex>
 
     <template #footer v-if="item.act">
-      <n-button
-        size="small"
-        ghost
-        :loading="item.act.state === 'running'"
-        :type="
-          item.act.state === 'success'
-            ? 'success'
-            : item.act.state === 'failed'
-              ? 'error'
-              : undefined
-        "
-      >
-        <template #icon>
-          <close-outlined v-if="item.act.state === 'failed'"></close-outlined>
-          <check-outlined v-else-if="item.act.state === 'success'"></check-outlined>
-        </template>
-        {{ item.act.info.name }}
-      </n-button>
+      <next-list-holder :items="item.act.scopes">
+        <n-button
+          size="small"
+          ghost
+          :loading="item.act.state === 'running'"
+          :type="
+            item.act.state === 'success'
+              ? 'success'
+              : item.act.state === 'failed'
+                ? 'error'
+                : undefined
+          "
+        >
+          <template #icon>
+            <close-outlined v-if="item.act.state === 'failed'"></close-outlined>
+            <check-outlined v-else-if="item.act.state === 'success'"></check-outlined>
+          </template>
+          {{ item.act.info.name }}
+        </n-button>
+      </next-list-holder>
     </template>
   </n-card>
 </template>

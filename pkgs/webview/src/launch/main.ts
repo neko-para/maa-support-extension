@@ -1,5 +1,4 @@
 import { createApp } from 'vue'
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import '../utils/base.css'
 import { vscodeLocale } from '../utils/locale'

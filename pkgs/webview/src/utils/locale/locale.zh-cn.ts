@@ -21,6 +21,7 @@ export default {
   'maa.control.launch.start': '启动',
 
   'maa.crop.crop-tool': '截图工具',
+  'maa.crop.hint': '按住control以开始裁剪',
   'maa.crop.screencap': '截图',
   'maa.crop.upload': '上传',
   'maa.crop.download': '下载',

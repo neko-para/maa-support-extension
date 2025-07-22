@@ -8,7 +8,8 @@ import { toggleShow } from '../states/visible'
 </script>
 
 <template>
-  <n-flex>
+  <n-flex align="center">
+    <span> {{ t('maa.crop.hint') }} </span>
     <n-button :loading="imageSt.loading.value" @click="imageSt.screencap()">
       {{ t('maa.crop.screencap') }}
     </n-button>

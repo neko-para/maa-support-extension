@@ -21,6 +21,7 @@ export default {
   'maa.control.launch.start': 'Start',
 
   'maa.crop.crop-tool': 'Crop Tool',
+  'maa.crop.hint': 'Hold control to start cropping',
   'maa.crop.screencap': 'Screencap',
   'maa.crop.upload': 'Upload',
   'maa.crop.download': 'Download',

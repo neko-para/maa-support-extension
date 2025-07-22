@@ -25,6 +25,10 @@ export class InterfaceIndexService extends BaseService {
     option: string
     case: string
   }[] = []
+  advancedOptionDecl: {
+    range: vscode.Range
+    option: string
+  }[] = []
 
   constructor() {
     super()
@@ -47,6 +51,7 @@ export class InterfaceIndexService extends BaseService {
     this.entryDecl = []
     this.optionDecl = []
     this.caseDecl = []
+    this.advancedOptionDecl = []
 
     visitJsonDocument(doc, {
       onLiteral: (value, range, path) => {
@@ -75,6 +80,15 @@ export class InterfaceIndexService extends BaseService {
                     if (typeof path[3] === 'number' && path.length === 4) {
                       this.refs.push({
                         type: 'option.ref',
+                        range,
+                        option: value
+                      })
+                    }
+                    break
+                  case 'advanced':
+                    if (typeof path[3] === 'number' && path.length === 4) {
+                      this.refs.push({
+                        type: 'option.ref.advanced',
                         range,
                         option: value
                       })
@@ -132,6 +146,21 @@ export class InterfaceIndexService extends BaseService {
                 })
                 this.refs.push({
                   type: 'option.ref',
+                  range,
+                  option: path[1]
+                })
+              }
+            }
+            break
+          case 'advanced':
+            if (typeof path[1] === 'string') {
+              if (path.length === 2) {
+                this.advancedOptionDecl.push({
+                  range,
+                  option: path[1]
+                })
+                this.refs.push({
+                  type: 'option.ref.advanced',
                   range,
                   option: path[1]
                 })

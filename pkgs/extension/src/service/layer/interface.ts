@@ -34,6 +34,11 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
     this.interfaceUri = uri
   }
 
+  async init() {
+    this.index = {}
+    await this.loadJson()
+  }
+
   async flushImage() {}
 
   async doUpdate(dirtyPath: string[]) {
@@ -72,6 +77,12 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
         path[4] === 'pipeline_override'
       ) {
         return [path.slice(5), `case${path[1]}${path[3]}@`]
+      } else if (
+        path[0] === 'advanced' &&
+        typeof path[1] === 'string' &&
+        path[2] === 'pipeline_override'
+      ) {
+        return [path.slice(3), `advanced${path[1]}@`]
       }
       return [[], '']
     }

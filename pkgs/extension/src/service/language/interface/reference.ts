@@ -40,6 +40,19 @@ export class InterfaceReferenceProvider
         }
       }
       return result
+    } else if (info.type === 'option.ref.advanced') {
+      const result: vscode.Location[] = []
+      const decl = interfaceIndexService.advancedOptionDecl.find(x => x.option === info.option)
+      for (const ref of interfaceIndexService.refs) {
+        if (
+          ref.type === 'option.ref.advanced' &&
+          ref.option === info.option &&
+          (!decl || !ref.range.isEqual(decl.range))
+        ) {
+          result.push(new vscode.Location(rootService.activeResource!.interfaceUri, ref.range))
+        }
+      }
+      return result
     }
 
     return null

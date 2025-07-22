@@ -41,6 +41,7 @@ export class TaskIndexService extends BaseService {
       this.layers = interfaceService.resourcePaths.map((uri, index) => new TaskLayer(uri, index))
       if (this.interfaceLayer) {
         this.interfaceLayer.level = this.layers.length
+        await this.interfaceLayer.init()
       }
       for (const layer of this.layers) {
         await layer.init()
@@ -70,7 +71,7 @@ export class TaskIndexService extends BaseService {
         return layer
       }
     }
-    if (uri.fsPath === this.interfaceLayer?.uri.fsPath) {
+    if (uri.fsPath === this.interfaceLayer?.interfaceUri.fsPath) {
       return this.interfaceLayer
     }
     return null

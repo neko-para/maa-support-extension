@@ -37,6 +37,16 @@ export class InterfaceCompletionProvider
           range: new vscode.Range(info.range.start, info.range.end.translate(0, -1))
         }
       })
+    } else if (info.type === 'option.ref.advanced') {
+      return interfaceIndexService.advancedOptionDecl.map(decl => {
+        const esc = JSON.stringify(decl.option)
+        return {
+          label: esc,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(0, esc.length - 1),
+          range: new vscode.Range(info.range.start, info.range.end.translate(0, -1))
+        }
+      })
     }
 
     return null

@@ -1,4 +1,3 @@
-export * from './fs'
 export * from './json'
 export * from './locale'
 export * from './logger'

@@ -1,11 +1,10 @@
+import { existsSync, statSync } from 'fs'
 import * as fs from 'fs/promises'
 import path from 'path'
 import { MESSAGE } from 'triple-beam'
 import * as vscode from 'vscode'
 import { createLogger, format, transports } from 'winston'
 import Transport from 'winston-transport'
-
-import { vscfs } from './fs'
 
 export const logger = createLogger({
   transports: [
@@ -27,10 +26,10 @@ export let loggerChannel: vscode.OutputChannel
 export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Uri) {
   loggerChannel = channel
 
-  if (await vscfs.exists(file)) {
-    const stat = await vscfs.stat(file)
+  if (existsSync(file.fsPath)) {
+    const stat = statSync(file.fsPath)
     if (stat.size > 10 * 1024 * 1024) {
-      await vscfs.delete(file)
+      await fs.unlink(file.fsPath)
     }
   }
 

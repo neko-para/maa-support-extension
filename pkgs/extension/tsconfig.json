@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "ES2022",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "allowArbitraryExtensions": true
   },
   "include": ["src/**/*.ts"]
 }

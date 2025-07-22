@@ -60,5 +60,6 @@ onMounted(() => {
     @select="onSelect"
     size="small"
     :placeholder="t('maa.launch.input-space-to-show-tasks')"
+    style="min-width: 16rem"
   ></n-auto-complete>
 </template>

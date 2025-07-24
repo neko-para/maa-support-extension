@@ -13,16 +13,16 @@ import { BaseService, context } from './context'
 
 const registries = {
   npm: 'https://registry.npmjs.org',
-  taobao: 'https://registry.npm.taobao.org'
+  cnpm: 'https://registry.npmmirror.com'
 }
 
 function isValidRegistryType(key: unknown): key is keyof typeof registries {
-  return typeof key === 'string' && ['npm', 'taobao'].includes(key)
+  return typeof key === 'string' && ['npm', 'cnpm'].includes(key)
 }
 
 const defaultRegistryType = 'npm'
 
-const defaultMaaVersion = '4.4.0-beta.1'
+const defaultMaaVersion = '4.4.0'
 
 export class NativeService extends BaseService {
   registry: string

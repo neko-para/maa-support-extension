@@ -189,7 +189,7 @@ export class LaunchService extends BaseService {
 
     let agent: vscode.TaskExecution | undefined = undefined
     if (runtime.agent) {
-      const client = new maa.AgentClient()
+      const client = new maa.AgentClient(runtime.agent.identifier)
       const identifier = client.identifier ?? 'vsc-no-identifier'
 
       logger.info(`AgentClient listening ${identifier}`)
@@ -218,6 +218,7 @@ export class LaunchService extends BaseService {
         agent = await vscode.tasks.executeTask(task)
       }
 
+      client.timeout = 5000
       client.bind_resource(resource)
       logger.info(`AgentClient start connecting ${identifier}`)
       if (

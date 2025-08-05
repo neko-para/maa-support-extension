@@ -22,7 +22,7 @@ function isValidRegistryType(key: unknown): key is keyof typeof registries {
 
 const defaultRegistryType = 'npm'
 
-const defaultMaaVersion = '4.4.0'
+const defaultMaaVersion = '4.4.1'
 
 export class NativeService extends BaseService {
   registry: string

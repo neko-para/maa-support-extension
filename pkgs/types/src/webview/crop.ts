@@ -7,6 +7,7 @@ export type CropHostState = HostStateBase & {
   backgroundFill?: string
   selectFill?: string
   selectOpacity?: number
+  revertScale?: boolean
   pointerAxesStroke?: string
   helperAxesStroke?: string
   helperAxesOpacity?: number

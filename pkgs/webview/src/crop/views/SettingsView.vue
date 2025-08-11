@@ -53,6 +53,20 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
       :step="0.1"
       @update:value="v => update('selectOpacity', v ?? undefined)"
     ></n-input-number>
+    <n-text> {{ t('maa.crop.settings.scale-direction') }} </n-text>
+    <n-flex>
+      <n-switch
+        :value="hostState.revertScale"
+        @update:value="v => update('revertScale', v)"
+      ></n-switch>
+      <n-text>
+        {{
+          hostState.revertScale
+            ? t('maa.crop.settings.revert-scale')
+            : t('maa.crop.settings.default-scale')
+        }}
+      </n-text>
+    </n-flex>
     <n-text> {{ t('maa.crop.settings.pointer-axes-stroke') }} </n-text>
     <n-input
       :value="hostState.pointerAxesStroke"

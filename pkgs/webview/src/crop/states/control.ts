@@ -1,6 +1,7 @@
 import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '../ipc'
+import { hostState } from '../state'
 import { Box, DragHandler, Pos, Size, Viewport } from '../utils/2d'
 import {
   type CornerType,
@@ -59,7 +60,11 @@ export function onWheel(event: WheelEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
 
-  viewport.value.zoom(event.deltaY > 0, mp)
+  if (hostState.value.revertScale) {
+    viewport.value.zoom(event.deltaY < 0, mp)
+  } else {
+    viewport.value.zoom(event.deltaY > 0, mp)
+  }
 }
 
 export function onPointerDown(event: PointerEvent) {

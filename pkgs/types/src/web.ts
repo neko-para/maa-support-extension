@@ -51,6 +51,7 @@ export type CropViewContext = {
   backgroundFill?: string
   selectFill?: string
   selectOpacity?: string
+  revertScale?: boolean
   pointerAxesStroke?: string
   helperAxesStroke?: string
   helperAxesOpacity?: string

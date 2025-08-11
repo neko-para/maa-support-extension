@@ -1,7 +1,7 @@
 {
   "name": "@mse/webview",
   "devDependencies": {
-    "@maaxyz/maa-node": "4.4.0-beta.1",
+    "@maaxyz/maa-node": "4.4.1",
     "@mse/types": "workspace:*",
     "@types/node": "^20.17.9",
     "@types/vscode-webview": "^1.57.5",

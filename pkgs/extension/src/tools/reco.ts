@@ -70,17 +70,25 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
 
   res.register_custom_action('@mse/action', async self => {
     logger.info('quick reco action called')
-    const resp = await self.context.run_recognition(task, image)
-    logger.info(`quick reco reco done, resp ${JSON.stringify(resp)}`)
-    if (resp) {
-      const presp = {
-        ...resp
-      } as Partial<typeof resp>
-      delete presp.draws
-      delete presp.raw
-      result = JSON.stringify(presp)
-    }
+    await self.context.run_recognition(task, image)
     return true
+  })
+
+  tasker.chain_parsed_notify(msg => {
+    if (msg.msg === 'Recognition.Succeeded' || msg.msg === 'Recognition.Failed') {
+      if (msg.name !== task) {
+        return
+      }
+      const resp = tasker.recognition_detail(msg.reco_id)
+      if (resp) {
+        const presp = {
+          ...resp
+        } as Partial<typeof resp>
+        delete presp.draws
+        delete presp.raw
+        result = JSON.stringify(presp)
+      }
+    }
   })
 
   await tasker

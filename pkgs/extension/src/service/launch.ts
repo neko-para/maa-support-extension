@@ -218,7 +218,7 @@ export class LaunchService extends BaseService {
         agent = await vscode.tasks.executeTask(task)
       }
 
-      client.timeout = 30000
+      // client.timeout = 30000
       client.bind_resource(resource)
       logger.info(`AgentClient start connecting ${identifier}`)
       if (

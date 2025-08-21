@@ -10,5 +10,5 @@
   "maa.command.native.select-registry": "Maa: select fetch registry",
   "maa.view.control-panel.title": "Maa Control Panel",
   "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)",
-  "maa.setting.agent-timeout": "Maa Agent Launch Timeout (ms), set 0 to disable."
+  "maa.setting.agent-timeout": "Maa Agent Launch Timeout (ms), set -1 to disable."
 }

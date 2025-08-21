@@ -3,12 +3,12 @@
   "maa.command.open-ext-log": "Maa: 打开插件日志",
   "maa.command.goto-task": "Maa: 跳转到任务",
   "maa.command.launch-task": "Maa: 执行任务",
-  "maa.command.launch-interface": "Maa: 执行interface",
+  "maa.command.launch-interface": "Maa: 执行 interface",
   "maa.command.open-crop": "Maa: 打开截图工具",
   "maa.command.reveal-control-panel": "Maa: 展示控制面板",
   "maa.command.native.select-maa": "Maa: 选择 MaaFramework 版本",
   "maa.command.native.select-registry": "Maa: 选择下载源",
   "maa.view.control-panel.title": "Maa 控制面板",
   "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)",
-  "maa.setting.agent-timeout": "Maa Agent启动超时时间 (ms), 使用 0 来禁用."
+  "maa.setting.agent-timeout": "Maa Agent启动超时时间 (ms), 使用 -1 来禁用."
 }

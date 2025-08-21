@@ -221,7 +221,7 @@ export class LaunchService extends BaseService {
       const timeout =
         (vscode.workspace.getConfiguration('maa').get('agentTimeout') as number | undefined) ??
         30000
-      if (timeout > 0) {
+      if (timeout >= 0) {
         client.timeout = timeout
       }
       client.bind_resource(resource)
@@ -242,7 +242,7 @@ export class LaunchService extends BaseService {
         agent?.terminate()
         return [null, undefined]
       }
-      if (timeout > 0) {
+      if (timeout >= 0) {
         client.timeout = Number.MAX_SAFE_INTEGER
       }
     }

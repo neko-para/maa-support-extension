@@ -104,7 +104,7 @@
         "maa.agentTimeout": {
           "type": "integer",
           "description": "%maa.setting.agent-timeout%",
-          "minimum": 0,
+          "minimum": -1,
           "default": 30000
         }
       }

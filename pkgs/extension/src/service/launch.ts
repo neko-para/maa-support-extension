@@ -218,7 +218,12 @@ export class LaunchService extends BaseService {
         agent = await vscode.tasks.executeTask(task)
       }
 
-      client.timeout = 30000
+      const timeout =
+        (vscode.workspace.getConfiguration('maa').get('agentTimeout') as number | undefined) ??
+        30000
+      if (timeout > 0) {
+        client.timeout = timeout
+      }
       client.bind_resource(resource)
       logger.info(`AgentClient start connecting ${identifier}`)
       if (
@@ -237,7 +242,9 @@ export class LaunchService extends BaseService {
         agent?.terminate()
         return [null, undefined]
       }
-      client.timeout = Number.MAX_SAFE_INTEGER
+      if (timeout > 0) {
+        client.timeout = Number.MAX_SAFE_INTEGER
+      }
     }
 
     return [resource, agent]

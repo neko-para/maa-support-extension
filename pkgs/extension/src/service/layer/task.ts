@@ -322,6 +322,9 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
         if (path.length !== 1) {
           return undefined
         }
+        if (path[0].toString().startsWith('$')) {
+          return undefined
+        }
         return {
           uri,
           taskContent: '',

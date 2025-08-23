@@ -104,6 +104,9 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
         if (path.length === 0) {
           return
         }
+        if (path[0].toString().startsWith('$')) {
+          return undefined
+        }
 
         if (path.length === 1) {
           return {

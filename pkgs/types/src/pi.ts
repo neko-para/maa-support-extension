@@ -101,7 +101,7 @@ export type InterfaceRuntime = {
   task: {
     name: string
     entry: string
-    pipeline_override: unknown
+    pipeline_override: unknown[]
   }[]
   // gpu: number
   agent?: {

@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 import type { HostToWeb, ImplType, WebToHost } from '@mse/types'
 
 export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>() {
@@ -31,7 +29,11 @@ export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>(
     })
   }
 
-  const recv = ref<(data: ToWeb) => void>(() => {})
+  const recv: {
+    value: (data: ToWeb) => void
+  } = {
+    value: () => {}
+  }
 
   // const stateInner = ref<unknown>({})
   // const state = computed(() => {

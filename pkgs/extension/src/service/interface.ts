@@ -273,15 +273,7 @@ export class InterfaceService extends BaseService {
           return t('maa.pi.error.cannot-find-task', task.name)
         }
 
-        const param: Record<string, unknown> = {}
-
-        const mergeParam = (data?: unknown) => {
-          for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
-            param[task] = Object.assign(param[task] ?? {}, opt)
-          }
-        }
-
-        mergeParam(taskInfo.pipeline_override)
+        const params: unknown[] = [taskInfo.pipeline_override ?? {}]
 
         for (const optName of taskInfo.option ?? []) {
           const optInfo = data.option?.[optName]
@@ -300,13 +292,13 @@ export class InterfaceService extends BaseService {
             return t('maa.pi.error.cannot-find-case-for-option', optName, optValue)
           }
 
-          mergeParam(csInfo.pipeline_override)
+          params.push(csInfo.pipeline_override ?? {})
         }
 
         result.task.push({
           name: task.name,
           entry: taskInfo.entry,
-          pipeline_override: param
+          pipeline_override: params
         })
       }
     }

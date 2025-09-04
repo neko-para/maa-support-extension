@@ -1,11 +1,12 @@
 import { readFile } from 'fs/promises'
 import path from 'path'
+import semVerCompare from 'semver/functions/compare'
 import * as vscode from 'vscode'
 
 import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t } from '@mse/utils'
 
-import { debugService, interfaceService } from '.'
+import { debugService, interfaceService, nativeService } from '.'
 import { Maa, maa } from '../maa'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -342,10 +343,31 @@ export class LaunchService extends BaseService {
       await panel.stop()
     }
 
+    const enableMultiOverride = semVerCompare(nativeService.version, '4.5.0-alpha.1') >= 0
+
+    const mergeParams = (data: unknown[]) => {
+      if (enableMultiOverride) {
+        return data as Record<string, unknown>[]
+      } else {
+        const result: Record<string, unknown> = {}
+        for (const tasks of data) {
+          for (const [task, over] of Object.entries(tasks as Record<string, unknown>)) {
+            result[task] = Object.assign(result[task] ?? {}, over)
+          }
+        }
+        return result
+      }
+    }
+    // const mergeParam = (data?: unknown) => {
+    //   for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
+    //     param[task] = Object.assign(param[task] ?? {}, opt)
+    //   }
+    // }
+
     for (const task of tasks ?? runtime.task) {
       session.pushMessage(t('maa.debug.task-started', task.name, task.entry))
       const succeeded = await tasker.tasker
-        .post_task(task.entry, task.pipeline_override as Record<string, unknown>)
+        .post_task(task.entry, mergeParams(task.pipeline_override))
         .wait().succeeded
       session.pushMessage(
         succeeded

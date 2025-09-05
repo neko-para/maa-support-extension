@@ -43,6 +43,7 @@ export type Interface = {
     child_args?: string[]
     identifier?: string
   }
+  interface_version?: never
 }
 
 export type TaskConfig = {

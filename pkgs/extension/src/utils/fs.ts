@@ -1,4 +1,5 @@
 import { existsSync } from 'fs'
+import path from 'path'
 import * as vscode from 'vscode'
 
 export function currentWorkspace() {
@@ -56,7 +57,7 @@ export let imageSuffix = 'image'
 export function checkMaaAssistantArknights() {
   const root = currentWorkspace()
   // 很蠢，但是能用
-  if (root && existsSync(vscode.Uri.joinPath(root, 'MAA.sln').fsPath)) {
+  if (root && existsSync(path.join(root.fsPath, 'src', 'MaaCore'))) {
     isMaaAssistantArknights = true
     pipelineSuffix = 'tasks'
     imageSuffix = 'template'

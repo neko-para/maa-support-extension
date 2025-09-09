@@ -48,8 +48,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@maaxyz/maa-node':
-        specifier: 4.5.0-alpha.1
-        version: 4.5.0-alpha.1
+        specifier: 4.5.2
+        version: 4.5.2
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -108,8 +108,8 @@ importers:
   pkgs/types:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.5.0-alpha.1
-        version: 4.5.0-alpha.1
+        specifier: 4.5.2
+        version: 4.5.2
 
   pkgs/utils:
     devDependencies:
@@ -153,8 +153,8 @@ importers:
   pkgs/webview:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 4.5.0-alpha.1
-        version: 4.5.0-alpha.1
+        specifier: 4.5.2
+        version: 4.5.2
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -863,38 +863,38 @@ packages:
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
 
-  '@maaxyz/maa-node-darwin-arm64@4.5.0-alpha.1':
-    resolution: {integrity: sha512-wKthEBI/b1kByiID4QIgIhRD9SabMYMJecncgVjyq4MhTLIAe/mk/8NJCF162TJ1UXuoEltKlkFwH5idDjWn7g==}
+  '@maaxyz/maa-node-darwin-arm64@4.5.2':
+    resolution: {integrity: sha512-31dquijF+COylw1tT4rB7UYVKpDy7uq6VJ2LaPjdvO5A1h00PawgZ9EVR2RL3o6QXA7ERnll/piuyPGNNiFyug==}
     cpu: [arm64]
     os: [darwin]
 
-  '@maaxyz/maa-node-darwin-x64@4.5.0-alpha.1':
-    resolution: {integrity: sha512-8RHmoXiQw5l1DakKtQSPBO7XoS1LvrL1PrdGpZ3XVRZ2eTVXKRlQXicQgGVBb2mPWV4/Tbr4xkFbIBec4irBFg==}
+  '@maaxyz/maa-node-darwin-x64@4.5.2':
+    resolution: {integrity: sha512-Bbuc+fj7McJITPBN3WmL9G+istIfNmsT0kXzo19UcDayKX2WK+UvnX0vJh/JKoM0CbgYKsyRaLfDF01Y288HbQ==}
     cpu: [x64]
     os: [darwin]
 
-  '@maaxyz/maa-node-linux-arm64@4.5.0-alpha.1':
-    resolution: {integrity: sha512-+C7V/Hkg8vMIaGqcc/yx2JP+/BoVfXqd3SwHyMqigDCLN3/InLBTuu2t/xmLpGeu1GfLebFbfLAH0rkAdDSKjA==}
+  '@maaxyz/maa-node-linux-arm64@4.5.2':
+    resolution: {integrity: sha512-SI/qbonsuEtMK9S5so/RxZqLF8uTVtsLx66CUW/TJB0diIxrDm0YXkoyvAQ7w3TzIr2h20lI98/1OXoMwLfBPQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@maaxyz/maa-node-linux-x64@4.5.0-alpha.1':
-    resolution: {integrity: sha512-vIekNrt9zHSUL+hTwcxuB2IEZn97JYkzl2qyDb+Um+3o3GM7+2vOX2KOe6mdsGI4EdjK82IniieR/C6HebtHOQ==}
+  '@maaxyz/maa-node-linux-x64@4.5.2':
+    resolution: {integrity: sha512-0MI9vkz/JVGXA6XTU09YXN7SIi1ZJujzeA6404aTgVKblv0E/ruZSbuRJEBd+/SgZhxdJPZ+hpFD2ekCwh9+OQ==}
     cpu: [x64]
     os: [linux]
 
-  '@maaxyz/maa-node-win32-arm64@4.5.0-alpha.1':
-    resolution: {integrity: sha512-u7CB74yTG9OZzcANmLo23e1u1VGU2t/Ph2dysdLN6JKRRUY9Z3G4Nxkpkv80rwIaran0pddB17OIPaqzwuzAsQ==}
+  '@maaxyz/maa-node-win32-arm64@4.5.2':
+    resolution: {integrity: sha512-a1D8UxGu7Vgv95lHdIEQWdoFHAXRy9LftJ1RtJjwqEjyzPJqYfYwg2vTKpNnO1zvD7HkmuGzXzHCfcyQwNbLDw==}
     cpu: [arm64]
     os: [win32]
 
-  '@maaxyz/maa-node-win32-x64@4.5.0-alpha.1':
-    resolution: {integrity: sha512-n3fxdmbH/iaZGGdih2Umh4D2ihCpK2d56h3oByklN/DPMv+F2HZipGDiXHnAinPibIeSK1Xya54F+xCSrhTR4A==}
+  '@maaxyz/maa-node-win32-x64@4.5.2':
+    resolution: {integrity: sha512-ZgDK9ANfy+w5SRw5Dd7HhQFa+8Sv8Vw5CBAo68D9KJZhR8AfnprIqkJB2Ikoxs1vTHBWwbWV2BEcyK5TpODIAg==}
     cpu: [x64]
     os: [win32]
 
-  '@maaxyz/maa-node@4.5.0-alpha.1':
-    resolution: {integrity: sha512-hjE9IloeBzfH5sHQ+ipJkeuOOuJyZ1de40MIHNMVoEdRUdOATOACup03eBUR3X9VrF02MlvP2g/uFBoUsu1buw==}
+  '@maaxyz/maa-node@4.5.2':
+    resolution: {integrity: sha512-GApqdLRMBOLOzHQ9WNNH0YMA3jATCKAhu0+1Q0ow8v6qdM5gb26dOCdR3uW300LGegIZfpRD4ytVzYTNKHSG1g==}
     engines: {node: '>= 20.0.0'}
 
   '@npmcli/agent@3.0.0':
@@ -2915,32 +2915,32 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@maaxyz/maa-node-darwin-arm64@4.5.0-alpha.1':
+  '@maaxyz/maa-node-darwin-arm64@4.5.2':
     optional: true
 
-  '@maaxyz/maa-node-darwin-x64@4.5.0-alpha.1':
+  '@maaxyz/maa-node-darwin-x64@4.5.2':
     optional: true
 
-  '@maaxyz/maa-node-linux-arm64@4.5.0-alpha.1':
+  '@maaxyz/maa-node-linux-arm64@4.5.2':
     optional: true
 
-  '@maaxyz/maa-node-linux-x64@4.5.0-alpha.1':
+  '@maaxyz/maa-node-linux-x64@4.5.2':
     optional: true
 
-  '@maaxyz/maa-node-win32-arm64@4.5.0-alpha.1':
+  '@maaxyz/maa-node-win32-arm64@4.5.2':
     optional: true
 
-  '@maaxyz/maa-node-win32-x64@4.5.0-alpha.1':
+  '@maaxyz/maa-node-win32-x64@4.5.2':
     optional: true
 
-  '@maaxyz/maa-node@4.5.0-alpha.1':
+  '@maaxyz/maa-node@4.5.2':
     optionalDependencies:
-      '@maaxyz/maa-node-darwin-arm64': 4.5.0-alpha.1
-      '@maaxyz/maa-node-darwin-x64': 4.5.0-alpha.1
-      '@maaxyz/maa-node-linux-arm64': 4.5.0-alpha.1
-      '@maaxyz/maa-node-linux-x64': 4.5.0-alpha.1
-      '@maaxyz/maa-node-win32-arm64': 4.5.0-alpha.1
-      '@maaxyz/maa-node-win32-x64': 4.5.0-alpha.1
+      '@maaxyz/maa-node-darwin-arm64': 4.5.2
+      '@maaxyz/maa-node-darwin-x64': 4.5.2
+      '@maaxyz/maa-node-linux-arm64': 4.5.2
+      '@maaxyz/maa-node-linux-x64': 4.5.2
+      '@maaxyz/maa-node-win32-arm64': 4.5.2
+      '@maaxyz/maa-node-win32-x64': 4.5.2
 
   '@npmcli/agent@3.0.0':
     dependencies:

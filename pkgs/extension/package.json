@@ -4,7 +4,7 @@
     "@jimp/core": "^1.6.0",
     "@jimp/js-png": "^1.6.0",
     "@jimp/plugin-crop": "^1.6.0",
-    "@maaxyz/maa-node": "4.5.0-alpha.1",
+    "@maaxyz/maa-node": "4.5.2",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",
     "@tsconfig/node20": "^20.1.4",

@@ -19,13 +19,38 @@
 - MaaPiCli功能 (仅MaaFramework项目)
   - 选择控制器
   - 选择资源
-  - 添加, 移动, 删除任务
+  - 添加并管理任务
   - 执行任务
-- 截取, 裁剪图片 (依赖控制器提供截图能力)
+- 截取图片 (依赖控制器提供截图能力)
+- 裁剪图片
+
+## For MaaFramework/MaaAssistantArknights project, providing following features:
+
+> Control Panel stays at left, with an icon similar to settings.
+>
+> All features are based on `interface.json`
+>
+> Extension will check if `src/MaaCore` exists, to decide if it is MaaAssistantArknights project.
+
+- Semantic resource analyze
+  - Query task definition
+  - Query task reference
+  - Task autocompletion
+  - Image path autocompletion
+  - Task diagnostic
+  - Image path diagnostic
+  - Multiple paths of resource support
+- Ability of MaaPiCli (MaaFramework project only)
+  - Select controller
+  - Select resource
+  - Add and manipulate tasks
+  - Run tasks
+- Take screenshot (Relying controller for screenshot ability)
+- Crop images
 
 ## 提供的vscode命令
 
-使用 Ctrl Shift P (MacOS下 Cmd Shift P) 打开命令面板后搜索使用
+使用 Ctrl Shift P (MacOS下 Command Shift P) 打开命令面板后搜索使用
 
 - Maa: 打开Maa日志
   - 打开MaaFramework的日志.
@@ -34,16 +59,37 @@
 - Maa: 跳转到任务
   - 搜索并跳转到指定任务.
 - Maa: 执行任务
-  - 基于interface配置创建实例, 然后执行任务.
+  - 基于interface配置创建实例, 然后执行指定任务.
 - Maa: 执行interface
-  - 以等价于MaaPiCli的效果执行interface.
-- Maa: 生成MSE入口脚本
-  - 生成插件专用的Custom脚本.
+  - 基于interface配置创建实例, 然后执行所有配置任务.
 - Maa: 打开截图工具
-  - 打开 进行截图裁剪 的Webview.
+  - 打开 进行截图裁剪 的 Webview.
 - Maa: 展示控制面板
   - 展示并聚焦 控制面板.
 - Maa: 选择 MaaFramework 版本
   - 下载并切换插件自身使用的 MaaFramework.
 - Maa: 选择下载源
   - 选择下载插件自身使用的 MaaFramework 的镜像源.
+
+## Provided vscode commands
+
+Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
+
+- Maa: open maa log
+  - Open log of MaaFramework.
+- Maa: open extension log
+  - Open log of extension.
+- Maa: goto task
+  - Search and navigate to certain task.
+- Maa: launch task
+  - Create instance based on interface, and launch the specified task.
+- Maa: launch interface
+  - Create instance based on interface, and launch all configured task.
+- Maa: open crop tool
+  - Open webview for taking screenshot and cropping images.
+- Maa: reveal control panel
+  - Reveal and focus control panel.
+- Maa: select MaaFramework version
+  - Download and change the version of MaaFramework used by extension.
+- Maa: select fetch registry
+  - Select the mirrors to download MaaFramework used by extension.

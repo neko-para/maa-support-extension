@@ -275,6 +275,33 @@ export class TaskIndexService extends BaseService {
     return [...new Set<string>(result)]
   }
 
+  async queryWorkspaceSymbol(query: string) {
+    await this.flushDirty()
+
+    const result: vscode.SymbolInformation[] = []
+
+    query = query.toLowerCase()
+    for (const layer of this.layers) {
+      for (const [name, tasks] of Object.entries(layer.index)) {
+        if (name.toLowerCase().indexOf(query) === -1) {
+          continue
+        }
+        for (const task of tasks) {
+          result.push(
+            new vscode.SymbolInformation(
+              name,
+              vscode.SymbolKind.Method,
+              rootService.relativePathToRoot(task.uri) ?? 'unknown',
+              new vscode.Location(task.uri, task.taskProp)
+            )
+          )
+        }
+      }
+    }
+
+    return result
+  }
+
   async queryImageList(level?: number) {
     await this.flushDirty()
     if (level === undefined) {

@@ -18,6 +18,7 @@ import { PipelineDefinitionProvider } from './language/pipeline/definition'
 import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
 import { PipelineHoverProvider } from './language/pipeline/hover'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
+import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSymbol'
 import { LaunchService } from './launch'
 import { NativeService } from './native'
 import { RootService } from './root'
@@ -66,7 +67,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new PipelineDefinitionProvider(),
     new PipelineDocumentLinkProvider(),
     new PipelineHoverProvider(),
-    new PipelineReferenceProvider()
+    new PipelineReferenceProvider(),
+    new PipelineWorkspaceSymbolProvider()
   ]
 
   interfaceLanguageServices = [

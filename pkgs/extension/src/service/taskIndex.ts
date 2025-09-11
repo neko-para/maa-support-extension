@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 import { t } from '@mse/utils'
 
 import { interfaceService, rootService } from '.'
-import { imageSuffix, isMaaAssistantArknights } from '../utils/fs'
+import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { InterfaceLayer } from './layer/interface'
 import { TaskLayer } from './layer/task'
@@ -66,15 +66,19 @@ export class TaskIndexService extends BaseService {
   }
 
   getLayer(uri: vscode.Uri): PipelineLayer | null {
-    for (const layer of this.layers) {
-      if (uri.fsPath.startsWith(layer.uri.fsPath + path.sep)) {
-        return layer
-      }
-    }
     if (uri.fsPath === this.interfaceLayer?.interfaceUri.fsPath) {
       return this.interfaceLayer
     }
-    return null
+    const foundLayers: TaskLayer[] = []
+    for (const layer of this.layers) {
+      if (uri.fsPath.startsWith(layer.uri.fsPath + path.sep)) {
+        foundLayers.push(layer)
+      }
+    }
+    foundLayers.sort((a, b) => {
+      return b.uri.fsPath.length - a.uri.fsPath.length
+    })
+    return foundLayers[0] ?? null
   }
 
   async queryLocation(
@@ -309,15 +313,20 @@ export class TaskIndexService extends BaseService {
     }
     const result: string[] = []
     for (const layer of this.layers.slice(0, level)) {
-      const pattern = new vscode.RelativePattern(layer.uri, imageSuffix + '/**/*.png')
+      const base = vscode.Uri.joinPath(layer.uri, imageSuffix).fsPath + path.sep
+      const pattern = new vscode.RelativePattern(currentWorkspace()!, '**/*.png')
       const files = await vscode.workspace.findFiles(pattern)
       result.push(
-        ...files.map(uri =>
-          rootService
-            .relativePathToRoot(uri, imageSuffix, layer.uri)
-            .replace(/^[\\/]/, '')
-            .replaceAll(/[\\/]/g, '/')
-        )
+        ...files
+          .filter(uri => {
+            return uri.fsPath.startsWith(base)
+          })
+          .map(uri =>
+            rootService
+              .relativePathToRoot(uri, imageSuffix, layer.uri)
+              .replace(/^[\\/]/, '')
+              .replaceAll(/[\\/]/g, '/')
+          )
       )
     }
     return [...new Set<string>(result)]

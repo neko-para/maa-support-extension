@@ -22,7 +22,10 @@ export class PipelineLanguageProvider extends BaseService {
         this.provider = undefined
       }
       const filters: vscode.DocumentFilter[] = interfaceService.resourcePaths.map(path => ({
-        pattern: new vscode.RelativePattern(path, pipelineSuffix + '/**/*.{json,jsonc}')
+        pattern: new vscode.RelativePattern(
+          vscode.Uri.joinPath(path, pipelineSuffix),
+          '**/*.{json,jsonc}'
+        )
       }))
       const root = rootService.activeResource
       if (root) {

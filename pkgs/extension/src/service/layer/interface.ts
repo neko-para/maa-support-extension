@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
 import { diagnosticService } from '..'
+import { currentWorkspace } from '../../utils/fs'
 import { PipelineLayer, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
 import { parsePipelineLiteral } from './task'
@@ -21,12 +22,9 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
   interfaceUri: vscode.Uri
 
   constructor(uri: vscode.Uri, level: number) {
-    super(
-      new vscode.RelativePattern(vscode.Uri.file(path.dirname(uri.fsPath)), 'interface.json'),
-      u => {
-        return u.fsPath === uri.fsPath
-      }
-    )
+    super(new vscode.RelativePattern(currentWorkspace()!, 'interface.json'), u => {
+      return u.fsPath === uri.fsPath
+    })
 
     this.uri = vscode.Uri.file(path.dirname(uri.fsPath))
     this.level = level

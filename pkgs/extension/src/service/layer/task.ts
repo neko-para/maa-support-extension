@@ -5,7 +5,12 @@ import * as vscode from 'vscode'
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
 import { context, diagnosticService } from '..'
-import { imageSuffix, isMaaAssistantArknights, pipelineSuffix } from '../../utils/fs'
+import {
+  currentWorkspace,
+  imageSuffix,
+  isMaaAssistantArknights,
+  pipelineSuffix
+} from '../../utils/fs'
 import { PipelineLayer, TaskBelong, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
 
@@ -187,20 +192,31 @@ class ImageIndex {
     this.uri = uri
     this.images = []
     this.watcher = vscode.workspace.createFileSystemWatcher(
-      new vscode.RelativePattern(uri, imageSuffix + '/**/*.png')
+      new vscode.RelativePattern(currentWorkspace()!, '**/*.png')
     )
     context.subscriptions.push(this.watcher)
 
+    const base = vscode.Uri.joinPath(uri, imageSuffix).fsPath + path.sep
+    const tester = (u: vscode.Uri) => {
+      return u.fsPath.startsWith(base) && u.fsPath.endsWith('.png')
+    }
+
     this.watcher.onDidCreate(uri => {
-      this.flushImage()
+      if (tester(uri)) {
+        this.flushImage()
+      }
     })
 
     this.watcher.onDidDelete(uri => {
-      this.flushImage()
+      if (tester(uri)) {
+        this.flushImage()
+      }
     })
 
     this.watcher.onDidChange(uri => {
-      this.flushImage()
+      if (tester(uri)) {
+        this.flushImage()
+      }
     })
   }
 
@@ -253,10 +269,10 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   imageIndex: ImageIndex
 
   constructor(uri: vscode.Uri, level: number) {
-    super(new vscode.RelativePattern(uri, pipelineSuffix + '/**/*.{json,jsonc}'), u => {
+    const base = vscode.Uri.joinPath(uri, pipelineSuffix).fsPath + path.sep
+    super(new vscode.RelativePattern(currentWorkspace()!, '**/*.{json,jsonc}'), u => {
       return (
-        u.fsPath.startsWith(uri.fsPath + path.sep) &&
-        (u.fsPath.endsWith('.json') || u.fsPath.endsWith('.jsonc'))
+        u.fsPath.startsWith(base) && (u.fsPath.endsWith('.json') || u.fsPath.endsWith('.jsonc'))
       )
     })
 

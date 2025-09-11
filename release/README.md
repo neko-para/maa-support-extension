@@ -45,7 +45,7 @@
   - Select resource
   - Add and manipulate tasks
   - Run tasks
-- Take screenshot (Relying controller for screenshot ability)
+- Take screenshots (Relying on controllers for screenshot ability)
 - Crop images
 
 ## 提供的vscode命令
@@ -76,17 +76,17 @@
 Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
 
 - Maa: open maa log
-  - Open log of MaaFramework.
+  - Open the log of MaaFramework.
 - Maa: open extension log
-  - Open log of extension.
+  - Open the log of extension.
 - Maa: goto task
   - Search and navigate to certain task.
 - Maa: launch task
   - Create instance based on interface, and launch the specified task.
 - Maa: launch interface
-  - Create instance based on interface, and launch all configured task.
+  - Create instance based on interface, and launch all configured tasks.
 - Maa: open crop tool
-  - Open webview for taking screenshot and cropping images.
+  - Open webview for taking screenshots and cropping images.
 - Maa: reveal control panel
   - Reveal and focus control panel.
 - Maa: select MaaFramework version

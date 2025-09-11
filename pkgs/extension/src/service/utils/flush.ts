@@ -60,15 +60,21 @@ export abstract class FSWatchFlushHelper extends FlushHelper {
     })
 
     this.watcher.onDidCreate(uri => {
-      this.dirtyPaths.add(uri.fsPath)
+      if (tester(uri)) {
+        this.dirtyPaths.add(uri.fsPath)
+      }
     })
 
     this.watcher.onDidDelete(uri => {
-      this.dirtyPaths.add(uri.fsPath)
+      if (tester(uri)) {
+        this.dirtyPaths.add(uri.fsPath)
+      }
     })
 
     this.watcher.onDidChange(uri => {
-      this.dirtyPaths.add(uri.fsPath)
+      if (tester(uri)) {
+        this.dirtyPaths.add(uri.fsPath)
+      }
     })
   }
 

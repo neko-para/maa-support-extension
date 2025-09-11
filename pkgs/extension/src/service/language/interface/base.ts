@@ -23,6 +23,7 @@ export class InterfaceLanguageProvider extends BaseService {
       const root = rootService.activeResource
       if (root) {
         this.provider = setup({
+          scheme: 'file',
           pattern: new vscode.RelativePattern(root.dirUri, 'interface.json')
         })
       }

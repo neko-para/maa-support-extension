@@ -1,0 +1,13 @@
+diff --git a/index.js b/index.js
+index e9eb697b07a89144e0cee66904a147f49bc90046..9179cebcee1850b41b751ddcba790d2e5e161ee5 100644
+--- a/index.js
++++ b/index.js
+@@ -69,7 +69,7 @@
+       }
+       return c;
+     }
+-    var inBrowser = typeof navigator !== "undefined";
++    var inBrowser = !(typeof process === "object" && process.versions?.node);
+     if(inBrowser && j_lm && (navigator.appName == "Microsoft Internet Explorer")) {
+       BigInteger.prototype.am = am2;
+       dbits = 30;

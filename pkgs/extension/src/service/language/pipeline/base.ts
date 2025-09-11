@@ -22,6 +22,7 @@ export class PipelineLanguageProvider extends BaseService {
         this.provider = undefined
       }
       const filters: vscode.DocumentFilter[] = interfaceService.resourcePaths.map(path => ({
+        scheme: 'file',
         pattern: new vscode.RelativePattern(
           vscode.Uri.joinPath(path, pipelineSuffix),
           '**/*.{json,jsonc}'

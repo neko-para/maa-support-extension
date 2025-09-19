@@ -28,6 +28,8 @@ export default {
   'maa.crop.reset-viewport': 'Reset Viewport',
   'maa.crop.ceil': 'Ceil',
   'maa.crop.bound': 'Bound',
+  'maa.crop.copy': 'Copy',
+  'maa.crop.paste': 'Paste',
   'maa.crop.settings': 'Settings',
   'maa.crop.tools': 'Tools',
   'maa.crop.tools.pick-color': 'Pick Color',

@@ -63,6 +63,10 @@ export type CropWebToHost =
       text: string
     }
   | {
+      // return string
+      command: 'readClipboard'
+    }
+  | {
       command: 'updateSettings'
       key: string
       value: unknown

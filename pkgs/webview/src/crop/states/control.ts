@@ -177,8 +177,28 @@ export function cropBound() {
   cropBox.value = cropBox.value.intersect(Box.from(new Pos(), imageSt.size.value))
 }
 
+function extractRect(text: string): [number, number, number, number] | null {
+  text = text.trim()
+  text = text.replaceAll(/^\[(.+)\]$/g, '$1')
+  const nums = text
+    .split(/[ \t\n_,-]+/)
+    .filter(x => !!x)
+    .map(x => {
+      return parseInt(x)
+    })
+    .filter(x => !isNaN(x))
+  if (nums.length !== 4) {
+    return null
+  }
+  return nums as [number, number, number, number]
+}
+
 export function roiText() {
   return JSON.stringify(cropBox.value.ceiled().flat())
+}
+
+export function roiDisp() {
+  return cropBox.value.ceiled().flat().join(', ')
 }
 
 export function copyRoi() {
@@ -188,8 +208,20 @@ export function copyRoi() {
   })
 }
 
+export async function pasteRoi() {
+  const pb = (await ipc.call({ command: 'readClipboard' })) as string
+  const rect = extractRect(pb)
+  if (rect) {
+    cropBox.value.set(Pos.from(rect[0], rect[1]), Size.from(rect[2], rect[3]))
+  }
+}
+
 export function roiExpandText() {
   return JSON.stringify(cropBoxExpand.value.ceiled().flat())
+}
+
+export function roiExpandDisp() {
+  return cropBoxExpand.value.ceiled().flat().join(', ')
 }
 
 export function copyRoiExpand() {

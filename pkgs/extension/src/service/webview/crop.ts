@@ -163,6 +163,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       case 'writeClipboard':
         vscode.env.clipboard.writeText(data.text)
         break
+      case 'readClipboard':
+        this.response(data.seq, await vscode.env.clipboard.readText())
+        break
       case 'updateSettings':
         stateService.reduce({
           cropSettings: {

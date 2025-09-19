@@ -28,6 +28,8 @@ export default {
   'maa.crop.reset-viewport': '重置视野',
   'maa.crop.ceil': '取整',
   'maa.crop.bound': '边界',
+  'maa.crop.copy': '复制',
+  'maa.crop.paste': '粘贴',
   'maa.crop.settings': '设置',
   'maa.crop.tools': '工具',
   'maa.crop.tools.pick-color': '取色',

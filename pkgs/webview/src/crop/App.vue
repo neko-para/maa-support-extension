@@ -30,6 +30,7 @@ canvasSt.setup(canvasSizeEl, canvasEl)
         :title="t('maa.crop.crop-tool')"
         style="height: 100vh"
         content-style="display: flex; flex-direction: column; gap: 10px; min-height: 0"
+        size="small"
       >
         <template #header-extra>
           <control-view></control-view>

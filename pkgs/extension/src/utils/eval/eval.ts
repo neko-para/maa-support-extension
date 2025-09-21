@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
+import { logger, t } from '@mse/utils'
 
 import { rootService, taskIndexService } from '../../service'
 import { isMaaAssistantArknights } from '../fs'
@@ -57,7 +57,9 @@ class EvalContext {
 
     if (this.evalChain.indexOf(name) !== -1) {
       this.evalChain.push(name)
-      vscode.window.showErrorMessage(`检测到循环 ${this.evalChain.join(' -> ')}`)
+      vscode.window.showErrorMessage(
+        `${t('maa.eval.loop-detected')} ${this.evalChain.join(' -> ')}`
+      )
       return null
     }
 

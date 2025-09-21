@@ -73,5 +73,10 @@ export default {
   'maa.core.cannot-find-log': 'Cannot find log file: {0}',
   'maa.core.load-maafw-failed': 'Load MaaFramework failed',
 
-  'maa.crop.warning.no-resource': 'resource of interface not configured, will save directly'
+  'maa.crop.warning.no-resource': 'resource of interface not configured, will save directly',
+
+  'maa.eval.input-task': 'Input task',
+  'maa.eval.eval-failed': 'Evaluate failed!',
+  'maa.eval.loop-detected': 'Loop detected',
+  'maa.eval.json.eval-task': 'Evaluate Task'
 } as const

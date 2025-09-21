@@ -72,5 +72,10 @@ export default {
   'maa.core.cannot-find-log': '无法找到日志文件: {0}',
   'maa.core.load-maafw-failed': '加载 MaaFramework 失败',
 
-  'maa.crop.warning.no-resource': '未配置interface的资源, 将直接保存'
+  'maa.crop.warning.no-resource': '未配置interface的资源, 将直接保存',
+
+  'maa.eval.input-task': '输入任务',
+  'maa.eval.eval-failed': '计算失败!',
+  'maa.eval.loop-detected': '检测到循环',
+  'maa.eval.json.eval-task': '计算任务'
 } as const

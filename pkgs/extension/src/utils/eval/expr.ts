@@ -41,7 +41,7 @@ function buildParser() {
       .when('parent')
         .withloop()
           .when('parent').do(([parent]) => parent)
-        .do((parent, parents) => [parent, ...parents])
+        .do(([parent, parents]) => [parent, ...parents])
 
     .for('taskList4')
       .when('%task')
@@ -116,7 +116,7 @@ export function parseExpr(expr: MaaTaskExpr): MaaTaskExprAst | null {
   try {
     return parser!.parse(expr) as MaaTaskExprAst
   } catch (err) {
-    logger.error('parse expr failed', expr, 'error', err)
+    logger.error(`parse expr failed ${expr} error ${err}`)
     return null
   }
 }

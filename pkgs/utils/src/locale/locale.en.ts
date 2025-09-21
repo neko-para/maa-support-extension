@@ -78,5 +78,6 @@ export default {
   'maa.eval.input-task': 'Input task',
   'maa.eval.eval-failed': 'Evaluate failed!',
   'maa.eval.loop-detected': 'Loop detected',
-  'maa.eval.json.eval-task': 'Evaluate Task'
+  'maa.eval.cannot-find-task-base': 'Cannot find task template {0}',
+  'maa.eval.json.eval-task': 'Evaluate Task {0}'
 } as const

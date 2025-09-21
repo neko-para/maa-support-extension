@@ -77,5 +77,6 @@ export default {
   'maa.eval.input-task': '输入任务',
   'maa.eval.eval-failed': '计算失败!',
   'maa.eval.loop-detected': '检测到循环',
-  'maa.eval.json.eval-task': '计算任务'
+  'maa.eval.cannot-find-task-base': '无法找到任务模板 {0}',
+  'maa.eval.json.eval-task': '计算任务 {0}'
 } as const

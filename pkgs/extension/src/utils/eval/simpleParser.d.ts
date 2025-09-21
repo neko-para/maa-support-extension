@@ -7,7 +7,7 @@ export default class SimpleParser {
 }
 
 export type ReduceFunc = (elems: unknown[]) => unknown
-export type LoopReduceFunc = (elem: unknown, elems: unknown[]) => unknown
+export type LoopReduceFunc = (elems: [init: unknown, rest: unknown[]]) => unknown
 
 export type RuleContext = {
   entry: (...keys: string[]) => WhenContext

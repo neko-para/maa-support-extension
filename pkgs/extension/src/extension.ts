@@ -97,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         const doc = await vscode.workspace.openTextDocument({
           language: 'jsonc',
-          content: `// ${t('maa.eval.json.eval-task')} ${expr}\n// ${result.self.name} (${result.self.path})\n${content}`
+          content: `// ${t('maa.eval.json.eval-task', expr)}\n// ${result.self.name} (${result.self.path})\n${content}`
         })
         await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
       })

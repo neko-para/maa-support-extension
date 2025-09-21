@@ -91,7 +91,7 @@ class EvalContext {
     if (infos.length === 0) {
       // 没有找到直接定义，递归提取@
       if (segs.length === 1) {
-        logger.error('cannot find', task, 'with parent', parent)
+        logger.error(`cannot find ${task} with parent ${parent}`)
         this.evalChain.pop()
         return null
       }
@@ -104,7 +104,7 @@ class EvalContext {
       // 找到定义了，先合并多文件
       const info = mergeMultiPathTasks(infos)
       if (!info) {
-        logger.error('cannot merge', task, 'with parent', parent)
+        logger.error(`cannot merge ${task} with parent ${parent}`)
         this.evalChain.pop()
         return null
       }
@@ -121,22 +121,28 @@ class EvalContext {
         const seg = segs.shift()!
         const base = await this.evalTask(segs.join('@'))
         if (!base) {
-          this.evalChain.pop()
-          return null
-        }
-        this.cache[segs.join('@')] = base
-
-        const baseWithSeg = applyParentToTask(base, [seg])
-        if (!baseWithSeg) {
-          this.evalChain.pop()
-          return null
+          vscode.window.showWarningMessage(t('maa.eval.cannot-find-task-base', segs.join('@')))
         }
 
-        // 没有 baseTask，一定是 resolved
-        const result = applyParentToTask(
-          mergeTask(baseWithSeg, info as MaaTaskWithTraceInfo<MaaTaskBaseResolved>, '@'),
-          parent
-        )
+        let result: MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null = null
+        if (base) {
+          this.cache[segs.join('@')] = base
+
+          const baseWithSeg = applyParentToTask(base, [seg])
+          if (!baseWithSeg) {
+            this.evalChain.pop()
+            return null
+          }
+
+          // 没有 baseTask，一定是 resolved
+          result = applyParentToTask(
+            mergeTask(baseWithSeg, info as MaaTaskWithTraceInfo<MaaTaskBaseResolved>, '@'),
+            parent
+          )
+        } else {
+          // 没有 baseTask，一定是 resolved
+          result = applyParentToTask(info as MaaTaskWithTraceInfo<MaaTaskBaseResolved>, parent)
+        }
         if (result) {
           this.cache[name] = result
         }
@@ -162,7 +168,7 @@ class EvalContext {
 
       const base = await this.evalTask(task.task.baseTask)
       if (!base) {
-        logger.error('resolve base task failed', task.task.baseTask)
+        logger.error(`resolve base task failed ${task.task.baseTask}`)
         return null
       }
 
@@ -176,7 +182,7 @@ class EvalContext {
 async function maaEvalExprImpl(expr: MaaTaskExpr): Promise<string[] | null> {
   const ast = parseExpr(expr)
   if (!ast) {
-    logger.error('parse expr error', expr)
+    logger.error(`parse expr error ${expr}`)
     return null
   }
 

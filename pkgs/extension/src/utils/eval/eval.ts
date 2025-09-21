@@ -2,12 +2,13 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 
-import { taskIndexService } from '../../service'
+import { rootService, taskIndexService } from '../../service'
 import { isMaaAssistantArknights } from '../fs'
 import { addParent, addParentToExpr, parseExpr } from './expr'
 import { MaaTask, MaaTaskBaseProps, MaaTaskExpr, MaaTaskExprProps } from './types'
 import {
   MaaTaskBaseResolved,
+  MaaTaskWithTraceInfo,
   applyParentToTask,
   isTaskNotResolved,
   isTaskResolved,
@@ -15,7 +16,7 @@ import {
   mergeTask
 } from './utils'
 
-export async function maaEvalTask(task: string): Promise<MaaTask | null> {
+export async function maaEvalTask(task: string): Promise<MaaTaskWithTraceInfo<MaaTask> | null> {
   if (!isMaaAssistantArknights) {
     return null
   }
@@ -26,7 +27,7 @@ export async function maaEvalTask(task: string): Promise<MaaTask | null> {
 
   const result = await ctx.evalTask(task)
   if (result) {
-    delete (result as MaaTask).__baseTaskResolved
+    delete (result.task as MaaTask).__baseTaskResolved
   }
   return result
 }
@@ -42,10 +43,13 @@ export async function maaEvalExpr(expr: MaaTaskExpr): Promise<string[] | null> {
 }
 
 class EvalContext {
-  cache: Record<string, MaaTaskBaseResolved> = {}
+  cache: Record<string, MaaTaskWithTraceInfo<MaaTaskBaseResolved>> = {}
   evalChain: string[] = []
 
-  async evalTask(task: string, parent: string[] = []): Promise<MaaTaskBaseResolved | null> {
+  async evalTask(
+    task: string,
+    parent: string[] = []
+  ): Promise<MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null> {
     const name = [...parent, task].join('@')
     if (this.cache[name]) {
       return this.cache[name]
@@ -61,7 +65,23 @@ class EvalContext {
 
     // 禁用flush，并且禁用回退
     const infos = (await taskIndexService.queryTask(task, undefined, undefined, false, false)).map(
-      x => JSON.parse(x.info.taskContent) as MaaTask
+      x => {
+        const obj = JSON.parse(x.info.taskContent) as MaaTask
+
+        // 这里硬编码了下逻辑
+        const path = rootService.relativePathToRoot(x.uri).replaceAll('\\', '/')
+        const match = /global\/(.+)\//.exec(path)
+        const anchor = {
+          name,
+          path: match ? match[1] : 'Official'
+        }
+
+        return {
+          self: anchor,
+          task: obj,
+          trace: Object.fromEntries(Object.keys(obj).map(key => [key, anchor] as const))
+        } satisfies MaaTaskWithTraceInfo<MaaTask>
+      }
     )
 
     const segs = task.split('@')
@@ -87,7 +107,7 @@ class EvalContext {
         return null
       }
 
-      if (info.baseTask || segs.length === 1) {
+      if (info.task.baseTask || segs.length === 1) {
         // 有 baseTask 或者没有 @，就不用递归了
         const result = applyParentToTask(await this.resolveBaseTask(info), parent)
         if (result) {
@@ -105,7 +125,10 @@ class EvalContext {
         this.cache[segs.join('@')] = base
 
         // 没有 baseTask，一定是 resolved
-        const result = applyParentToTask(mergeTask(base, info as MaaTaskBaseResolved, '@'), parent)
+        const result = applyParentToTask(
+          mergeTask(base, info as MaaTaskWithTraceInfo<MaaTaskBaseResolved>, '@'),
+          parent
+        )
         if (result) {
           this.cache[name] = result
         }
@@ -115,17 +138,23 @@ class EvalContext {
     }
   }
 
-  async resolveBaseTask(task: MaaTask): Promise<MaaTaskBaseResolved | null> {
-    if (isTaskResolved(task)) {
-      return task
-    } else if (isTaskNotResolved(task)) {
-      if (!task.baseTask) {
-        return { ...task, __baseTaskResolved: true }
+  async resolveBaseTask(
+    task: MaaTaskWithTraceInfo<MaaTask>
+  ): Promise<MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null> {
+    if (isTaskResolved(task.task)) {
+      return task as MaaTaskWithTraceInfo<MaaTaskBaseResolved>
+    } else if (isTaskNotResolved(task.task)) {
+      if (!task.task.baseTask) {
+        return {
+          self: task.self,
+          task: { ...task.task, __baseTaskResolved: true },
+          trace: task.trace
+        }
       }
 
-      const base = await this.evalTask(task.baseTask)
+      const base = await this.evalTask(task.task.baseTask)
       if (!base) {
-        logger.error('resolve base task failed', task.baseTask)
+        logger.error('resolve base task failed', task.task.baseTask)
         return null
       }
 

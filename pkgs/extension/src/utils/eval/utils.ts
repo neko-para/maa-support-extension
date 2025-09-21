@@ -11,45 +11,89 @@ export function isTaskNotResolved(task: MaaTask): task is MaaTaskBaseNotResolved
   return !task.__baseTaskResolved
 }
 
+export type MaaTaskWithTraceInfo<MaaTaskType extends MaaTask> = {
+  self: {
+    name: string
+    path: string
+  }
+  task: MaaTaskType
+  trace: Record<
+    string,
+    {
+      name: string
+      path: string
+    }
+  >
+}
+
 type MergeMode = '@' | 'baseTask'
 export function mergeTask(
-  base: MaaTaskBaseResolved,
-  inherit: MaaTaskBaseResolved,
+  base: MaaTaskWithTraceInfo<MaaTaskBaseResolved>,
+  inherit: MaaTaskWithTraceInfo<MaaTaskBaseResolved>,
   mode: MergeMode
-): MaaTaskBaseResolved
+): MaaTaskWithTraceInfo<MaaTaskBaseResolved>
 export function mergeTask(
-  base: MaaTaskBaseResolved,
-  inherit: MaaTaskBaseNotResolved,
+  base: MaaTaskWithTraceInfo<MaaTaskBaseResolved>,
+  inherit: MaaTaskWithTraceInfo<MaaTaskBaseNotResolved>,
   mode: MergeMode
-): MaaTaskBaseNotResolved
-export function mergeTask(base: MaaTaskBaseResolved, inherit: MaaTask, mode: MergeMode): MaaTask
-export function mergeTask(base: MaaTaskBaseResolved, inherit: MaaTask, mode: MergeMode): MaaTask {
-  if (mode === '@' && inherit.baseTask) {
+): MaaTaskWithTraceInfo<MaaTaskBaseNotResolved>
+export function mergeTask(
+  base: MaaTaskWithTraceInfo<MaaTaskBaseResolved>,
+  inherit: MaaTaskWithTraceInfo<MaaTask>,
+  mode: MergeMode
+): MaaTaskWithTraceInfo<MaaTask>
+export function mergeTask(
+  base: MaaTaskWithTraceInfo<MaaTaskBaseResolved>,
+  inherit: MaaTaskWithTraceInfo<MaaTask>,
+  mode: MergeMode
+): MaaTaskWithTraceInfo<MaaTask> {
+  if (mode === '@' && inherit.task.baseTask) {
     return inherit
   }
 
-  let result: MaaTask = {}
-  if (inherit.algorithm && (base.algorithm ?? 'MatchTemplate') !== inherit.algorithm) {
+  const result: MaaTaskWithTraceInfo<MaaTask> = {
+    self: inherit.self,
+    task: {},
+    trace: {}
+  }
+  if (
+    inherit.task.algorithm &&
+    (base.task.algorithm ?? 'MatchTemplate') !== inherit.task.algorithm
+  ) {
     for (const key of MaaTaskBaseProps) {
-      result[key] = (inherit[key] ?? base[key]) as any
+      if (inherit.task[key] !== undefined) {
+        result.task[key] = inherit.task[key] as any
+        result.trace[key] = inherit.self
+      } else if (base.task[key] !== undefined) {
+        result.task[key] = base.task[key] as any
+        result.trace[key] = base.self
+      }
     }
   } else {
-    result = { ...base }
-    Object.assign(result, inherit)
-    if (!inherit.template) {
-      delete result.template
+    result.task = { ...base.task }
+    result.trace = { ...base.trace }
+    for (const [key, val] of Object.entries(inherit.task)) {
+      result.task[key as keyof MaaTask] = val as any
+      result.trace[key] = inherit.self
+    }
+    if (!inherit.task.template) {
+      delete result.task.template
+      delete result.trace.template
     }
   }
 
   if (mode === 'baseTask') {
-    delete result.baseTask
+    delete result.task.baseTask
+    delete result.trace.baseTask
   }
 
   return result
 }
 
-export function mergeMultiPathTasks(tasks: MaaTask[]): MaaTask | null {
-  tasks = [...tasks]
+export function mergeMultiPathTasks(
+  tasks: MaaTaskWithTraceInfo<MaaTask>[]
+): MaaTaskWithTraceInfo<MaaTask> | null {
+  tasks = JSON.parse(JSON.stringify(tasks))
   if (tasks.length === 0) {
     return null
   }
@@ -60,10 +104,11 @@ export function mergeMultiPathTasks(tasks: MaaTask[]): MaaTask | null {
 
   const last = tasks.pop()!
 
-  if (last.baseTask) {
-    // 神秘
-    if (last.baseTask === '#none') {
-      delete last.baseTask
+  if (last.task.baseTask) {
+    // 神秘的逃逸逻辑
+    if (last.task.baseTask === '#none') {
+      delete last.task.baseTask
+      delete last.trace.baseTask
     }
     return last
   }
@@ -74,25 +119,29 @@ export function mergeMultiPathTasks(tasks: MaaTask[]): MaaTask | null {
   }
 
   // 就是直接覆盖
-  Object.assign(prev, last)
+  prev.self = last.self
+  for (const [key, val] of Object.entries(last.task)) {
+    prev.task[key as keyof MaaTask] = val as any
+    prev.trace[key] = last.self
+  }
   return prev
 }
 
 export function applyParentToTask(
-  task: MaaTaskBaseResolved | null,
+  task: MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null,
   parent: string[]
-): MaaTaskBaseResolved | null {
+): MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null {
   if (!task) {
     return null
   }
 
-  const clonedTask = JSON.parse(JSON.stringify(task))
+  const clonedTask = JSON.parse(JSON.stringify(task)) as MaaTaskWithTraceInfo<MaaTaskBaseResolved>
   if (!parent) {
     return clonedTask
   }
 
   for (const key of MaaTaskExprProps) {
-    const prev = clonedTask[key] as MaaTaskExpr[] | undefined
+    const prev = clonedTask.task[key] as MaaTaskExpr[] | undefined
     if (prev) {
       const newPrev: MaaTaskExpr[] = []
       for (const expr of prev) {
@@ -102,7 +151,7 @@ export function applyParentToTask(
         }
         newPrev.push(newExpr)
       }
-      clonedTask[key] = newPrev
+      clonedTask.task[key] = newPrev
     }
   }
 

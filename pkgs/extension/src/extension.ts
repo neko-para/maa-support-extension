@@ -82,11 +82,20 @@ export async function activate(context: vscode.ExtensionContext) {
           return
         }
 
+        let content = JSON.stringify(result.task, null, 4)
+        for (const [key, info] of Object.entries(result.trace)) {
+          content = content.replace(
+            `    "${key}"`,
+            `\n    // ${info.name} (${info.path})\n    "${key}"`
+          )
+        }
+        content = content.replace('{\n\n', '{\n')
+
         const doc = await vscode.workspace.openTextDocument({
           language: 'jsonc',
-          content: `// ${expr}\n${JSON.stringify(result, null, 4)}`
+          content: `// Evaluate Task ${expr}\n// ${result.self.name} (${result.self.path})\n${content}`
         })
-        await vscode.window.showTextDocument(doc)
+        await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
       })
     )
   }

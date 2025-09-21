@@ -6,6 +6,7 @@ import { NConfigProvider, NFlex, NScrollbar } from 'naive-ui'
 import { useTheme } from '../utils/theme'
 import { hostState } from './state'
 import ControllerView from './views/ControllerView.vue'
+import EvalView from './views/EvalView.vue'
 import InterfaceView from './views/InterfaceView.vue'
 import LaunchView from './views/LaunchView.vue'
 import ResourceView from './views/ResourceView.vue'
@@ -26,6 +27,7 @@ hljs.registerLanguage('json', json)
           <controller-view></controller-view>
           <task-view v-if="!hostState.isMAA"></task-view>
           <launch-view v-if="!hostState.isMAA"></launch-view>
+          <eval-view v-if="hostState.isMAA"></eval-view>
         </n-flex>
       </n-config-provider>
     </n-scrollbar>

@@ -171,7 +171,13 @@ export class TaskIndexService extends BaseService {
     return [null, null]
   }
 
-  async queryTask(task: string, level?: number, pos?: vscode.Position, flush = true) {
+  async queryTask(
+    task: string,
+    level?: number,
+    pos?: vscode.Position,
+    flush = true,
+    enableMaaFallback = true
+  ) {
     if (flush) {
       await this.flushDirty()
     }
@@ -199,7 +205,7 @@ export class TaskIndexService extends BaseService {
       }
     }
     search(task)
-    if (isMaaAssistantArknights) {
+    if (isMaaAssistantArknights && enableMaaFallback) {
       while (/@/.test(task)) {
         task = task.replace(/^[^@]*@/, '')
         search(task)

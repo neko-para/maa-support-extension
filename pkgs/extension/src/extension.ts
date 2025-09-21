@@ -7,6 +7,8 @@ import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { maa } from './maa'
 import { init, nativeService, statusBarService } from './service'
+import { maaEvalTask } from './utils/eval/eval'
+import { MaaTaskExpr } from './utils/eval/types'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()
@@ -61,6 +63,30 @@ export async function activate(context: vscode.ExtensionContext) {
         } catch {
           vscode.window.showErrorMessage(t('maa.core.cannot-find-log', maaLogFile.fsPath))
         }
+      })
+    )
+  }
+
+  if (isMaaAssistantArknights) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(commands.MaaEvalTask, async (expr?: string) => {
+        if (!expr) {
+          expr = await vscode.window.showInputBox()
+        }
+        if (!expr) {
+          return
+        }
+        const result = await maaEvalTask(expr)
+        if (!result) {
+          vscode.window.showErrorMessage('计算失败！')
+          return
+        }
+
+        const doc = await vscode.workspace.openTextDocument({
+          language: 'jsonc',
+          content: `// ${expr}\n${JSON.stringify(result, null, 4)}`
+        })
+        await vscode.window.showTextDocument(doc)
       })
     )
   }

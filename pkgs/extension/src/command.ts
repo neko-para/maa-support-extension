@@ -15,5 +15,7 @@ export const commands = {
   NativeSelectMaa: 'maa.native.select-maa',
   NativeSelectRegistry: 'maa.native.select-registry',
 
+  MaaEvalTask: 'maa.eval-task',
+
   DebugQueryLocation: 'maa.debug.query-location'
 }

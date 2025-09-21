@@ -91,3 +91,6 @@ export type ControlWebToHost =
   | {
       command: 'launch'
     }
+  | {
+      command: 'maa.evalTask'
+    }

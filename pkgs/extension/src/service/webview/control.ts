@@ -12,6 +12,7 @@ import {
   rootService,
   stateService
 } from '..'
+import { commands } from '../../command'
 import { maa } from '../../maa'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
@@ -190,6 +191,9 @@ export class WebviewControlService extends BaseService {
             break
           }
           launchService.launchRuntime(runtime)
+          break
+        case 'maa.evalTask':
+          vscode.commands.executeCommand(commands.MaaEvalTask)
           break
       }
     }

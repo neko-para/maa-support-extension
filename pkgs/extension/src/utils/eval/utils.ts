@@ -152,6 +152,7 @@ export function applyParentToTask(
         newPrev.push(newExpr)
       }
       clonedTask.task[key] = newPrev
+      clonedTask.trace[key] = clonedTask.self
     }
   }
 

@@ -116,7 +116,7 @@ class EvalContext {
         this.evalChain.pop()
         return result
       } else {
-        segs.shift()
+        const seg = segs.shift()!
         const base = await this.evalTask(segs.join('@'))
         if (!base) {
           this.evalChain.pop()
@@ -124,9 +124,15 @@ class EvalContext {
         }
         this.cache[segs.join('@')] = base
 
+        const baseWithSeg = applyParentToTask(base, [seg])
+        if (!baseWithSeg) {
+          this.evalChain.pop()
+          return null
+        }
+
         // 没有 baseTask，一定是 resolved
         const result = applyParentToTask(
-          mergeTask(base, info as MaaTaskWithTraceInfo<MaaTaskBaseResolved>, '@'),
+          mergeTask(baseWithSeg, info as MaaTaskWithTraceInfo<MaaTaskBaseResolved>, '@'),
           parent
         )
         if (result) {

@@ -28,13 +28,13 @@ export function mergeTask(base: MaaTaskBaseResolved, inherit: MaaTask, mode: Mer
     return inherit
   }
 
-  const result: MaaTask = {}
-  if ((base.algorithm ?? 'MatchTemplate') != (inherit.algorithm ?? 'MatchTemplate')) {
+  let result: MaaTask = {}
+  if (inherit.algorithm && (base.algorithm ?? 'MatchTemplate') !== inherit.algorithm) {
     for (const key of MaaTaskBaseProps) {
       result[key] = (inherit[key] ?? base[key]) as any
     }
   } else {
-    const result: MaaTask = { ...base }
+    result = { ...base }
     Object.assign(result, inherit)
     if (!inherit.template) {
       delete result.template

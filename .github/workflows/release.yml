@@ -51,6 +51,11 @@ jobs:
           echo "Change version to ${ver}"
           npm --prefix release pkg set version=${ver}
 
+      - name: Lint check
+        shell: bash
+        run: |
+          npm run lint
+
       - name: Build extension
         shell: bash
         run: |

@@ -5,8 +5,8 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  jsbn:
-    hash: ac283f268479c0b0027e6be8a39b8f55f7ba8090a6a9ecedc93a289e89842023
+  jsbn@1.1.0:
+    hash: 6qqc5nofoy6iyca4pzloou6ujq
     path: patches/jsbn.patch
 
 importers:
@@ -3804,7 +3804,7 @@ snapshots:
 
   ip-address@9.0.5:
     dependencies:
-      jsbn: 1.1.0(patch_hash=ac283f268479c0b0027e6be8a39b8f55f7ba8090a6a9ecedc93a289e89842023)
+      jsbn: 1.1.0(patch_hash=6qqc5nofoy6iyca4pzloou6ujq)
       sprintf-js: 1.1.3
 
   is-arrayish@0.3.2: {}
@@ -3830,7 +3830,7 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  jsbn@1.1.0(patch_hash=ac283f268479c0b0027e6be8a39b8f55f7ba8090a6a9ecedc93a289e89842023): {}
+  jsbn@1.1.0(patch_hash=6qqc5nofoy6iyca4pzloou6ujq): {}
 
   jsesc@2.5.2: {}
 

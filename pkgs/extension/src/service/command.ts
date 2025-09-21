@@ -43,7 +43,7 @@ export class CommandService extends BaseService {
         {
           name: task,
           entry: task,
-          pipeline_override: {}
+          pipeline_override: []
         }
       ])
       return true

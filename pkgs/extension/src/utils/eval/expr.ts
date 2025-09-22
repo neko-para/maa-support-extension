@@ -10,7 +10,7 @@ function buildParser() {
   return makeParser(
     [
       ['virt', /self|back|next|sub|on_error_next|exceeded_next|reduce_other_times/],
-      ['number', /\d+/],
+      // ['number', /\d+/], 有些task真的是全是数字, 太坏了
       ['task', /[a-zA-Z0-9_-]+/],
       ['sharp', /#/],
       ['at', /@/],
@@ -92,11 +92,11 @@ function buildParser() {
 
       .for('taskList2')
         .sameas('taskList3')
-        .when('taskList3', '%multi', '%number')
+        .when('taskList3', '%multi', '%task')
           .do(([list, , count]) => ({
             type: '*',
             list,
-            count: parseInt(count as string)
+            count: /\d+/.test(count) ? parseInt(count) : 0
           }))
 
       .for('taskList1')

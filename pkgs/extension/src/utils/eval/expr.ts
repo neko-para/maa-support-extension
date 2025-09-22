@@ -1,17 +1,14 @@
 import { logger } from '@mse/utils'
 
-import SimpleParser from './simpleParser'
+import { declExpr, makeParser } from './simpleParser'
 import { MaaTaskExpr } from './types'
+import { AllVirtTaskProp } from './utils'
 
-let parser: SimpleParser | null = null
+let parser: ReturnType<typeof buildParser> | null = null
 
 function buildParser() {
-  if (parser) {
-    return
-  }
-
-  parser = new SimpleParser({
-    token: [
+  return makeParser(
+    [
       ['virt', /self|back|next|sub|on_error_next|exceeded_next|reduce_other_times/],
       ['number', /\d+/],
       ['task', /[a-zA-Z0-9_-]+/],
@@ -22,99 +19,111 @@ function buildParser() {
       ['diff', /\^/],
       ['leftBrace', /\(/],
       ['rightBrace', /\)/]
-    ],
-    ignore: /[ \t\n]+/
-  })
+    ] as const,
+    declExpr<{
+      parent: string
+      parentList: string[]
 
-  // prettier-ignore
-  parser.rule
-    .entry('taskList1')
-      .do()
+      taskList4: TaskList4
+      taskList3: TaskList3
+      taskList2: TaskList2
+      taskList1: TaskList1
+    }>(),
+    /[ \t\n]+/,
+    rule => {
+      // prettier-ignore
+      return rule
+      .entry('taskList1')
+        .do()
 
-    .for('parent')
-      .when('%task', '%at')
-        .do(([parent]) => parent)
+      .for('parent')
+        .when('%task', '%at')
+          .do()
 
-    .for('parentList')
-      .when('parent')
-        .do(([parent]) => [parent])
-      .when('parent')
-        .withloop()
-          .when('parent').do(([parent]) => parent)
-        .do(([parent, parents]) => [parent, ...parents])
+      .for('parentList')
+        .when('parent')
+          .do(([parent]) => [parent])
+        .when('parent')
+          .withloop()
+            .when('parent').do()
+          .do(([parent, parents]) => [parent, ...parents])
 
-    .for('taskList4')
-      .when('%task')
-        .do(([task]) => ({
-          type: 'task',
-          task
-        }))
-      .when('%leftBrace', 'taskList1', '%rightBrace')
-        .do(([, list]) => ({
-          type: 'brace',
-          list
-        }))
+      .for('taskList4')
+        .when('%task')
+          .do(([task]) => ({
+            type: 'task',
+            task
+          }))
+        .when('%leftBrace', 'taskList1', '%rightBrace')
+          .do(([, list]) => ({
+            type: 'brace',
+            list
+          }))
 
-    .for('taskList3')
-      .sameas('taskList4')
-      .when('%sharp', '%virt')
-        .do(([, virt]) => ({
-          type: '#',
-          virt
-        }))
-      .when('parentList', 'taskList4')
-        .do(([parent, list]) => ({
-          type: '@',
-          parent,
-          list
-        }))
-      .when('parentList', 'taskList4', '%sharp', '%virt')
-        .do(([parent, list, , virt]) => ({
-          type: '#',
-          list: {
+      .for('taskList3')
+        .sameas('taskList4')
+        .when('%sharp', '%virt')
+          .do(([, virt]) => ({
+            type: '#',
+            virt: virt as AllVirtTaskProp
+          }))
+        .when('parentList', 'taskList4')
+          .do(([parent, list]) => ({
             type: '@',
             parent,
             list
-          },
-          virt
-        }))
-      .when('taskList4', '%sharp', '%virt')
-        .do(([list, , virt]) => ({
-          type: '#',
-          list,
-          virt
-        }))
+          }))
+        .when('parentList', 'taskList4', '%sharp', '%virt')
+          .do(([parent, list, , virt]) => ({
+            type: '#',
+            list: {
+              type: '@',
+              parent,
+              list
+            },
+            virt: virt as AllVirtTaskProp
+          }))
+        .when('taskList4', '%sharp', '%virt')
+          .do(([list, , virt]) => ({
+            type: '#',
+            list,
+            virt: virt as AllVirtTaskProp
+          }))
 
-    .for('taskList2')
-      .sameas('taskList3')
-      .when('taskList3', '%multi', '%number')
-        .do(([list, , count]) => ({
-          type: '*',
-          list,
-          count: parseInt(count as string)
-        }))
+      .for('taskList2')
+        .sameas('taskList3')
+        .when('taskList3', '%multi', '%number')
+          .do(([list, , count]) => ({
+            type: '*',
+            list,
+            count: parseInt(count as string)
+          }))
 
-    .for('taskList1')
-      .sameas('taskList2')
-      .when('taskList2', '%plus', 'taskList2')
-        .do(([left, , right]) => ({
-          type: '+',
-          left,
-          right
-        }))
-      .when('taskList2', '%diff', 'taskList2')
-        .do(([left, , right]) => ({
-          type: '^',
-          left,
-          right
-        }))
+      .for('taskList1')
+        .sameas('taskList2')
+        .when('taskList2', '%plus', 'taskList2')
+          .do(([left, , right]) => ({
+            type: '+',
+            left,
+            right
+          }))
+        .when('taskList2', '%diff', 'taskList2')
+          .do(([left, , right]) => ({
+            type: '^',
+            left,
+            right
+          }))
+    }
+  )
 }
 
 export function parseExpr(expr: MaaTaskExpr): MaaTaskExprAst | null {
-  buildParser()
+  if (!parser) {
+    parser = buildParser()
+  }
 
   try {
-    return parser!.parse(expr) as MaaTaskExprAst
+    return parser.parse(expr)
   } catch (err) {
     logger.error(`parse expr failed ${expr} error ${err}`)
     return null
@@ -290,14 +299,7 @@ export type TaskList3 =
             parent: string[]
             list: TaskList4
           }
-      virt:
-        | 'self'
-        | 'back'
-        | 'next'
-        | 'sub'
-        | 'on_error_next'
-        | 'exceeded_next'
-        | 'reduce_other_times'
+      virt: AllVirtTaskProp
     }
   | {
       type: '@'

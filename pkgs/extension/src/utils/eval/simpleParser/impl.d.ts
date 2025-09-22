@@ -1,5 +1,11 @@
+export type TokenFilter = (curr: string, getBack: (idx: number) => string | null) => boolean
+
 export default class SimpleParser {
-  constructor(lexRule: { token: [key: string, rule: RegExp][]; ignore: RegExp })
+  constructor(lexRule: {
+    token: [key: string, rule: RegExp][]
+    ignore: RegExp
+    tokenFilter?: (curr: string, getBack: (idx: number) => string | null) => boolean
+  })
 
   rule: RuleContext
 

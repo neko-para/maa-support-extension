@@ -1,4 +1,4 @@
-import SimpleParser from './impl'
+import SimpleParser, { TokenFilter } from './impl'
 
 type TokenDecl = [token: string, grammar: RegExp]
 
@@ -146,13 +146,18 @@ export function makeParser<
   RuleResult
 >(
   token: [...TokenDecls],
+  tokenFilter: (
+    curr: BuildToken<TokenArray<TokenDecls>>,
+    getBack: (idx: number) => BuildToken<TokenArray<TokenDecls>> | null
+  ) => boolean,
   expr: Exprs,
   ignore: RegExp,
   setup: (rule: RuleContext<never, BuildToken<TokenArray<TokenDecls>>, Exprs>) => RuleResult
 ) {
   const parserImpl = new SimpleParser({
     token,
-    ignore
+    ignore,
+    tokenFilter: tokenFilter as TokenFilter
   }) as any as TypedParser<never, BuildToken<TokenArray<TokenDecls>>, Exprs>
   setup(parserImpl.rule)
   return parserImpl as any as TypedParser<

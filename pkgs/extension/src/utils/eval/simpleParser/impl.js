@@ -100,6 +100,13 @@ export default class SimpleParser {
         continue
       }
       for (const [name, rule] of this.lexRule.token) {
+        if (
+          this.lexRule.tokenFilter?.(`%${name}`, idx => {
+            return this.tokens[this.tokens.length - 1 - idx].name ?? null
+          })
+        ) {
+          continue
+        }
         const [r, i] = this.canLex(text, rule)
         if (r) {
           yield { name: `%${name}`, value: text.substr(0, i) }

@@ -23,6 +23,12 @@ function buildParser() {
       ['leftBrace', /\(/],
       ['rightBrace', /\)/]
     ] as const,
+    (curr, getBack) => {
+      if (curr === '%virt') {
+        return getBack(0) !== '%sharp'
+      }
+      return false
+    },
     declExpr<{
       parent: string
       parentList: string[]

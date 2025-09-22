@@ -13,6 +13,7 @@ function buildParser() {
   parser = new SimpleParser({
     token: [
       ['virt', /self|back|next|sub|on_error_next|exceeded_next|reduce_other_times/],
+      ['number', /\d+/],
       ['task', /[a-zA-Z0-9_-]+/],
       ['sharp', /#/],
       ['at', /@/],
@@ -20,8 +21,7 @@ function buildParser() {
       ['plus', /\+/],
       ['diff', /\^/],
       ['leftBrace', /\(/],
-      ['rightBrace', /\)/],
-      ['number', /\d+/]
+      ['rightBrace', /\)/]
     ],
     ignore: /[ \t\n]+/
   })

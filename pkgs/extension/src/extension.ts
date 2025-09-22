@@ -68,41 +68,6 @@ export async function activate(context: vscode.ExtensionContext) {
       })
     )
   }
-
-  if (isMaaAssistantArknights) {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(commands.MaaEvalTask, async (expr?: string) => {
-        if (!expr) {
-          expr = await vscode.window.showInputBox({
-            title: t('maa.eval.input-task')
-          })
-        }
-        if (!expr) {
-          return
-        }
-        const result = await maaEvalTask(expr)
-        if (!result) {
-          vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
-          return
-        }
-
-        let content = JSON.stringify(result.task, null, 4)
-        for (const [key, info] of Object.entries(result.trace)) {
-          content = content.replace(
-            `    "${key}"`,
-            `\n    // ${info.name} (${info.path})\n    "${key}"`
-          )
-        }
-        content = content.replace('{\n\n', '{\n')
-
-        const doc = await vscode.workspace.openTextDocument({
-          language: 'jsonc',
-          content: `// ${t('maa.eval.json.eval-task', expr)}\n// ${result.self.name} (${result.self.path})\n${content}`
-        })
-        await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
-      })
-    )
-  }
 }
 
 export function deactivate() {}

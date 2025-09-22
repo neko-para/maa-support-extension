@@ -79,5 +79,7 @@ export default {
   'maa.eval.eval-failed': 'Evaluate failed!',
   'maa.eval.loop-detected': 'Loop detected',
   'maa.eval.cannot-find-task-base': 'Cannot find task template {0}',
-  'maa.eval.json.eval-task': 'Evaluate Task {0}'
+  'maa.eval.json.eval-task': 'Evaluate Task',
+  'maa.eval.json.eval-list': 'Evaluate List',
+  'maa.eval.json.stripped': 'Stripped'
 } as const

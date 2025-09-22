@@ -158,3 +158,8 @@ export function applyParentToTask(
 
   return clonedTask
 }
+
+export type VirtTaskProp = 'next' | 'sub' | 'on_error_next' | 'exceeded_next' | 'reduce_other_times'
+export function shouldStrip(prop: VirtTaskProp) {
+  return prop === 'next' || prop === 'on_error_next' || prop === 'exceeded_next'
+}

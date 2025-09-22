@@ -4,16 +4,18 @@ import { logger, t } from '@mse/utils'
 
 import { rootService, taskIndexService } from '../../service'
 import { isMaaAssistantArknights } from '../fs'
-import { addParent, addParentToExpr, parseExpr } from './expr'
+import { MaaTaskExprAst, addParent, addParentToExpr, parseExpr } from './expr'
 import { MaaTask, MaaTaskBaseProps, MaaTaskExpr, MaaTaskExprProps } from './types'
 import {
   MaaTaskBaseResolved,
   MaaTaskWithTraceInfo,
+  VirtTaskProp,
   applyParentToTask,
   isTaskNotResolved,
   isTaskResolved,
   mergeMultiPathTasks,
-  mergeTask
+  mergeTask,
+  shouldStrip
 } from './utils'
 
 export async function maaEvalTask(task: string): Promise<MaaTaskWithTraceInfo<MaaTask> | null> {
@@ -32,14 +34,25 @@ export async function maaEvalTask(task: string): Promise<MaaTaskWithTraceInfo<Ma
   return result
 }
 
-export async function maaEvalExpr(expr: MaaTaskExpr): Promise<string[] | null> {
+export async function maaEvalExpr(
+  expr: MaaTaskExpr,
+  host: string,
+  strip: boolean
+): Promise<string[] | null> {
   if (!isMaaAssistantArknights) {
     return null
   }
 
   await taskIndexService.flushDirty()
 
-  return await maaEvalExprImpl(expr)
+  const ast = parseExpr(expr)
+  if (!ast) {
+    return null
+  }
+
+  const ctx = new EvalContext()
+
+  return await ctx.evalExpr(ast, host, strip)
 }
 
 class EvalContext {
@@ -177,22 +190,151 @@ class EvalContext {
 
     return null
   }
-}
 
-async function maaEvalExprImpl(expr: MaaTaskExpr): Promise<string[] | null> {
-  const ast = parseExpr(expr)
-  if (!ast) {
-    logger.error(`parse expr error ${expr}`)
-    return null
+  async getNextList(task: string, prop: VirtTaskProp): Promise<string[] | null> {
+    const obj = await this.evalTask(task)
+    if (!obj) {
+      return null
+    }
+
+    let rawResult: string[]
+    switch (prop) {
+      case 'next':
+        rawResult = obj.task.next ?? []
+        break
+      case 'sub':
+        rawResult = obj.task.sub ?? []
+        break
+      case 'on_error_next':
+        rawResult = obj.task.onErrorNext ?? []
+        break
+      case 'exceeded_next':
+        rawResult = obj.task.exceededNext ?? []
+        break
+      case 'reduce_other_times':
+        rawResult = obj.task.reduceOtherTimes ?? []
+        break
+    }
+
+    const result: string[] = []
+    for (const expr of rawResult) {
+      const ast = parseExpr(expr as MaaTaskExpr)
+      if (!ast) {
+        return null
+      }
+
+      const res = await this.evalExpr(ast, task, shouldStrip(prop))
+      if (!res) {
+        return null
+      }
+
+      result.push(...res)
+    }
+
+    return result
   }
 
-  // const taskInfos = await taskIndexService.queryTask(expr)
-  // if (!taskInfos.length) {
-  //   return null
-  // }
+  async evalExpr(ast: MaaTaskExprAst, host: string, strip = false): Promise<string[] | null> {
+    let result: string[] | null
+    switch (ast.type) {
+      case 'task':
+        result = [ast.task]
+        break
+      case 'brace':
+        result = await this.evalExpr(ast.list, host)
+        break
+      case '#':
+        switch (ast.virt) {
+          case 'self':
+            if (ast.list) {
+              const prev = await this.evalExpr(ast.list, host)
+              result = prev?.map(() => host) ?? null
+            } else {
+              result = [host]
+            }
+            break
+          case 'back':
+            if (ast.list) {
+              const prev = await this.evalExpr(ast.list, host)
+              result = prev
+            } else {
+              result = []
+            }
+            break
+          case 'next':
+          case 'sub':
+          case 'on_error_next':
+          case 'exceeded_next':
+          case 'reduce_other_times':
+            if (ast.list) {
+              const prev = await this.evalExpr(ast.list, host)
+              if (!prev) {
+                return null
+              }
+              result = []
+              for (const p of prev) {
+                const res = await this.getNextList(p, ast.virt)
+                if (!res) {
+                  return null
+                }
+                result.push(...res)
+              }
+            } else {
+              result = []
+            }
+            break
+        }
+        break
+      case '@': {
+        const prefix = ast.parent.join('@')
+        result = (await this.evalExpr(ast.list, host))?.map(task => `${prefix}@${task}`) ?? null
+        break
+      }
+      case '*': {
+        const list = await this.evalExpr(ast.list, host)
+        if (!list) {
+          return null
+        }
+        result = Array.from({ length: ast.count }, () => [...list]).flat()
+        break
+      }
+      case '+': {
+        const left = await this.evalExpr(ast.left, host)
+        const right = await this.evalExpr(ast.right, host)
+        if (!left || !right) {
+          return null
+        }
+        result = [...left, ...right]
+        break
+      }
+      case '^': {
+        const left = await this.evalExpr(ast.left, host)
+        const right = await this.evalExpr(ast.right, host)
+        if (!left || !right) {
+          return null
+        }
+        const rightSet = new Set(right)
+        result = left.filter(task => !rightSet.has(task))
+        break
+      }
+    }
 
-  // const lastInfo = taskInfos[taskInfos.length - 1]
-  // return JSON.parse(lastInfo.info.taskContent)
+    if (!result) {
+      return null
+    }
 
-  return []
+    if (strip) {
+      const allTasks = new Set(result)
+      result = result.filter(task => {
+        if (allTasks.has(task)) {
+          allTasks.delete(task)
+          return true
+        } else {
+          return false
+        }
+      })
+    }
+
+    return result
+  }
 }

@@ -93,4 +93,11 @@ export type ControlWebToHost =
     }
   | {
       command: 'maa.evalTask'
+      task: string
+    }
+  | {
+      command: 'maa.evalExpr'
+      expr: string
+      host: string
+      strip: boolean
     }

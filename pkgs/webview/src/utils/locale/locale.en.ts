@@ -19,8 +19,11 @@ export default {
   'maa.control.task.current-case': 'Curr Case',
   'maa.control.launch.launch': 'Launch',
   'maa.control.launch.start': 'Start',
-  'maa.control.eval-tool': 'Eval Tool (beta)',
+  'maa.control.eval-tool': 'Eval Tool',
   'maa.control.eval-task': 'Eval Task (beta)',
+  'maa.control.eval-list': 'Eval List (beta)',
+  'maa.control.strip-list': 'Strip List',
+  'maa.control.not-strip-list': 'Not Strip List',
 
   'maa.crop.crop-tool': 'Crop Tool',
   'maa.crop.hint': 'Hold control to start cropping',

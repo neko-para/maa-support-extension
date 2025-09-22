@@ -8,7 +8,6 @@
   "maa.command.reveal-control-panel": "Maa: reveal control panel",
   "maa.command.native.select-maa": "Maa: select MaaFramework version",
   "maa.command.native.select-registry": "Maa: select fetch registry",
-  "maa.command.eval-task": "Maa: evaluate task",
   "maa.view.control-panel.title": "Maa Control Panel",
   "maa.setting.output-level": "Maa Output Channel Logging Level (Restart to apply)",
   "maa.setting.agent-timeout": "Maa Agent Launch Timeout (ms), set -1 to disable."

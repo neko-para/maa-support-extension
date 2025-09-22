@@ -14,6 +14,8 @@ import {
 } from '..'
 import { commands } from '../../command'
 import { maa } from '../../maa'
+import { maaEvalExpr, maaEvalTask } from '../../utils/eval/eval'
+import { MaaTaskExpr } from '../../utils/eval/types'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
 import { isCtrlDev } from './dev'
@@ -192,9 +194,43 @@ export class WebviewControlService extends BaseService {
           }
           launchService.launchRuntime(runtime)
           break
-        case 'maa.evalTask':
-          vscode.commands.executeCommand(commands.MaaEvalTask)
+        case 'maa.evalTask': {
+          const result = await maaEvalTask(data.task)
+          if (!result) {
+            vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+            return
+          }
+
+          let content = JSON.stringify(result.task, null, 4)
+          for (const [key, info] of Object.entries(result.trace)) {
+            content = content.replace(
+              `    "${key}"`,
+              `\n    // ${info.name} (${info.path})\n    "${key}"`
+            )
+          }
+          content = content.replace('{\n\n', '{\n')
+
+          const doc = await vscode.workspace.openTextDocument({
+            language: 'jsonc',
+            content: `// ${t('maa.eval.json.eval-task')} ${data.task}\n// ${result.self.name} (${result.self.path})\n${content}`
+          })
+          await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
           break
+        }
+        case 'maa.evalExpr': {
+          const result = await maaEvalExpr(data.expr as MaaTaskExpr, data.host, data.strip)
+          if (!result) {
+            vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+            return
+          }
+
+          const doc = await vscode.workspace.openTextDocument({
+            language: 'jsonc',
+            content: `// ${t('maa.eval.json.eval-list')} ${data.host}: ${data.expr}${data.strip ? ` [${t('maa.eval.json.stripped')}]` : ''}\n${JSON.stringify(result, null, 4)}`
+          })
+          await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
+          break
+        }
       }
     }
 

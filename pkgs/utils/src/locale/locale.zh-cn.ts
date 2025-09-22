@@ -78,5 +78,7 @@ export default {
   'maa.eval.eval-failed': '计算失败!',
   'maa.eval.loop-detected': '检测到循环',
   'maa.eval.cannot-find-task-base': '无法找到任务模板 {0}',
-  'maa.eval.json.eval-task': '计算任务 {0}'
+  'maa.eval.json.eval-task': '计算任务',
+  'maa.eval.json.eval-list': '计算列表',
+  'maa.eval.json.stripped': '已去重'
 } as const

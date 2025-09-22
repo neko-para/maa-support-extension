@@ -19,8 +19,11 @@ export default {
   'maa.control.task.current-case': '当前值',
   'maa.control.launch.launch': '执行',
   'maa.control.launch.start': '启动',
-  'maa.control.eval-tool': '计算工具 (beta)',
+  'maa.control.eval-tool': '计算工具',
   'maa.control.eval-task': '计算任务 (beta)',
+  'maa.control.eval-list': '计算列表 (beta)',
+  'maa.control.strip-list': '列表去重',
+  'maa.control.not-strip-list': '列表不去重',
 
   'maa.crop.crop-tool': '截图工具',
   'maa.crop.hint': '按住control以开始裁剪',

@@ -60,11 +60,6 @@
         "command": "maa.native.select-registry"
       },
       {
-        "title": "%maa.command.eval-task%",
-        "command": "maa.eval-task",
-        "enablement": "maa.maa-mode"
-      },
-      {
         "title": "Maa(debug): query location",
         "command": "maa.debug.query-location"
       }

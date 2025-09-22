@@ -9,7 +9,10 @@ let parser: ReturnType<typeof buildParser> | null = null
 function buildParser() {
   return makeParser(
     [
-      ['virt', /self|back|next|sub|on_error_next|exceeded_next|reduce_other_times/],
+      [
+        'virt',
+        /(?:self|back|next|sub|on_error_next|exceeded_next|reduce_other_times)(?![a-zA-Z0-9_-])/
+      ],
       // ['number', /\d+/], 有些task真的是全是数字, 太坏了
       ['task', /[a-zA-Z0-9_-]+/],
       ['sharp', /#/],

@@ -13,7 +13,7 @@ function buildParser() {
         'virt',
         /(?:self|back|next|sub|on_error_next|exceeded_next|reduce_other_times)(?![a-zA-Z0-9_-])/
       ],
-      // ['number', /\d+/], 有些task真的是全是数字, 太坏了
+      ['number', /\d+/],
       ['task', /[a-zA-Z0-9_-]+/],
       ['sharp', /#/],
       ['at', /@/],
@@ -26,6 +26,8 @@ function buildParser() {
     (curr, getBack) => {
       if (curr === '%virt') {
         return getBack(0) !== '%sharp'
+      } else if (curr === '%number') {
+        return getBack(0) !== '%multi'
       }
       return false
     },
@@ -101,11 +103,11 @@ function buildParser() {
 
       .for('taskList2')
         .sameas('taskList3')
-        .when('taskList3', '%multi', '%task')
+        .when('taskList3', '%multi', '%number')
           .do(([list, , count]) => ({
             type: '*',
             list,
-            count: /\d+/.test(count) ? parseInt(count) : 0
+            count: parseInt(count)
           }))
 
       .for('taskList1')

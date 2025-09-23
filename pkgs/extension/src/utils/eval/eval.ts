@@ -58,7 +58,7 @@ export async function maaEvalExpr(
 function makeUnique(input: string[], keepLast = false): string[] {
   const inputSet = new Set(input)
   if (keepLast) {
-    input.reverse()
+    input = input.toReversed()
   }
   input = input.filter(task => {
     if (inputSet.has(task)) {
@@ -72,11 +72,29 @@ function makeUnique(input: string[], keepLast = false): string[] {
   return input
 }
 
+function removeDupPrefix(segs: string[]) {
+  const last = segs.pop()!
+  return [...makeUnique(segs, true), last].join('@')
+}
+
 class EvalContext {
   cache: Record<string, MaaTaskWithTraceInfo<MaaTaskBaseResolved>> = {}
   evalChain: string[] = []
+  evalExprGetPropChain: string[] = []
 
   async evalTask(
+    task: string | string[]
+  ): Promise<MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null> {
+    if (typeof task === 'string') {
+      task = task.split('@')
+    } else {
+      task = [...task]
+    }
+
+    return this.evalTaskImpl(removeDupPrefix(task))
+  }
+
+  async evalTaskImpl(
     task: string,
     parent: string[] = []
   ): Promise<MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null> {
@@ -127,7 +145,7 @@ class EvalContext {
       }
 
       const seg = segs.shift()!
-      const result = this.evalTask(segs.join('@'), [...parent, seg])
+      const result = this.evalTaskImpl(segs.join('@'), [...parent, seg])
       this.evalChain.pop()
       return result
     } else {
@@ -149,7 +167,7 @@ class EvalContext {
         return result
       } else {
         const seg = segs.shift()!
-        const base = await this.evalTask(segs.join('@'))
+        const base = await this.evalTask(segs)
         if (!base) {
           vscode.window.showWarningMessage(t('maa.eval.cannot-find-task-base', segs.join('@')))
         }
@@ -208,9 +226,22 @@ class EvalContext {
     return null
   }
 
-  async getNextList(task: string, prop: VirtTaskProp): Promise<string[] | null> {
+  async getNextList(task: string, prop: VirtTaskProp, host: string): Promise<string[] | null> {
+    const key = `${task}.${prop}`
+
+    if (this.evalExprGetPropChain.indexOf(key) !== -1) {
+      this.evalExprGetPropChain.push(key)
+      vscode.window.showErrorMessage(
+        `${t('maa.eval.loop-detected')} ${this.evalExprGetPropChain.join(' -> ')}`
+      )
+      return null
+    }
+
+    this.evalExprGetPropChain.push(key)
+
     const obj = await this.evalTask(task)
     if (!obj) {
+      this.evalExprGetPropChain.pop()
       return null
     }
 
@@ -237,17 +268,20 @@ class EvalContext {
     for (const expr of rawResult) {
       const ast = parseExpr(expr as MaaTaskExpr)
       if (!ast) {
+        this.evalExprGetPropChain.pop()
         return null
       }
 
-      const res = await this.evalExpr(ast, task, shouldStrip(prop))
+      const res = await this.evalExpr(ast, host, shouldStrip(prop))
       if (!res) {
+        this.evalExprGetPropChain.pop()
         return null
       }
 
       result.push(...res)
     }
 
+    this.evalExprGetPropChain.pop()
     return result
   }
 
@@ -307,9 +341,7 @@ class EvalContext {
           stages.unshift(output)
         }
 
-        const expand = stages.shift()!.map(task => {
-          return makeUnique(task.split('@'), true).join('@')
-        })
+        const expand = stages.shift()!.map(task => removeDupPrefix(task.split('@')))
 
         switch (ast.virt) {
           case undefined:
@@ -331,7 +363,7 @@ class EvalContext {
           case 'reduce_other_times':
             result = []
             for (const p of expand) {
-              const res = await this.getNextList(p, ast.virt)
+              const res = await this.getNextList(p, ast.virt, host)
               if (!res) {
                 return null
               }

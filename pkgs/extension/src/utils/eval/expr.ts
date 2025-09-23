@@ -59,6 +59,8 @@ function buildParser() {
 
       .for('atTaskList')
         .when('taskList4')
+          .do(([task]) => [task])
+        .when('taskList4')
           .withloop()
             .when('%at', 'taskList4')
               .do(([, task]) => (task))

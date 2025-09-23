@@ -55,6 +55,23 @@ export async function maaEvalExpr(
   return await ctx.evalExpr(ast, host, strip)
 }
 
+function makeUnique(input: string[], keepLast = false): string[] {
+  const inputSet = new Set(input)
+  if (keepLast) {
+    input.reverse()
+  }
+  input = input.filter(task => {
+    if (inputSet.has(task)) {
+      inputSet.delete(task)
+      return true
+    } else {
+      return false
+    }
+  })
+  input.reverse()
+  return input
+}
+
 class EvalContext {
   cache: Record<string, MaaTaskWithTraceInfo<MaaTaskBaseResolved>> = {}
   evalChain: string[] = []
@@ -290,7 +307,9 @@ class EvalContext {
           stages.unshift(output)
         }
 
-        const expand = stages.shift()!
+        const expand = stages.shift()!.map(task => {
+          return makeUnique(task.split('@'), true).join('@')
+        })
 
         switch (ast.virt) {
           case undefined:
@@ -356,15 +375,7 @@ class EvalContext {
     }
 
     if (strip) {
-      const allTasks = new Set(result)
-      result = result.filter(task => {
-        if (allTasks.has(task)) {
-          allTasks.delete(task)
-          return true
-        } else {
-          return false
-        }
-      })
+      result = makeUnique(result)
     }
 
     return result

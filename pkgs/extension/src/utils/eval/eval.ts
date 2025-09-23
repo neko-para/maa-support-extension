@@ -4,7 +4,7 @@ import { logger, t } from '@mse/utils'
 
 import { rootService, taskIndexService } from '../../service'
 import { isMaaAssistantArknights } from '../fs'
-import { MaaTaskExprAst, addParent, addParentToExpr, parseExpr } from './expr'
+import { MaaTaskExprAst, parseExpr } from './expr'
 import { MaaTask, MaaTaskBaseProps, MaaTaskExpr, MaaTaskExprProps } from './types'
 import {
   MaaTaskBaseResolved,
@@ -245,49 +245,81 @@ class EvalContext {
         break
       case '#':
         switch (ast.virt) {
+          case 'none':
+            result = []
+            break
           case 'self':
-            if (ast.list) {
-              const prev = await this.evalExpr(ast.list, host)
-              result = prev?.map(() => host) ?? null
-            } else {
-              result = [host]
-            }
+            result = [host]
             break
           case 'back':
-            if (ast.list) {
-              const prev = await this.evalExpr(ast.list, host)
-              result = prev
-            } else {
-              result = []
-            }
+            result = []
             break
           case 'next':
           case 'sub':
           case 'on_error_next':
           case 'exceeded_next':
           case 'reduce_other_times':
-            if (ast.list) {
-              const prev = await this.evalExpr(ast.list, host)
-              if (!prev) {
-                return null
-              }
-              result = []
-              for (const p of prev) {
-                const res = await this.getNextList(p, ast.virt)
-                if (!res) {
-                  return null
-                }
-                result.push(...res)
-              }
-            } else {
-              result = []
-            }
+            result = []
             break
         }
         break
       case '@': {
-        const prefix = ast.parent.join('@')
-        result = (await this.evalExpr(ast.list, host))?.map(task => `${prefix}@${task}`) ?? null
+        const stages: string[][] = []
+        let count = 1
+        for (const list of ast.list) {
+          const stage = await this.evalExpr(list, host)
+          if (!stage) {
+            return null
+          }
+          stages.push(stage)
+          count *= stage.length
+        }
+        if (count > 100000) {
+          logger.error(`expr too large ${count}`)
+          return null
+        }
+        while (stages.length > 1) {
+          const first = stages.shift()!
+          const second = stages.shift()!
+          const output: string[] = []
+          for (const f of first) {
+            for (const s of second) {
+              output.push(`${f}@${s}`)
+            }
+          }
+          stages.unshift(output)
+        }
+
+        const expand = stages.shift()!
+
+        switch (ast.virt) {
+          case undefined:
+            result = expand
+            break
+          case 'none':
+            result = []
+            break
+          case 'self':
+            result = expand.map(() => host) ?? null
+            break
+          case 'back':
+            result = expand
+            break
+          case 'next':
+          case 'sub':
+          case 'on_error_next':
+          case 'exceeded_next':
+          case 'reduce_other_times':
+            result = []
+            for (const p of expand) {
+              const res = await this.getNextList(p, ast.virt)
+              if (!res) {
+                return null
+              }
+              result.push(...res)
+            }
+            break
+        }
         break
       }
       case '*': {

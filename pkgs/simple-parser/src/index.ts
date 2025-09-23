@@ -1,4 +1,4 @@
-import SimpleParser, { TokenFilter } from './impl'
+import SimpleParser, { type TokenFilter } from './impl'
 
 type TokenDecl = [token: string, grammar: RegExp]
 
@@ -135,6 +135,8 @@ type ExtractResultType<Return> =
     : Return extends RuleContext<infer Entry, infer Tokens, infer Exprs>
       ? Entry
       : never
+
+///
 
 export function declExpr<Exprs extends Record<string, unknown>>(): Exprs {
   return {} as Exprs

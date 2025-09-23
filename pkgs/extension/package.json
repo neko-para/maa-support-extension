@@ -7,6 +7,7 @@
     "@maaxyz/maa-node": "4.5.2",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",
+    "@nekosu/simple-parser": "workspace:*",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.17.9",
     "@types/pacote": "^11.1.8",

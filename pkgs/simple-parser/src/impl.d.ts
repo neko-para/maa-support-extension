@@ -22,7 +22,7 @@ export type RuleContext = {
 
 export type ForContext = {
   for: (expr?: string) => ForContext
-  with: (func: (ctx: ForContext) => void) => ForContext
+  // with: (func: (ctx: ForContext) => void) => ForContext
   when: (...keys: string[]) => WhenContext
   sameas: (key: string) => ForContext
 }

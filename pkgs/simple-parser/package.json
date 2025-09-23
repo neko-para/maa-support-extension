@@ -1,0 +1,4 @@
+{
+  "name": "@nekosu/simple-parser",
+  "main": "src/index.ts"
+}

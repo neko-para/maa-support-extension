@@ -1,6 +1,6 @@
 import { logger } from '@mse/utils'
+import { declExpr, makeParser } from '@nekosu/simple-parser'
 
-import { declExpr, makeParser } from './simpleParser'
 import { MaaTaskExpr } from './types'
 import { AllVirtTaskProp } from './utils'
 

@@ -5,7 +5,7 @@
   "arrowParens": "avoid",
   "printWidth": 100,
 
-  "importOrder": ["^@mse/", "^@/", "^\\."],
+  "importOrder": ["^@(mse|nekosu)/", "^@/", "^\\."],
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,
 

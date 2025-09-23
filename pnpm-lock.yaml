@@ -61,6 +61,9 @@ importers:
       '@mse/utils':
         specifier: workspace:*
         version: link:../utils
+      '@nekosu/simple-parser':
+        specifier: workspace:*
+        version: link:../simple-parser
       '@tsconfig/node20':
         specifier: ^20.1.4
         version: 20.1.4
@@ -109,6 +112,8 @@ importers:
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
+
+  pkgs/simple-parser: {}
 
   pkgs/types:
     devDependencies:

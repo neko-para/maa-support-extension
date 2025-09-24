@@ -3,6 +3,11 @@ import type * as maa from '@maaxyz/maa-node'
 import type { Interface, InterfaceConfig } from '../pi'
 import type { HostStateBase } from './base'
 
+export type EvalTaskConfig = {
+  expandList?: boolean
+  stripList?: boolean // default true
+}
+
 export type ControlHostState = HostStateBase & {
   interface?: string[]
   activeInterface?: string
@@ -10,6 +15,8 @@ export type ControlHostState = HostStateBase & {
 
   interfaceJson?: Partial<Interface>
   interfaceConfigJson?: Partial<InterfaceConfig>
+
+  evalTaskConfig?: EvalTaskConfig
 }
 
 export type ControlHostToWeb = {
@@ -99,5 +106,8 @@ export type ControlWebToHost =
       command: 'maa.evalExpr'
       expr: string
       host: string
-      strip: boolean
+    }
+  | {
+      command: 'maa.updateEvalConfig'
+      config: EvalTaskConfig
     }

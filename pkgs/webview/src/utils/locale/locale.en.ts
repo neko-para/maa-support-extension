@@ -22,6 +22,8 @@ export default {
   'maa.control.eval-tool': 'Eval Tool',
   'maa.control.eval-task': 'Eval Task (beta)',
   'maa.control.eval-list': 'Eval List (beta)',
+  'maa.control.expand-list': 'Expand List',
+  'maa.control.not-expand-list': 'Not Expand List',
   'maa.control.strip-list': 'Strip List',
   'maa.control.not-strip-list': 'Not Strip List',
 

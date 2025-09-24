@@ -22,6 +22,8 @@ export default {
   'maa.control.eval-tool': '计算工具',
   'maa.control.eval-task': '计算任务 (beta)',
   'maa.control.eval-list': '计算列表 (beta)',
+  'maa.control.expand-list': '展开列表',
+  'maa.control.not-expand-list': '不展开列表',
   'maa.control.strip-list': '列表去重',
   'maa.control.not-strip-list': '列表不去重',
 

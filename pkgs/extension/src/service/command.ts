@@ -2,10 +2,11 @@ import * as vscode from 'vscode'
 
 import { logger, t } from '@mse/utils'
 
-import { interfaceService, launchService, rootService, taskIndexService } from '.'
+import { interfaceService, launchService, rootService, stateService, taskIndexService } from '.'
 import { commands } from '../command'
 import { maaEvalExpr, maaEvalTask } from '../utils/eval/eval'
-import { MaaTaskExpr } from '../utils/eval/types'
+import { MaaTaskExpr, MaaTaskExprProps } from '../utils/eval/types'
+import { NextPropMap, shouldStrip } from '../utils/eval/utils'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { TaskIndexInfo } from './types'
@@ -108,12 +109,39 @@ export class CommandService extends BaseService {
         return false
       }
 
+      const originalExpr: Partial<Record<string, string>> = {}
+      if (stateService.state.evalTaskConfig?.expandList) {
+        for (const prop of MaaTaskExprProps) {
+          if (prop in result.task) {
+            const list = result.task[prop]!
+            originalExpr[prop] = JSON.stringify(list)
+
+            const listResult: string[] = []
+            for (const expr of list) {
+              const exprResult = await maaEvalExpr(expr, task, shouldStrip(NextPropMap[prop]))
+              if (!exprResult) {
+                vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+                return false
+              }
+              listResult.push(...exprResult)
+            }
+            result.task[prop] = listResult as MaaTaskExpr[]
+          }
+        }
+      }
+
       let content = JSON.stringify(result.task, null, 4)
       for (const [key, info] of Object.entries(result.trace)) {
         content = content.replace(
           `    "${key}"`,
           `\n    // ${info.name} (${info.path})\n    "${key}"`
         )
+        if (key in originalExpr) {
+          content = content.replace(
+            `    "${key}"`,
+            `    // ${t('maa.eval.json.expanded-from')} ${originalExpr[key]}\n    "${key}"`
+          )
+        }
       }
       content = content.replace('{\n\n', '{\n')
 

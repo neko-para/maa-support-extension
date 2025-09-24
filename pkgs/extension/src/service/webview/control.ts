@@ -14,8 +14,6 @@ import {
 } from '..'
 import { commands } from '../../command'
 import { maa } from '../../maa'
-import { maaEvalExpr, maaEvalTask } from '../../utils/eval/eval'
-import { MaaTaskExpr } from '../../utils/eval/types'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
 import { isCtrlDev } from './dev'
@@ -194,14 +192,23 @@ export class WebviewControlService extends BaseService {
           }
           launchService.launchRuntime(runtime)
           break
-        case 'maa.evalTask': {
+        case 'maa.evalTask':
           await vscode.commands.executeCommand(commands.EvalTask, data.task)
           break
-        }
-        case 'maa.evalExpr': {
-          await vscode.commands.executeCommand(commands.EvalExpr, data.expr, data.host, data.strip)
+        case 'maa.evalExpr':
+          await vscode.commands.executeCommand(
+            commands.EvalExpr,
+            data.expr,
+            data.host,
+            stateService.state.evalTaskConfig?.stripList ?? true
+          )
           break
-        }
+        case 'maa.updateEvalConfig':
+          stateService.reduce({
+            evalTaskConfig: data.config
+          })
+          this.pushState()
+          break
       }
     }
 
@@ -232,7 +239,9 @@ export class WebviewControlService extends BaseService {
       refreshingInterface: rootService.refreshing,
 
       interfaceJson: interfaceService.interfaceJson,
-      interfaceConfigJson: interfaceService.interfaceConfigJson
+      interfaceConfigJson: interfaceService.interfaceConfigJson,
+
+      evalTaskConfig: stateService.state.evalTaskConfig
     }
   }
 

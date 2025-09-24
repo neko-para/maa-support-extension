@@ -74,22 +74,6 @@ export class PipelineCodeLensProvider
               arguments: [taskName]
             })
           )
-          // const obj = JSON.parse(taskInfo.taskContent) as MaaTask
-          // for (const prop of MaaTaskExprProps) {
-          //   if (prop in obj) {
-          //     result.push(
-          //       new vscode.CodeLens(taskInfo.taskProp, {
-          //         title: t('maa.pipeline.codelens.eval-expr', prop),
-          //         command: commands.EvalExpr,
-          //         arguments: [
-          //           `${taskName}#${NextPropMap[prop]}`,
-          //           taskName,
-          //           shouldStrip(NextPropMap[prop])
-          //         ]
-          //       })
-          //     )
-          //   }
-          // }
         }
       }
     }

@@ -83,5 +83,6 @@ export default {
   'maa.eval.cannot-find-task-base': 'Cannot find task template {0}',
   'maa.eval.json.eval-task': 'Evaluate Task',
   'maa.eval.json.eval-list': 'Evaluate List',
-  'maa.eval.json.stripped': 'Stripped'
+  'maa.eval.json.stripped': 'Stripped',
+  'maa.eval.json.expanded-from': 'Expanded From'
 } as const

@@ -1,4 +1,4 @@
-import { CropHostState } from '@mse/types'
+import { CropHostState, EvalTaskConfig } from '@mse/types'
 
 import { BaseService, context } from './context'
 
@@ -9,6 +9,8 @@ export type State = {
   cropSettings?: CropHostState
 
   breakTasks?: string[]
+
+  evalTaskConfig?: EvalTaskConfig
 }
 
 const stateKey = 'stateService:state'

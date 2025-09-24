@@ -4,10 +4,10 @@ import { computed, ref } from 'vue'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
+import { hostState } from '../state'
 
 const task = ref('')
 const expr = ref('')
-const exprStrip = ref(true)
 
 const isTaskValid = computed(() => {
   return /^[ \n\ta-zA-Z0-9_@-]+$/.test(task.value)
@@ -28,8 +28,29 @@ function evalExpr() {
   ipc.send({
     command: 'maa.evalExpr',
     expr: expr.value,
-    host: task.value,
-    strip: exprStrip.value
+    host: task.value
+  })
+}
+
+function updateExpandList(expandList: boolean) {
+  ipc.send({
+    command: 'maa.updateEvalConfig',
+    config: {
+      ...(hostState.value.evalTaskConfig ?? {}),
+
+      expandList
+    }
+  })
+}
+
+function updateStripList(stripList: boolean) {
+  ipc.send({
+    command: 'maa.updateEvalConfig',
+    config: {
+      ...(hostState.value.evalTaskConfig ?? {}),
+
+      stripList
+    }
   })
 }
 </script>
@@ -40,10 +61,26 @@ function evalExpr() {
       <n-input v-model:value="task" placeholder="input task" size="small"></n-input>
       <n-input v-model:value="expr" placeholder="input expr" size="small"></n-input>
       <n-flex>
-        <n-switch v-model:value="exprStrip"></n-switch>
+        <n-switch
+          :value="hostState.evalTaskConfig?.expandList"
+          @update:value="updateExpandList"
+        ></n-switch>
         <span>
           {{
-            exprStrip
+            hostState.evalTaskConfig?.expandList
+              ? t('maa.control.expand-list')
+              : t('maa.control.not-expand-list')
+          }}
+        </span>
+      </n-flex>
+      <n-flex>
+        <n-switch
+          :value="hostState.evalTaskConfig?.stripList ?? true"
+          @update:value="updateStripList"
+        ></n-switch>
+        <span>
+          {{
+            (hostState.evalTaskConfig?.stripList ?? true)
               ? `${t('maa.control.strip-list')} - next / on_error_next / exceeded_next`
               : `${t('maa.control.not-strip-list')} - sub / reduce_other_times`
           }}

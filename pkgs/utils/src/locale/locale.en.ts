@@ -41,6 +41,8 @@ export default {
   'maa.debug.task-failed': 'Task failed {0} - {1}',
 
   'maa.pipeline.codelens.launch': 'Launch',
+  'maa.pipeline.codelens.eval-task': 'Eval Task',
+  'maa.pipeline.codelens.eval-expr': 'Eval {0}',
   'maa.pipeline.codelens.resource-switch': 'Switch',
   'maa.pipeline.codelens.resource-activated': 'Activated',
 

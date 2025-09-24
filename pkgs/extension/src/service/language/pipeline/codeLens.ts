@@ -4,6 +4,8 @@ import { t } from '@mse/utils'
 
 import { interfaceService, taskIndexService } from '../..'
 import { commands } from '../../../command'
+import { MaaTask, MaaTaskExprProps } from '../../../utils/eval/types'
+import { NextPropMap, VirtTaskProp, shouldStrip } from '../../../utils/eval/utils'
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { debounce } from '../../utils/debounce'
 import { PipelineLanguageProvider } from './base'
@@ -42,10 +44,6 @@ export class PipelineCodeLensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
-    if (isMaaAssistantArknights) {
-      return []
-    }
-
     await taskIndexService.flushDirty()
 
     const layer = taskIndexService.getLayer(document.uri)
@@ -60,13 +58,39 @@ export class PipelineCodeLensProvider
         if (taskInfo.uri.fsPath !== document.uri.fsPath) {
           continue
         }
-        result.push(
-          new vscode.CodeLens(taskInfo.taskProp, {
-            title: t('maa.pipeline.codelens.launch'),
-            command: commands.LaunchTask,
-            arguments: [taskName]
-          })
-        )
+        if (!isMaaAssistantArknights) {
+          result.push(
+            new vscode.CodeLens(taskInfo.taskProp, {
+              title: t('maa.pipeline.codelens.launch'),
+              command: commands.LaunchTask,
+              arguments: [taskName]
+            })
+          )
+        } else {
+          result.push(
+            new vscode.CodeLens(taskInfo.taskProp, {
+              title: t('maa.pipeline.codelens.eval-task'),
+              command: commands.EvalTask,
+              arguments: [taskName]
+            })
+          )
+          // const obj = JSON.parse(taskInfo.taskContent) as MaaTask
+          // for (const prop of MaaTaskExprProps) {
+          //   if (prop in obj) {
+          //     result.push(
+          //       new vscode.CodeLens(taskInfo.taskProp, {
+          //         title: t('maa.pipeline.codelens.eval-expr', prop),
+          //         command: commands.EvalExpr,
+          //         arguments: [
+          //           `${taskName}#${NextPropMap[prop]}`,
+          //           taskName,
+          //           shouldStrip(NextPropMap[prop])
+          //         ]
+          //       })
+          //     )
+          //   }
+          // }
+        }
       }
     }
     return result

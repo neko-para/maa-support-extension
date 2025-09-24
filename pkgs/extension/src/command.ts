@@ -4,6 +4,9 @@ export const commands = {
 
   GotoTask: 'maa.goto-task',
   LaunchTask: 'maa.launch-task',
+  EvalTask: 'maa.eval-task',
+  EvalExprImpl: 'maa.eval-expr-impl',
+  EvalExpr: 'maa.eval-expr',
 
   LaunchInterface: 'maa.launch-interface',
   OpenCrop: 'maa.open-crop',

@@ -68,7 +68,9 @@ function makeUnique(input: string[], keepLast = false): string[] {
       return false
     }
   })
-  input.reverse()
+  if (keepLast) {
+    input.reverse()
+  }
   return input
 }
 
@@ -253,11 +255,11 @@ class EvalContext {
       case 'sub':
         rawResult = obj.task.sub ?? []
         break
-      case 'on_error_next':
-        rawResult = obj.task.onErrorNext ?? []
-        break
       case 'exceeded_next':
         rawResult = obj.task.exceededNext ?? []
+        break
+      case 'on_error_next':
+        rawResult = obj.task.onErrorNext ?? []
         break
       case 'reduce_other_times':
         rawResult = obj.task.reduceOtherTimes ?? []
@@ -307,8 +309,8 @@ class EvalContext {
             break
           case 'next':
           case 'sub':
-          case 'on_error_next':
           case 'exceeded_next':
+          case 'on_error_next':
           case 'reduce_other_times':
             result = []
             break
@@ -358,8 +360,8 @@ class EvalContext {
             break
           case 'next':
           case 'sub':
-          case 'on_error_next':
           case 'exceeded_next':
+          case 'on_error_next':
           case 'reduce_other_times':
             result = []
             for (const p of expand) {

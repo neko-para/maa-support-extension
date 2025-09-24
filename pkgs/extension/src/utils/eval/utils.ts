@@ -160,7 +160,15 @@ export function applyParentToTask(
 }
 
 export type AllVirtTaskProp = 'none' | 'self' | 'back' | VirtTaskProp
-export type VirtTaskProp = 'next' | 'sub' | 'on_error_next' | 'exceeded_next' | 'reduce_other_times'
+export type VirtTaskProp = 'next' | 'sub' | 'exceeded_next' | 'on_error_next' | 'reduce_other_times'
 export function shouldStrip(prop: VirtTaskProp) {
-  return prop === 'next' || prop === 'on_error_next' || prop === 'exceeded_next'
+  return ['next', 'exceeded_next', 'on_error_next'].includes(prop)
 }
+
+export const NextPropMap = {
+  sub: 'sub',
+  next: 'next',
+  exceededNext: 'exceeded_next',
+  onErrorNext: 'on_error_next',
+  reduceOtherTimes: 'reduce_other_times'
+} as const

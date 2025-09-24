@@ -59,8 +59,6 @@ function buildParser() {
 
       .for('atTaskList')
         .when('taskList4')
-          .do(([task]) => [task])
-        .when('taskList4')
           .withloop()
             .when('%at', 'taskList4')
               .do(([, task]) => (task))
@@ -80,6 +78,12 @@ function buildParser() {
 
       .for('taskList3')
         .sameas('taskList4')
+        .when('taskList4', 'taskVirt')
+          .do(([list, virt]) => ({
+            type: '@',
+            list: [list],
+            virt: virt.virt
+          }))
         .sameas('taskVirt')
         .when('atTaskList', 'taskVirt')
           .do(([list, virt]) => ({

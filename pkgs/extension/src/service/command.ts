@@ -4,6 +4,9 @@ import { logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, rootService, taskIndexService } from '.'
 import { commands } from '../command'
+import { maaEvalExpr, maaEvalTask } from '../utils/eval/eval'
+import { MaaTaskExpr } from '../utils/eval/types'
+import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { TaskIndexInfo } from './types'
 import { WebviewCropPanel } from './webview/crop'
@@ -92,6 +95,63 @@ export class CommandService extends BaseService {
         } catch {}
       }
     })
+
+    this.defer = vscode.commands.registerCommand(commands.EvalTask, async (task?: string) => {
+      if (!isMaaAssistantArknights || typeof task !== 'string') {
+        vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+        return false
+      }
+
+      const result = await maaEvalTask(task)
+      if (!result) {
+        vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+        return false
+      }
+
+      let content = JSON.stringify(result.task, null, 4)
+      for (const [key, info] of Object.entries(result.trace)) {
+        content = content.replace(
+          `    "${key}"`,
+          `\n    // ${info.name} (${info.path})\n    "${key}"`
+        )
+      }
+      content = content.replace('{\n\n', '{\n')
+
+      const doc = await vscode.workspace.openTextDocument({
+        language: 'jsonc',
+        content: `// ${t('maa.eval.json.eval-task')} ${task}\n// ${result.self.name} (${result.self.path})\n${content}`
+      })
+      await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
+      return true
+    })
+
+    this.defer = vscode.commands.registerCommand(
+      commands.EvalExpr,
+      async (expr?: string, host?: string, strip?: boolean) => {
+        if (
+          !isMaaAssistantArknights ||
+          typeof expr !== 'string' ||
+          typeof host !== 'string' ||
+          typeof strip !== 'boolean'
+        ) {
+          vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+          return false
+        }
+
+        const result = await maaEvalExpr(expr as MaaTaskExpr, host, strip)
+        if (!result) {
+          vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+          return false
+        }
+
+        const doc = await vscode.workspace.openTextDocument({
+          language: 'jsonc',
+          content: `// ${t('maa.eval.json.eval-list')} ${host}: ${expr}${strip ? ` [${t('maa.eval.json.stripped')}]` : ''}\n${JSON.stringify(result, null, 4)}`
+        })
+        await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
+        return true
+      }
+    )
   }
 
   async init() {

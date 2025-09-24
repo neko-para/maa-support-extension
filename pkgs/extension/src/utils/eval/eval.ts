@@ -100,20 +100,22 @@ class EvalContext {
     task: string,
     parent: string[] = []
   ): Promise<MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null> {
+    const key = `${parent.join('@')}:${task}`
+
     const name = [...parent, task].join('@')
     if (this.cache[name]) {
       return this.cache[name]
     }
 
-    if (this.evalChain.indexOf(name) !== -1) {
-      this.evalChain.push(name)
+    if (this.evalChain.indexOf(key) !== -1) {
+      this.evalChain.push(key)
       vscode.window.showErrorMessage(
         `${t('maa.eval.loop-detected')} ${this.evalChain.join(' -> ')}`
       )
       return null
     }
 
-    this.evalChain.push(name)
+    this.evalChain.push(key)
 
     // 禁用flush，并且禁用回退
     const infos = (await taskIndexService.queryTask(task, undefined, undefined, false, false)).map(

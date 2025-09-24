@@ -50,6 +50,10 @@ export function useTheme(type: 'view' | 'panel') {
           }
         }
       },
+      Input: {
+        border: `${getVar('--vscode-editorWidget-border')} solid 1px`,
+        borderRadius: '0'
+      },
       DynamicTags: {
         peers: {
           Tag: {

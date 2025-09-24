@@ -12,5 +12,5 @@ body {
 }
 
 ::selection {
-  background-color: var(--vscode-selection-background);
+  background-color: var(--vscode-selection-background, revert);
 }

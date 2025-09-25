@@ -1,12 +1,11 @@
 import * as vscode from 'vscode'
 
 import { logger, t } from '@mse/utils'
+import { MaaTaskExpr, TaskExprProps, TaskExprPropsVirtsMap, shouldStrip } from '@nekosu/maa-tasker'
 
 import { interfaceService, launchService, rootService, stateService, taskIndexService } from '.'
 import { commands } from '../command'
-import { maaEvalExpr, maaEvalTask } from '../utils/eval/eval'
-import { MaaTaskExpr, MaaTaskExprProps } from '../utils/eval/types'
-import { NextPropMap, shouldStrip } from '../utils/eval/utils'
+import { maaEvalExpr, maaEvalTask } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { TaskIndexInfo } from './types'
@@ -111,14 +110,18 @@ export class CommandService extends BaseService {
 
       const originalExpr: Partial<Record<string, string>> = {}
       if (stateService.state.evalTaskConfig?.expandList) {
-        for (const prop of MaaTaskExprProps) {
+        for (const prop of TaskExprProps) {
           if (prop in result.task) {
             const list = result.task[prop]!
             originalExpr[prop] = JSON.stringify(list)
 
             const listResult: string[] = []
             for (const expr of list) {
-              const exprResult = await maaEvalExpr(expr, task, shouldStrip(NextPropMap[prop]))
+              const exprResult = await maaEvalExpr(
+                expr,
+                task,
+                shouldStrip(TaskExprPropsVirtsMap[prop])
+              )
               if (!exprResult) {
                 vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
                 return false
@@ -134,7 +137,7 @@ export class CommandService extends BaseService {
       for (const [key, info] of Object.entries(result.trace)) {
         content = content.replace(
           `    "${key}"`,
-          `\n    // ${info.name} (${info.path})\n    "${key}"`
+          `\n    // ${info.task} (${info.anchor})\n    "${key}"`
         )
         if (key in originalExpr) {
           content = content.replace(
@@ -147,7 +150,7 @@ export class CommandService extends BaseService {
 
       const doc = await vscode.workspace.openTextDocument({
         language: 'jsonc',
-        content: `// ${t('maa.eval.json.eval-task')} ${task}\n// ${result.self.name} (${result.self.path})\n${content}`
+        content: `// ${t('maa.eval.json.eval-task')} ${task}\n// ${result.self.task} (${result.self.anchor})\n${content}`
       })
       await vscode.window.showTextDocument(doc, vscode.ViewColumn.Two)
       return true

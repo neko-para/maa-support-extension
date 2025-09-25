@@ -61,12 +61,15 @@ importers:
       '@mse/utils':
         specifier: workspace:*
         version: link:../utils
+      '@nekosu/maa-tasker':
+        specifier: workspace:*
+        version: link:../maa-tasker
       '@nekosu/simple-parser':
         specifier: workspace:*
         version: link:../simple-parser
       '@tsconfig/node20':
-        specifier: ^20.1.4
-        version: 20.1.4
+        specifier: ^20.1.6
+        version: 20.1.6
       '@types/node':
         specifier: ^20.17.9
         version: 20.17.9
@@ -113,7 +116,20 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
 
-  pkgs/simple-parser: {}
+  pkgs/maa-tasker:
+    devDependencies:
+      '@nekosu/simple-parser':
+        specifier: workspace:*
+        version: link:../simple-parser
+      '@tsconfig/node20':
+        specifier: ^20.1.6
+        version: 20.1.6
+
+  pkgs/simple-parser:
+    devDependencies:
+      '@tsconfig/node20':
+        specifier: ^20.1.6
+        version: 20.1.6
 
   pkgs/types:
     devDependencies:
@@ -127,8 +143,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@tsconfig/node20':
-        specifier: ^20.1.4
-        version: 20.1.4
+        specifier: ^20.1.6
+        version: 20.1.6
       '@types/node':
         specifier: ^20.17.9
         version: 20.17.9
@@ -1179,11 +1195,11 @@ packages:
       '@vue/compiler-sfc':
         optional: true
 
-  '@tsconfig/node20@20.1.4':
-    resolution: {integrity: sha512-sqgsT69YFeLWf5NtJ4Xq/xAF8p4ZQHlmGW74Nu2tD4+g5fAsposc4ZfaaPixVu4y01BEiDCWLRDCvDM5JOsRxg==}
-
   '@tsconfig/node20@20.1.5':
     resolution: {integrity: sha512-Vm8e3WxDTqMGPU4GATF9keQAIy1Drd7bPwlgzKJnZtoOsTm1tduUTbDjg0W5qERvGuxPI2h9RbMufH0YdfBylA==}
+
+  '@tsconfig/node20@20.1.6':
+    resolution: {integrity: sha512-sz+Hqx9zwZDpZIV871WSbUzSqNIsXzghZydypnfgzPKLltVJfkINfUeTct31n/tTSa9ZE1ZOfKdRre1uHHquYQ==}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -3179,9 +3195,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tsconfig/node20@20.1.4': {}
-
   '@tsconfig/node20@20.1.5': {}
+
+  '@tsconfig/node20@20.1.6': {}
 
   '@tufjs/canonical-json@2.0.0': {}
 

@@ -1,7 +1,8 @@
 {
-  "name": "@nekosu/simple-parser",
+  "name": "@nekosu/maa-tasker",
   "main": "src/index.ts",
   "devDependencies": {
+    "@nekosu/simple-parser": "workspace:*",
     "@tsconfig/node20": "^20.1.6"
   }
 }

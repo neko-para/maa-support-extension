@@ -7,8 +7,6 @@ import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { maa } from './maa'
 import { init, nativeService, statusBarService } from './service'
-import { maaEvalTask } from './utils/eval/eval'
-import { MaaTaskExpr } from './utils/eval/types'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()

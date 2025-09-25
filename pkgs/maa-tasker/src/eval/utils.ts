@@ -1,8 +1,6 @@
-import { addParentToExpr } from './expr'
-import { MaaTask, MaaTaskBaseProps, MaaTaskExpr, MaaTaskExprProps } from './types'
-
-export type MaaTaskBaseNotResolved = MaaTask & { __baseTaskResolved?: false }
-export type MaaTaskBaseResolved = MaaTask & { __baseTaskResolved: true }
+import { TaskBaseProps, TaskExprProps } from '../props'
+import { MaaTask, MaaTaskExpr } from '../types'
+import { MaaTaskBaseNotResolved, MaaTaskBaseResolved, MaaTaskWithTraceInfo } from './types'
 
 export function isTaskResolved(task: MaaTask): task is MaaTaskBaseResolved {
   return !!task.__baseTaskResolved
@@ -11,19 +9,29 @@ export function isTaskNotResolved(task: MaaTask): task is MaaTaskBaseNotResolved
   return !task.__baseTaskResolved
 }
 
-export type MaaTaskWithTraceInfo<MaaTaskType extends MaaTask> = {
-  self: {
-    name: string
-    path: string
+export function removeDuplicated(input: string[], keepLast = false): string[] {
+  const inputSet = new Set(input)
+  if (keepLast) {
+    input = input.toReversed()
   }
-  task: MaaTaskType
-  trace: Record<
-    string,
-    {
-      name: string
-      path: string
+  input = input.filter(task => {
+    if (inputSet.has(task)) {
+      inputSet.delete(task)
+      return true
+    } else {
+      return false
     }
-  >
+  })
+  if (keepLast) {
+    input.reverse()
+  }
+  return input
+}
+
+// will modify segs
+export function removeDuplicatedPrefix(segs: string[]) {
+  const last = segs.pop()!
+  return [...removeDuplicated(segs, true), last].join('@')
 }
 
 type MergeMode = '@' | 'baseTask'
@@ -60,7 +68,7 @@ export function mergeTask(
     inherit.task.algorithm &&
     (base.task.algorithm ?? 'MatchTemplate') !== inherit.task.algorithm
   ) {
-    for (const key of MaaTaskBaseProps) {
+    for (const key of TaskBaseProps) {
       if (inherit.task[key] !== undefined) {
         result.task[key] = inherit.task[key] as any
         result.trace[key] = inherit.self
@@ -90,13 +98,14 @@ export function mergeTask(
   return result
 }
 
+// tasks must not empty
 export function mergeMultiPathTasks(
   tasks: MaaTaskWithTraceInfo<MaaTask>[]
-): MaaTaskWithTraceInfo<MaaTask> | null {
+): MaaTaskWithTraceInfo<MaaTask> {
   tasks = JSON.parse(JSON.stringify(tasks))
-  if (tasks.length === 0) {
-    return null
-  }
+  // if (tasks.length === 0) {
+  //   return null
+  // }
 
   if (tasks.length === 1) {
     return tasks[0]
@@ -114,9 +123,6 @@ export function mergeMultiPathTasks(
   }
 
   const prev = mergeMultiPathTasks(tasks)
-  if (!prev) {
-    return null
-  }
 
   // 就是直接覆盖
   prev.self = last.self
@@ -140,16 +146,13 @@ export function applyParentToTask(
     return clonedTask
   }
 
-  for (const key of MaaTaskExprProps) {
+  for (const key of TaskExprProps) {
     const prev = clonedTask.task[key] as MaaTaskExpr[] | undefined
     if (prev) {
       const newPrev: MaaTaskExpr[] = []
       for (const expr of prev) {
-        const newExpr = addParentToExpr(expr, parent)
-        if (!newExpr) {
-          return null
-        }
-        newPrev.push(newExpr)
+        // 这就是 MAA
+        newPrev.push((parent.join('@') + expr) as MaaTaskExpr)
       }
       clonedTask.task[key] = newPrev
       clonedTask.trace[key] = clonedTask.self
@@ -158,17 +161,3 @@ export function applyParentToTask(
 
   return clonedTask
 }
-
-export type AllVirtTaskProp = 'none' | 'self' | 'back' | VirtTaskProp
-export type VirtTaskProp = 'next' | 'sub' | 'exceeded_next' | 'on_error_next' | 'reduce_other_times'
-export function shouldStrip(prop: VirtTaskProp) {
-  return ['next', 'exceeded_next', 'on_error_next'].includes(prop)
-}
-
-export const NextPropMap = {
-  sub: 'sub',
-  next: 'next',
-  exceededNext: 'exceeded_next',
-  onErrorNext: 'on_error_next',
-  reduceOtherTimes: 'reduce_other_times'
-} as const

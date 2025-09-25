@@ -1,4 +1,4 @@
-import type { Maa } from '../../maa'
+type FlatRect = [x: number, y: number, width: number, height: number]
 
 export type MaaTaskExpr = string & { __brand: 'MaaTaskExpr' }
 
@@ -16,11 +16,11 @@ export type MaaTask = {
   onErrorNext?: MaaTaskExpr[]
   preDelay?: number
   postDelay?: number
-  roi?: Maa.api.FlatRect
+  roi?: FlatRect
   cache?: boolean
-  rectMove?: Maa.api.FlatRect
+  rectMove?: FlatRect
   reduceOtherTimes?: MaaTaskExpr[]
-  specificRect?: Maa.api.FlatRect
+  specificRect?: FlatRect
   specialParams?: unknown[]
   highResolutionSwipeFix?: boolean
 } & MaaTaskMatchTemplate &
@@ -59,32 +59,6 @@ export type MaaTaskInput = {
   inputText?: string
 }
 
-export const MaaTaskBaseProps = [
-  '__baseTaskResolved',
-  'baseTask',
-  'algorithm',
-  'action',
-  'sub',
-  'subErrorIgnored',
-  'next',
-  'maxTimes',
-  'exceededNext',
-  'onErrorNext',
-  'preDelay',
-  'postDelay',
-  'roi',
-  'cache',
-  'rectMove',
-  'reduceOtherTimes',
-  'specificRect',
-  'specialParams',
-  'highResolutionSwipeFix'
-] as const
-
-export const MaaTaskExprProps = [
-  'sub',
-  'next',
-  'exceededNext',
-  'onErrorNext',
-  'reduceOtherTimes'
-] as const
+export type SpecialVirts = 'none' | 'self' | 'back'
+export type PropsVirts = 'next' | 'sub' | 'exceeded_next' | 'on_error_next' | 'reduce_other_times'
+export type AllVirts = SpecialVirts | PropsVirts

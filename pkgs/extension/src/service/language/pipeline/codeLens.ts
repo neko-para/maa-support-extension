@@ -4,8 +4,6 @@ import { t } from '@mse/utils'
 
 import { interfaceService, taskIndexService } from '../..'
 import { commands } from '../../../command'
-import { MaaTask, MaaTaskExprProps } from '../../../utils/eval/types'
-import { NextPropMap, VirtTaskProp, shouldStrip } from '../../../utils/eval/utils'
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { debounce } from '../../utils/debounce'
 import { PipelineLanguageProvider } from './base'

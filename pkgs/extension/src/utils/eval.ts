@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import { logger, t } from '@mse/utils'
 import {
   MaaEvalContext,
-  type MaaEvalDelegate,
+  MaaEvalDelegate,
   type MaaTask,
   type MaaTaskExpr,
   type MaaTaskWithTraceInfo
@@ -12,7 +12,7 @@ import {
 import { rootService, taskIndexService } from '../service'
 import { isMaaAssistantArknights } from './fs'
 
-class MaaEvalDelegateImpl implements MaaEvalDelegate {
+class MaaEvalDelegateImpl extends MaaEvalDelegate {
   async query(task: string): Promise<[task: MaaTask, anchor: string][]> {
     return (await taskIndexService.queryTask(task, undefined, undefined, false, false)).map(x => {
       const obj = JSON.parse(x.info.taskContent) as MaaTask
@@ -34,11 +34,11 @@ class MaaEvalDelegateImpl implements MaaEvalDelegate {
     vscode.window.showErrorMessage(`${t('maa.eval.loop-detected')} ${exprs.join(' -> ')}`)
   }
 
-  cannotFoundTask(task: string, prefix: string[]): void {
+  cannotFindTask(task: string, prefix: string[]): void {
     logger.error(`cannot find ${task} with parent ${prefix}`)
   }
 
-  warnCannotFoundBaseTask(task: string): void {
+  warnCannotFindBaseTask(task: string): void {
     vscode.window.showWarningMessage(t('maa.eval.cannot-find-task-base', task))
   }
 

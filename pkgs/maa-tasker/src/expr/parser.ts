@@ -107,7 +107,7 @@ function buildParser() {
 
       .for('taskList1')
         .sameas('taskList2')
-        .when('taskList2', '%plus', 'taskList2')
+        .when('taskList2', '%plus', 'taskList1')
           .do(([left, , right]) => ({
             type: '+',
             left,

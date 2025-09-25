@@ -3,6 +3,7 @@
   "main": "src/index.ts",
   "devDependencies": {
     "@nekosu/simple-parser": "workspace:*",
-    "@tsconfig/node20": "^20.1.6"
+    "@tsconfig/node20": "^20.1.6",
+    "@types/node": "^20.17.9"
   }
 }

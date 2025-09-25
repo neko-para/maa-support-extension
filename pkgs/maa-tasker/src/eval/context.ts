@@ -17,15 +17,34 @@ type ChainContext = {
   exprGetPropChain: string[]
 }
 
-export interface MaaEvalDelegate {
-  query(task: string): Promise<[task: MaaTask, anchor: string][]>
+export class MaaEvalDelegate {
+  async query(task: string): Promise<[task: MaaTask, anchor: string][]> {
+    return []
+  }
 
-  taskLoopDetected(tasks: string[]): void
-  exprPropLoopDetected(exprs: string[]): void
-  cannotFoundTask(task: string, prefix: string[]): void
-  warnCannotFoundBaseTask(task: string): void
-  parseExprError(expr: MaaTaskExpr, err: string): void
-  exprTooLarge(count: number): void
+  taskLoopDetected(tasks: string[]): void {
+    console.error(`task loop detected ${tasks.join(' -> ')}`)
+  }
+
+  exprPropLoopDetected(exprs: string[]): void {
+    console.error(`expr loop detected ${exprs.join(' -> ')}`)
+  }
+
+  cannotFindTask(task: string, prefix: string[]): void {
+    console.error(`cannot find task ${task} with parent ${prefix}`)
+  }
+
+  warnCannotFindBaseTask(task: string): void {
+    console.warn(`cannot find base task ${task}`)
+  }
+
+  parseExprError(expr: MaaTaskExpr, err: string): void {
+    console.error(`parse expr ${expr} failed with error ${err}`)
+  }
+
+  exprTooLarge(count: number): void {
+    console.error(`expr expand too large ${count}`)
+  }
 }
 
 export class MaaEvalContext {
@@ -47,6 +66,10 @@ export class MaaEvalContext {
       taskChain: [],
       exprGetPropChain: []
     })
+  }
+
+  cleanCache() {
+    this.impl.cache = {}
   }
 }
 
@@ -253,7 +276,7 @@ class MaaEvalContextImpl {
     if (infos.length === 0) {
       // 没有找到直接定义，递归提取@
       if (segs.length === 1) {
-        this.delegate.cannotFoundTask(task, parent)
+        this.delegate.cannotFindTask(task, parent)
         context.taskChain.pop()
         return null
       }
@@ -278,7 +301,7 @@ class MaaEvalContextImpl {
         const seg = segs.shift()!
         const base = await this.evalTask(segs, context)
         if (!base) {
-          this.delegate.warnCannotFoundBaseTask(segs.join('@'))
+          this.delegate.warnCannotFindBaseTask(segs.join('@'))
         }
 
         let result: MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null = null

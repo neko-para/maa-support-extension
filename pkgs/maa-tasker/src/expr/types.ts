@@ -12,7 +12,7 @@ export type TaskList1 =
   | {
       type: '+' | '^'
       left: TaskList2
-      right: TaskList2
+      right: TaskList1
     }
 
 export type TaskList2 =

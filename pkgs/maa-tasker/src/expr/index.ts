@@ -9,7 +9,7 @@ export function parseExpr(expr: MaaTaskExpr): MaaTaskExprAst {
   try {
     return getParser().parse(expr)
   } catch (err) {
-    throw `parse expr failed ${expr} error ${err}`
+    throw `${err}`
   }
 }
 

@@ -113,7 +113,7 @@ function buildParser() {
             left,
             right
           }))
-        .when('taskList2', '%diff', 'taskList2')
+        .when('taskList2', '%diff', 'taskList1')
           .do(([left, , right]) => ({
             type: '^',
             left,

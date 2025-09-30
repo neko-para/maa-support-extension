@@ -1,3 +1,4 @@
+import os from 'os'
 import sms from 'source-map-support'
 import vscode from 'vscode'
 
@@ -29,6 +30,8 @@ export async function activate(context: vscode.ExtensionContext) {
     })
   )
 
+  logger.info(`Running as ${os.userInfo().username}`)
+
   checkMaaAssistantArknights()
 
   if (isMaaAssistantArknights) {
@@ -49,6 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
   logger.info(`MaaFramework version ${maa.Global.version}`)
+
   maa.Global.debug_mode = true
   const logPath = context.storageUri
   if (logPath) {

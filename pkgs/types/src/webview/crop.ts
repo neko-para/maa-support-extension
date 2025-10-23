@@ -1,5 +1,3 @@
-import * as maa from '@maaxyz/maa-node'
-
 import type { HostStateBase } from './base'
 
 export type CropHostState = HostStateBase & {
@@ -43,15 +41,15 @@ export type CropWebToHost =
       // return void
       command: 'requestSave'
       image: string
-      crop: maa.api.FlatRect
-      roi: maa.api.FlatRect
-      expandRoi: maa.api.FlatRect
+      crop: maa.FlatRect
+      roi: maa.FlatRect
+      expandRoi: maa.FlatRect
     }
   | {
       // return string | null
       command: 'requestOCR'
       image: string
-      roi: maa.api.FlatRect
+      roi: maa.FlatRect
     }
   | {
       // return string | null

@@ -1,5 +1,3 @@
-import type * as maa from '@maaxyz/maa-node'
-
 export type EntryBase = {
   label?: string
   description?: string
@@ -17,8 +15,8 @@ export type ControllerBase = EntryBase & {
 export type AdbController = ControllerBase & {
   type: 'Adb'
   adb?: {
-    screencap?: maa.api.ScreencapOrInputMethods
-    input?: maa.api.ScreencapOrInputMethods
+    screencap?: maa.ScreencapOrInputMethods
+    input?: maa.ScreencapOrInputMethods
     config?: unknown
   }
 }
@@ -28,8 +26,8 @@ export type Win32Controller = ControllerBase & {
   win32?: {
     class_regex?: string
     window_regex?: string
-    screencap?: maa.api.ScreencapOrInputMethods
-    input?: maa.api.ScreencapOrInputMethods
+    screencap?: maa.ScreencapOrInputMethods
+    input?: maa.ScreencapOrInputMethods
   }
 }
 

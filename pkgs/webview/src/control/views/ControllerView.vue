@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type * as maa from '@maaxyz/maa-node'
 import { NButton, NCard, NDropdown, NFlex, NPopselect, NSelect } from 'naive-ui'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
@@ -44,16 +43,7 @@ function switchController(index: number) {
   })
 }
 
-type AdbDevice = [
-  name: string,
-  adb_path: string,
-  address: string,
-  screencap_methods: maa.api.Uint64,
-  input_methods: maa.api.Uint64,
-  config: string
-]
-
-const adbDevices = ref<AdbDevice[]>([])
+const adbDevices = ref<maa.AdbDevice[]>([])
 
 const refreshingAdb = ref(false)
 
@@ -71,7 +61,7 @@ async function refreshAdb() {
   adbDevices.value =
     ((await ipc.call({
       command: 'refreshAdb'
-    })) as AdbDevice[] | null) ?? []
+    })) as maa.AdbDevice[] | null) ?? []
   refreshingAdb.value = false
 }
 
@@ -85,9 +75,7 @@ function configAdb(index: number) {
   })
 }
 
-type DesktopDevice = [handle: maa.api.DesktopHandle, class_name: string, window_name: string]
-
-const desktopDevices = ref<DesktopDevice[]>([])
+const desktopDevices = ref<maa.DesktopDevice[]>([])
 const currDevice = computed(() => {
   return desktopDevices.value.find(
     info => info[0] === hostState.value.interfaceConfigJson?.win32?.hwnd
@@ -96,7 +84,7 @@ const currDevice = computed(() => {
 
 const refreshingDesktop = ref(false)
 
-const makeBrief = (dev: DesktopDevice) => {
+const makeBrief = (dev: maa.DesktopDevice) => {
   return dev
     .map(x => {
       if (x.length > 10) {
@@ -117,7 +105,7 @@ const desktopOptions = computed(() => {
 })
 
 async function refreshDesktop() {
-  const filters: ((info: DesktopDevice) => boolean)[] = []
+  const filters: ((info: maa.DesktopDevice) => boolean)[] = []
   if (currentControllerMeta.value?.win32?.class_regex) {
     const reg = new RegExp(currentControllerMeta.value?.win32?.class_regex)
     filters.push(info => {
@@ -134,7 +122,7 @@ async function refreshDesktop() {
   desktopDevices.value = (
     ((await ipc.call({
       command: 'refreshDesktop'
-    })) as DesktopDevice[] | null) ?? []
+    })) as maa.DesktopDevice[] | null) ?? []
   ).filter(info => {
     return filters.map(f => f(info)).reduce((a, b) => a && b, true)
   })

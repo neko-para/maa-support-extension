@@ -1,19 +1,17 @@
-import type * as maa from '@maaxyz/maa-node'
-
 export type Interface = {
   controller: {
     name: string
     type: 'Adb' | 'Win32' | 'VscFixed'
     adb?: {
-      screencap?: maa.api.ScreencapOrInputMethods
-      input?: maa.api.ScreencapOrInputMethods
+      screencap?: maa.ScreencapOrInputMethods
+      input?: maa.ScreencapOrInputMethods
       config?: unknown
     }
     win32?: {
       class_regex?: string
       window_regex?: string
-      screencap?: maa.api.ScreencapOrInputMethods
-      input?: maa.api.ScreencapOrInputMethods
+      screencap?: maa.ScreencapOrInputMethods
+      input?: maa.ScreencapOrInputMethods
     }
   }[]
   resource: {
@@ -67,7 +65,7 @@ export type InterfaceConfig = {
     config: unknown
   }
   win32?: {
-    hwnd?: maa.api.DesktopHandle | null
+    hwnd?: maa.DesktopHandle | null
   }
   vscFixed?: {
     image?: string
@@ -84,15 +82,15 @@ export type InterfaceRuntime = {
         ctype: 'adb'
         adb_path: string
         address: string
-        screencap: maa.api.ScreencapOrInputMethods
-        input: maa.api.ScreencapOrInputMethods
+        screencap: maa.ScreencapOrInputMethods
+        input: maa.ScreencapOrInputMethods
         config: string
       }
     | {
         ctype: 'win32'
-        hwnd: maa.api.DesktopHandle
-        screencap: maa.api.ScreencapOrInputMethods
-        input: maa.api.ScreencapOrInputMethods
+        hwnd: maa.DesktopHandle
+        screencap: maa.ScreencapOrInputMethods
+        input: maa.ScreencapOrInputMethods
       }
     | {
         ctype: 'vscFixed'

@@ -6,7 +6,6 @@ import { logger, setupLogger, t } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
-import { maa } from './maa'
 import { init, nativeService, statusBarService } from './service'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 

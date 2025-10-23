@@ -7,18 +7,18 @@ import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t } from '@mse/utils'
 
 import { debugService, interfaceService, nativeService } from '.'
-import { Maa, maa } from '../maa'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
 
 type InstanceCache = {
-  controller: Maa.ControllerBase
+  controller: maa.Controller
 }
 
 export type TaskerInstance = {
-  tasker: Maa.TaskerBase
-  resource: Maa.ResourceBase
-  controller: Maa.ControllerBase
+  tasker: maa.Tasker
+  resource: maa.Resource
+  controller: maa.Controller
+  client?: maa.Client
   agent?: vscode.TaskExecution
 }
 
@@ -65,8 +65,8 @@ export class LaunchService extends BaseService {
         adb_path: config.adb.adb_path,
         address: config.adb.address,
         config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
-        screencap: ctrlInfo.adb?.screencap ?? maa.api.AdbScreencapMethod.Default,
-        input: ctrlInfo.adb?.input ?? maa.api.AdbInputMethod.Default
+        screencap: ctrlInfo.adb?.screencap ?? maa.AdbScreencapMethod.Default,
+        input: ctrlInfo.adb?.input ?? maa.AdbInputMethod.Default
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -86,8 +86,8 @@ export class LaunchService extends BaseService {
       return {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.DXGI_DesktopDup,
-        input: ctrlInfo.win32?.input ?? maa.api.Win32InputMethod.Seize
+        screencap: ctrlInfo.win32?.screencap ?? maa.Win32ScreencapMethod.DXGI_DesktopDup,
+        input: ctrlInfo.win32?.input ?? maa.Win32InputMethod.Seize
       }
     } else if (ctrlInfo.type === 'VscFixed') {
       if (!config.vscFixed) {
@@ -122,7 +122,7 @@ export class LaunchService extends BaseService {
       this.cacheKey = undefined
     }
 
-    let controller: Maa.ControllerBase | undefined = this.cache?.controller
+    let controller: maa.Controller | undefined = this.cache?.controller
 
     if (controller) {
       return true
@@ -140,28 +140,24 @@ export class LaunchService extends BaseService {
       controller = new maa.Win32Controller(runtime.hwnd, runtime.screencap, runtime.input)
     } else if (runtime.ctype === 'vscFixed') {
       const image = (await readFile(runtime.image)).buffer
-      controller = new maa.CustomController(
-        new (class extends maa.CustomControllerActorDefaultImpl {
-          connect() {
-            return true
-          }
-
-          request_uuid() {
-            return '0'
-          }
-
-          screencap() {
-            return image
-          }
-        })()
-      )
+      controller = new maa.CustomController({
+        connect() {
+          return true
+        },
+        request_uuid() {
+          return '0'
+        },
+        screencap() {
+          return image
+        }
+      })
     } else {
       return false
     }
 
-    controller.notify = (msg, detail) => {
-      logger.info(`${msg} ${detail}`)
-    }
+    controller.add_sink((_, msg) => {
+      logger.info(`${msg}`)
+    })
 
     await controller.post_connection().wait()
 
@@ -177,20 +173,21 @@ export class LaunchService extends BaseService {
 
   async setupResource(
     runtime: InterfaceRuntime
-  ): Promise<[Maa.Resource | null, vscode.TaskExecution | undefined]> {
+  ): Promise<[maa.Resource | null, maa.Client | undefined, vscode.TaskExecution | undefined]> {
     const resource = new maa.Resource()
 
-    resource.notify = (msg, detail) => {
-      logger.info(`${msg} ${detail}`)
-    }
+    resource.add_sink((_, msg) => {
+      logger.info(`${msg}`)
+    })
 
     for (const path of runtime.resource_path) {
       await resource.post_bundle(path).wait()
     }
 
+    let client: maa.Client | undefined = undefined
     let agent: vscode.TaskExecution | undefined = undefined
     if (runtime.agent) {
-      const client = new maa.AgentClient(runtime.agent.identifier)
+      client = new maa.Client(runtime.agent.identifier)
       const identifier = client.identifier ?? 'vsc-no-identifier'
 
       logger.info(`AgentClient listening ${identifier}`)
@@ -223,7 +220,7 @@ export class LaunchService extends BaseService {
         (vscode.workspace.getConfiguration('maa').get('agentTimeout') as number | undefined) ??
         30000
       if (timeout >= 0) {
-        client.timeout = timeout
+        client.timeout = timeout.toString()
       }
       client.bind_resource(resource)
       logger.info(`AgentClient start connecting ${identifier}`)
@@ -241,14 +238,14 @@ export class LaunchService extends BaseService {
       ) {
         resource.destroy()
         agent?.terminate()
-        return [null, undefined]
+        return [null, undefined, undefined]
       }
       if (timeout >= 0) {
-        client.timeout = Number.MAX_SAFE_INTEGER
+        client.timeout = Number.MAX_SAFE_INTEGER.toString()
       }
     }
 
-    return [resource, agent]
+    return [resource, client, agent]
   }
 
   async setupInstance(runtime: InterfaceRuntime): Promise<[false, string] | [true, null]> {
@@ -266,23 +263,24 @@ export class LaunchService extends BaseService {
       return [false, t('maa.debug.init-controller-failed')]
     }
 
-    const [resource, agent] = await this.setupResource(runtime)
+    const [resource, client, agent] = await this.setupResource(runtime)
     if (!resource) {
       return [false, t('maa.debug.init-resource-failed')]
     }
 
     const tasker = new maa.Tasker()
 
-    tasker.notify = (msg, detail) => {
-      logger.info(`${msg} ${detail}`)
-    }
+    tasker.add_sink((_, msg) => {
+      logger.info(`${msg}`)
+    })
 
-    tasker.bind(controller)
-    tasker.bind(resource)
+    tasker.controller = controller
+    tasker.resource = resource
 
     if (!tasker.inited) {
       tasker.destroy()
       resource.destroy()
+      client?.destroy()
       agent?.terminate()
       return [false, t('maa.debug.init-instance-failed')]
     }
@@ -291,6 +289,7 @@ export class LaunchService extends BaseService {
       tasker: tasker,
       controller,
       resource,
+      client,
       agent
     }
 
@@ -328,7 +327,7 @@ export class LaunchService extends BaseService {
 
     const tasker = this.tasker
     this.tasker = undefined
-    const panel = new WebviewLaunchPanel(tasker, 'Maa launch')
+    const panel = new WebviewLaunchPanel(tasker, 'maa launch')
     await panel.init()
 
     session.handlePause = async () => {

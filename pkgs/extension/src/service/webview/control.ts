@@ -13,7 +13,6 @@ import {
   stateService
 } from '..'
 import { commands } from '../../command'
-import { maa } from '../../maa'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
 import { isCtrlDev } from './dev'

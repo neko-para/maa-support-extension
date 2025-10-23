@@ -8,7 +8,6 @@ import * as vscode from 'vscode'
 import { t } from '@mse/utils'
 
 import { commands } from '../command'
-import { maa, setMaa } from '../maa'
 import { BaseService, context } from './context'
 
 const registries = {
@@ -22,7 +21,7 @@ function isValidRegistryType(key: unknown): key is keyof typeof registries {
 
 const defaultRegistryType = 'npm'
 
-const defaultMaaVersion = '4.5.5'
+const defaultMaaVersion = '5.0.0-alpha.3'
 
 export class NativeService extends BaseService {
   registry: string
@@ -315,7 +314,7 @@ export class NativeService extends BaseService {
   }
 
   async load() {
-    if (maa) {
+    if (globalThis.maa) {
       return true
     }
 
@@ -328,7 +327,7 @@ export class NativeService extends BaseService {
     )
 
     try {
-      setMaa(require('@maaxyz/maa-node'))
+      require('@maaxyz/maa-node')
     } catch {
       return false
     }

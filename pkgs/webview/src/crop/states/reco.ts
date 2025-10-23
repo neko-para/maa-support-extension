@@ -1,4 +1,3 @@
-import type * as maa from '@maaxyz/maa-node'
 import { computed, ref } from 'vue'
 
 import { ipc } from '../ipc'
@@ -14,13 +13,7 @@ export const resultObject = computed(() => {
     return null
   }
 
-  const rawData = JSON.parse(result.value) as {
-    name: string
-    algorithm: string
-    hit: boolean
-    box: maa.api.Rect
-    detail: maa.RecoDetail
-  }
+  const rawData = JSON.parse(result.value) as maa.RecoDetailWithoutDraws
 
   return rawData
 })

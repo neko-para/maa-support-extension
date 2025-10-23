@@ -2,26 +2,20 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 
-import { maa } from '../maa'
-
 let prevTask: string | undefined = undefined
 
 export async function performReco(image: ArrayBuffer, resources: string[]): Promise<string | null> {
-  const ctrl = new maa.CustomController(
-    new (class extends maa.CustomControllerActorDefaultImpl {
-      connect() {
-        return true
-      }
-
-      request_uuid() {
-        return '0'
-      }
-
-      screencap() {
-        return image
-      }
-    })()
-  )
+  const ctrl = new maa.CustomController({
+    connect() {
+      return true
+    },
+    request_uuid() {
+      return '0'
+    },
+    screencap() {
+      return image
+    }
+  })
   await ctrl.post_connection().wait()
   if (!ctrl.connected) {
     logger.error('quick reco ctrl create failed')
@@ -37,7 +31,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
     return null
   }
 
-  const tasks = res.task_list
+  const tasks = res.node_list
   if (!tasks) {
     logger.error('quick reco res no task')
     return null
@@ -59,8 +53,8 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
   prevTask = task
 
   const tasker = new maa.Tasker()
-  tasker.bind(ctrl)
-  tasker.bind(res)
+  tasker.controller = ctrl
+  tasker.resource = res
   if (!tasker.inited) {
     logger.error('quick reco tasker create failed')
     return null
@@ -74,7 +68,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
     return true
   })
 
-  tasker.chain_parsed_notify(msg => {
+  tasker.add_context_sink((ctx, msg) => {
     if (msg.msg === 'Recognition.Succeeded' || msg.msg === 'Recognition.Failed') {
       if (msg.name !== task) {
         return

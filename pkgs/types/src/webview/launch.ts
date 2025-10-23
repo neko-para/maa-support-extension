@@ -1,5 +1,3 @@
-import * as maa from '@maaxyz/maa-node'
-
 import type { HostStateBase } from './base'
 
 export type LaunchHostState = HostStateBase & {
@@ -53,11 +51,5 @@ export type LaunchWebToHost =
 export type RecoInfo = {
   raw: string
   draws: string[]
-  info: {
-    name: string
-    algorithm: string
-    hit: boolean
-    box: maa.api.Rect
-    detail: maa.RecoDetail
-  }
+  info: maa.RecoDetailWithoutDraws
 }

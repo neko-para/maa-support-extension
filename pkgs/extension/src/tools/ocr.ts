@@ -1,27 +1,21 @@
 import { logger } from '@mse/utils'
 
-import { Maa, maa } from '../maa'
-
 export async function performOcr(
   image: ArrayBuffer,
-  roi: Maa.api.FlatRect,
+  roi: maa.FlatRect,
   resources: string[]
 ): Promise<string | null> {
-  const ctrl = new maa.CustomController(
-    new (class extends maa.CustomControllerActorDefaultImpl {
-      connect() {
-        return true
-      }
-
-      request_uuid() {
-        return '0'
-      }
-
-      screencap() {
-        return image
-      }
-    })()
-  )
+  const ctrl = new maa.CustomController({
+    connect() {
+      return true
+    },
+    request_uuid() {
+      return '0'
+    },
+    screencap() {
+      return image
+    }
+  })
   await ctrl.post_connection().wait()
   if (!ctrl.connected) {
     logger.error('ocr ctrl create failed')
@@ -38,8 +32,8 @@ export async function performOcr(
   }
 
   const tasker = new maa.Tasker()
-  tasker.bind(ctrl)
-  tasker.bind(res)
+  tasker.controller = ctrl
+  tasker.resource = res
   if (!tasker.inited) {
     logger.error('ocr tasker create failed')
     return null

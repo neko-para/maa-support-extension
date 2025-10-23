@@ -1,5 +1,3 @@
-import type * as maa from '@maaxyz/maa-node'
-
 import type { LogCategory } from './logger'
 
 export type IpcRest = {
@@ -74,13 +72,13 @@ export type CropViewToHost =
   | {
       cmd: 'requestSave'
       image: string
-      roi: maa.api.FlatRect
-      expandRoi: maa.api.FlatRect
+      roi: maa.FlatRect
+      expandRoi: maa.FlatRect
     }
   | {
       cmd: 'requestOCR'
       image: string
-      roi: maa.api.FlatRect
+      roi: maa.FlatRect
     }
   | {
       cmd: 'requestReco'

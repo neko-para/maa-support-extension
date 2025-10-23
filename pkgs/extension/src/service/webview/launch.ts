@@ -4,7 +4,6 @@ import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@m
 import { WebviewPanelProvider, locale } from '@mse/utils'
 
 import { stateService } from '..'
-import { Maa } from '../../maa'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
@@ -34,14 +33,12 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     })
 
     this.instance = instance
-    this.knownTasks = this.instance.resource.task_list ?? []
+    this.knownTasks = this.instance.resource.node_list ?? []
     this.knownTasks.sort()
 
-    const oldNotify = this.instance.tasker.notify
-    this.instance.tasker.notify = async (msg, detail) => {
-      await oldNotify(msg, detail)
-      await this.pushNotify(msg, detail)
-    }
+    this.instance.tasker.add_sink(async (_, msg) => {
+      await this.pushNotify(msg.msg, JSON.stringify(msg))
+    })
   }
 
   dispose() {
@@ -65,7 +62,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'requestReco': {
-        const detailInfo = this.instance.tasker.recognition_detail(data.reco_id as Maa.api.RecoId)
+        const detailInfo = this.instance.tasker.recognition_detail(
+          data.reco_id.toString() as maa.RecoId
+        )
         if (!detailInfo) {
           this.response(data.seq, null)
           break

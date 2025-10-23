@@ -1,4 +1,3 @@
-import type { api } from '@maaxyz/maa-node'
 import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '../ipc'
@@ -65,7 +64,7 @@ export async function upload() {
   loadingCounter.value -= 1
 }
 
-export async function cropImage(): Promise<[string | null, api.FlatRect | null]> {
+export async function cropImage(): Promise<[string | null, maa.FlatRect | null]> {
   if (!data.value) {
     return [null, null]
   }

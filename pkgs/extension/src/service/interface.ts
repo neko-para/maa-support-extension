@@ -8,7 +8,6 @@ import { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 import { t } from '@mse/utils'
 
 import { rootService } from '.'
-import { maa } from '../maa'
 import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 
@@ -222,8 +221,8 @@ export class InterfaceService extends BaseService {
         adb_path: config.adb.adb_path,
         address: config.adb.address,
         config: JSON.stringify(adb_config),
-        screencap: ctrlInfo.adb?.screencap ?? maa.api.AdbScreencapMethod.Default,
-        input: ctrlInfo.adb?.input ?? maa.api.AdbInputMethod.Default
+        screencap: ctrlInfo.adb?.screencap ?? maa.AdbScreencapMethod.Default,
+        input: ctrlInfo.adb?.input ?? maa.AdbInputMethod.Default
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -236,8 +235,8 @@ export class InterfaceService extends BaseService {
       result.controller_param = {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        screencap: ctrlInfo.win32?.screencap ?? maa.api.Win32ScreencapMethod.GDI,
-        input: ctrlInfo.win32?.input ?? maa.api.Win32InputMethod.SendMessage
+        screencap: ctrlInfo.win32?.screencap ?? maa.Win32ScreencapMethod.GDI,
+        input: ctrlInfo.win32?.input ?? maa.Win32InputMethod.SendMessage
       }
     } else if (ctrlInfo.type === 'VscFixed') {
       if (!config.vscFixed) {

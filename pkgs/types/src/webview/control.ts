@@ -1,5 +1,3 @@
-import type * as maa from '@maaxyz/maa-node'
-
 import type { Interface, InterfaceConfig } from '../pi'
 import type { HostStateBase } from './base'
 
@@ -59,7 +57,7 @@ export type ControlWebToHost =
     }
   | {
       command: 'configDesktop'
-      handle: maa.api.DesktopHandle
+      handle: maa.DesktopHandle
     }
   | {
       command: 'uploadImage'

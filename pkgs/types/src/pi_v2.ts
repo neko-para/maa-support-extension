@@ -19,10 +19,12 @@ export type AdbController = ControllerBase & {
     input?: maa.ScreencapOrInputMethods
     config?: unknown
   }
+  win32?: never
 }
 
 export type Win32Controller = ControllerBase & {
   type: 'Win32'
+  adb?: never
   win32?: {
     class_regex?: string
     window_regex?: string
@@ -31,18 +33,24 @@ export type Win32Controller = ControllerBase & {
   }
 }
 
-export type Controller = AdbController | Win32Controller
+export type VscFixedController = ControllerBase & {
+  type: 'VscFixed'
+  adb?: never
+  win32?: never
+}
+
+export type Controller = AdbController | Win32Controller | VscFixedController
 
 export type Resource = EntryBase & {
   name: string
   path: string | string[]
+  controller?: string[]
 }
 
 export type Task = EntryBase & {
   name: string
-  // 我觉得这两个不太对劲
-  // force_check?: boolean
-  // default_check?: boolean
+  default_check?: boolean
+  resource?: string[]
   entry: string
   pipeline_override?: unknown
   option?: string[]
@@ -60,11 +68,13 @@ export type SelectOption = EntryBase & {
   default_case?: string
 }
 
+export type InputItemType = 'string' | 'int'
+
 export type InputItem = EntryBase & {
   name: string
 
   default?: string
-  pipeline_type?: 'number' | 'string'
+  pipeline_type?: InputItemType
   verify?: string
 }
 
@@ -76,12 +86,10 @@ export type InputOption = EntryBase & {
 
 export type Option = SelectOption | InputOption
 
-export type InterfaceV2 = {
+export type InterfaceV2 = EntryBase & {
   interface_version: 2
   languages?: Record<string, string>
-  name?: string // 这里是不是和别的地方统一, 改成label
-  title?: string
-  icon?: string
+  name?: string
   mirrorchyan_rid?: string
   mirrorchyan_multiplatform?: boolean
   auto_update_ui?: boolean
@@ -91,17 +99,15 @@ export type InterfaceV2 = {
   contact?: string
   license?: string
   welcome?: string
-  description?: string
 
-  // 是不是考虑支持区分平台? 不然只能在action里面改
   agent?: {
     child_exec?: string
     child_args?: string[]
     identifier?: string
   }
 
-  controller: Controller[]
-  resource: Resource[]
-  task: Task[]
+  controller?: Controller[]
+  resource?: Resource[]
+  task?: Task[]
   option?: Record<string, Option>
 }

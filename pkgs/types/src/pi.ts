@@ -1,4 +1,6 @@
-export type Interface = {
+import type { InterfaceV2 } from './pi_v2'
+
+export type InterfaceV1 = {
   controller: {
     name: string
     type: 'Adb' | 'Win32' | 'VscFixed'
@@ -48,7 +50,7 @@ export type TaskConfig = {
   name: string
   option?: {
     name: string
-    value: string
+    value: string | Record<string, string>
   }[]
 
   __vscKey?: string
@@ -109,3 +111,5 @@ export type InterfaceRuntime = {
     identifier?: string
   }
 }
+
+export type Interface = InterfaceV2

@@ -4,7 +4,7 @@ import path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import { Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
+import { InputItemType, Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
 import { t } from '@mse/utils'
 
 import { rootService } from '.'
@@ -283,15 +283,80 @@ export class InterfaceService extends BaseService {
 
           const optEntry = task.option?.find(x => x.name === optName)
 
-          const optValue = optEntry?.value ?? optInfo.default_case ?? optInfo.cases[0].name
+          if (!optInfo.type || optInfo.type === 'Select') {
+            const entryVal = typeof optEntry?.value === 'object' ? undefined : optEntry?.value
+            const optValue = entryVal ?? optInfo.default_case ?? optInfo.cases[0].name
 
-          const csInfo = optInfo.cases.find(x => x.name === optValue)
+            const csInfo = optInfo.cases.find(x => x.name === optValue)
 
-          if (!csInfo) {
-            return t('maa.pi.error.cannot-find-case-for-option', optName, optValue)
+            if (!csInfo) {
+              return t('maa.pi.error.cannot-find-case-for-option', optName, optValue)
+            }
+
+            params.push(csInfo.pipeline_override ?? {})
+          } else if (optInfo.type === 'Input') {
+            const entryVal = typeof optEntry?.value === 'object' ? optEntry.value : undefined
+            const optValue = entryVal ?? {}
+            for (const subOpt of optInfo.input) {
+              if (!(subOpt.name in optValue)) {
+                optValue[subOpt.name] = subOpt.default ?? ''
+              }
+              if (subOpt.verify) {
+                const re = new RegExp(subOpt.verify)
+                if (!re.test(optValue[subOpt.name])) {
+                  return 'verify failed'
+                }
+              }
+            }
+
+            const templateOverride = optInfo.pipeline_override ?? {}
+
+            const updateOverride = (v: unknown): unknown => {
+              if (Array.isArray(v)) {
+                return v.map(updateOverride)
+              } else if (typeof v === 'object' && v !== null) {
+                const obj = v as Record<string, unknown>
+                return Object.fromEntries(
+                  Object.entries(obj).map(([key, val]) => {
+                    return [key, updateOverride(val)] as [string, unknown]
+                  })
+                )
+              } else if (typeof v === 'string') {
+                let finalType: InputItemType | undefined = undefined
+                let result = v
+                for (const subOpt of optInfo.input) {
+                  const idx = result.indexOf(`{${subOpt.name}}`)
+                  if (idx !== -1) {
+                    const expectType = subOpt.pipeline_type ?? 'string'
+                    if (finalType && finalType !== expectType) {
+                      throw 'input type mismatch!'
+                    }
+                    finalType = expectType
+                    result = result.replaceAll(`{${subOpt.name}}`, optValue[subOpt.name])
+                  }
+                }
+                switch (finalType) {
+                  case 'string':
+                    return result
+                  case 'int':
+                    return parseInt(result)
+                }
+                return ''
+              } else {
+                return v
+              }
+            }
+
+            try {
+              params.push(updateOverride(templateOverride))
+            } catch (err) {
+              if (typeof err === 'string') {
+                return err
+              } else {
+                throw err
+              }
+            }
           }
-
-          params.push(csInfo.pipeline_override ?? {})
         }
 
         result.task.push({

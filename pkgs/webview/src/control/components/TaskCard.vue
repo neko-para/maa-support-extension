@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
+import { NButton, NCard, NFlex } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { TaskConfig } from '@mse/types'
+import type { InputOption, SelectOption, TaskConfig } from '@mse/types'
 
-import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
+import TaskInputOption from './TaskInputOption.vue'
+import TaskSelectOption from './TaskSelectOption.vue'
 
 const props = defineProps<{
   task: TaskConfig
@@ -26,18 +27,6 @@ function removeTask() {
   })
 }
 
-function configTask(option: string, value: string) {
-  if (!props.task.__vscKey) {
-    return
-  }
-  ipc.send({
-    command: 'configTask',
-    key: props.task.__vscKey,
-    option,
-    value
-  })
-}
-
 function revealEntry() {
   ipc.send({
     command: 'revealInterface',
@@ -48,31 +37,8 @@ function revealEntry() {
   })
 }
 
-function revealOption(opt: string) {
-  ipc.send({
-    command: 'revealInterface',
-    dest: {
-      type: 'option',
-      option: opt
-    }
-  })
-}
-
-function revealCase(opt: string) {
-  const value =
-    props.task.option?.find(info => info.name === opt)?.value ??
-    hostState.value.interfaceJson?.option?.[opt].default_case ??
-    hostState.value.interfaceJson?.option?.[opt].cases[0].name
-  if (value) {
-    ipc.send({
-      command: 'revealInterface',
-      dest: {
-        type: 'case',
-        option: opt,
-        case: value
-      }
-    })
-  }
+function cast<T>(val: unknown): T {
+  return val as T
 }
 </script>
 
@@ -83,31 +49,22 @@ function revealCase(opt: string) {
     </template>
     <n-flex vertical>
       <template v-for="opt in taskMeta?.option ?? []" :key="opt">
-        <n-flex>
-          <n-button @click="revealOption(opt)" text> {{ opt }} </n-button>
-          <n-button @click="revealCase(opt)" text>
-            {{ t('maa.control.task.current-case') }}
-          </n-button>
-        </n-flex>
-        <n-select
-          :options="
-            hostState.interfaceJson?.option?.[opt].cases.map(cs => ({
-              value: cs.name,
-              label: cs.name
-            }))
-          "
-          :value="task.option?.find(info => info.name === opt)?.value ?? null"
-          @update:value="
-            value => {
-              configTask(opt, value)
-            }
-          "
-          :placeholder="
-            hostState.interfaceJson?.option?.[opt].default_case ??
-            hostState.interfaceJson?.option?.[opt].cases[0].name
-          "
-          size="small"
-        ></n-select>
+        <template v-if="hostState.interfaceJson?.option?.[opt]">
+          <template v-if="(hostState.interfaceJson.option[opt].type ?? 'Select') === 'Select'">
+            <task-select-option
+              :task="task"
+              :opt="opt"
+              :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt])"
+            ></task-select-option>
+          </template>
+          <template v-else-if="hostState.interfaceJson.option[opt].type === 'Input'">
+            <task-input-option
+              :task="task"
+              :opt="opt"
+              :opt-meta="cast<InputOption>(hostState.interfaceJson.option[opt])"
+            ></task-input-option>
+          </template>
+        </template>
       </template>
     </n-flex>
   </n-card>

@@ -8,12 +8,19 @@ import { ipc } from '../ipc'
 import { hostState } from '../state'
 
 const resourceOptions = computed(() => {
-  return (hostState.value.interfaceJson?.resource ?? []).map((info, index) => {
-    return {
-      value: index,
-      label: info.name
-    } satisfies SelectMixedOption
-  })
+  return (hostState.value.interfaceJson?.resource ?? [])
+    .filter(info => {
+      if (info.controller) {
+        return info.controller.includes(hostState.value.interfaceConfigJson?.controller?.name ?? '')
+      }
+      return true
+    })
+    .map((info, index) => {
+      return {
+        value: index,
+        label: info.name
+      } satisfies SelectMixedOption
+    })
 })
 
 const currentResource = computed(() => {

@@ -49,9 +49,10 @@ export type InterfaceV1 = {
 export type TaskConfig = {
   name: string
   option?: {
-    name: string
-    value: string | Record<string, string>
-  }[]
+    [option in string]?: {
+      [sub in string]?: string
+    }
+  }
 
   __vscKey?: string
   __vscExpand?: boolean

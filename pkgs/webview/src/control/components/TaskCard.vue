@@ -54,7 +54,7 @@ const allOptions = computed<string[]>(() => {
     if ((optMeta.type ?? 'Select') === 'Select') {
       const selectMeta = optMeta as SelectOption
 
-      let optValue = props.task.option?.find(info => info.name === opt)?.value
+      let optValue = props.task.option?.[opt]?.value
       if (typeof optValue === 'object') {
         optValue = undefined
       }

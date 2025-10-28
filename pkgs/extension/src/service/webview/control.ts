@@ -116,7 +116,7 @@ export class WebviewControlService extends BaseService {
             task: (interfaceService.interfaceConfigJson.task ?? []).concat([
               {
                 name: data.task,
-                option: [],
+                option: {},
                 __vscKey: v4()
               }
             ])
@@ -134,17 +134,14 @@ export class WebviewControlService extends BaseService {
           const tasks = interfaceService.interfaceConfigJson.task
           const task = tasks?.find(info => info.__vscKey === data.key)
           if (task) {
-            const option = task.option?.find(opt => opt.name === data.option)
-            if (option) {
-              option.value = data.value
+            task.option = task.option ?? {}
+            const option = task.option[data.option] ?? {}
+            if (data.value) {
+              option[data.name] = data.value
             } else {
-              task.option = (task.option ?? []).concat([
-                {
-                  name: data.option,
-                  value: data.value
-                }
-              ])
+              delete option[data.name]
             }
+            task.option[data.option] = option
             interfaceService.reduceConfig({
               task: tasks
             })

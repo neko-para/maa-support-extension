@@ -74,7 +74,8 @@ export type ControlWebToHost =
       command: 'configTask'
       key: string
       option: string
-      value: string | Record<string, string>
+      name: string
+      value?: string
     }
   | {
       command: 'revealInterface'

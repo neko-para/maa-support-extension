@@ -14,12 +14,7 @@ const props = defineProps<{
 }>()
 
 const optValue = computed(() => {
-  const val = props.task.option?.find(info => info.name === props.opt)?.value
-  if (typeof val === 'string') {
-    return {}
-  } else {
-    return val
-  }
+  return props.task.option?.[props.opt] ?? {}
 })
 
 function revealOption() {
@@ -92,10 +87,8 @@ function configTask(option: string, key: string, value: string) {
       command: 'configTask',
       key: taskKey,
       option,
-      value: {
-        ...optValue.value,
-        [key]: value
-      }
+      name: key,
+      value
     })
     setTimeout(() => {
       delete inputCache.value[key]
@@ -119,15 +112,11 @@ function configTaskRemove(option: string, key: string) {
 
   flushDifferent(key)
 
-  const vals = {
-    ...optValue.value
-  }
-  delete vals[key]
   ipc.send({
     command: 'configTask',
     key: taskKey,
     option,
-    value: vals
+    name: key
   })
   setTimeout(() => {
     delete inputCache.value[key]

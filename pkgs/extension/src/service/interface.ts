@@ -107,15 +107,24 @@ export class InterfaceService extends BaseService {
       let taskFixed = false
       const tasks = this.interfaceConfigJson.task ?? []
       const fixedTasks = tasks.map(task => {
-        if (!task.__vscKey) {
-          taskFixed = true
-          return {
-            ...task,
-            __vscKey: v4()
-          }
-        } else {
-          return task
+        const newTask = {
+          ...task
         }
+        if (!newTask.__vscKey) {
+          taskFixed = true
+          newTask.__vscKey = v4()
+        }
+        if (Array.isArray(newTask.option)) {
+          const newOptions: Record<string, Record<string, string>> = {}
+          for (const { name, value } of newTask.option as { name: string; value: string }[]) {
+            newOptions[name] = {
+              default: value
+            }
+          }
+          taskFixed = true
+          newTask.option = newOptions
+        }
+        return newTask
       })
       if (taskFixed) {
         fixConfig.task = fixedTasks
@@ -281,11 +290,10 @@ export class InterfaceService extends BaseService {
             return t('maa.pi.error.cannot-find-option', optName)
           }
 
-          const optEntry = task.option?.find(x => x.name === optName)
+          const optEntry = task.option?.[optName]
 
           if (!optInfo.type || optInfo.type === 'Select') {
-            const entryVal = typeof optEntry?.value === 'object' ? undefined : optEntry?.value
-            const optValue = entryVal ?? optInfo.default_case ?? optInfo.cases?.[0].name
+            const optValue = optEntry?.default ?? optInfo.default_case ?? optInfo.cases?.[0].name
 
             const csInfo = optInfo.cases?.find(x => x.name === optValue)
 
@@ -295,15 +303,14 @@ export class InterfaceService extends BaseService {
 
             params.push(csInfo.pipeline_override ?? {})
           } else if (optInfo.type === 'Input') {
-            const entryVal = typeof optEntry?.value === 'object' ? optEntry.value : undefined
-            const optValue = entryVal ?? {}
+            const optValue = optEntry ?? {}
             for (const subOpt of optInfo.input ?? []) {
               if (!(subOpt.name in optValue)) {
                 optValue[subOpt.name] = subOpt.default ?? ''
               }
               if (subOpt.verify) {
                 const re = new RegExp(subOpt.verify)
-                if (!re.test(optValue[subOpt.name])) {
+                if (!re.test(optValue[subOpt.name]!)) {
                   return 'verify failed'
                 }
               }
@@ -332,7 +339,7 @@ export class InterfaceService extends BaseService {
                       throw 'input type mismatch!'
                     }
                     finalType = expectType
-                    result = result.replaceAll(`{${subOpt.name}}`, optValue[subOpt.name])
+                    result = result.replaceAll(`{${subOpt.name}}`, optValue[subOpt.name]!)
                   }
                 }
                 switch (finalType) {

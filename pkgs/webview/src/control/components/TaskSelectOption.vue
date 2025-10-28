@@ -14,12 +14,15 @@ const props = defineProps<{
 }>()
 
 const optValue = computed(() => {
-  const val = props.task.option?.find(info => info.name === props.opt)?.value
-  if (typeof val === 'object') {
-    return undefined
-  } else {
-    return val
-  }
+  return props.task.option?.[props.opt]?.default
+})
+
+const defaultValue = computed(() => {
+  return props.optMeta.default_case ?? props.optMeta.cases?.[0].name
+})
+
+const effectiveValue = computed(() => {
+  return optValue.value ?? defaultValue.value
 })
 
 function revealOption() {
@@ -33,14 +36,13 @@ function revealOption() {
 }
 
 function revealCase() {
-  const value = optValue.value ?? props.optMeta.default_case ?? props.optMeta.cases?.[0].name
-  if (value) {
+  if (effectiveValue.value) {
     ipc.send({
       command: 'revealInterface',
       dest: {
         type: 'case',
         option: props.opt,
-        case: value
+        case: effectiveValue.value
       }
     })
   }
@@ -54,6 +56,7 @@ function configTask(option: string, value: string) {
     command: 'configTask',
     key: props.task.__vscKey,
     option,
+    name: 'default',
     value
   })
 }
@@ -70,7 +73,7 @@ function configTask(option: string, value: string) {
     :options="
       optMeta.cases?.map(cs => ({
         value: cs.name,
-        label: cs.name
+        label: cs.name + (cs.description ? ` - ${cs.description}` : '')
       })) ?? []
     "
     :value="optValue ?? null"
@@ -79,7 +82,7 @@ function configTask(option: string, value: string) {
         configTask(opt, value)
       }
     "
-    :placeholder="optMeta.default_case ?? optMeta.cases?.[0].name"
+    :placeholder="defaultValue"
     size="small"
   ></n-select>
 </template>

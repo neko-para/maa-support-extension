@@ -22,6 +22,15 @@ function isValidRegistryType(key: unknown): key is keyof typeof registries {
 const defaultRegistryType = 'npm'
 
 const defaultMaaVersion = '5.0.0-alpha.3'
+const minimumMaaVersion = '5.0.0-alpha.3'
+
+function fixMinimumVersion(ver: string) {
+  if (semVerCompare(ver, minimumMaaVersion) === -1) {
+    return minimumMaaVersion
+  } else {
+    return ver
+  }
+}
 
 export class NativeService extends BaseService {
   registry: string
@@ -155,7 +164,7 @@ export class NativeService extends BaseService {
   get explicitVersion() {
     const value = context.globalState.get('NativeService:version')
     if (typeof value === 'string' && value.length > 0) {
-      return value
+      return fixMinimumVersion(value)
     } else {
       return null
     }
@@ -204,7 +213,9 @@ export class NativeService extends BaseService {
       cache: this.cacheUri.fsPath
     })
     await release()
-    return Object.entries(result.versions)
+    return Object.entries(result.versions).filter(([ver]) => {
+      return semVerCompare(ver, minimumMaaVersion) !== -1
+    })
   }
 
   async fetchLatest() {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex, NSelect } from 'naive-ui'
+import { NButton, NFlex, NPopover, NSelect } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { SelectOption, TaskConfig } from '@mse/types'
@@ -23,6 +23,10 @@ const defaultValue = computed(() => {
 
 const effectiveValue = computed(() => {
   return optValue.value ?? defaultValue.value
+})
+
+const effectiveCase = computed(() => {
+  return props.optMeta.cases?.find(cs => cs.name === effectiveValue.value)
 })
 
 function revealOption() {
@@ -60,29 +64,58 @@ function configTask(option: string, value: string) {
     value
   })
 }
+
+function clearOption() {
+  if (!props.task.__vscKey) {
+    return
+  }
+
+  ipc.send({
+    command: 'configTask',
+    key: props.task.__vscKey,
+    option: props.opt,
+    name: 'default'
+  })
+}
 </script>
 
 <template>
   <n-flex>
-    <n-button @click="revealOption()" text> {{ opt }} </n-button>
-    <n-button @click="revealCase()" text>
-      {{ t('maa.control.task.current-case') }}
-    </n-button>
+    <n-popover trigger="hover" :disabled="!optMeta.default_case">
+      <template #trigger>
+        <n-button @click="revealOption()" text> {{ opt }} </n-button>
+      </template>
+
+      <span> {{ optMeta.default_case }} </span>
+    </n-popover>
+
+    <n-popover v-if="effectiveCase" trigger="hover" :disabled="!effectiveCase.description">
+      <template #trigger>
+        <n-button @click="revealCase()" text>
+          {{ t('maa.control.task.current-case') }}
+        </n-button>
+      </template>
+
+      <span> {{ effectiveCase.description }} </span>
+    </n-popover>
   </n-flex>
-  <n-select
-    :options="
-      optMeta.cases?.map(cs => ({
-        value: cs.name,
-        label: cs.name + (cs.description ? ` - ${cs.description}` : '')
-      })) ?? []
-    "
-    :value="optValue ?? null"
-    @update:value="
-      value => {
-        configTask(opt, value)
-      }
-    "
-    :placeholder="defaultValue"
-    size="small"
-  ></n-select>
+  <n-flex :wrap="false">
+    <n-select
+      :options="
+        optMeta.cases?.map(cs => ({
+          value: cs.name,
+          label: cs.name
+        })) ?? []
+      "
+      :value="optValue ?? null"
+      @update:value="
+        value => {
+          configTask(opt, value)
+        }
+      "
+      :placeholder="optValue !== undefined ? '' : defaultValue"
+      size="small"
+    ></n-select>
+    <n-button :disabled="optValue === undefined" @click="clearOption" text> Reset </n-button>
+  </n-flex>
 </template>

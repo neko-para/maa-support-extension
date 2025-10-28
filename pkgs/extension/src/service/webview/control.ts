@@ -136,7 +136,7 @@ export class WebviewControlService extends BaseService {
           if (task) {
             task.option = task.option ?? {}
             const option = task.option[data.option] ?? {}
-            if (data.value) {
+            if (typeof data.value === 'string') {
               option[data.name] = data.value
             } else {
               delete option[data.name]

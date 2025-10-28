@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex } from 'naive-ui'
+import { NButton, NCard, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { InputOption, SelectOption, TaskConfig } from '@mse/types'
@@ -78,7 +78,13 @@ function cast<T>(val: unknown): T {
 <template>
   <n-card size="small" closable @close="removeTask">
     <template #header>
-      <n-button size="large" @click="revealEntry" text> {{ task.name }} </n-button>
+      <n-popover v-if="taskMeta" trigger="hover" :disabled="!taskMeta.description">
+        <template #trigger>
+          <n-button size="large" @click="revealEntry" text> {{ task.name }} </n-button>
+        </template>
+
+        <span> {{ taskMeta.description }} </span>
+      </n-popover>
     </template>
     <n-flex vertical>
       <template v-for="opt in allOptions" :key="opt">

@@ -1,6 +1,5 @@
 import { readFile } from 'fs/promises'
 import path from 'path'
-import semVerCompare from 'semver/functions/compare'
 import * as vscode from 'vscode'
 
 import { InterfaceRuntime } from '@mse/types'
@@ -139,7 +138,7 @@ export class LaunchService extends BaseService {
     } else if (runtime.ctype === 'win32') {
       controller = new maa.Win32Controller(runtime.hwnd, runtime.screencap, runtime.input)
     } else if (runtime.ctype === 'vscFixed') {
-      const image = (await readFile(runtime.image)).buffer
+      const image = (await readFile(runtime.image)).buffer as ArrayBuffer
       controller = new maa.CustomController({
         connect() {
           return true
@@ -342,20 +341,8 @@ export class LaunchService extends BaseService {
       await panel.stop()
     }
 
-    const enableMultiOverride = semVerCompare(nativeService.version, '4.5.0-alpha.1') >= 0
-
     const mergeParams = (data: unknown[]) => {
-      if (enableMultiOverride) {
-        return data as Record<string, unknown>[]
-      } else {
-        const result: Record<string, unknown> = {}
-        for (const tasks of data) {
-          for (const [task, over] of Object.entries(tasks as Record<string, unknown>)) {
-            result[task] = Object.assign(result[task] ?? {}, over)
-          }
-        }
-        return result
-      }
+      return data as Record<string, unknown>[]
     }
     // const mergeParam = (data?: unknown) => {
     //   for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {

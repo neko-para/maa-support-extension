@@ -92,6 +92,11 @@ export type ControlWebToHost =
             option: string
             case: string
           }
+        | {
+            type: 'input'
+            option: string
+            name: string
+          }
     }
   | {
       command: 'launch'

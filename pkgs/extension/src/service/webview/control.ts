@@ -168,6 +168,14 @@ export class WebviewControlService extends BaseService {
               range = interfaceIndexService.caseDecl.find(
                 x => x.option === info.option && x.case === info.case
               )?.range
+              break
+            }
+            case 'input': {
+              const info = data.dest
+              range = interfaceIndexService.inputDecl.find(
+                x => x.option === info.option && x.name === info.name
+              )?.range
+              break
             }
           }
           if (range) {

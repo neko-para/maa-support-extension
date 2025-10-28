@@ -33,7 +33,7 @@ function revealOption() {
 }
 
 function revealCase() {
-  const value = optValue.value ?? props.optMeta.default_case ?? props.optMeta.cases[0].name
+  const value = optValue.value ?? props.optMeta.default_case ?? props.optMeta.cases?.[0].name
   if (value) {
     ipc.send({
       command: 'revealInterface',
@@ -68,10 +68,10 @@ function configTask(option: string, value: string) {
   </n-flex>
   <n-select
     :options="
-      optMeta.cases.map(cs => ({
+      optMeta.cases?.map(cs => ({
         value: cs.name,
         label: cs.name
-      }))
+      })) ?? []
     "
     :value="optValue ?? null"
     @update:value="
@@ -79,7 +79,7 @@ function configTask(option: string, value: string) {
         configTask(opt, value)
       }
     "
-    :placeholder="optMeta.default_case ?? optMeta.cases[0].name"
+    :placeholder="optMeta.default_case ?? optMeta.cases?.[0].name"
     size="small"
   ></n-select>
 </template>

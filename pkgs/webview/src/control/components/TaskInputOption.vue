@@ -32,6 +32,17 @@ function revealOption() {
   })
 }
 
+function revealInput(name: string) {
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'input',
+      option: props.opt,
+      name
+    }
+  })
+}
+
 function configTask(option: string, key: string, value: string) {
   if (!props.task.__vscKey) {
     return
@@ -52,19 +63,19 @@ function configTask(option: string, key: string, value: string) {
   <n-flex>
     <n-button @click="revealOption()" text> {{ opt }} </n-button>
   </n-flex>
-  <n-flex vertical>
-    <template v-for="info in optMeta.input" :key="info.name">
-      <span> {{ info.name }} </span>
-      <n-input
-        :value="optValue?.[info.name] ?? null"
-        @update:value="
-          value => {
-            configTask(opt, info.name, value)
-          }
-        "
-        :placeholder="info.default"
-        size="small"
-      ></n-input>
-    </template>
-  </n-flex>
+  <template v-for="info in optMeta.input ?? []" :key="info.name">
+    <n-flex>
+      <n-button @click="revealInput(info.name)" text> {{ info.name }} </n-button>
+    </n-flex>
+    <n-input
+      :value="optValue?.[info.name] ?? null"
+      @update:value="
+        value => {
+          configTask(opt, info.name, value)
+        }
+      "
+      :placeholder="info.default"
+      size="small"
+    ></n-input>
+  </template>
 </template>

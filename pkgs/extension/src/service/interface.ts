@@ -285,19 +285,19 @@ export class InterfaceService extends BaseService {
 
           if (!optInfo.type || optInfo.type === 'Select') {
             const entryVal = typeof optEntry?.value === 'object' ? undefined : optEntry?.value
-            const optValue = entryVal ?? optInfo.default_case ?? optInfo.cases[0].name
+            const optValue = entryVal ?? optInfo.default_case ?? optInfo.cases?.[0].name
 
-            const csInfo = optInfo.cases.find(x => x.name === optValue)
+            const csInfo = optInfo.cases?.find(x => x.name === optValue)
 
             if (!csInfo) {
-              return t('maa.pi.error.cannot-find-case-for-option', optName, optValue)
+              return t('maa.pi.error.cannot-find-case-for-option', optName, optValue ?? '<unknown>')
             }
 
             params.push(csInfo.pipeline_override ?? {})
           } else if (optInfo.type === 'Input') {
             const entryVal = typeof optEntry?.value === 'object' ? optEntry.value : undefined
             const optValue = entryVal ?? {}
-            for (const subOpt of optInfo.input) {
+            for (const subOpt of optInfo.input ?? []) {
               if (!(subOpt.name in optValue)) {
                 optValue[subOpt.name] = subOpt.default ?? ''
               }
@@ -324,7 +324,7 @@ export class InterfaceService extends BaseService {
               } else if (typeof v === 'string') {
                 let finalType: InputItemType | undefined = undefined
                 let result = v
-                for (const subOpt of optInfo.input) {
+                for (const subOpt of optInfo.input ?? []) {
                   const idx = result.indexOf(`{${subOpt.name}}`)
                   if (idx !== -1) {
                     const expectType = subOpt.pipeline_type ?? 'string'

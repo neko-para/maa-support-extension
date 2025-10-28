@@ -37,6 +37,39 @@ function revealEntry() {
   })
 }
 
+const allOptions = computed<string[]>(() => {
+  const resolved: string[] = []
+  const options = [...(taskMeta.value?.option ?? [])]
+  while (options.length > 0) {
+    const opt = options.shift()!
+    if (resolved.indexOf(opt) !== -1) {
+      continue
+    }
+    resolved.push(opt)
+
+    const optMeta = hostState.value.interfaceJson?.option?.[opt]
+    if (!optMeta) {
+      continue
+    }
+    if ((optMeta.type ?? 'Select') === 'Select') {
+      const selectMeta = optMeta as SelectOption
+
+      let optValue = props.task.option?.find(info => info.name === opt)?.value
+      if (typeof optValue === 'object') {
+        optValue = undefined
+      }
+      const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0].name
+      if (val) {
+        const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
+        if (caseMeta?.options) {
+          options.push(...caseMeta.options)
+        }
+      }
+    }
+  }
+  return resolved
+})
+
 function cast<T>(val: unknown): T {
   return val as T
 }
@@ -48,7 +81,7 @@ function cast<T>(val: unknown): T {
       <n-button size="large" @click="revealEntry" text> {{ task.name }} </n-button>
     </template>
     <n-flex vertical>
-      <template v-for="opt in taskMeta?.option ?? []" :key="opt">
+      <template v-for="opt in allOptions" :key="opt">
         <template v-if="hostState.interfaceJson?.option?.[opt]">
           <template v-if="(hostState.interfaceJson.option[opt].type ?? 'Select') === 'Select'">
             <task-select-option

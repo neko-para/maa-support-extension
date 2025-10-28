@@ -25,9 +25,10 @@ export class InterfaceIndexService extends BaseService {
     option: string
     case: string
   }[] = []
-  advancedOptionDecl: {
+  inputDecl: {
     range: vscode.Range
     option: string
+    name: string
   }[] = []
 
   constructor() {
@@ -51,7 +52,7 @@ export class InterfaceIndexService extends BaseService {
     this.entryDecl = []
     this.optionDecl = []
     this.caseDecl = []
-    this.advancedOptionDecl = []
+    this.inputDecl = []
 
     visitJsonDocument(doc, {
       onLiteral: (value, range, path) => {
@@ -85,15 +86,6 @@ export class InterfaceIndexService extends BaseService {
                       })
                     }
                     break
-                  case 'advanced':
-                    if (typeof path[3] === 'number' && path.length === 4) {
-                      this.refs.push({
-                        type: 'option.ref.advanced',
-                        range,
-                        option: value
-                      })
-                    }
-                    break
                 }
               }
               break
@@ -117,6 +109,16 @@ export class InterfaceIndexService extends BaseService {
                               case: value
                             })
                           }
+                          break
+                        case 'options':
+                          if (typeof path[5] === 'number' && path.length === 6) {
+                            this.refs.push({
+                              type: 'option.ref',
+                              range,
+                              option: value
+                            })
+                          }
+                          break
                       }
                     }
                     break
@@ -129,6 +131,21 @@ export class InterfaceIndexService extends BaseService {
                         case: value
                       })
                     }
+                    break
+                  case 'input':
+                    if (typeof path[3] === 'number') {
+                      switch (path[4]) {
+                        case 'name':
+                          if (path.length === 5) {
+                            this.inputDecl.push({
+                              range,
+                              option: path[1],
+                              name: value
+                            })
+                          }
+                      }
+                    }
+                    break
                     break
                 }
               }
@@ -146,21 +163,6 @@ export class InterfaceIndexService extends BaseService {
                 })
                 this.refs.push({
                   type: 'option.ref',
-                  range,
-                  option: path[1]
-                })
-              }
-            }
-            break
-          case 'advanced':
-            if (typeof path[1] === 'string') {
-              if (path.length === 2) {
-                this.advancedOptionDecl.push({
-                  range,
-                  option: path[1]
-                })
-                this.refs.push({
-                  type: 'option.ref.advanced',
                   range,
                   option: path[1]
                 })

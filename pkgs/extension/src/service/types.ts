@@ -41,7 +41,7 @@ export type TaskQueryResult =
 
 export type InterfaceQueryResult =
   | {
-      type: 'option.ref' | 'option.ref.advanced'
+      type: 'option.ref'
       range: vscode.Range
       option: string
     }

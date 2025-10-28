@@ -76,11 +76,11 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
       ) {
         return [path.slice(5), `case${path[1]}${path[3]}@`]
       } else if (
-        path[0] === 'advanced' &&
+        path[0] === 'option' &&
         typeof path[1] === 'string' &&
         path[2] === 'pipeline_override'
       ) {
-        return [path.slice(3), `advanced${path[1]}@`]
+        return [path.slice(3), `input${path[1]}@`]
       }
       return [[], '']
     }

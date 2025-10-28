@@ -31,13 +31,6 @@ export class InterfaceDefinitionProvider
       return optionInfo
         ? new vscode.Location(rootService.activeResource!.interfaceUri, optionInfo.range)
         : null
-    } else if (info.type === 'option.ref.advanced') {
-      const optionInfo = interfaceIndexService.advancedOptionDecl.find(
-        x => x.option === info.option
-      )
-      return optionInfo
-        ? new vscode.Location(rootService.activeResource!.interfaceUri, optionInfo.range)
-        : null
     } else if (info.type === 'case.ref') {
       const caseInfo = interfaceIndexService.caseDecl.find(
         x => x.option === info.option && x.case === info.case

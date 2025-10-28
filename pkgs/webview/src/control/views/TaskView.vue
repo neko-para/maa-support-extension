@@ -9,12 +9,19 @@ import { ipc } from '../ipc'
 import { hostState } from '../state'
 
 const taskOptions = computed(() => {
-  return (hostState.value.interfaceJson?.task ?? []).map((info, index) => {
-    return {
-      value: info.name,
-      label: info.name
-    } satisfies SelectMixedOption
-  })
+  return (hostState.value.interfaceJson?.task ?? [])
+    .filter(info => {
+      if (info.resource) {
+        return info.resource.includes(hostState.value.interfaceConfigJson?.resource ?? '')
+      }
+      return true
+    })
+    .map((info, index) => {
+      return {
+        value: info.name,
+        label: info.name
+      } satisfies SelectMixedOption
+    })
 })
 
 function addTask(task: string) {

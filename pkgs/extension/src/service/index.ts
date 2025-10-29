@@ -6,10 +6,13 @@ import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
 import { InterfaceIndexService } from './interfaceIndex'
+import { InterfaceLocalizationService } from './interfaceLocalization'
 import { InterfaceLanguageProvider } from './language/interface/base'
 import { InterfaceCodeLensProvider } from './language/interface/codeLens'
 import { InterfaceCompletionProvider } from './language/interface/completion'
 import { InterfaceDefinitionProvider } from './language/interface/definition'
+import { InterfaceDocumentLinkProvider } from './language/interface/documentLink'
+import { InterfaceHoverProvider } from './language/interface/hover'
 import { InterfaceReferenceProvider } from './language/interface/reference'
 import { PipelineLanguageProvider } from './language/pipeline/base'
 import { PipelineCodeLensProvider } from './language/pipeline/codeLens'
@@ -35,6 +38,7 @@ export let rootService: RootService
 export let interfaceService: InterfaceService
 export let taskIndexService: TaskIndexService
 export let interfaceIndexService: InterfaceIndexService
+export let interfaceLocalizationService: InterfaceLocalizationService
 export let launchService: LaunchService
 export let debugService: DebugService
 export let commandService: CommandService
@@ -55,6 +59,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   interfaceService = new InterfaceService()
   taskIndexService = new TaskIndexService()
   interfaceIndexService = new InterfaceIndexService()
+  interfaceLocalizationService = new InterfaceLocalizationService()
   launchService = new LaunchService()
   debugService = new DebugService()
   commandService = new CommandService()
@@ -75,6 +80,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new InterfaceCodeLensProvider(),
     new InterfaceCompletionProvider(),
     new InterfaceDefinitionProvider(),
+    new InterfaceDocumentLinkProvider(),
+    new InterfaceHoverProvider(),
     new InterfaceReferenceProvider()
   ]
 
@@ -86,6 +93,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await interfaceService.init()
   await taskIndexService.init()
   await interfaceIndexService.init()
+  await interfaceLocalizationService.init()
   await launchService.init()
   await debugService.init()
   await commandService.init()

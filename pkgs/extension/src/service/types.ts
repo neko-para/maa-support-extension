@@ -51,6 +51,11 @@ export type InterfaceQueryResult =
       option: string
       case: string
     }
+  | {
+      type: 'locale.ref'
+      range: vscode.Range
+      value: string
+    }
 
 export type TaskIndexInfo = {
   uri: vscode.Uri

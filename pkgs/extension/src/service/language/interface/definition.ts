@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { interfaceIndexService, rootService } from '../..'
+import { interfaceIndexService, interfaceLocalizationService, rootService } from '../..'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceDefinitionProvider
@@ -38,6 +38,19 @@ export class InterfaceDefinitionProvider
       return caseInfo
         ? new vscode.Location(rootService.activeResource!.interfaceUri, caseInfo.range)
         : null
+    } else if (info.type === 'locale.ref') {
+      const result: vscode.Definition = []
+      for (const [locale, index] of Object.entries(interfaceLocalizationService.localeIndex)) {
+        if (info.value in index) {
+          result.push(
+            new vscode.Location(
+              interfaceLocalizationService.activeConfig[locale],
+              index[info.value].propRange
+            )
+          )
+        }
+      }
+      return result
     }
 
     return null

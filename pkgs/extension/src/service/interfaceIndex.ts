@@ -30,6 +30,11 @@ export class InterfaceIndexService extends BaseService {
     option: string
     name: string
   }[] = []
+  localeDecl: {
+    range: vscode.Range
+    key: string
+    file: string
+  }[] = []
 
   constructor() {
     super()
@@ -53,11 +58,36 @@ export class InterfaceIndexService extends BaseService {
     this.optionDecl = []
     this.caseDecl = []
     this.inputDecl = []
+    this.localeDecl = []
 
     visitJsonDocument(doc, {
       onLiteral: (value, range, path) => {
         if (typeof value === 'string') {
+          const last = path[path.length - 1]
+          if (
+            typeof last === 'string' &&
+            ['label', 'icon', 'description', 'title', 'contact', 'license', 'welcome'].includes(
+              last
+            ) &&
+            value.startsWith('$')
+          ) {
+            this.refs.push({
+              type: 'locale.ref',
+              range,
+              value
+            })
+          }
+
           switch (path[0]) {
+            case 'languages':
+              if (typeof path[1] === 'string' && path.length === 2) {
+                this.localeDecl.push({
+                  range,
+                  key: path[1],
+                  file: value
+                })
+              }
+              break
             case 'resource':
               if (typeof path[1] === 'number' && path[2] === 'name') {
                 this.resourceDecl.push({

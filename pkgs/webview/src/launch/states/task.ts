@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { hostState } from '../state'
 import {
   type ActionMessage,
+  type FocusNotify,
   Message,
   type NextListMessage,
   type RecognitionMessage,
@@ -37,39 +38,6 @@ type ActionScope = {
   scopes: NextListScope[]
 }
 
-type FocusNotify = {
-  start?: string | string[]
-  succeeded?: string | string[]
-  failed?: string | string[]
-  toast?: string
-}
-
-function parseNotify(data: unknown): FocusNotify {
-  const result: FocusNotify = {}
-  if (typeof data !== 'object' || data === null) {
-    return {}
-  }
-  const check = (v: unknown): v is string | string[] => {
-    return (
-      typeof v === 'string' ||
-      (Array.isArray(v) && v.map(x => typeof x === 'string').reduce((a, b) => a && b, true))
-    )
-  }
-  if ('start' in data && check(data.start)) {
-    result.start = data.start
-  }
-  if ('succeeded' in data && check(data.succeeded)) {
-    result.succeeded = data.succeeded
-  }
-  if ('failed' in data && check(data.failed)) {
-    result.failed = data.failed
-  }
-  if ('toast' in data && typeof data.toast === 'string') {
-    result.toast = data.toast
-  }
-  return result
-}
-
 export class TaskList {
   info: TaskScope[] = []
   focus: string[] = []
@@ -94,9 +62,13 @@ export class TaskList {
     return this.lastNLInfo.recos[this.lastNLInfo.recos.length - 1]
   }
 
-  yieldFocus(v?: string | string[]) {
+  yieldFocus(repl: Record<string, unknown>, v?: string) {
     if (v) {
-      this.focus.push(...(typeof v === 'string' ? [v] : v))
+      for (const [key, val] of Object.entries(repl)) {
+        v = v!.replaceAll(`{${key}}`, `${val}`)
+      }
+      this.focus.push(v)
+      console.log(v)
     }
   }
 
@@ -119,6 +91,13 @@ export class TaskList {
   }
 
   push(msg: Message, detail_: unknown) {
+    if (msg.startsWith('Node.')) {
+      this.yieldFocus(
+        detail_ as Record<string, unknown>,
+        (detail_ as { focus?: FocusNotify })?.focus?.[msg]
+      )
+    }
+
     switch (msg) {
       case Message.Tasker_Task_Starting:
         this.info.push({
@@ -148,21 +127,12 @@ export class TaskList {
 
           id: this.counter++
         })
-        {
-          const notify = parseNotify((detail_ as NextListMessage).focus)
-          this.yieldFocus(notify.start)
-          if (notify.toast) {
-            this.focus.push(`<toast> ${notify.toast}`)
-          }
-        }
         break
       case Message.Task_NextList_Succeeded:
-        this.yieldFocus(parseNotify((detail_ as NextListMessage).focus).succeeded)
         this.lastNLInfo.state = 'success'
         this.lastNLInfo.info = detail_ as NextListMessage
         break
       case Message.Task_NextList_Failed:
-        this.yieldFocus(parseNotify((detail_ as NextListMessage).focus).failed)
         this.lastNLInfo.state = 'failed'
         this.lastNLInfo.info = detail_ as NextListMessage
         break

@@ -268,9 +268,11 @@ export class InterfaceService extends BaseService {
       return t('maa.pi.error.cannot-find-resource', config.resource ?? '')
     }
 
-    result.resource_path = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path).map(
-      replaceVar
-    )
+    result.resource_path = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
+      .map(replaceVar)
+      .map(resPath => {
+        return path.resolve(projectDir, resPath)
+      })
 
     if (!skipTask) {
       result.task = []

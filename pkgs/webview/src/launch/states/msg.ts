@@ -23,21 +23,27 @@ export type TaskMessage = {
   hash: string
 }
 
+export type FocusNotify = {
+  [msg in Message]?: string
+}
+
 export type NextListMessage = {
   task_id: number
   name: string
   list: string[]
-  focus: unknown
+  focus: FocusNotify
 }
 
 export type RecognitionMessage = {
   task_id: number
   reco_id: number
   name: string
+  focus: FocusNotify
 }
 
 export type ActionMessage = {
   task_id: number
   node_id: number
   name: string
+  focus: FocusNotify
 }

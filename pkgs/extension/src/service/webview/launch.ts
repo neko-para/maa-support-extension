@@ -39,6 +39,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.instance.tasker.add_sink(async (_, msg) => {
       await this.pushNotify(msg.msg, JSON.stringify(msg))
     })
+    this.instance.tasker.add_context_sink(async (_, msg) => {
+      await this.pushNotify(msg.msg, JSON.stringify(msg))
+    })
   }
 
   dispose() {

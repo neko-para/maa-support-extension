@@ -155,7 +155,7 @@ export class LaunchService extends BaseService {
     }
 
     controller.add_sink((_, msg) => {
-      logger.info(`${msg}`)
+      logger.info(`${JSON.stringify(msg)}`)
     })
 
     await controller.post_connection().wait()
@@ -176,7 +176,7 @@ export class LaunchService extends BaseService {
     const resource = new maa.Resource()
 
     resource.add_sink((_, msg) => {
-      logger.info(`${msg}`)
+      logger.info(`${JSON.stringify(msg)}`)
     })
 
     for (const path of runtime.resource_path) {
@@ -270,7 +270,7 @@ export class LaunchService extends BaseService {
     const tasker = new maa.Tasker()
 
     tasker.add_sink((_, msg) => {
-      logger.info(`${msg}`)
+      logger.info(`${JSON.stringify(msg)}`)
     })
 
     tasker.controller = controller

@@ -4,8 +4,9 @@ import { URI } from 'vscode-languageserver/node'
 import { URI as Uri } from 'vscode-uri'
 
 import { lsp } from '../lsp/connection'
+import { BaseService } from './base'
 
-export class DocumentProvider {
+export class DocumentService extends BaseService {
   async get(uri: Uri, lang: string = 'plaintext'): Promise<TextDocument | undefined> {
     if (lsp) {
       const doc = lsp.documents.get(uri.toString())

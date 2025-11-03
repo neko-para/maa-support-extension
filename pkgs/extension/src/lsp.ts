@@ -16,6 +16,41 @@ import { logger } from '@mse/utils'
 
 let client: LanguageClient
 
+function traceSocket(socket: net.Socket) {
+  socket.on('data', data => {
+    const buf = data.toString()
+    const json = buf.replace(/^Content-Length: \d+\r\n\r\n/, '')
+    try {
+      const obj = JSON.parse(json) as { result?: unknown }
+      logger.info(`<-- ${JSON.stringify(obj.result)}`)
+    } catch {}
+  })
+
+  const oldWrite = socket.write.bind(socket)
+  socket.write = (data, ...args) => {
+    let str = data
+    if (typeof str !== 'string') {
+      str = str.toString()
+    }
+    if (str.startsWith('{')) {
+      try {
+        const obj = JSON.parse(str) as {
+          method: string
+          params?: unknown
+        }
+        if (obj.method === 'textDocument/didOpen') {
+          const params = obj.params as DidOpenTextDocumentParams
+          logger.info(`--> ${obj.method} ${params.textDocument.uri}`)
+        } else {
+          logger.info(`--> ${obj.method}`)
+        }
+      } catch {}
+    }
+
+    return (oldWrite as any)(data, ...args)
+  }
+}
+
 export function activateLsp(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('lsp', 'index.js'))
 
@@ -23,37 +58,7 @@ export function activateLsp(context: vscode.ExtensionContext) {
     return new Promise<StreamInfo>(resolve => {
       const server = net.createServer(socket => {
         server.close()
-        socket.on('data', data => {
-          const buf = data.toString()
-          const json = buf.replace(/^Content-Length: \d+\r\n\r\n/, '')
-          try {
-            const obj = JSON.parse(json) as { result?: unknown }
-            logger.info(`<-- ${JSON.stringify(obj.result)}`)
-          } catch {}
-        })
-        const oldWrite = socket.write.bind(socket)
-        socket.write = (data, ...args) => {
-          let str = data
-          if (typeof str !== 'string') {
-            str = str.toString()
-          }
-          if (str.startsWith('{')) {
-            try {
-              const obj = JSON.parse(str) as {
-                method: string
-                params?: unknown
-              }
-              if (obj.method === 'textDocument/didOpen') {
-                const params = obj.params as DidOpenTextDocumentParams
-                logger.info(`--> ${obj.method} ${params.textDocument.uri}`)
-              } else {
-                logger.info(`--> ${obj.method}`)
-              }
-            } catch {}
-          }
-
-          return (oldWrite as any)(data, ...args)
-        }
+        traceSocket(socket)
         resolve({
           writer: socket,
           reader: socket

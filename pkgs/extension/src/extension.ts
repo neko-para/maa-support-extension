@@ -6,12 +6,15 @@ import { logger, setupLogger, t } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
+import { activateLsp } from './lsp'
 import { init, nativeService, statusBarService } from './service'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()
 
 export async function activate(context: vscode.ExtensionContext) {
+  activateLsp(context)
+
   const channel = vscode.window.createOutputChannel('Maa')
   context.subscriptions.push(channel)
 

@@ -19,7 +19,7 @@ export class LspConnection {
       return {
         capabilities: {
           textDocumentSync: TextDocumentSyncKind.Incremental,
-          documentLinkProvider: {}
+          hoverProvider: {}
         }
       }
     })

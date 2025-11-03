@@ -24,3 +24,15 @@ viteWatch({
   await server.listen()
   server.printUrls()
 })
+
+esContext({
+  entryPoints: ['pkgs/maa-lsp/src/index.ts'],
+  bundle: true,
+  outdir: 'pkgs/maa-lsp/dist',
+  external: ['@maaxyz/maa-node', 'node-gyp/bin/node-gyp.js'],
+  platform: 'node',
+  sourcemap: true,
+  mainFields: ['module', 'main']
+}).then(ctx => {
+  ctx.watch()
+})

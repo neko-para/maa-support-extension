@@ -7,3 +7,4 @@ azure.token
 *.vsix
 .DS_Store
 
+dist

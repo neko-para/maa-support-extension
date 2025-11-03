@@ -115,6 +115,12 @@ importers:
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
+      vscode-languageclient:
+        specifier: ^9.0.1
+        version: 9.0.1
+      vscode-languageserver-protocol:
+        specifier: ^3.17.5
+        version: 3.17.5
 
   pkgs/maa-lsp:
     devDependencies:
@@ -1867,6 +1873,10 @@ packages:
     engines: {node: '>=10.0.0'}
     hasBin: true
 
+  minimatch@5.1.6:
+    resolution: {integrity: sha512-lKwV/1brpG6mBUFHtb7NUmtABCb2WZZmm2wNiOA5hAb8VdCS4B3dtMWyvcoViccwAW/COERjXLt0zP1zXUN26g==}
+    engines: {node: '>=10'}
+
   minimatch@9.0.5:
     resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
     engines: {node: '>=16 || 14 >=14.17'}
@@ -2351,6 +2361,10 @@ packages:
   vscode-jsonrpc@8.2.0:
     resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
     engines: {node: '>=14.0.0'}
+
+  vscode-languageclient@9.0.1:
+    resolution: {integrity: sha512-JZiimVdvimEuHh5olxhxkht09m3JzUGwggb5eRUkzzJhZ2KjCN0nh55VfiED9oez9DyF8/fz1g1iBV3h+0Z2EA==}
+    engines: {vscode: ^1.82.0}
 
   vscode-languageserver-protocol@3.17.5:
     resolution: {integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==}
@@ -3967,6 +3981,10 @@ snapshots:
 
   mime@3.0.0: {}
 
+  minimatch@5.1.6:
+    dependencies:
+      brace-expansion: 2.0.1
+
   minimatch@9.0.5:
     dependencies:
       brace-expansion: 2.0.1
@@ -4467,6 +4485,12 @@ snapshots:
       vue: 3.5.13(typescript@5.8.3)
 
   vscode-jsonrpc@8.2.0: {}
+
+  vscode-languageclient@9.0.1:
+    dependencies:
+      minimatch: 5.1.6
+      semver: 7.7.2
+      vscode-languageserver-protocol: 3.17.5
 
   vscode-languageserver-protocol@3.17.5:
     dependencies:

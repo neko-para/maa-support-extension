@@ -4,15 +4,17 @@ import {
   Range,
   TextDocumentSyncKind,
   TextDocuments,
-  createConnection
+  createConnection,
+  createServerSocketTransport
 } from 'vscode-languageserver/node'
 
 export class LspConnection {
   connection: ProposedFeatures.Connection
   documents: TextDocuments<TextDocument>
 
-  constructor() {
-    this.connection = createConnection(ProposedFeatures.all)
+  constructor(port: number) {
+    const [input, output] = createServerSocketTransport(port)
+    this.connection = createConnection(ProposedFeatures.all, input, output)
     this.documents = new TextDocuments(TextDocument)
 
     this.connection.onInitialize(params => {
@@ -44,6 +46,6 @@ export class LspConnection {
 
 export let lsp: LspConnection | null = null
 
-export function setupLsp() {
-  lsp = new LspConnection()
+export function setupLsp(port: number) {
+  lsp = new LspConnection(port)
 }

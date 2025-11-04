@@ -1,19 +1,26 @@
-import { setupBase } from './base'
+import { nativeService, setupBase } from './base'
 import { setupLsp } from './lsp/connection'
 import { setupServer } from './server'
 
 export type MaaLspOption = {
-  enableLsp?: boolean
+  lsp?: {
+    port: number
+  }
 }
 
-export function launch(option: MaaLspOption = {}) {
-  if (option.enableLsp) {
-    setupLsp()
-  }
-  setupBase()
+export async function launch(option: MaaLspOption = {}) {
+  await setupBase()
   setupServer(60002)
+
+  await nativeService.load()
+
+  if (option.lsp) {
+    setupLsp(option.lsp.port)
+  }
 }
 
 launch({
-  enableLsp: true
+  lsp: {
+    port: 60001
+  }
 })

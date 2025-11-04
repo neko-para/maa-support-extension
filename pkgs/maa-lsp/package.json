@@ -1,6 +1,8 @@
 {
   "name": "@maaxyz/maa-lsp",
   "devDependencies": {
+    "@maaxyz/maa-node": "5.0.0-alpha.3",
+    "@tsconfig/node20": "^20.1.6",
     "@types/express": "^5.0.5",
     "@types/node": "^20.17.9",
     "@types/pacote": "^11.1.8",

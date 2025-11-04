@@ -65,7 +65,8 @@ export function activateLsp(context: vscode.ExtensionContext) {
         })
       })
       server.listen(60001, () => {
-        const cp = child_process.fork(serverModule, ['--socket=60001'], {
+        const cp = child_process.fork(serverModule, [], {
+          cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? context.globalStorageUri.fsPath,
           stdio: 'pipe'
         })
         cp.on('close', () => {

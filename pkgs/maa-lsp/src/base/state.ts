@@ -3,6 +3,8 @@ import * as fs from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
 
+import { handle } from '../server'
+import { GlobalState, LocalState } from '../server/api'
 import { BaseService } from './base'
 
 class BaseStateService<State> extends BaseService {
@@ -40,23 +42,25 @@ class BaseStateService<State> extends BaseService {
   }
 }
 
-export type GlobalState = {
-  registryType?: string
-  explicitVersion?: string
-}
-
 export class GlobalStateService extends BaseStateService<GlobalState> {
   constructor() {
     super(os.homedir(), {})
   }
-}
 
-export type LocalState = {
-  activeInterface?: string
+  listen() {
+    handle('/state/getGlobalConfig', req => {
+      return this.state
+    })
+  }
 }
 
 export class LocalStateService extends BaseStateService<LocalState> {
   constructor() {
     super(process.cwd(), {})
+  }
+  listen() {
+    handle('/state/getLocalConfig', req => {
+      return this.state
+    })
   }
 }

@@ -92,6 +92,8 @@ export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>(
           },
           builtin: true
         })
+      } else {
+        return
       }
       e.preventDefault()
     }

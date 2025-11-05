@@ -185,6 +185,51 @@ importers:
         specifier: 5.0.0-alpha.3
         version: 5.0.0-alpha.3
 
+  pkgs/maa-support-webview:
+    devDependencies:
+      '@maaxyz/maa-node':
+        specifier: 5.0.0-alpha.3
+        version: 5.0.0-alpha.3
+      '@mse/types':
+        specifier: workspace:*
+        version: link:../types
+      '@types/node':
+        specifier: ^20.17.9
+        version: 20.17.9
+      '@types/vscode-webview':
+        specifier: ^1.57.5
+        version: 1.57.5
+      '@vicons/material':
+        specifier: ^0.13.0
+        version: 0.13.0
+      '@vitejs/plugin-vue':
+        specifier: ^5.2.1
+        version: 5.2.4(vite@6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))
+      '@vitejs/plugin-vue-jsx':
+        specifier: ^4.1.1
+        version: 4.1.1(vite@6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))
+      '@vue/tsconfig':
+        specifier: ^0.5.1
+        version: 0.5.1
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
+      naive-ui:
+        specifier: ^2.41.1
+        version: 2.41.1(vue@3.5.13(typescript@5.9.3))
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.3
+        version: 6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0)
+      vue:
+        specifier: ^3.5.13
+        version: 3.5.13(typescript@5.9.3)
+
   pkgs/maa-tasker:
     devDependencies:
       '@nekosu/simple-parser':
@@ -2975,6 +3020,10 @@ snapshots:
     dependencies:
       vue: 3.5.13(typescript@5.8.3)
 
+  '@css-render/vue3-ssr@0.15.14(vue@3.5.13(typescript@5.9.3))':
+    dependencies:
+      vue: 3.5.13(typescript@5.9.3)
+
   '@dabh/diagnostics@2.0.3':
     dependencies:
       colorspace: 1.1.4
@@ -3655,6 +3704,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@vitejs/plugin-vue-jsx@4.1.1(vite@6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))':
+    dependencies:
+      '@babel/core': 7.26.0
+      '@babel/plugin-transform-typescript': 7.26.3(@babel/core@7.26.0)
+      '@vue/babel-plugin-jsx': 1.2.5(@babel/core@7.26.0)
+      vite: 6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0)
+      vue: 3.5.13(typescript@5.9.3)
+    transitivePeerDependencies:
+      - supports-color
+
   '@vitejs/plugin-vue@5.2.4(vite@5.4.19(@types/node@20.17.9))(vue@3.5.13(typescript@5.8.3))':
     dependencies:
       vite: 5.4.19(@types/node@20.17.9)
@@ -3664,6 +3723,11 @@ snapshots:
     dependencies:
       vite: 6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0)
       vue: 3.5.13(typescript@5.8.3)
+
+  '@vitejs/plugin-vue@5.2.4(vite@6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))':
+    dependencies:
+      vite: 6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0)
+      vue: 3.5.13(typescript@5.9.3)
 
   '@volar/language-core@2.4.14':
     dependencies:
@@ -3795,6 +3859,12 @@ snapshots:
       '@vue/compiler-ssr': 3.5.13
       '@vue/shared': 3.5.13
       vue: 3.5.13(typescript@5.8.3)
+
+  '@vue/server-renderer@3.5.13(vue@3.5.13(typescript@5.9.3))':
+    dependencies:
+      '@vue/compiler-ssr': 3.5.13
+      '@vue/shared': 3.5.13
+      vue: 3.5.13(typescript@5.9.3)
 
   '@vue/shared@3.5.13': {}
 
@@ -4485,6 +4555,29 @@ snapshots:
       vue: 3.5.13(typescript@5.8.3)
       vueuc: 0.4.64(vue@3.5.13(typescript@5.8.3))
 
+  naive-ui@2.41.1(vue@3.5.13(typescript@5.9.3)):
+    dependencies:
+      '@css-render/plugin-bem': 0.15.14(css-render@0.15.14)
+      '@css-render/vue3-ssr': 0.15.14(vue@3.5.13(typescript@5.9.3))
+      '@types/katex': 0.16.7
+      '@types/lodash': 4.17.17
+      '@types/lodash-es': 4.17.12
+      async-validator: 4.2.5
+      css-render: 0.15.14
+      csstype: 3.1.3
+      date-fns: 3.6.0
+      date-fns-tz: 3.2.0(date-fns@3.6.0)
+      evtd: 0.2.4
+      highlight.js: 11.11.1
+      lodash: 4.17.21
+      lodash-es: 4.17.21
+      seemly: 0.3.10
+      treemate: 0.3.11
+      vdirs: 0.1.8(vue@3.5.13(typescript@5.9.3))
+      vooks: 0.2.12(vue@3.5.13(typescript@5.9.3))
+      vue: 3.5.13(typescript@5.9.3)
+      vueuc: 0.4.64(vue@3.5.13(typescript@5.9.3))
+
   nanoid@3.3.11: {}
 
   negotiator@1.0.0: {}
@@ -4995,6 +5088,11 @@ snapshots:
       evtd: 0.2.4
       vue: 3.5.13(typescript@5.8.3)
 
+  vdirs@0.1.8(vue@3.5.13(typescript@5.9.3)):
+    dependencies:
+      evtd: 0.2.4
+      vue: 3.5.13(typescript@5.9.3)
+
   vite@5.4.19(@types/node@20.17.9):
     dependencies:
       esbuild: 0.21.5
@@ -5019,6 +5117,11 @@ snapshots:
     dependencies:
       evtd: 0.2.4
       vue: 3.5.13(typescript@5.8.3)
+
+  vooks@0.2.12(vue@3.5.13(typescript@5.9.3)):
+    dependencies:
+      evtd: 0.2.4
+      vue: 3.5.13(typescript@5.9.3)
 
   vscode-jsonrpc@8.2.0: {}
 
@@ -5059,6 +5162,16 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
+  vue@3.5.13(typescript@5.9.3):
+    dependencies:
+      '@vue/compiler-dom': 3.5.13
+      '@vue/compiler-sfc': 3.5.13
+      '@vue/runtime-dom': 3.5.13
+      '@vue/server-renderer': 3.5.13(vue@3.5.13(typescript@5.9.3))
+      '@vue/shared': 3.5.13
+    optionalDependencies:
+      typescript: 5.9.3
+
   vueuc@0.4.64(vue@3.5.13(typescript@5.8.3)):
     dependencies:
       '@css-render/vue3-ssr': 0.15.14(vue@3.5.13(typescript@5.8.3))
@@ -5069,6 +5182,17 @@ snapshots:
       vdirs: 0.1.8(vue@3.5.13(typescript@5.8.3))
       vooks: 0.2.12(vue@3.5.13(typescript@5.8.3))
       vue: 3.5.13(typescript@5.8.3)
+
+  vueuc@0.4.64(vue@3.5.13(typescript@5.9.3)):
+    dependencies:
+      '@css-render/vue3-ssr': 0.15.14(vue@3.5.13(typescript@5.9.3))
+      '@juggle/resize-observer': 3.4.0
+      css-render: 0.15.14
+      evtd: 0.2.4
+      seemly: 0.3.10
+      vdirs: 0.1.8(vue@3.5.13(typescript@5.9.3))
+      vooks: 0.2.12(vue@3.5.13(typescript@5.9.3))
+      vue: 3.5.13(typescript@5.9.3)
 
   which@2.0.2:
     dependencies:

@@ -47,7 +47,7 @@ canvasSt.setup(canvasSizeEl, canvasEl)
                 cursor: controlSt.cursor.value
               }"
               @wheel.prevent="controlSt.onWheel"
-              @pointerdown.prevent="controlSt.onPointerDown"
+              @pointerdown="controlSt.onPointerDown"
               @pointermove.prevent="controlSt.onPointerMove"
               @pointerup.prevent="controlSt.onPointerUp"
               @contextmenu.prevent="controlSt.onContextMenu"

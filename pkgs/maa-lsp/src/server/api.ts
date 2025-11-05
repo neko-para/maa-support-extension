@@ -7,6 +7,14 @@ export type LocalState = {
   activeInterface?: string
 }
 
+export type RootInfo = {
+  folder: string
+  folderRelative: string
+  interface: string
+  interfaceRelative: string
+  config: string
+}
+
 export type ApiMeta = {
   '/state/getGlobalConfig': {
     req: {}
@@ -31,5 +39,28 @@ export type ApiMeta = {
       local: boolean
       using: boolean
     }[]
+  }
+  '/root/list': {
+    req: {}
+    rsp: {
+      active?: RootInfo
+      info: RootInfo[]
+    }
+  }
+  '/root/refresh': {
+    req: {}
+    rsp: {}
+  }
+  '/root/select': {
+    req: {
+      index: number
+    }
+    rsp: {}
+  }
+  '/root/selectPath': {
+    req: {
+      path: string
+    }
+    rsp: {}
   }
 }

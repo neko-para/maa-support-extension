@@ -1,9 +1,9 @@
-import fs from 'fs/promises'
-import path from 'path'
+import { RootInfo } from '@maaxyz/maa-support-types'
+import * as fs from 'fs/promises'
+import * as path from 'path'
 
 import { localStateService } from '.'
 import { handle } from '../server'
-import { RootInfo } from '../server/api'
 import { BaseService } from './base'
 
 export class RootService extends BaseService {

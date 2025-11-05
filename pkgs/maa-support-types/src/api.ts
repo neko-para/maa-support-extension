@@ -1,19 +1,5 @@
-export type GlobalState = {
-  registryType?: string
-  explicitVersion?: string
-}
-
-export type LocalState = {
-  activeInterface?: string
-}
-
-export type RootInfo = {
-  folder: string
-  folderRelative: string
-  interface: string
-  interfaceRelative: string
-  config: string
-}
+import { RootInfo } from './root'
+import { GlobalState, LocalState } from './state'
 
 export type ApiMeta = {
   '/state/getGlobalConfig': {
@@ -63,4 +49,9 @@ export type ApiMeta = {
     }
     rsp: {}
   }
+}
+
+export type SseMeta = {
+  'state/updateGlobal': GlobalState
+  'state/updateLocal': LocalState
 }

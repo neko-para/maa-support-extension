@@ -1,0 +1,7 @@
+{
+  "name": "@maaxyz/maa-support-types",
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@maaxyz/maa-node": "5.0.0-alpha.3"
+  }
+}

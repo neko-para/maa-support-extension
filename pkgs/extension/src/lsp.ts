@@ -52,7 +52,7 @@ function traceSocket(socket: net.Socket) {
 }
 
 export function activateLsp(context: vscode.ExtensionContext) {
-  const serverModule = context.asAbsolutePath(path.join('lsp', 'index.js'))
+  const serverModule = context.asAbsolutePath(path.join('support', 'index.js'))
 
   let serverOptions: ServerOptions = () => {
     return new Promise<StreamInfo>(resolve => {

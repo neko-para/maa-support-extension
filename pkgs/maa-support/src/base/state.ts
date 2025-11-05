@@ -1,10 +1,10 @@
+import { GlobalState, LocalState } from '@maaxyz/maa-support-types'
 import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
 
-import { handle } from '../server'
-import { GlobalState, LocalState } from '../server/api'
+import { handle, pushEvent } from '../server'
 import { BaseService } from './base'
 
 class BaseStateService<State> extends BaseService {
@@ -39,7 +39,11 @@ class BaseStateService<State> extends BaseService {
       }
     }
     await fs.writeFile(this.file, JSON.stringify(this.state))
+
+    this.push()
   }
+
+  push() {}
 }
 
 export class GlobalStateService extends BaseStateService<GlobalState> {
@@ -52,15 +56,24 @@ export class GlobalStateService extends BaseStateService<GlobalState> {
       return this.state
     })
   }
+
+  push() {
+    pushEvent('state/updateGlobal', this.state)
+  }
 }
 
 export class LocalStateService extends BaseStateService<LocalState> {
   constructor() {
     super(process.cwd(), {})
   }
+
   listen() {
     handle('/state/getLocalConfig', req => {
       return this.state
     })
+  }
+
+  push() {
+    pushEvent('state/updateLocal', this.state)
   }
 }

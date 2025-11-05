@@ -2,7 +2,7 @@ import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
 import * as os from 'os'
 import pacote from 'pacote'
-import path from 'path'
+import * as path from 'path'
 import { lock } from 'proper-lockfile'
 import semVerCompare from 'semver/functions/compare'
 

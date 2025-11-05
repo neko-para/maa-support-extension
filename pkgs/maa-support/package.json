@@ -1,6 +1,7 @@
 {
-  "name": "@maaxyz/maa-lsp",
+  "name": "@maaxyz/maa-support",
   "devDependencies": {
+    "@maaxyz/maa-support-types": "workspace:*",
     "@maaxyz/maa-node": "5.0.0-alpha.3",
     "@tsconfig/node20": "^20.1.6",
     "@types/express": "^5.0.5",

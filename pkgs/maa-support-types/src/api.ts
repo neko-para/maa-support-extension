@@ -1,5 +1,7 @@
-import { RootInfo } from './root'
-import { GlobalState, LocalState } from './state'
+import type { Patch } from 'immer'
+
+import type { RootInfo } from './root'
+import type { GlobalState, LocalState } from './state'
 
 export type ApiMeta = {
   '/state/getGlobalConfig': {
@@ -52,6 +54,6 @@ export type ApiMeta = {
 }
 
 export type SseMeta = {
-  'state/updateGlobal': GlobalState
-  'state/updateLocal': LocalState
+  'state/updateGlobal': Patch[]
+  'state/updateLocal': Patch[]
 }

@@ -1,11 +1,21 @@
 import { type GlobalTheme, type GlobalThemeOverrides, darkTheme, lightTheme } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
-export function useTheme(type: 'view' | 'panel') {
+import { isVscode, vscodeViewType } from './config'
+
+export function useTheme() {
   const loaded = ref<boolean>(false)
 
   const theme = ref<GlobalTheme>(lightTheme)
   const themeOverride = ref<GlobalThemeOverrides>({})
+
+  if (!isVscode) {
+    return {
+      loaded,
+      theme,
+      themeOverride
+    }
+  }
 
   let updateThemeTimer: NodeJS.Timeout | undefined
 
@@ -36,7 +46,7 @@ export function useTheme(type: 'view' | 'panel') {
         cardColor: 'transparent',
         inputColor: 'transparent',
         inputColorDisabled: 'transparent',
-        popoverColor: type === 'view' ? viewBgColor : panelBgColor,
+        popoverColor: vscodeViewType === 'view' ? viewBgColor : panelBgColor,
         hoverColor: getVar('--vscode-toolbar-hoverBackground')
       },
       Card: {

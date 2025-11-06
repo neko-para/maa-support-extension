@@ -56,8 +56,8 @@ export class RootService extends BaseService {
       this.activeRootInfo = undefined
     }
 
-    await localStateService.reduce({
-      activeInterface: this.activeRootInfo?.interfaceRelative
+    await localStateService.reduce(state => {
+      state.activeInterface = this.activeRootInfo?.interfaceRelative
     })
 
     this.refreshing = false
@@ -70,8 +70,8 @@ export class RootService extends BaseService {
       this.activeRootInfo = this.rootInfos[index]
     }
 
-    await localStateService.reduce({
-      activeInterface: this.activeRootInfo?.interfaceRelative
+    await localStateService.reduce(state => {
+      state.activeInterface = this.activeRootInfo?.interfaceRelative
     })
   }
 

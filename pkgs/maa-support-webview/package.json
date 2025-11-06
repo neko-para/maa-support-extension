@@ -2,6 +2,7 @@
   "name": "@maaxyz/maa-support-webview",
   "devDependencies": {
     "@maaxyz/maa-node": "5.0.0-alpha.3",
+    "@maaxyz/maa-support-types": "workspace:*",
     "@mse/types": "workspace:*",
     "@types/node": "^20.17.9",
     "@types/vscode-webview": "^1.57.5",
@@ -9,7 +10,9 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "@vitejs/plugin-vue-jsx": "^4.1.1",
     "@vue/tsconfig": "^0.5.1",
+    "axios": "^1.13.2",
     "highlight.js": "^11.11.1",
+    "immer": "^10.2.0",
     "naive-ui": "^2.41.1",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",

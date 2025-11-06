@@ -2,6 +2,7 @@
   "name": "@maaxyz/maa-support-types",
   "main": "./src/index.ts",
   "devDependencies": {
-    "@maaxyz/maa-node": "5.0.0-alpha.3"
+    "@maaxyz/maa-node": "5.0.0-alpha.3",
+    "immer": "^10.2.0"
   }
 }

@@ -36,3 +36,11 @@ esContext({
 }).then(ctx => {
   ctx.watch()
 })
+
+viteWatch({
+  root: path.join(import.meta.dirname, '../pkgs/maa-support-webview'),
+  mode: 'development'
+}).then(async server => {
+  await server.listen()
+  server.printUrls()
+})

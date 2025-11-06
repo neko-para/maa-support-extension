@@ -94,8 +94,8 @@ export class NativeService extends BaseService {
   }
 
   set registryType(type: RegistryType | null) {
-    globalStateService.reduce({
-      registryType: type ?? undefined
+    globalStateService.reduce(state => {
+      state.registryType = type ?? undefined
     })
   }
 
@@ -108,8 +108,8 @@ export class NativeService extends BaseService {
   }
 
   set explicitVersion(ver: string | null) {
-    globalStateService.reduce({
-      explicitVersion: ver ?? undefined
+    globalStateService.reduce(state => {
+      state.explicitVersion = ver ?? undefined
     })
   }
 

@@ -9,7 +9,7 @@ export default defineConfig({
   root: __dirname,
   base: './',
   server: {
-    port: 5173
+    port: 60003
   },
   build: {
     outDir: '../../release/support-webview',

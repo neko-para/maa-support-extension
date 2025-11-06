@@ -1,6 +1,7 @@
 import { GlobalState, LocalState } from '@maaxyz/maa-support-types'
 import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
+import { Patch, produceWithPatches } from 'immer'
 import * as os from 'os'
 import * as path from 'path'
 
@@ -29,21 +30,15 @@ class BaseStateService<State> extends BaseService {
     }
   }
 
-  async reduce(change: Partial<State> | ((state: State) => State)) {
-    if (typeof change === 'function') {
-      this.state = change(this.state)
-    } else {
-      this.state = {
-        ...this.state,
-        ...change
-      }
-    }
-    await fs.writeFile(this.file, JSON.stringify(this.state))
+  async reduce(change: (state: State) => void) {
+    const [newState, patches] = produceWithPatches(this.state, change)
+    this.state = newState
+    this.push(patches)
 
-    this.push()
+    await fs.writeFile(this.file, JSON.stringify(this.state))
   }
 
-  push() {}
+  push(patches: Patch[]) {}
 }
 
 export class GlobalStateService extends BaseStateService<GlobalState> {
@@ -57,8 +52,8 @@ export class GlobalStateService extends BaseStateService<GlobalState> {
     })
   }
 
-  push() {
-    pushEvent('state/updateGlobal', this.state)
+  push(patches: Patch[]) {
+    pushEvent('state/updateGlobal', patches)
   }
 }
 
@@ -73,7 +68,7 @@ export class LocalStateService extends BaseStateService<LocalState> {
     })
   }
 
-  push() {
-    pushEvent('state/updateLocal', this.state)
+  push(patches: Patch[]) {
+    pushEvent('state/updateLocal', patches)
   }
 }

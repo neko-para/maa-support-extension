@@ -1,6 +1,10 @@
+import { enablePatches } from 'immer'
+
 import { nativeService, setupBase } from './base'
 import { setupLsp } from './lsp/connection'
 import { setupServer } from './server'
+
+enablePatches()
 
 export type MaaLspOption = {
   lsp?: {

@@ -16,7 +16,7 @@ export function setupServer(port: number) {
     service.listen()
   }
 
-  app.get('/sse', (req, rsp) => {
+  app.get('/api/sse', (req, rsp) => {
     rsp.set({
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
@@ -37,11 +37,11 @@ export function handle<Path extends keyof ApiMeta>(
   path: Path,
   func: (req: ApiMeta[Path]['req']) => ApiMeta[Path]['rsp'] | Promise<ApiMeta[Path]['rsp']>
 ) {
-  app.post(path, async (req, rsp) => {
+  app.post(`/api${path}`, async (req, rsp) => {
     const result = await func(req.body)
     rsp.send(result)
   })
-  app.get(path, async (req, rsp) => {
+  app.get(`/api${path}`, async (req, rsp) => {
     let obj: any = {}
     if (req.query.req) {
       obj = JSON.parse(req.query.req as string)

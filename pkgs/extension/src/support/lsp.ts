@@ -6,13 +6,13 @@ import {
   LanguageClient,
   LanguageClientOptions,
   ServerOptions,
-  StreamInfo,
-  Trace,
-  TransportKind
+  StreamInfo
 } from 'vscode-languageclient/node'
 import { DidOpenTextDocumentParams } from 'vscode-languageserver-protocol'
 
 import { logger } from '@mse/utils'
+
+import { request } from './utils'
 
 let client: LanguageClient
 
@@ -51,8 +51,26 @@ function traceSocket(socket: net.Socket) {
   }
 }
 
-export function activateLsp(context: vscode.ExtensionContext) {
+function initServer(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('support', 'index.js'))
+
+  const cp = child_process.fork(serverModule, [], {
+    cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? context.globalStorageUri.fsPath,
+    stdio: 'pipe'
+  })
+  cp.on('close', () => {
+    logger.info(`lsp close`)
+  })
+  cp.stdout?.on('data', data => {
+    logger.info(`lsp stdout: ${data}`)
+  })
+  cp.stderr?.on('data', data => {
+    logger.info(`lsp stderr: ${data}`)
+  })
+}
+
+export function activateLsp(context: vscode.ExtensionContext) {
+  initServer(context)
 
   let serverOptions: ServerOptions = () => {
     return new Promise<StreamInfo>(resolve => {
@@ -65,19 +83,7 @@ export function activateLsp(context: vscode.ExtensionContext) {
         })
       })
       server.listen(60001, () => {
-        const cp = child_process.fork(serverModule, [], {
-          cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? context.globalStorageUri.fsPath,
-          stdio: 'pipe'
-        })
-        cp.on('close', () => {
-          logger.info(`lsp close`)
-        })
-        cp.stdout?.on('data', data => {
-          logger.info(`lsp stdout: ${data}`)
-        })
-        cp.stderr?.on('data', data => {
-          logger.info(`lsp stderr: ${data}`)
-        })
+        request('/lsp/start', { port: 60001 })
       })
     })
   }

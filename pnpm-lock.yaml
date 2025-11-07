@@ -55,6 +55,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.0.0-alpha.3
         version: 5.0.0-alpha.3
+      '@maaxyz/maa-support-types':
+        specifier: workspace:*
+        version: link:../maa-support-types
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -94,6 +97,9 @@ importers:
       '@vscode/debugprotocol':
         specifier: ^1.68.0
         version: 1.68.0
+      axios:
+        specifier: ^1.13.2
+        version: 1.13.2
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
@@ -148,6 +154,9 @@ importers:
       '@types/semver':
         specifier: ^7.7.0
         version: 7.7.0
+      '@types/source-map-support':
+        specifier: ^0.5.10
+        version: 0.5.10
       express:
         specifier: ^5.1.0
         version: 5.1.0
@@ -163,9 +172,15 @@ importers:
       semver:
         specifier: ^7.7.2
         version: 7.7.2
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
       vscode-languageserver:
         specifier: ^9.0.1
         version: 9.0.1
@@ -1855,10 +1870,6 @@ packages:
     resolution: {integrity: sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw==}
     engines: {node: '>=14'}
 
-  form-data@4.0.3:
-    resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
-    engines: {node: '>= 6'}
-
   form-data@4.0.4:
     resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
@@ -3022,7 +3033,7 @@ snapshots:
       '@babel/parser': 7.27.5
       '@babel/template': 7.25.9
       '@babel/types': 7.26.3
-      debug: 4.4.0
+      debug: 4.4.1
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -3657,7 +3668,7 @@ snapshots:
   '@types/node-fetch@2.6.12':
     dependencies:
       '@types/node': 20.17.9
-      form-data: 4.0.3
+      form-data: 4.0.4
 
   '@types/node@20.17.9':
     dependencies:
@@ -4288,14 +4299,6 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
-
-  form-data@4.0.3:
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      es-set-tostringtag: 2.1.0
-      hasown: 2.0.2
-      mime-types: 2.1.35
 
   form-data@4.0.4:
     dependencies:

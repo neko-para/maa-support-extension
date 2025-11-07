@@ -1,4 +1,5 @@
 import { RootInfo } from '@maaxyz/maa-support-types'
+import EventEmitter from 'events'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
@@ -6,7 +7,11 @@ import { localStateService } from '.'
 import { handle } from '../server'
 import { BaseService } from './base'
 
-export class RootService extends BaseService {
+export class RootService extends BaseService<{
+  refreshingChanged: []
+  rootInfosChanged: []
+  activeRootInfoChanged: []
+}> {
   rootInfos: RootInfo[] = []
   activeRootInfo?: RootInfo
 
@@ -45,6 +50,7 @@ export class RootService extends BaseService {
       return
     }
     this.refreshing = true
+    this.emitter.emit('refreshingChanged')
 
     const old = this.activeRootInfo?.interfaceRelative ?? localStateService.state.activeInterface
     const roots = await RootService.locate()
@@ -60,7 +66,10 @@ export class RootService extends BaseService {
       state.activeInterface = this.activeRootInfo?.interfaceRelative
     })
 
+    this.emitter.emit('rootInfosChanged')
+    this.emitter.emit('activeRootInfoChanged')
     this.refreshing = false
+    this.emitter.emit('refreshingChanged')
   }
 
   async select(index: number) {
@@ -73,6 +82,8 @@ export class RootService extends BaseService {
     await localStateService.reduce(state => {
       state.activeInterface = this.activeRootInfo?.interfaceRelative
     })
+
+    this.emitter.emit('activeRootInfoChanged')
   }
 
   async selectPath(path: string) {

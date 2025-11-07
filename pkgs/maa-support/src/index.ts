@@ -1,30 +1,17 @@
 import { enablePatches } from 'immer'
+import sms from 'source-map-support'
 
 import { nativeService, setupBase } from './base'
-import { setupLsp } from './lsp/connection'
 import { setupServer } from './server'
 
+sms.install()
 enablePatches()
 
-export type MaaLspOption = {
-  lsp?: {
-    port: number
-  }
-}
-
-export async function launch(option: MaaLspOption = {}) {
+export async function launch() {
   await setupBase()
   setupServer(60002)
 
   await nativeService.load()
-
-  if (option.lsp) {
-    setupLsp(option.lsp.port)
-  }
 }
 
-launch({
-  lsp: {
-    port: 60001
-  }
-})
+launch()

@@ -6,8 +6,8 @@ import { logger, setupLogger, t } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
-import { activateLsp } from './lsp'
 import { init, nativeService, statusBarService } from './service'
+import { activateLsp } from './support/lsp'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()

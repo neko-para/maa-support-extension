@@ -8,8 +8,11 @@ export async function request<Path extends keyof ApiMeta>(
 ): Promise<ApiMeta[Path]['rsp'] | null> {
   try {
     const resp = await axios({
-      url: path,
+      url: `/api${path}`,
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       data: JSON.stringify(req),
       responseType: 'json'
     })
@@ -29,7 +32,7 @@ export function subscribe<Event extends keyof SseMeta>(
     es = null
   }
   if (!es) {
-    es = new EventSource('/sse')
+    es = new EventSource('/api/sse')
   }
   const f = (ev: MessageEvent) => {
     func(JSON.parse(ev.data))

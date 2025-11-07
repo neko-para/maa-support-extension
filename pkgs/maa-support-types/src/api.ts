@@ -2,6 +2,7 @@ import type { Patch } from 'immer'
 
 import type { RootInfo } from './root'
 import type { GlobalState, LocalState } from './state'
+import { ControlViewState } from './webview/control'
 
 export type ApiMeta = {
   '/state/getGlobalConfig': {
@@ -12,6 +13,11 @@ export type ApiMeta = {
     req: {}
     rsp: LocalState
   }
+  '/state/getControlView': {
+    req: {}
+    rsp: ControlViewState
+  }
+
   '/native/listRegistry': {
     req: {}
     rsp: {
@@ -28,6 +34,7 @@ export type ApiMeta = {
       using: boolean
     }[]
   }
+
   '/root/list': {
     req: {}
     rsp: {
@@ -51,9 +58,17 @@ export type ApiMeta = {
     }
     rsp: {}
   }
+
+  '/lsp/start': {
+    req: {
+      port: number
+    }
+    rsp: {}
+  }
 }
 
 export type SseMeta = {
   'state/updateGlobal': Patch[]
   'state/updateLocal': Patch[]
+  'state/updateControlView': Patch[]
 }

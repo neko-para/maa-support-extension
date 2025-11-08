@@ -74,9 +74,9 @@ export function useTheme() {
     }
 
     const isLight =
-      document.body.className.indexOf('vscode-light') !== -1 ||
-      document.body.className.indexOf('vscode-high-contrast') !== -1
-    const isDark = document.body.className.indexOf('vscode-dark') !== -1
+      document.body.classList.contains('vscode-light') ||
+      document.body.classList.contains('vscode-high-contrast')
+    const isDark = document.body.classList.contains('vscode-dark')
 
     theme.value = isLight ? lightTheme : darkTheme
     loaded.value = isLight || isDark

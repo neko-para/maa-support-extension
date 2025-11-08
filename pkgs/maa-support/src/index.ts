@@ -12,12 +12,15 @@ export async function launch() {
   program
     .option('-p, --port <port>', 'server port', '60002')
     .option('-c, --chdir <chdir>', 'change directory')
-  program.parse()
+  program.parse(process.argv.slice(2))
 
   const opts = program.opts<{
     port: string
     chdir?: string
   }>()
+  const args = program.args
+
+  // console.log(process.argv, process.argv0, opts, args)
 
   let port = parseInt(opts.port)
   if (isNaN(port)) {

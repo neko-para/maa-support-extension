@@ -65,7 +65,7 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
     if (this.option.dev) {
       this.webview.html = forwardHtml.replace(
         '%DEV_URL%',
-        `http://localhost:5173/${this.option.index}`
+        `http://localhost:60003?vsc_view_type=view&maa_role=${this.option.index}`
       )
     } else {
       const webRoot = vscode.Uri.joinPath(this.option.context.extensionUri, this.option.folder)

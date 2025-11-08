@@ -8,3 +8,4 @@ azure.token
 .DS_Store
 
 dist
+/release/support

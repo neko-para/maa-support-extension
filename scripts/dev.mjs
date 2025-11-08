@@ -28,7 +28,7 @@ viteWatch({
 esContext({
   entryPoints: ['pkgs/maa-support/src/index.ts'],
   bundle: true,
-  outdir: 'pkgs/maa-support/dist',
+  outdir: 'release/support',
   external: ['@maaxyz/maa-node', 'node-gyp/bin/node-gyp.js'],
   platform: 'node',
   sourcemap: true,

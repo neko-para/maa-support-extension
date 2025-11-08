@@ -12,7 +12,17 @@ export class LspConnection {
   connection: ProposedFeatures.Connection
   documents: TextDocuments<TextDocument>
 
+  connected: Promise<void>
+  connectedResolve?: () => void
+
+  exited: boolean = false
+  onExit?: () => void
+
   constructor(port: number) {
+    this.connected = new Promise(resolve => {
+      this.connectedResolve = resolve
+    })
+
     const [input, output] = createServerSocketTransport(port)
     this.connection = createConnection(ProposedFeatures.all, input, output)
     this.documents = new TextDocuments(TextDocument)
@@ -24,6 +34,15 @@ export class LspConnection {
           hoverProvider: {}
         }
       }
+    })
+
+    this.connection.onInitialized(params => {
+      this.connectedResolve?.()
+    })
+
+    this.connection.onExit(() => {
+      this.exited = true
+      this.onExit?.()
     })
 
     this.connection.onHover(params => {
@@ -46,6 +65,10 @@ export class LspConnection {
 
 export let lsp: LspConnection | null = null
 
-export function setupLsp(port: number) {
+export function setupLsp(port: number, onExit: () => void) {
   lsp = new LspConnection(port)
+  lsp.onExit = () => {
+    lsp = null
+    onExit()
+  }
 }

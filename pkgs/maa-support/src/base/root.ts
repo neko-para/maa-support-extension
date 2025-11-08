@@ -52,8 +52,15 @@ export class RootService extends BaseService<{
     this.refreshing = true
     this.emitter.emit('refreshingChanged')
 
+    const wait = new Promise(resolve => {
+      setTimeout(resolve, 1000)
+    })
+
     const old = this.activeRootInfo?.interfaceRelative ?? localStateService.state.activeInterface
     const roots = await RootService.locate()
+
+    await wait
+
     if (roots.length > 0) {
       this.rootInfos = roots
       this.activeRootInfo = roots.find(info => info.interfaceRelative === old) ?? roots[0]
@@ -107,8 +114,7 @@ export class RootService extends BaseService<{
             folder: current,
             folderRelative: current.replace(root + path.sep, ''),
             interface: path.join(current, 'interface.json'),
-            interfaceRelative: path.join(current, 'interface.json').replace(root + path.sep, ''),
-            config: path.join(current, 'config', 'maa_pi_config.json')
+            interfaceRelative: path.join(current, 'interface.json').replace(root + path.sep, '')
           })
         }
         if (child.isDirectory()) {

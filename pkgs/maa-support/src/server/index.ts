@@ -1,4 +1,5 @@
 import { ApiMeta, SseMeta } from '@maaxyz/maa-support-types'
+import cors from 'cors'
 import express, { type Express, type Response, json } from 'express'
 
 import { services } from '../base'
@@ -11,6 +12,12 @@ export function setupServer(port: number) {
   app = express()
 
   app.use(json())
+  app.use(cors())
+
+  app.use((req, rsp, next) => {
+    console.log(`--> ${req.path}`)
+    next()
+  })
 
   for (const service of services) {
     service.listen()

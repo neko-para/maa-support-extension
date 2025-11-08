@@ -5,7 +5,7 @@ import { Patch, produceWithPatches } from 'immer'
 import * as os from 'os'
 import * as path from 'path'
 
-import { rootService } from '.'
+import { interfaceService, rootService } from '.'
 import { handle, pushEvent } from '../server'
 import { BaseService } from './base'
 
@@ -31,7 +31,7 @@ class BaseStateService<State> extends BaseService {
     }
   }
 
-  async reduce(change: (state: State) => void) {
+  async reduce(change: ((state: State) => void) | (() => State)) {
     const [newState, patches] = produceWithPatches(this.state, change)
     this.state = newState
     this.push(patches)
@@ -100,7 +100,6 @@ export class ControlViewStateService extends BaseMemoryStateService<ControlViewS
   async init() {
     this.reduce(state => {
       state.interface = rootService.rootInfos.map(root => root.interfaceRelative)
-      state.activeInterface = rootService.activeRootInfo?.interfaceRelative
       state.refreshingInterface = false
     })
 
@@ -114,9 +113,10 @@ export class ControlViewStateService extends BaseMemoryStateService<ControlViewS
         state.interface = rootService.rootInfos.map(root => root.interfaceRelative)
       })
     })
-    rootService.emitter.addListener('activeRootInfoChanged', () => {
+
+    interfaceService.emitter.addListener('interfaceChanged', () => {
       this.reduce(state => {
-        state.activeInterface = rootService.activeRootInfo?.interfaceRelative
+        state.interfaceJson = interfaceService.interfaceJson
       })
     })
   }

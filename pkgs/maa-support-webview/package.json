@@ -1,7 +1,7 @@
 {
   "name": "@maaxyz/maa-support-webview",
   "devDependencies": {
-    "@maaxyz/maa-node": "5.0.0-alpha.3",
+    "@maaxyz/maa-node": "5.0.0-beta.2",
     "@maaxyz/maa-support-types": "workspace:*",
     "@mse/types": "workspace:*",
     "@types/node": "^20.17.9",

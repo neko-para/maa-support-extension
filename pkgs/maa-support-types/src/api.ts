@@ -35,6 +35,13 @@ export type ApiMeta = {
     }[]
   }
 
+  '/lsp/start': {
+    req: {
+      port: number
+    }
+    rsp: {}
+  }
+
   '/root/list': {
     req: {}
     rsp: {
@@ -59,11 +66,31 @@ export type ApiMeta = {
     rsp: {}
   }
 
-  '/lsp/start': {
+  '/interface/selectResource': {
     req: {
-      port: number
+      index: number
     }
     rsp: {}
+  }
+  '/interface/selectController': {
+    req: {
+      index: number
+    }
+    rsp: {}
+  }
+  '/interface/configAdb': {
+    req: {
+      adb_path: string
+      address: string
+      config: unknown
+    }
+    rsp: {}
+  }
+  '/interface/native/refreshAdb': {
+    req: {}
+    rsp: {
+      devices: maa.AdbDevice[] | null
+    }
   }
 }
 

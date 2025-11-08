@@ -25,8 +25,8 @@ function isValidRegistryType(key: unknown): key is RegistryType {
 
 const defaultRegistryType: RegistryType = 'npm'
 
-const defaultMaaVersion = '5.0.0-alpha.3'
-const minimumMaaVersion = '5.0.0-alpha.3'
+const defaultMaaVersion = '5.0.0-beta.2'
+const minimumMaaVersion = '5.0.0-beta.2'
 
 function fixMinimumVersion(ver: string) {
   if (semVerCompare(ver, minimumMaaVersion) === -1) {
@@ -202,6 +202,7 @@ export class NativeService extends BaseService {
 
   async load() {
     if (!this.version) {
+      console.log('no version')
       return false
     }
 
@@ -210,6 +211,7 @@ export class NativeService extends BaseService {
     }
 
     if (!(await this.prepare(this.version))) {
+      console.log('prepare failed')
       return false
     }
 
@@ -218,6 +220,7 @@ export class NativeService extends BaseService {
     try {
       require('@maaxyz/maa-node')
     } catch {
+      console.log('require failed')
       return false
     }
 

@@ -9,13 +9,7 @@ export default defineConfig({
   root: __dirname,
   base: './',
   server: {
-    port: 60003,
-    proxy: {
-      '^/api/.*': {
-        target: 'http://localhost:60002',
-        changeOrigin: true
-      }
-    }
+    port: 60003
   },
   build: {
     outDir: '../../release/support-webview',

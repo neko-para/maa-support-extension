@@ -2,7 +2,7 @@
 import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
 import { computed } from 'vue'
 
-import { controlViewState } from '../states/config'
+import { controlViewState, localState } from '../states/config'
 import { request } from '../utils/api'
 import { t } from '../utils/locale'
 
@@ -36,7 +36,7 @@ function revealConfig() {
   <n-card :title="t('maa.control.interface.interface')" size="small">
     <template #header-extra>
       <n-flex>
-        <n-button :disabled="!controlViewState.activeInterface" @click="revealConfig" size="small">
+        <n-button :disabled="!localState.activeInterface" @click="revealConfig" size="small">
           {{ t('maa.control.reveal-config') }}
         </n-button>
         <n-button
@@ -51,7 +51,7 @@ function revealConfig() {
     </template>
     <n-select
       :options="interfaceOptions"
-      :value="controlViewState.activeInterface"
+      :value="localState.activeInterface"
       :disabled="controlViewState.refreshingInterface"
       @update:value="switchInterface"
       :placeholder="t('maa.control.interface.select-interface')"

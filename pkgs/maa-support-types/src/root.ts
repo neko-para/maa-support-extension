@@ -3,5 +3,4 @@ export type RootInfo = {
   folderRelative: string
   interface: string
   interfaceRelative: string
-  config: string
 }

@@ -1,7 +1,7 @@
 export let isVscode: boolean = false
 export let vscodeViewType: 'view' | 'panel' = 'panel'
 
-export let viewRole: 'control' | 'launch' | 'crop' = 'control'
+export let viewRole: 'control' | 'launch' | 'crop' | null = null
 
 export function setup() {
   const urlParams = new URLSearchParams(window.location.search)

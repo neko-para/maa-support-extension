@@ -1,6 +1,8 @@
 import type { ApiMeta, SseMeta } from '@maaxyz/maa-support-types'
 import axios from 'axios'
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, shallowRef } from 'vue'
+
+const host = 'http://localhost:60002'
 
 export async function request<Path extends keyof ApiMeta>(
   path: Path,
@@ -9,6 +11,7 @@ export async function request<Path extends keyof ApiMeta>(
   try {
     const resp = await axios({
       url: `/api${path}`,
+      baseURL: host,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -22,24 +25,54 @@ export async function request<Path extends keyof ApiMeta>(
   }
 }
 
-let es: EventSource | null = null
+export const es = shallowRef<EventSource | null>(null)
+const handlers: Record<string, (ev: MessageEvent) => void> = {}
+const reconnectHandlers: (() => void)[] = []
+
+function ensureConnection() {
+  if (es.value && es.value.readyState === EventSource.CLOSED) {
+    console.log('已断开')
+    es.value = null
+  }
+  if (!es.value) {
+    es.value = new EventSource(host + '/api/sse')
+    for (const [event, func] of Object.entries(handlers)) {
+      es.value.addEventListener(event, func)
+    }
+    for (const reconn of reconnectHandlers) {
+      reconn()
+    }
+    es.value.addEventListener('error', () => {
+      console.log('已断开')
+      es.value = null
+      setTimeout(() => {
+        ensureConnection()
+      }, 5000)
+    })
+    es.value.addEventListener('open', () => {
+      console.log('已连接')
+    })
+  }
+}
 
 export function subscribe<Event extends keyof SseMeta>(
   event: Event,
-  func: (data: SseMeta[Event]) => void
+  func: (data: SseMeta[Event]) => void,
+  reconnect?: () => void
 ) {
-  if (es && es.readyState === EventSource.CLOSED) {
-    es = null
-  }
-  if (!es) {
-    es = new EventSource('/api/sse')
-  }
+  ensureConnection()
+
   const f = (ev: MessageEvent) => {
     func(JSON.parse(ev.data))
   }
-  es.addEventListener(event, f)
+  handlers[event] = f
+  if (reconnect) {
+    reconnectHandlers.push(reconnect)
+  }
+  es.value!.addEventListener(event, f)
   return () => {
-    es?.removeEventListener(event, f)
+    delete handlers[event]
+    es.value?.removeEventListener(event, f)
   }
 }
 

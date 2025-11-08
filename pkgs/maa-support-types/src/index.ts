@@ -1,4 +1,6 @@
 export type * from './api'
+export type * from './pi'
+export type * from './pi_config'
 export type * from './root'
 export type * from './state'
 export type * from './webview/control'

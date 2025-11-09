@@ -1,4 +1,5 @@
 import { Interface } from '@maaxyz/maa-support-types'
+import * as fs from 'fs/promises'
 import { parse } from 'jsonc-parser'
 import * as path from 'path'
 import { v4 } from 'uuid'
@@ -6,6 +7,7 @@ import { URI as Uri } from 'vscode-uri'
 
 import { documentService, localStateService, lspService, rootService } from '.'
 import { handle } from '../server'
+import { showOpenFileDialog } from '../utils/dialog'
 import { BaseService } from './base'
 
 export class InterfaceService extends BaseService<{
@@ -58,9 +60,38 @@ export class InterfaceService extends BaseService<{
       return {}
     })
 
+    handle('/interface/configDesktop', async req => {
+      await localStateService.reduce(state => {
+        state.interfaceConfig!.win32 = {
+          ...req
+        }
+      })
+      return {}
+    })
+
+    handle('/interface/configVscFixed', async req => {
+      const file = await showOpenFileDialog('select image')
+      if (file) {
+        const target = path.join(localStateService.folder, 'fixed.png')
+        await fs.copyFile(file, target)
+        await localStateService.reduce(state => {
+          state.interfaceConfig!.vscFixed = {
+            image: target
+          }
+        })
+      }
+      return {}
+    })
+
     handle('/interface/native/refreshAdb', async req => {
       return {
         devices: await maa.AdbController.find()
+      }
+    })
+
+    handle('/interface/native/refreshDesktop', async req => {
+      return {
+        devices: await maa.Win32Controller.find()
       }
     })
   }

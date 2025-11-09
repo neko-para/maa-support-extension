@@ -114,28 +114,23 @@ async function refreshDesktop() {
     })
   }
   refreshingDesktop.value = true
-  // desktopDevices.value = (
-  //   ((await ipc.call({
-  //     command: 'refreshDesktop'
-  //   })) as maa.DesktopDevice[] | null) ?? []
-  // ).filter(info => {
-  //   return filters.map(f => f(info)).reduce((a, b) => a && b, true)
-  // })
+  desktopDevices.value = (
+    (await request('/interface/native/refreshDesktop', {}))?.devices ?? []
+  ).filter(info => {
+    return filters.map(f => f(info)).reduce((a, b) => a && b, true)
+  })
   refreshingDesktop.value = false
 }
 
 function configDesktop(index: number) {
   const opt = desktopDevices.value[index]
-  // ipc.send({
-  //   command: 'configDesktop',
-  //   handle: opt[0]
-  // })
+  request('/interface/configDesktop', {
+    hwnd: opt[0]
+  })
 }
 
 function uploadImage() {
-  // ipc.send({
-  //   command: 'uploadImage'
-  // })
+  request('/interface/configVscFixed', {})
 }
 </script>
 

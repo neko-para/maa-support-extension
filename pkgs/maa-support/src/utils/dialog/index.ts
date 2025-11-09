@@ -33,7 +33,3 @@ export async function showSaveFileDialog(prompt: string, filename: string) {
       return null
   }
 }
-
-showFolderDialog('123123').then(res => {
-  console.log(res)
-})

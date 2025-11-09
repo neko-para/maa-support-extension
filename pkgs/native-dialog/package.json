@@ -1,0 +1,8 @@
+{
+  "name": "@nekosu/native-dialog",
+  "main": "src/index.ts",
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "typescript": "^5.9.3"
+  }
+}

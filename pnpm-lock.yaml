@@ -290,6 +290,15 @@ importers:
         specifier: ^20.17.9
         version: 20.17.9
 
+  pkgs/native-dialog:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.17.9
+        version: 20.17.9
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   pkgs/simple-parser:
     devDependencies:
       '@tsconfig/node20':

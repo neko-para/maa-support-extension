@@ -86,10 +86,26 @@ export type ApiMeta = {
     }
     rsp: {}
   }
+  '/interface/configDesktop': {
+    req: {
+      hwnd: maa.DesktopHandle
+    }
+    rsp: {}
+  }
+  '/interface/configVscFixed': {
+    req: {}
+    rsp: {}
+  }
   '/interface/native/refreshAdb': {
     req: {}
     rsp: {
       devices: maa.AdbDevice[] | null
+    }
+  }
+  '/interface/native/refreshDesktop': {
+    req: {}
+    rsp: {
+      devices: maa.DesktopDevice[] | null
     }
   }
 }

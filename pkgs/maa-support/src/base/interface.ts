@@ -5,9 +5,10 @@ import * as path from 'path'
 import { v4 } from 'uuid'
 import { URI as Uri } from 'vscode-uri'
 
+import { getFileDialogImpl } from '@nekosu/native-dialog'
+
 import { documentService, localStateService, lspService, rootService } from '.'
 import { handle } from '../server'
-import { showOpenFileDialog } from '../utils/dialog'
 import { BaseService } from './base'
 
 export class InterfaceService extends BaseService<{
@@ -70,10 +71,12 @@ export class InterfaceService extends BaseService<{
     })
 
     handle('/interface/configVscFixed', async req => {
-      const file = await showOpenFileDialog('select image')
-      if (file) {
+      const file = await getFileDialogImpl().openFile({
+        title: 'select image'
+      })
+      if (file && file.length > 0) {
         const target = path.join(localStateService.folder, 'fixed.png')
-        await fs.copyFile(file, target)
+        await fs.copyFile(file[0], target)
         await localStateService.reduce(state => {
           state.interfaceConfig!.vscFixed = {
             image: target

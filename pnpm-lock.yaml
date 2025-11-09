@@ -139,6 +139,9 @@ importers:
       '@maaxyz/maa-support-types':
         specifier: workspace:*
         version: link:../maa-support-types
+      '@nekosu/native-dialog':
+        specifier: workspace:*
+        version: link:../native-dialog
       '@tsconfig/node20':
         specifier: ^20.1.6
         version: 20.1.6

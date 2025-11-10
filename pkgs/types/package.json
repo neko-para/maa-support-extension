@@ -2,6 +2,6 @@
   "name": "@mse/types",
   "main": "./src/index.ts",
   "devDependencies": {
-    "@maaxyz/maa-node": "5.0.0-alpha.3"
+    "@maaxyz/maa-node": "5.0.0-beta.4"
   }
 }

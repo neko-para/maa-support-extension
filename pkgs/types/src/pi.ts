@@ -80,7 +80,7 @@ export type InterfaceConfig = {
 
 export type InterfaceRuntime = {
   root: string
-  controller_param:
+  controller_param: (
     | {
         ctype: 'adb'
         adb_path: string
@@ -93,12 +93,18 @@ export type InterfaceRuntime = {
         ctype: 'win32'
         hwnd: maa.DesktopHandle
         screencap: maa.ScreencapOrInputMethods
-        input: maa.ScreencapOrInputMethods
+        mouse: maa.ScreencapOrInputMethods
+        keyboard: maa.ScreencapOrInputMethods
       }
     | {
         ctype: 'vscFixed'
         image: string
       }
+  ) & {
+    display_short_side?: number
+    display_long_side?: number
+    display_raw?: boolean
+  }
   resource_path: string[]
   task: {
     name: string

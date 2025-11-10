@@ -65,7 +65,11 @@ export class LaunchService extends BaseService {
         address: config.adb.address,
         config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
         screencap: ctrlInfo.adb?.screencap ?? maa.AdbScreencapMethod.Default,
-        input: ctrlInfo.adb?.input ?? maa.AdbInputMethod.Default
+        input: ctrlInfo.adb?.input ?? maa.AdbInputMethod.Default,
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -86,7 +90,12 @@ export class LaunchService extends BaseService {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
         screencap: ctrlInfo.win32?.screencap ?? maa.Win32ScreencapMethod.DXGI_DesktopDup,
-        input: ctrlInfo.win32?.input ?? maa.Win32InputMethod.Seize
+        mouse: ctrlInfo.win32?.mouse ?? maa.Win32InputMethod.SendMessage,
+        keyboard: ctrlInfo.win32?.keyboard ?? maa.Win32InputMethod.SendMessage,
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw
       }
     } else if (ctrlInfo.type === 'VscFixed') {
       if (!config.vscFixed) {
@@ -101,7 +110,11 @@ export class LaunchService extends BaseService {
 
       return {
         ctype: 'vscFixed',
-        image: config.vscFixed.image
+        image: config.vscFixed.image,
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw
       }
     }
 
@@ -136,7 +149,12 @@ export class LaunchService extends BaseService {
         runtime.config
       )
     } else if (runtime.ctype === 'win32') {
-      controller = new maa.Win32Controller(runtime.hwnd, runtime.screencap, runtime.input)
+      controller = new maa.Win32Controller(
+        runtime.hwnd,
+        runtime.screencap,
+        runtime.mouse,
+        runtime.keyboard
+      )
     } else if (runtime.ctype === 'vscFixed') {
       const image = (await readFile(runtime.image)).buffer as ArrayBuffer
       controller = new maa.CustomController({
@@ -152,6 +170,14 @@ export class LaunchService extends BaseService {
       })
     } else {
       return false
+    }
+
+    if (runtime.display_short_side) {
+      controller.screenshot_target_short_side = runtime.display_short_side
+    } else if (runtime.display_long_side) {
+      controller.screenshot_target_long_side = runtime.display_long_side
+    } else if (runtime.display_raw) {
+      controller.screenshot_use_raw_size = true
     }
 
     controller.add_sink((_, msg) => {

@@ -1,7 +1,7 @@
 {
   "name": "@maaxyz/maa-support",
   "devDependencies": {
-    "@maaxyz/maa-node": "5.0.0-beta.2",
+    "@maaxyz/maa-node": "5.0.0-beta.4",
     "@maaxyz/maa-support-types": "workspace:*",
     "@nekosu/native-dialog": "workspace:*",
     "@tsconfig/node20": "^20.1.6",

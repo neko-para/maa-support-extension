@@ -89,7 +89,7 @@ function updateBreak(tasks: string[]) {
     <n-scrollbar>
       <next-list
         style="min-height: 0"
-        :items="taskList.info[activeTask as number].nexts"
+        :items="taskList.info[activeTask as number]?.nexts"
       ></next-list>
     </n-scrollbar>
   </n-card>

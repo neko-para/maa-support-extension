@@ -20,6 +20,7 @@ esContext({
 viteBuild({
   root: path.join(import.meta.dirname, '../pkgs/webview'),
   build: {
+    minify: false,
     watch: {}
   }
 })

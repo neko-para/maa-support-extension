@@ -21,8 +21,8 @@ function isValidRegistryType(key: unknown): key is keyof typeof registries {
 
 const defaultRegistryType = 'npm'
 
-const defaultMaaVersion = '5.0.0-alpha.3'
-const minimumMaaVersion = '5.0.0-alpha.3'
+const defaultMaaVersion = '5.0.0-beta.4'
+const minimumMaaVersion = '5.0.0-beta.4'
 
 function fixMinimumVersion(ver: string) {
   if (semVerCompare(ver, minimumMaaVersion) === -1) {

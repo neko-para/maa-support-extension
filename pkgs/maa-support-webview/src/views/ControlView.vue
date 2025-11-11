@@ -5,6 +5,7 @@ import ControllerFragment from '../components/ControllerFragment.vue'
 import InterfaceFragment from '../components/InterfaceFragment.vue'
 import JsonCode from '../components/JsonCode.vue'
 import ResourceFragment from '../components/ResourceFragment.vue'
+import TaskFragment from '../components/TaskFragment.vue'
 import { controlViewState, globalState, localState } from '../states/config'
 </script>
 
@@ -13,6 +14,7 @@ import { controlViewState, globalState, localState } from '../states/config'
     <interface-fragment></interface-fragment>
     <resource-fragment></resource-fragment>
     <controller-fragment></controller-fragment>
+    <task-fragment></task-fragment>
   </n-flex>
   <n-scrollbar style="max-height: 100px">
     <json-code :code="JSON.stringify(globalState)"></json-code>

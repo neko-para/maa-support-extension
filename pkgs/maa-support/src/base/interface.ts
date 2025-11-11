@@ -97,6 +97,45 @@ export class InterfaceService extends BaseService<{
         devices: await maa.Win32Controller.find()
       }
     })
+
+    handle('/interface/addTask', async req => {
+      await localStateService.reduce(state => {
+        state.interfaceConfig!.task = state.interfaceConfig!.task ?? []
+        state.interfaceConfig!.task.push({
+          name: req.task,
+          option: {},
+          __vscKey: v4()
+        })
+      })
+      return {}
+    })
+
+    handle('/interface/removeTask', async req => {
+      await localStateService.reduce(state => {
+        state.interfaceConfig!.task = state.interfaceConfig!.task?.filter(
+          info => info.__vscKey !== req.key
+        )
+      })
+      return {}
+    })
+
+    handle('/interface/configTask', async req => {
+      await localStateService.reduce(state => {
+        const task = state.interfaceConfig!.task?.find(info => info.__vscKey === req.key)
+        if (!task) {
+          return
+        }
+        task.option = task.option ?? {}
+        task.option[req.option] = task.option[req.option] ?? {}
+        const option = task.option[req.option]!
+        if (typeof req.value === 'string') {
+          option[req.name] = req.value
+        } else {
+          delete option[req.name]
+        }
+      })
+      return {}
+    })
   }
 
   async loadInterface() {

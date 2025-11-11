@@ -4,7 +4,8 @@ import { InterfaceService } from './interface'
 import { LspService } from './lsp'
 import { NativeService } from './native'
 import { RootService } from './root'
-import { ControlViewStateService, GlobalStateService, LocalStateService } from './state'
+import { GlobalStateService, LocalStateService } from './state'
+import { ControlViewStateService } from './webview/control'
 
 export let globalStateService: GlobalStateService
 export let localStateService: LocalStateService

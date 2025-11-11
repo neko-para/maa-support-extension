@@ -1,6 +1,5 @@
 import * as fs from 'fs/promises'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { URI } from 'vscode-languageserver/node'
 import { URI as Uri } from 'vscode-uri'
 
 import { lsp } from '../lsp/connection'

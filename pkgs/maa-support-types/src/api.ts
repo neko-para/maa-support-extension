@@ -108,6 +108,27 @@ export type ApiMeta = {
       devices: maa.DesktopDevice[] | null
     }
   }
+  '/interface/addTask': {
+    req: {
+      task: string
+    }
+    rsp: {}
+  }
+  '/interface/removeTask': {
+    req: {
+      key: string
+    }
+    rsp: {}
+  }
+  '/interface/configTask': {
+    req: {
+      key: string
+      option: string
+      name: string
+      value?: string
+    }
+    rsp: {}
+  }
 }
 
 export type SseMeta = {

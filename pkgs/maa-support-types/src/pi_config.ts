@@ -44,7 +44,8 @@ export type InterfaceRuntime = {
         ctype: 'win32'
         hwnd: maa.DesktopHandle
         screencap: maa.ScreencapOrInputMethods
-        input: maa.ScreencapOrInputMethods
+        mouse: maa.ScreencapOrInputMethods
+        keyboard: maa.ScreencapOrInputMethods
       }
     | {
         ctype: 'vscFixed'

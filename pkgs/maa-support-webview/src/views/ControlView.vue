@@ -4,6 +4,7 @@ import { NFlex, NScrollbar } from 'naive-ui'
 import ControllerFragment from '../components/ControllerFragment.vue'
 import InterfaceFragment from '../components/InterfaceFragment.vue'
 import JsonCode from '../components/JsonCode.vue'
+import LaunchFragment from '../components/LaunchFragment.vue'
 import ResourceFragment from '../components/ResourceFragment.vue'
 import TaskFragment from '../components/TaskFragment.vue'
 import { controlViewState, globalState, localState } from '../states/config'
@@ -15,6 +16,7 @@ import { controlViewState, globalState, localState } from '../states/config'
     <resource-fragment></resource-fragment>
     <controller-fragment></controller-fragment>
     <task-fragment></task-fragment>
+    <launch-fragment></launch-fragment>
   </n-flex>
   <n-scrollbar style="max-height: 100px">
     <json-code :code="JSON.stringify(globalState)"></json-code>

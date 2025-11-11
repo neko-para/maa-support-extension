@@ -29,7 +29,8 @@ export type Win32Controller = ControllerBase & {
     class_regex?: string
     window_regex?: string
     screencap?: maa.ScreencapOrInputMethods
-    input?: maa.ScreencapOrInputMethods
+    mouse?: maa.ScreencapOrInputMethods
+    keyboard?: maa.ScreencapOrInputMethods
   }
 }
 

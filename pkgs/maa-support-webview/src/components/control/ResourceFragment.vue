@@ -3,9 +3,9 @@ import { NCard, NSelect } from 'naive-ui'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed } from 'vue'
 
-import { controlViewState, localState } from '../states/config'
-import { request } from '../utils/api'
-import { t } from '../utils/locale'
+import { controlViewState, localState } from '../../states/config'
+import { request } from '../../utils/api'
+import { t } from '../../utils/locale'
 
 const resourceOptions = computed(() => {
   return (controlViewState.value.interfaceJson?.resource ?? [])

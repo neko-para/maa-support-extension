@@ -2,9 +2,9 @@
 import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
 import { computed } from 'vue'
 
-import { controlViewState, localState } from '../states/config'
-import { request } from '../utils/api'
-import { t } from '../utils/locale'
+import { controlViewState, localState } from '../../states/config'
+import { request } from '../../utils/api'
+import { t } from '../../utils/locale'
 
 const interfaceOptions = computed(() => {
   return (controlViewState.value.interface ?? []).map(path => {

@@ -15,7 +15,7 @@ export const localState = shallowRef<LocalState>({})
 export const controlViewState = shallowRef<ControlViewState>({})
 
 function trackState<Getter extends keyof ApiMeta, Updater extends keyof SseMeta>(
-  state: ShallowRef<ApiMeta[Getter]['req']>,
+  state: ShallowRef<ApiMeta[Getter]['rsp']>,
   getter: Getter,
   updater: Updater
 ) {

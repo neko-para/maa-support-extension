@@ -4,10 +4,10 @@ import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
-import { controlViewState, localState } from '../states/config'
-import { request } from '../utils/api'
-import { t } from '../utils/locale'
-import JsonCode from './JsonCode.vue'
+import { controlViewState, localState } from '../../states/config'
+import { request } from '../../utils/api'
+import { t } from '../../utils/locale'
+import JsonCode from '../JsonCode.vue'
 
 const controllerOptions = computed(() => {
   return (controlViewState.value.interfaceJson?.controller ?? []).map((info, index) => {

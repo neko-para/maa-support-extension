@@ -3,7 +3,7 @@ import { NButton, NFlex, NPopover } from 'naive-ui'
 
 import type { InputOption, TaskConfig } from '@mse/types'
 
-import { t } from '../../utils/locale'
+import { t } from '../../../utils/locale'
 import TaskInputOptionItem from './TaskInputOptionItem.vue'
 
 const props = defineProps<{

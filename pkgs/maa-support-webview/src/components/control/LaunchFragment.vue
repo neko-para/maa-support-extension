@@ -2,8 +2,8 @@
 import { NButton, NCard } from 'naive-ui'
 import { ref } from 'vue'
 
-import { request } from '../utils/api'
-import { t } from '../utils/locale'
+import { request } from '../../utils/api'
+import { t } from '../../utils/locale'
 
 const canLaunch = ref(true)
 

@@ -4,7 +4,7 @@ import { compile, computed, ref } from 'vue'
 
 import type { InputItem, InputOption, TaskConfig } from '@mse/types'
 
-import { request } from '../../utils/api'
+import { request } from '../../../utils/api'
 
 const props = defineProps<{
   taskKey: string

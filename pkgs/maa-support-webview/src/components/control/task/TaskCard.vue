@@ -4,8 +4,8 @@ import { computed } from 'vue'
 
 import type { InputOption, SelectOption, TaskConfig } from '@mse/types'
 
-import { controlViewState } from '../../states/config'
-import { request } from '../../utils/api'
+import { controlViewState } from '../../../states/config'
+import { request } from '../../../utils/api'
 import TaskInputOption from './TaskInputOption.vue'
 import TaskSelectOption from './TaskSelectOption.vue'
 

@@ -3,7 +3,7 @@ import type { Patch } from 'immer'
 import { InterfaceRuntime } from './pi_config'
 import type { RootInfo } from './root'
 import type { GlobalState, LocalState } from './state'
-import { ControlViewState } from './webview/control'
+import { ControlViewState } from './webview'
 
 export type ApiMeta = {
   '/state/getGlobalConfig': {
@@ -139,6 +139,11 @@ export type ApiMeta = {
       error?: string
     }
   }
+  // '/interface/createLaunch': {
+  //   req: {
+  //     runtime: InterfaceRuntime
+  //   }
+  // }
 }
 
 export type SseMeta = {

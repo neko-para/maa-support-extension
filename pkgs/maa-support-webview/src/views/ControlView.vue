@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { NFlex, NScrollbar } from 'naive-ui'
 
-import ControllerFragment from '../components/ControllerFragment.vue'
-import InterfaceFragment from '../components/InterfaceFragment.vue'
 import JsonCode from '../components/JsonCode.vue'
-import LaunchFragment from '../components/LaunchFragment.vue'
-import ResourceFragment from '../components/ResourceFragment.vue'
-import TaskFragment from '../components/TaskFragment.vue'
+import ControllerFragment from '../components/control/ControllerFragment.vue'
+import InterfaceFragment from '../components/control/InterfaceFragment.vue'
+import LaunchFragment from '../components/control/LaunchFragment.vue'
+import ResourceFragment from '../components/control/ResourceFragment.vue'
+import TaskFragment from '../components/control/TaskFragment.vue'
 import { controlViewState, globalState, localState } from '../states/config'
 </script>
 

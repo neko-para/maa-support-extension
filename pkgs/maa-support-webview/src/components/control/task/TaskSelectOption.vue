@@ -4,8 +4,8 @@ import { computed } from 'vue'
 
 import type { SelectOption, TaskConfig } from '@mse/types'
 
-import { request } from '../../utils/api'
-import { t } from '../../utils/locale'
+import { request } from '../../../utils/api'
+import { t } from '../../../utils/locale'
 
 const props = defineProps<{
   task: TaskConfig

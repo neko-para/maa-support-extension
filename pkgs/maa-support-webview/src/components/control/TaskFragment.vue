@@ -3,9 +3,9 @@ import { NButton, NCard, NFlex, NPopselect } from 'naive-ui'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed } from 'vue'
 
-import { controlViewState, localState } from '../states/config'
-import { request } from '../utils/api'
-import { t } from '../utils/locale'
+import { controlViewState, localState } from '../../states/config'
+import { request } from '../../utils/api'
+import { t } from '../../utils/locale'
 import TaskCard from './task/TaskCard.vue'
 
 const taskOptions = computed(() => {

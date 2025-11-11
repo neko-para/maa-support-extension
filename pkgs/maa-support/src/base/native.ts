@@ -47,7 +47,7 @@ export class NativeService extends BaseService {
   constructor() {
     super()
 
-    this.rootFolder = path.join(os.homedir(), '.maalsp', 'maa')
+    this.rootFolder = path.join(os.homedir(), '.maa_support', 'maa')
     this.downloadFolder = path.join(this.rootFolder, 'download')
     this.installFolder = path.join(this.rootFolder, 'install')
   }

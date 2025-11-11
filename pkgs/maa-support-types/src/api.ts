@@ -1,5 +1,6 @@
 import type { Patch } from 'immer'
 
+import { InterfaceRuntime } from './pi_config'
 import type { RootInfo } from './root'
 import type { GlobalState, LocalState } from './state'
 import { ControlViewState } from './webview/control'
@@ -128,6 +129,15 @@ export type ApiMeta = {
       value?: string
     }
     rsp: {}
+  }
+  '/interface/buildRuntime': {
+    req: {
+      skipTask?: boolean
+    }
+    rsp: {
+      runtime?: InterfaceRuntime
+      error?: string
+    }
   }
 }
 

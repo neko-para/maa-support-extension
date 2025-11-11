@@ -245,7 +245,8 @@ export class InterfaceService extends BaseService {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
         screencap: ctrlInfo.win32?.screencap ?? maa.Win32ScreencapMethod.GDI,
-        input: ctrlInfo.win32?.input ?? maa.Win32InputMethod.SendMessage
+        mouse: ctrlInfo.win32?.mouse ?? maa.Win32InputMethod.SendMessage,
+        keyboard: ctrlInfo.win32?.keyboard ?? maa.Win32InputMethod.SendMessage
       }
     } else if (ctrlInfo.type === 'VscFixed') {
       if (!config.vscFixed) {

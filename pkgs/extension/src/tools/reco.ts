@@ -73,7 +73,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
       if (msg.name !== task) {
         return
       }
-      const resp = tasker.recognition_detail(msg.reco_id)
+      const resp = tasker.recognition_detail(`${msg.reco_id}` as maa.RecoId)
       if (resp) {
         const presp = {
           ...resp

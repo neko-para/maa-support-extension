@@ -218,6 +218,13 @@ export class InterfaceService extends BaseService {
       return t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '')
     }
 
+    const fixNum = (v?: string | number) => {
+      if (typeof v === 'number') {
+        return `${v}`
+      }
+      return v
+    }
+
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
         return t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '')
@@ -230,8 +237,8 @@ export class InterfaceService extends BaseService {
         adb_path: config.adb.adb_path,
         address: config.adb.address,
         config: JSON.stringify(adb_config),
-        screencap: ctrlInfo.adb?.screencap ?? maa.AdbScreencapMethod.Default,
-        input: ctrlInfo.adb?.input ?? maa.AdbInputMethod.Default
+        screencap: fixNum(ctrlInfo.adb?.screencap) ?? maa.AdbScreencapMethod.Default,
+        input: fixNum(ctrlInfo.adb?.input) ?? maa.AdbInputMethod.Default
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -244,9 +251,9 @@ export class InterfaceService extends BaseService {
       result.controller_param = {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        screencap: ctrlInfo.win32?.screencap ?? maa.Win32ScreencapMethod.GDI,
-        mouse: ctrlInfo.win32?.mouse ?? maa.Win32InputMethod.SendMessage,
-        keyboard: ctrlInfo.win32?.keyboard ?? maa.Win32InputMethod.SendMessage
+        screencap: fixNum(ctrlInfo.win32?.screencap) ?? maa.Win32ScreencapMethod.GDI,
+        mouse: fixNum(ctrlInfo.win32?.mouse) ?? maa.Win32InputMethod.SendMessage,
+        keyboard: fixNum(ctrlInfo.win32?.keyboard) ?? maa.Win32InputMethod.SendMessage
       }
     } else if (ctrlInfo.type === 'VscFixed') {
       if (!config.vscFixed) {

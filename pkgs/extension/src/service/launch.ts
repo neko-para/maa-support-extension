@@ -51,6 +51,13 @@ export class LaunchService extends BaseService {
       return null
     }
 
+    const fixNum = (v?: string | number) => {
+      if (typeof v === 'number') {
+        return `${v}`
+      }
+      return v
+    }
+
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
         vscode.window.showErrorMessage(
@@ -64,8 +71,8 @@ export class LaunchService extends BaseService {
         adb_path: config.adb.adb_path,
         address: config.adb.address,
         config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
-        screencap: ctrlInfo.adb?.screencap ?? maa.AdbScreencapMethod.Default,
-        input: ctrlInfo.adb?.input ?? maa.AdbInputMethod.Default,
+        screencap: fixNum(ctrlInfo.adb?.screencap) ?? maa.AdbScreencapMethod.Default,
+        input: fixNum(ctrlInfo.adb?.input) ?? maa.AdbInputMethod.Default,
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
@@ -89,9 +96,9 @@ export class LaunchService extends BaseService {
       return {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        screencap: ctrlInfo.win32?.screencap ?? maa.Win32ScreencapMethod.DXGI_DesktopDup,
-        mouse: ctrlInfo.win32?.mouse ?? maa.Win32InputMethod.SendMessage,
-        keyboard: ctrlInfo.win32?.keyboard ?? maa.Win32InputMethod.SendMessage,
+        screencap: fixNum(ctrlInfo.win32?.screencap) ?? maa.Win32ScreencapMethod.DXGI_DesktopDup,
+        mouse: fixNum(ctrlInfo.win32?.mouse) ?? maa.Win32InputMethod.SendMessage,
+        keyboard: fixNum(ctrlInfo.win32?.keyboard) ?? maa.Win32InputMethod.SendMessage,
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,

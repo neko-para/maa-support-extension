@@ -5,7 +5,7 @@ import {
   type LocalState,
   type SseMeta
 } from '@maaxyz/maa-support-types'
-import { applyPatches } from 'immer'
+import { type Patch, applyPatches } from 'immer'
 import { type ShallowRef, shallowRef } from 'vue'
 
 import { request, subscribe } from '../utils/api'
@@ -30,7 +30,7 @@ function trackState<Getter extends keyof ApiMeta, Updater extends keyof SseMeta>
   subscribe(
     updater,
     patches => {
-      state.value = applyPatches(state.value, patches)
+      state.value = applyPatches(state.value, patches as Patch[])
     },
     () => {
       fullUpdate()

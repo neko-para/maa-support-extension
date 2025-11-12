@@ -261,7 +261,7 @@ export class InterfaceService extends BaseService<{
 
               params.push(csInfo.pipeline_override ?? {})
             } else if (optInfo.type === 'Input') {
-              const optValue = optEntry ?? {}
+              const optValue = structuredClone(optEntry ?? {})
               for (const subOpt of optInfo.input ?? []) {
                 if (!(subOpt.name in optValue)) {
                   optValue[subOpt.name] = subOpt.default ?? ''

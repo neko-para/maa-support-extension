@@ -12,6 +12,7 @@ import { DidOpenTextDocumentParams } from 'vscode-languageserver-protocol'
 
 import { logger } from '@mse/utils'
 
+import { setupServer } from './host'
 import { request } from './utils'
 
 let client: LanguageClient
@@ -54,7 +55,7 @@ function traceSocket(socket: net.Socket) {
 function initServer(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('support', 'index.js'))
 
-  const cp = child_process.fork(serverModule, [], {
+  const cp = child_process.fork(serverModule, ['--host', '60005'], {
     cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? context.globalStorageUri.fsPath,
     stdio: 'pipe'
   })
@@ -67,6 +68,14 @@ function initServer(context: vscode.ExtensionContext) {
   cp.stderr?.on('data', data => {
     logger.info(`lsp stderr: ${data}`)
   })
+
+  context.subscriptions.push({
+    dispose() {
+      cp.kill()
+    }
+  })
+
+  setupServer(60005, context)
 }
 
 export function activateLsp(context: vscode.ExtensionContext) {

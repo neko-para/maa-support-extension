@@ -5,12 +5,14 @@ import { LspService } from './lsp'
 import { NativeService } from './native'
 import { RootService } from './root'
 import { GlobalStateService, LocalStateService } from './state'
+import { VscodeService } from './vscode'
 import { ControlViewStateService } from './webview/control'
 
 export let globalStateService: GlobalStateService
 export let localStateService: LocalStateService
 export let nativeService: NativeService
 
+export let vscodeService: VscodeService
 export let lspService: LspService
 export let documentService: DocumentService
 
@@ -26,6 +28,7 @@ export async function setupBase() {
   localStateService = new LocalStateService()
   nativeService = new NativeService()
 
+  vscodeService = new VscodeService()
   lspService = new LspService()
   documentService = new DocumentService()
 
@@ -38,6 +41,7 @@ export async function setupBase() {
     globalStateService,
     localStateService,
     nativeService,
+    vscodeService,
     lspService,
     documentService,
     rootService,

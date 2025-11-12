@@ -9,6 +9,9 @@ export async function request<Path extends keyof ApiMeta>(
     const resp = await axios({
       url: `/api${path}`,
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       data: JSON.stringify(req),
       responseType: 'json'
     })

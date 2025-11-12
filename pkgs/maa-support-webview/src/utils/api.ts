@@ -1,4 +1,4 @@
-import type { ApiMeta, SseMeta } from '@maaxyz/maa-support-types'
+import type { ApiMeta, HostApiMeta, SseMeta } from '@maaxyz/maa-support-types'
 import axios from 'axios'
 import { onMounted, onUnmounted, shallowRef } from 'vue'
 
@@ -10,8 +10,8 @@ export async function request<Path extends keyof ApiMeta>(
 ): Promise<ApiMeta[Path]['rsp'] | null> {
   try {
     const resp = await axios({
-      url: `/api${path}`,
       baseURL: host,
+      url: `/api${path}`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -22,6 +22,21 @@ export async function request<Path extends keyof ApiMeta>(
     return resp.data
   } catch {
     return null
+  }
+}
+
+export async function requestHost<Method extends keyof HostApiMeta>(
+  method: Method,
+  req: HostApiMeta[Method]['req']
+): Promise<HostApiMeta[Method]['rsp'] | null> {
+  const result = await request('/host/forward', {
+    method,
+    data: req
+  })
+  if (result === null) {
+    return null
+  } else {
+    return result.data as HostApiMeta[Method]['rsp']
   }
 }
 

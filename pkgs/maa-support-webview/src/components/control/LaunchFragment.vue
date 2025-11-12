@@ -4,6 +4,7 @@ import { ref } from 'vue'
 
 import { request } from '../../utils/api'
 import { t } from '../../utils/locale'
+import { addPage } from '../../utils/tabs'
 
 const canLaunch = ref(true)
 
@@ -11,6 +12,7 @@ async function launch() {
   const runtime = await request('/interface/buildRuntime', {})
   if (runtime?.runtime) {
     console.log(runtime.runtime)
+    addPage('launch', runtime.runtime)
   } else {
     console.log(runtime?.error ?? 'unknown error')
   }

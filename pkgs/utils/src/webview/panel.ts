@@ -16,6 +16,8 @@ export type WebviewPanelOption = {
   preserveFocus: boolean
   iconPath: string
   dev: boolean
+
+  id?: string
 }
 
 export class WebviewPanelProvider<ToWebImpl extends ImplType, ToHostImpl extends ImplType>
@@ -77,7 +79,7 @@ export class WebviewPanelProvider<ToWebImpl extends ImplType, ToHostImpl extends
     if (this.option.dev) {
       this.panel.webview.html = forwardHtml.replace(
         '%DEV_URL%',
-        `http://localhost:5173/${this.option.index}`
+        `http://localhost:60003?vsc_view_type=panel&maa_role=${this.option.index}&maa_id=${this.option.id}`
       )
     } else {
       const webRoot = vscode.Uri.joinPath(this.option.context.extensionUri, this.option.folder)

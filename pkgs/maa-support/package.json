@@ -12,6 +12,7 @@
     "@types/proper-lockfile": "^4.1.4",
     "@types/semver": "^7.7.0",
     "@types/source-map-support": "^0.5.10",
+    "axios": "^1.13.2",
     "commander": "^14.0.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",

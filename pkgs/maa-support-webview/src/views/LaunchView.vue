@@ -1,19 +1,36 @@
 <script setup lang="ts">
+import type { LaunchViewState } from '@maaxyz/maa-support-types'
 import { NFlex, NScrollbar } from 'naive-ui'
+import { onMounted, ref, shallowRef } from 'vue'
 
 import JsonCode from '../components/JsonCode.vue'
 import { controlViewState, globalState, localState } from '../states/config'
+import { getPageData } from '../utils/tabs'
+
+const props = defineProps<{
+  id: string
+}>()
+
+const launchState = shallowRef<LaunchViewState>({
+  id: props.id
+})
+
+const loaded = ref(false)
+
+onMounted(async () => {
+  const data = (await getPageData(props.id)) as LaunchViewState
+  launchState.value = {
+    ...launchState.value,
+    ...data
+  }
+  loaded.value = true
+})
 </script>
 
 <template>
-  <n-flex vertical> </n-flex>
-  <n-scrollbar style="max-height: 100px">
-    <json-code :code="JSON.stringify(globalState)"></json-code>
-  </n-scrollbar>
-  <n-scrollbar style="max-height: 100px">
-    <json-code :code="JSON.stringify(localState)"></json-code>
-  </n-scrollbar>
-  <n-scrollbar style="max-height: 400px">
-    <json-code :code="JSON.stringify(controlViewState)"></json-code>
-  </n-scrollbar>
+  <template v-if="loaded">
+    <n-flex vertical>
+      <json-code :code="JSON.stringify(launchState)"></json-code>
+    </n-flex>
+  </template>
 </template>

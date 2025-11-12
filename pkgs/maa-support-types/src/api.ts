@@ -3,7 +3,7 @@ import type { Patch } from 'immer'
 import { InterfaceRuntime } from './pi_config'
 import type { RootInfo } from './root'
 import type { GlobalState, LocalState } from './state'
-import { ControlViewState } from './webview'
+import { ControlViewState, PageType } from './webview'
 
 export type ApiMeta = {
   '/state/getGlobalConfig': {
@@ -139,11 +139,37 @@ export type ApiMeta = {
       error?: string
     }
   }
-  // '/interface/createLaunch': {
-  //   req: {
-  //     runtime: InterfaceRuntime
-  //   }
-  // }
+
+  '/host/forward': {
+    req: {
+      method: string
+      data: unknown
+    }
+    rsp: {
+      data: unknown
+    }
+  }
+}
+
+export type HostApiMeta = {
+  addPage: {
+    req: {
+      type: PageType
+      id: string
+      data: unknown
+    }
+    rsp: {
+      succ: boolean
+    }
+  }
+  getPageData: {
+    req: {
+      id: string
+    }
+    rsp: {
+      data: unknown
+    }
+  }
 }
 
 export type SseMeta = {

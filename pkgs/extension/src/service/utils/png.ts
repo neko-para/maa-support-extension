@@ -1,5 +1,8 @@
-export function toPngDataUrl(buffer: ArrayBuffer) {
-  return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
+export function toPngDataUrl(buffer: ArrayBuffer | Buffer) {
+  if (!Buffer.isBuffer(buffer)) {
+    buffer = Buffer.from(buffer)
+  }
+  return 'data:image/png;base64,' + buffer.toString('base64')
 }
 
 export function fromPngDataUrl(url: string) {

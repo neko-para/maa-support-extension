@@ -76,7 +76,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           uploadDir: path.dirname(files[0].fsPath)
         })
 
-        this.response(data.seq, toPngDataUrl(await vscode.workspace.fs.readFile(files[0])))
+        const image = Buffer.from(await vscode.workspace.fs.readFile(files[0]))
+        this.response(data.seq, toPngDataUrl(image))
         break
       case 'requestSave': {
         const image = Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64')

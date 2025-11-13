@@ -4,8 +4,11 @@ import { LaunchHostToWeb, LaunchWebToHost } from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
 
 import { isLaunchDev } from '../service/webview/dev'
+import { request } from './utils'
 
 export class WebviewPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
+  pageId: string
+
   constructor(
     context: vscode.ExtensionContext,
     type: 'launch' | 'crop',
@@ -26,7 +29,13 @@ export class WebviewPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWe
 
       id
     })
+
+    this.pageId = id
   }
 
-  dispose() {}
+  dispose() {
+    request('/page/close', {
+      pageId: this.pageId
+    })
+  }
 }

@@ -2,7 +2,7 @@ import type { PageType } from '@maaxyz/maa-support-types'
 import { v4 } from 'uuid'
 import { ref } from 'vue'
 
-import { requestHost } from './api'
+import { request, requestHost } from './api'
 import { isVscode } from './config'
 
 export type TabData = {
@@ -40,6 +40,9 @@ export function closePage(id: string) {
       tabData.value.splice(idx, 1)
     }
   }
+  request('/page/close', {
+    pageId: id
+  })
 }
 
 export async function getPageData(id: string) {

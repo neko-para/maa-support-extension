@@ -1,8 +1,9 @@
 import { program } from 'commander'
 import { enablePatches } from 'immer'
+import * as path from 'path'
 import sms from 'source-map-support'
 
-import { nativeService, setupBase, vscodeService } from './base'
+import { localStateService, nativeService, setupBase, vscodeService } from './base'
 import { setupServer } from './server'
 
 sms.install()
@@ -44,6 +45,7 @@ export async function launch() {
 
   console.log('preparing maaframework...')
   if (await nativeService.load()) {
+    maa.Global.log_dir = path.join(localStateService.folder, 'log')
     console.log('preparing maaframework done')
   } else {
     console.log('preparing maaframework failed')

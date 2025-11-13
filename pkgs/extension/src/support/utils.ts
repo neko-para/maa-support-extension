@@ -7,6 +7,7 @@ export async function request<Path extends keyof ApiMeta>(
 ): Promise<ApiMeta[Path]['rsp'] | null> {
   try {
     const resp = await axios({
+      baseURL: 'http://localhost:60002',
       url: `/api${path}`,
       method: 'POST',
       headers: {

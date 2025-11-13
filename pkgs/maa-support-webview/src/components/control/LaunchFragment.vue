@@ -12,7 +12,9 @@ async function launch() {
   const runtime = await request('/interface/buildRuntime', {})
   if (runtime?.runtime) {
     console.log(runtime.runtime)
-    addPage('launch', runtime.runtime)
+    addPage('launch', {
+      runtime: runtime.runtime
+    })
   } else {
     console.log(runtime?.error ?? 'unknown error')
   }

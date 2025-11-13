@@ -1,6 +1,7 @@
 import { BaseServiceBase } from './base'
 import { DocumentService } from './document'
 import { InterfaceService } from './interface'
+import { LaunchService } from './launch'
 import { LspService } from './lsp'
 import { NativeService } from './native'
 import { RootService } from './root'
@@ -18,6 +19,7 @@ export let documentService: DocumentService
 
 export let rootService: RootService
 export let interfaceService: InterfaceService
+export let launchService: LaunchService
 
 export let controlViewStateService: ControlViewStateService
 
@@ -34,6 +36,7 @@ export async function setupBase() {
 
   rootService = new RootService()
   interfaceService = new InterfaceService()
+  launchService = new LaunchService()
 
   controlViewStateService = new ControlViewStateService()
 
@@ -46,6 +49,7 @@ export async function setupBase() {
     documentService,
     rootService,
     interfaceService,
+    launchService,
     controlViewStateService
   ]
 

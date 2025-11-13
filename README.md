@@ -25,3 +25,14 @@ npm run watch # build模式启动前端, 不可热重载, 使用Run Extension As
 ### pkgs/utils
 
 后端工具
+
+---
+
+端口使用情况
+
+|          | 端口  | 配置来源                       | 获取                  |
+| -------- | ----- | ------------------------------ | --------------------- |
+| Vsc Lsp  | 60001 | Vsc Ext 请求                   | `/lsp/start` 请求参数 |
+| Support  | 60002 | Vsc Ext 启动                   | support 启动参数      |
+| Web Dev  | 60003 | vite 配置                      | query                 |
+| Vsc Host | 60005 | support 启动参数, 来自 Vsc Ext |                       |

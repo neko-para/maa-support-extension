@@ -140,6 +140,30 @@ export type ApiMeta = {
     }
   }
 
+  '/launch/create': {
+    req: {
+      runtime: InterfaceRuntime
+      pageId: string
+    }
+    rsp: {
+      succ: boolean
+      error?: string
+    }
+  }
+  '/launch/start': {
+    req: {
+      pageId: string
+    }
+    rsp: {}
+  }
+
+  '/page/close': {
+    req: {
+      pageId: string
+    }
+    rsp: {}
+  }
+
   '/host/forward': {
     req: {
       method: string
@@ -176,4 +200,9 @@ export type SseMeta = {
   'state/updateGlobal': Patch[]
   'state/updateLocal': Patch[]
   'state/updateControlView': Patch[]
+
+  'launch/message': {
+    id: string
+    msg: maa.TaskerNotify | maa.TaskerContextNotify
+  }
 }

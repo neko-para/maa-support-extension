@@ -95,18 +95,32 @@ export class LaunchService extends BaseService {
       return {}
     })
 
-    handle('/page/close', async req => {
+    handle('/launch/stop', async req => {
       const launch = this.launchs.get(req.pageId)
       if (!launch) {
         return
       }
+      this.launchs.delete(req.pageId)
       launch.stopped = true
       await launch?.tasker.post_stop().wait()
       launch?.tasker.destroy()
       launch?.controller.destroy()
       launch?.resource.destroy()
       launch?.agent?.kill()
+    })
+
+    handle('/page/close', async req => {
+      const launch = this.launchs.get(req.pageId)
+      if (!launch) {
+        return
+      }
       this.launchs.delete(req.pageId)
+      launch.stopped = true
+      await launch?.tasker.post_stop().wait()
+      launch?.tasker.destroy()
+      launch?.controller.destroy()
+      launch?.resource.destroy()
+      launch?.agent?.kill()
     })
   }
 

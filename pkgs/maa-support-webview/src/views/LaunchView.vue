@@ -4,7 +4,7 @@ import { NFlex, NScrollbar } from 'naive-ui'
 import { inject, onMounted, provide, ref, shallowRef } from 'vue'
 
 import JsonCode from '../components/JsonCode.vue'
-import LaunchEditFragment from '../components/launch/LaunchEditFragment.vue'
+import LaunchStatusFragment from '../components/launch/LaunchStatusFragment.vue'
 import { controlViewState, globalState, localState } from '../states/config'
 import { getPageData } from '../utils/tabs'
 
@@ -32,7 +32,7 @@ onMounted(async () => {
 <template>
   <template v-if="loaded">
     <n-flex vertical>
-      <launch-edit-fragment></launch-edit-fragment>
+      <launch-status-fragment></launch-status-fragment>
       <json-code :code="JSON.stringify(launchState)"></json-code>
     </n-flex>
   </template>

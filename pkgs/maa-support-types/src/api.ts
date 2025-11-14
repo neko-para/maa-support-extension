@@ -156,6 +156,12 @@ export type ApiMeta = {
     }
     rsp: {}
   }
+  '/launch/stop': {
+    req: {
+      pageId: string
+    }
+    rsp: {}
+  }
 
   '/page/close': {
     req: {

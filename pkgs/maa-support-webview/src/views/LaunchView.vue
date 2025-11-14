@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LaunchViewState } from '@maaxyz/maa-support-types'
-import { NFlex, NScrollbar } from 'naive-ui'
+import { NCard, NFlex } from 'naive-ui'
 import { inject, onMounted, provide, ref, shallowRef } from 'vue'
 
 import JsonCode from '../components/JsonCode.vue'
@@ -31,9 +31,6 @@ onMounted(async () => {
 
 <template>
   <template v-if="loaded">
-    <n-flex vertical>
-      <launch-status-fragment></launch-status-fragment>
-      <json-code :code="JSON.stringify(launchState)"></json-code>
-    </n-flex>
+    <launch-status-fragment></launch-status-fragment>
   </template>
 </template>

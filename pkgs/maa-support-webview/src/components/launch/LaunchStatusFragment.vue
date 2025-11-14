@@ -18,13 +18,13 @@ const launchGraph = shallowRef<LaunchGraph>({
   depth: 0,
   childs: []
 })
-const activeTask = ref<number>(0)
+const stopped = ref(false)
+const activeTask = ref(0)
 
 useSubsribe('launch/message', ({ id, msg }) => {
   if (id !== launchState.value.id) {
     return
   }
-  // launchMessages.value.push(msg)
   msg.msg = msg.msg
     .replace(/^(Resource|Controller|Tasker|Node)\./, '')
     .replace('Task.Starting', 'Task.Started')
@@ -53,6 +53,7 @@ onMounted(async () => {
 })
 
 function requestStop() {
+  stopped.value = true
   request('/launch/stop', {
     pageId: launchState.value.id
   })
@@ -60,33 +61,35 @@ function requestStop() {
 </script>
 
 <template>
-  <n-card v-if="launchState.runtime" size="small">
-    <n-flex vertical>
-      <n-flex>
-        <n-button @click="requestStop">
-          {{ t('maa.launch.stop') }}
-        </n-button>
-        {{ launchGraph.depth }}
-      </n-flex>
-
-      <n-tabs v-model:value="activeTask">
-        <n-tab
-          v-for="(info, index) in launchGraph.childs"
-          :key="index"
-          :name="index"
-          :label="info.msg.entry"
-        >
-        </n-tab>
-      </n-tabs>
-
-      <n-scrollbar>
-        <template v-if="activeTask < launchGraph.childs.length">
-          <launch-task-fragment
-            style="min-height: 0"
-            :item="launchGraph.childs[activeTask]"
-          ></launch-task-fragment>
-        </template>
-      </n-scrollbar>
+  <n-card
+    v-if="launchState.runtime"
+    size="small"
+    style="min-height: 0"
+    content-style="display: flex; flex-direction: column; gap: 10px; min-height: 0"
+  >
+    <n-flex>
+      <n-button :disabled="stopped" @click="requestStop">
+        {{ t('maa.launch.stop') }}
+      </n-button>
     </n-flex>
+
+    <n-tabs v-model:value="activeTask">
+      <n-tab
+        v-for="(info, index) in launchGraph.childs"
+        :key="index"
+        :name="index"
+        :label="info.msg.entry"
+      >
+      </n-tab>
+    </n-tabs>
+
+    <n-scrollbar style="min-height: 0">
+      <template v-if="activeTask < launchGraph.childs.length">
+        <launch-task-fragment
+          style="min-height: 0"
+          :item="launchGraph.childs[activeTask]"
+        ></launch-task-fragment>
+      </template>
+    </n-scrollbar>
   </n-card>
 </template>

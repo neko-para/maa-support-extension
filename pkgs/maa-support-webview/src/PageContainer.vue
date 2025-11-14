@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { NFlex, NSplit, NTabPane, NTabs } from 'naive-ui'
+import { NFlex, NSplit, NTab, NTabPane, NTabs } from 'naive-ui'
 
 import { es } from './utils/api'
-import { activeTab, closePage, tabData } from './utils/tabs'
+import { activeTab, activeTabInfo, closePage, tabData } from './utils/tabs'
 import ControlView from './views/ControlView.vue'
 import LaunchView from './views/LaunchView.vue'
 </script>
 
 <template>
-  <n-split :default-size="0.3">
+  <n-split :default-size="0.3" style="height: 100vh">
     <template #1>
       <n-flex vertical>
         <control-view></control-view>
@@ -16,15 +16,18 @@ import LaunchView from './views/LaunchView.vue'
       </n-flex>
     </template>
     <template #2>
-      <n-tabs v-model:value="activeTab" type="card" closable @close="id => closePage(id)">
-        <template v-for="info in tabData" :key="info.id">
-          <n-tab-pane :name="info.id" :tab="info.type">
-            <template v-if="info.type === 'launch'">
-              <launch-view :id="info.id"></launch-view>
-            </template>
-          </n-tab-pane>
+      <n-flex vertical style="height: 100vh">
+        <n-tabs v-model:value="activeTab" type="card" closable @close="id => closePage(id)">
+          <template v-for="info in tabData" :key="info.id">
+            <n-tab :name="info.id" :tab="info.type"> </n-tab>
+          </template>
+        </n-tabs>
+        <template v-if="activeTabInfo">
+          <template v-if="activeTabInfo.type === 'launch'">
+            <launch-view :id="activeTabInfo.id"></launch-view>
+          </template>
         </template>
-      </n-tabs>
+      </n-flex>
     </template>
   </n-split>
 </template>

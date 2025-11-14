@@ -1,6 +1,6 @@
 import type { PageType } from '@maaxyz/maa-support-types'
 import { v4 } from 'uuid'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { request, requestHost } from './api'
 import { isVscode } from './config'
@@ -12,6 +12,10 @@ export type TabData = {
 
 export const activeTab = ref<string>('')
 export const tabData = ref<TabData[]>([])
+
+export const activeTabInfo = computed(() => {
+  return tabData.value.find(x => x.id === activeTab.value)
+})
 
 const tabInitData = new Map<string, unknown>()
 

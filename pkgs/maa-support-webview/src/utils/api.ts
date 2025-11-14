@@ -2,7 +2,11 @@ import type { ApiMeta, HostApiMeta, SseMeta } from '@maaxyz/maa-support-types'
 import axios from 'axios'
 import { onMounted, onUnmounted, shallowRef } from 'vue'
 
-const host = 'http://localhost:60002'
+let host = 'http://localhost:60002'
+
+export function updateServicePort(port: number) {
+  host = `http://localhost:${port}`
+}
 
 export async function request<Path extends keyof ApiMeta>(
   path: Path,

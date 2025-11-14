@@ -17,14 +17,6 @@ esContext({
   ctx.watch()
 })
 
-viteWatch({
-  root: path.join(import.meta.dirname, '../pkgs/webview'),
-  mode: 'development'
-}).then(async server => {
-  await server.listen()
-  server.printUrls()
-})
-
 esContext({
   entryPoints: ['pkgs/maa-support/src/index.ts'],
   bundle: true,

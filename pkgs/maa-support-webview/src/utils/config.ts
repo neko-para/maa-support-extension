@@ -1,5 +1,7 @@
 import type { PageType } from '@maaxyz/maa-support-types'
 
+import { updateServicePort } from './api'
+
 export let isVscode: boolean = false
 export let vscodeViewType: 'view' | 'panel' = 'panel'
 
@@ -28,6 +30,14 @@ export function setup() {
     const id = urlParams.get('maa_id')
     if (id) {
       viewId = id
+    }
+  }
+
+  const port = urlParams.get('maa_port')
+  if (port) {
+    const portNum = parseInt(port)
+    if (!isNaN(portNum) && portNum > 0 && portNum < 65536) {
+      updateServicePort(portNum)
     }
   }
 }

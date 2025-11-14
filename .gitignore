@@ -9,3 +9,4 @@ azure.token
 
 dist
 /release/support
+/release/support-webview

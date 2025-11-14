@@ -17,4 +17,6 @@ export class BaseImpl {
   async openFolder(option: FileDialogOption): Promise<string[] | null> {
     return null
   }
+
+  async openUrl(url: string): Promise<void> {}
 }

@@ -1,7 +1,10 @@
 import { program } from 'commander'
+import { existsSync } from 'fs'
 import { enablePatches } from 'immer'
 import * as path from 'path'
 import sms from 'source-map-support'
+
+import { getFileDialogImpl } from '@nekosu/native-dialog'
 
 import { localStateService, nativeService, setupBase, vscodeService } from './base'
 import { setupServer } from './server'
@@ -14,12 +17,14 @@ export async function launch() {
     .option('-p, --port <port>', 'server port', '60002')
     .option('-c, --chdir <chdir>', 'change directory')
     .option('-h, --host <host>', 'vscode host port')
+    .option('-q, --quite', 'quite mode')
   program.parse(['node'].concat(process.argv.slice(1)))
 
   const opts = program.opts<{
     port: string
     chdir?: string
     host?: string
+    quite?: boolean
   }>()
   const args = program.args
 
@@ -35,13 +40,26 @@ export async function launch() {
   }
 
   await setupBase()
-  setupServer(port)
+  let site: string | undefined = path.resolve(
+    path.dirname(process.argv[1]),
+    '..',
+    'support-webview'
+  )
+  if (!existsSync(site)) {
+    console.log('missing site')
+    site = undefined
+  }
+  setupServer(port, site)
 
   let hostPort = opts.host ? parseInt(opts.host) : null
   if (typeof hostPort === 'number' && isNaN(hostPort)) {
     hostPort = null
   }
   vscodeService.hostPort = hostPort
+
+  if (site && !opts.quite) {
+    getFileDialogImpl().openUrl(`http://localhost:${port}?maa_port=${port}`)
+  }
 
   console.log('preparing maaframework...')
   if (await nativeService.load()) {

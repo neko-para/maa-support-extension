@@ -1,6 +1,6 @@
 import { ApiMeta, SseMeta } from '@maaxyz/maa-support-types'
 import cors from 'cors'
-import express, { type Express, type Response, json } from 'express'
+import express, { type Express, type Response, json, static as static_ } from 'express'
 
 import { services } from '../base'
 
@@ -8,11 +8,15 @@ let app: Express
 
 const sseClients: Set<Response> = new Set()
 
-export function setupServer(port: number) {
+export function setupServer(port: number, site?: string) {
   app = express()
 
   app.use(json())
   app.use(cors())
+  if (site) {
+    app.use(static_(site))
+    console.log('setup website')
+  }
 
   app.use((req, rsp, next) => {
     console.log(`--> ${req.path}`)

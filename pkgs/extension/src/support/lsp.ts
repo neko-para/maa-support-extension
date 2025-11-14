@@ -55,18 +55,18 @@ function traceSocket(socket: net.Socket) {
 function initServer(context: vscode.ExtensionContext) {
   const serverModule = context.asAbsolutePath(path.join('support', 'index.js'))
 
-  const cp = child_process.fork(serverModule, ['--host', '60005'], {
+  const cp = child_process.fork(serverModule, ['--host', '60005', '--quite'], {
     cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? context.globalStorageUri.fsPath,
     stdio: 'pipe'
   })
   cp.on('close', () => {
-    logger.info(`lsp close`)
+    logger.info(`support close`)
   })
   cp.stdout?.on('data', data => {
-    logger.info(`lsp stdout: ${data}`)
+    logger.info(`support stdout: ${data}`)
   })
   cp.stderr?.on('data', data => {
-    logger.info(`lsp stderr: ${data}`)
+    logger.info(`support stderr: ${data}`)
   })
 
   context.subscriptions.push({

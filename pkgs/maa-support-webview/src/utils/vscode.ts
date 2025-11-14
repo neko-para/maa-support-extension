@@ -45,7 +45,11 @@ function forwardKeys() {
     } else if (hasMeta && code === 90) {
       // Ctrl+Z
       document.execCommand('undo')
-    } else if (hasMeta && e.key === 'w') {
+    } else if (
+      (hasMeta && e.key === 'w') ||
+      (hasMeta && (e.key === 'p' || e.key === 'P')) ||
+      (hasMeta && e.key === 't')
+    ) {
       window.parent.postMessage(
         JSON.stringify({
           command: '__keyDown',

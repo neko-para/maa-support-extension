@@ -1,38 +1,15 @@
-import { context as esContext } from 'esbuild'
-import path from 'path'
-import { createServer as viteWatch } from 'vite'
+import * as path from 'node:path'
+import nodemon from 'nodemon'
 
-esContext({
-  entryPoints: ['pkgs/extension/src/extension.ts'],
-  bundle: true,
-  outdir: 'release/out',
-  external: ['@maaxyz/maa-node', 'vscode', 'node-gyp/bin/node-gyp.js'],
-  platform: 'node',
-  sourcemap: true,
-  mainFields: ['module', 'main'],
-  loader: {
-    '.html': 'text'
-  }
-}).then(ctx => {
-  ctx.watch()
+import { buildExtension, buildSupport, buildSupportWeb } from './utils.mjs'
+
+buildExtension('watch')
+buildSupport('watch')
+buildSupportWeb('dev')
+
+nodemon({
+  script: path.resolve(import.meta.dirname, '../release/support/index.js'),
+  args: ['--chdir', path.resolve(import.meta.dirname, '../../M9A')]
 })
 
-esContext({
-  entryPoints: ['pkgs/maa-support/src/index.ts'],
-  bundle: true,
-  outdir: 'release/support',
-  external: ['@maaxyz/maa-node', 'node-gyp/bin/node-gyp.js'],
-  platform: 'node',
-  sourcemap: true,
-  mainFields: ['module', 'main']
-}).then(ctx => {
-  ctx.watch()
-})
-
-viteWatch({
-  root: path.join(import.meta.dirname, '../pkgs/maa-support-webview'),
-  mode: 'development'
-}).then(async server => {
-  await server.listen()
-  server.printUrls()
-})
+console.log('http://localhost:60003?maa_port=60002')

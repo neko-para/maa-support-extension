@@ -157,6 +157,7 @@ export class NativeService extends BaseService {
 
     const release = await this.lock()
     if (!release) {
+      console.log('cannot lock')
       return false
     }
 

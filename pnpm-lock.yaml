@@ -70,6 +70,9 @@ importers:
       '@nekosu/maa-tasker':
         specifier: workspace:*
         version: link:../maa-tasker
+      '@nekosu/native-tools':
+        specifier: workspace:*
+        version: link:../native-tools
       '@nekosu/simple-parser':
         specifier: workspace:*
         version: link:../simple-parser
@@ -145,9 +148,9 @@ importers:
       '@maaxyz/maa-support-types':
         specifier: workspace:*
         version: link:../maa-support-types
-      '@nekosu/native-dialog':
+      '@nekosu/native-tools':
         specifier: workspace:*
-        version: link:../native-dialog
+        version: link:../native-tools
       '@tsconfig/node20':
         specifier: ^20.1.6
         version: 20.1.6
@@ -232,6 +235,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.0.0-beta.4
         version: 5.0.0-beta.4
+      '@nekosu/native-tools':
+        specifier: workspace:*
+        version: link:../native-tools
       immer:
         specifier: ^10.2.0
         version: 10.2.0
@@ -305,7 +311,7 @@ importers:
         specifier: ^20.17.9
         version: 20.17.9
 
-  pkgs/native-dialog:
+  pkgs/native-tools:
     devDependencies:
       '@types/node':
         specifier: ^20.17.9

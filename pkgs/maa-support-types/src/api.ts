@@ -1,5 +1,7 @@
 import type { Patch } from 'immer'
 
+import type { FileDialogOption } from '@nekosu/native-tools'
+
 import { InterfaceRuntime } from './pi_config'
 import type { RootInfo } from './root'
 import type { GlobalState, LocalState } from './state'
@@ -199,6 +201,37 @@ export type HostApiMeta = {
     rsp: {
       data: unknown
     }
+  }
+
+  nativeOpenFile: {
+    req: {
+      option: FileDialogOption
+    }
+    rsp: {
+      files: string[] | null
+    }
+  }
+  nativeSaveFile: {
+    req: {
+      option: FileDialogOption
+    }
+    rsp: {
+      files: string | null
+    }
+  }
+  nativeOpenFolder: {
+    req: {
+      option: FileDialogOption
+    }
+    rsp: {
+      files: string[] | null
+    }
+  }
+  nativeOpenUrl: {
+    req: {
+      url: string
+    }
+    rsp: {}
   }
 }
 

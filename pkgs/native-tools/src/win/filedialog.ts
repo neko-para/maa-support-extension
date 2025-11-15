@@ -1,7 +1,7 @@
-import { BaseImpl, FileDialogOption } from '../base'
+import { FileDialogBaseImpl, FileDialogOption } from '../base/filedialog'
 import { launchPowershell } from './utils'
 
-export class WinImpl extends BaseImpl {
+export class FileDialogWinImpl extends FileDialogBaseImpl {
   async openFile(option: FileDialogOption): Promise<string[] | null> {
     const result = await launchPowershell(`
 Add-Type -AssemblyName System.Windows.Forms;

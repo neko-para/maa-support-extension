@@ -11,10 +11,10 @@ public class ProcessDPI {
 [ProcessDPI]::SetProcessDPIAware() | Out-Null;
 `
 
-export function launchPowershell(script: string) {
+export function launchPowershell(script: string, needFixDpi = true) {
   const cp = spawn(
     process.env.SystemRoot + '\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
-    ['-command', `${fixDpi}\n${script}`],
+    ['-command', needFixDpi ? `${fixDpi}\n${script}` : script],
     {
       stdio: 'pipe'
     }

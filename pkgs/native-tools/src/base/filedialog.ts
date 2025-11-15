@@ -5,7 +5,7 @@ export type FileDialogOption = {
   multi?: boolean
 }
 
-export class BaseImpl {
+export class FileDialogBaseImpl {
   async openFile(option: FileDialogOption): Promise<string[] | null> {
     return null
   }
@@ -17,6 +17,4 @@ export class BaseImpl {
   async openFolder(option: FileDialogOption): Promise<string[] | null> {
     return null
   }
-
-  async openUrl(url: string): Promise<void> {}
 }

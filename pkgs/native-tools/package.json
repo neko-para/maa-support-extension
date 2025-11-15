@@ -1,5 +1,5 @@
 {
-  "name": "@nekosu/native-dialog",
+  "name": "@nekosu/native-tools",
   "main": "src/index.ts",
   "devDependencies": {
     "@types/node": "^20.17.9",

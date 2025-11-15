@@ -3,6 +3,7 @@
   "main": "./src/index.ts",
   "devDependencies": {
     "@maaxyz/maa-node": "5.0.0-beta.4",
+    "@nekosu/native-tools": "workspace:*",
     "immer": "^10.2.0"
   }
 }

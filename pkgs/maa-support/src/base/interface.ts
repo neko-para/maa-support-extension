@@ -5,7 +5,7 @@ import * as path from 'path'
 import { v4 } from 'uuid'
 import { URI as Uri } from 'vscode-uri'
 
-import { getFileDialogImpl } from '@nekosu/native-dialog'
+import { getFileDialogImpl } from '@nekosu/native-tools'
 
 import { documentService, interfaceService, localStateService, lspService, rootService } from '.'
 import { t } from '../locale'

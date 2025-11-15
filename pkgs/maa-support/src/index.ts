@@ -4,7 +4,7 @@ import { enablePatches } from 'immer'
 import * as path from 'path'
 import sms from 'source-map-support'
 
-import { getFileDialogImpl } from '@nekosu/native-dialog'
+import { getBrowserImpl } from '@nekosu/native-tools'
 
 import { localStateService, nativeService, setupBase, vscodeService } from './base'
 import { setupServer } from './server'
@@ -55,10 +55,12 @@ export async function launch() {
   if (typeof hostPort === 'number' && isNaN(hostPort)) {
     hostPort = null
   }
-  vscodeService.hostPort = hostPort
+  if (hostPort) {
+    vscodeService.setup(hostPort)
+  }
 
-  if (site && !opts.quite) {
-    getFileDialogImpl().openUrl(`http://localhost:${port}?maa_port=${port}`)
+  if (site && !opts.quite && !vscodeService.loaded) {
+    getBrowserImpl().openUrl(`http://localhost:${port}?maa_port=${port}`)
   }
 
   console.log('preparing maaframework...')

@@ -49,6 +49,44 @@ export function setupServer(port: number, context: vscode.ExtensionContext) {
     }
   })
 
+  handle('nativeOpenFile', async req => {
+    const result = await vscode.window.showOpenDialog({
+      title: req.option.title,
+      defaultUri: req.option.defaultFolder ? vscode.Uri.file(req.option.defaultFolder) : undefined,
+      canSelectMany: req.option.multi
+    })
+    return {
+      files: result?.map(uri => uri.fsPath) ?? null
+    }
+  })
+
+  handle('nativeSaveFile', async req => {
+    const result = await vscode.window.showSaveDialog({
+      title: req.option.title,
+      defaultUri: req.option.defaultFolder ? vscode.Uri.file(req.option.defaultFolder) : undefined
+    })
+    return {
+      files: result?.fsPath ?? null
+    }
+  })
+
+  handle('nativeOpenFolder', async req => {
+    const result = await vscode.window.showOpenDialog({
+      title: req.option.title,
+      defaultUri: req.option.defaultFolder ? vscode.Uri.file(req.option.defaultFolder) : undefined,
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: req.option.multi
+    })
+    return {
+      files: result?.map(uri => uri.fsPath) ?? null
+    }
+  })
+
+  handle('nativeOpenUrl', async req => {
+    vscode.env.openExternal(vscode.Uri.parse(req.url))
+  })
+
   const server = app.listen(port)
 
   context.subscriptions.push({

@@ -1,7 +1,7 @@
-import { BaseImpl, FileDialogOption } from '../base'
+import { FileDialogBaseImpl, FileDialogOption } from '../base/filedialog'
 import { launchOSAScript } from './utils'
 
-export class MacImpl extends BaseImpl {
+export class FileDialogMacImpl extends FileDialogBaseImpl {
   async openFile(option: FileDialogOption): Promise<string[] | null> {
     const result = await launchOSAScript(
       `POSIX path of (choose file ${option.title ? `with prompt "${option.title}"` : ''})`
@@ -29,9 +29,5 @@ export class MacImpl extends BaseImpl {
     } else {
       return null
     }
-  }
-
-  async openUrl(url: string): Promise<void> {
-    await launchOSAScript(`open location "${url}"`)
   }
 }

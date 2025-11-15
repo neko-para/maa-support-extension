@@ -9,6 +9,7 @@
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",
+    "@nekosu/native-tools": "workspace:*",
     "@nekosu/simple-parser": "workspace:*",
     "@tsconfig/node20": "^20.1.6",
     "@types/express": "^5.0.5",

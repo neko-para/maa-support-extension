@@ -236,9 +236,10 @@ export class InterfaceService extends BaseService {
         ctype: 'adb',
         adb_path: config.adb.adb_path,
         address: config.adb.address,
-        config: JSON.stringify(adb_config),
-        screencap: fixNum(ctrlInfo.adb?.screencap) ?? maa.AdbScreencapMethod.Default,
-        input: fixNum(ctrlInfo.adb?.input) ?? maa.AdbInputMethod.Default
+        screencap:
+          fixNum(ctrlInfo.adb?.screencap) ?? config.adb.screencap ?? maa.AdbScreencapMethod.Default,
+        input: fixNum(ctrlInfo.adb?.input) ?? config.adb.input ?? maa.AdbInputMethod.Default,
+        config: JSON.stringify(adb_config)
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {

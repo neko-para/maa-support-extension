@@ -70,9 +70,10 @@ export class LaunchService extends BaseService {
         ctype: 'adb',
         adb_path: config.adb.adb_path,
         address: config.adb.address,
+        screencap:
+          fixNum(ctrlInfo.adb?.screencap) ?? config.adb.screencap ?? maa.AdbScreencapMethod.Default,
+        input: fixNum(ctrlInfo.adb?.input) ?? config.adb.input ?? maa.AdbInputMethod.Default,
         config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
-        screencap: fixNum(ctrlInfo.adb?.screencap) ?? maa.AdbScreencapMethod.Default,
-        input: fixNum(ctrlInfo.adb?.input) ?? maa.AdbInputMethod.Default,
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,

@@ -65,6 +65,8 @@ export type InterfaceConfig = {
   adb?: {
     adb_path: string
     address: string
+    screencap: maa.ScreencapOrInputMethods
+    input: maa.ScreencapOrInputMethods
     config: unknown
   }
   win32?: {

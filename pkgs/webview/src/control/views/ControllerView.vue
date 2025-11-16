@@ -71,6 +71,8 @@ function configAdb(index: number) {
     command: 'configAdb',
     adb: opt[1],
     address: opt[2],
+    screencap: opt[3],
+    input: opt[4],
     config: JSON.parse(opt[5])
   })
 }

@@ -73,6 +73,8 @@ export class WebviewControlService extends BaseService {
             adb: {
               adb_path: data.adb,
               address: data.address,
+              screencap: data.screencap,
+              input: data.input,
               config: data.config
             }
           })

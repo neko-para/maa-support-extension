@@ -53,6 +53,8 @@ export type ControlWebToHost =
       command: 'configAdb'
       adb: string
       address: string
+      screencap: maa.ScreencapOrInputMethods
+      input: maa.ScreencapOrInputMethods
       config: string
     }
   | {

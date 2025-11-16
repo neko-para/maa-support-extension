@@ -36,7 +36,9 @@ function fixMinimumVersion(ver: string) {
   }
 }
 
-export class NativeService extends BaseService {
+export class NativeService extends BaseService<{
+  maaLoaded: []
+}> {
   registry?: string
   version?: string
 
@@ -215,6 +217,8 @@ export class NativeService extends BaseService {
       console.log('prepare failed')
       return false
     }
+
+    this.emitter.emit('maaLoaded')
 
     module.paths.unshift(path.join(this.versionFolder(this.version), 'node_modules'))
 

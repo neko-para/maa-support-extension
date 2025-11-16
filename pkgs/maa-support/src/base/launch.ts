@@ -1,6 +1,7 @@
 import { InterfaceRuntime } from '@maaxyz/maa-support-types'
 import { ChildProcess, spawn } from 'child_process'
 import * as fs from 'fs/promises'
+import * as iconv from 'iconv-lite'
 import * as path from 'path'
 
 import { t } from '../locale'
@@ -109,6 +110,50 @@ export class LaunchService extends BaseService {
       launch?.agent?.kill()
     })
 
+    handle('/launch/recoDetail', async req => {
+      const launch = this.launchs.get(req.pageId)
+      if (!launch) {
+        return { detail: null }
+      }
+      const detail = launch.tasker.recognition_detail(`${req.recoId}` as maa.RecoId)
+      if (detail) {
+        return {
+          detail: {
+            name: detail.name,
+            algorithm: detail.algorithm,
+            hit: detail.hit,
+            box: detail.box,
+            detail: detail.detail,
+            raw: Buffer.from(detail.raw).toString('base64'),
+            draws: detail.draws.map(data => Buffer.from(data).toString('base64'))
+          }
+        }
+      } else {
+        return { detail: null }
+      }
+    })
+
+    handle('/launch/actDetail', async req => {
+      const launch = this.launchs.get(req.pageId)
+      if (!launch) {
+        return { detail: null }
+      }
+      const detail = launch.tasker.action_detail(`${req.actId}` as maa.RecoId) // TODO: act id
+      if (detail) {
+        return {
+          detail: {
+            name: detail.name,
+            action: detail.action,
+            box: detail.box,
+            success: detail.success,
+            detail: detail.detail
+          }
+        }
+      } else {
+        return { detail: null }
+      }
+    })
+
     handle('/page/close', async req => {
       const launch = this.launchs.get(req.pageId)
       if (!launch) {
@@ -207,16 +252,27 @@ export class LaunchService extends BaseService {
         agent = spawn(
           runtime.agent.child_exec,
           (runtime.agent.child_args ?? []).concat([identifier]),
-
           {
             cwd: runtime.root,
+            shell: true,
             env: {
               VSCODE_MAAFW_AGENT: '1',
               VSCODE_MAAFW_AGENT_ROOT: runtime.root,
               VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
-            }
+            },
+            stdio: 'pipe'
           }
         )
+        let encoding = 'utf8'
+        if (process.platform === 'win32') {
+          encoding = 'gbk'
+        }
+        agent.stdout?.on('data', (data: Buffer) => {
+          console.log('agent stdout', iconv.decode(data, encoding))
+        })
+        agent.stderr?.on('data', (data: Buffer) => {
+          console.log('agent stderr', iconv.decode(data, encoding))
+        })
       }
       client.bind_resource(resource)
       console.log(`AgentClient start connecting ${identifier}`)

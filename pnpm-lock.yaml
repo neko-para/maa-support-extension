@@ -187,6 +187,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      iconv-lite:
+        specifier: ^0.7.0
+        version: 0.7.0
       immer:
         specifier: ^10.2.0
         version: 10.2.0

@@ -164,6 +164,29 @@ export type ApiMeta = {
     }
     rsp: {}
   }
+  '/launch/recoDetail': {
+    req: {
+      pageId: string
+      recoId: number
+    }
+    rsp: {
+      detail:
+        | (maa.RecoDetailWithoutDraws & {
+            raw: string
+            draws: string[]
+          })
+        | null
+    }
+  }
+  '/launch/actDetail': {
+    req: {
+      pageId: string
+      actId: number
+    }
+    rsp: {
+      detail: maa.ActionDetail | null
+    }
+  }
 
   '/page/close': {
     req: {

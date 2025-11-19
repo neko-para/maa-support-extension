@@ -44,6 +44,7 @@ import { toggleShow } from '../states/visible'
           {{ t('maa.crop.copy') }}
         </n-button>
       </n-flex>
+      <span> {{ t('maa.crop.hint') }} </span>
     </n-flex>
   </n-flex>
 </template>

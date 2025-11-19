@@ -307,6 +307,10 @@ export class LaunchService extends BaseService {
       logger.info(`${JSON.stringify(msg)}`)
     })
 
+    tasker.add_context_sink((_, msg) => {
+      logger.info(`${JSON.stringify(msg)}`)
+    })
+
     tasker.controller = controller
     tasker.resource = resource
 

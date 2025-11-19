@@ -72,13 +72,13 @@ export type CropViewToHost =
   | {
       cmd: 'requestSave'
       image: string
-      roi: maa.FlatRect
-      expandRoi: maa.FlatRect
+      roi: maa.Rect
+      expandRoi: maa.Rect
     }
   | {
       cmd: 'requestOCR'
       image: string
-      roi: maa.FlatRect
+      roi: maa.Rect
     }
   | {
       cmd: 'requestReco'

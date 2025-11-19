@@ -64,7 +64,7 @@ export async function upload() {
   loadingCounter.value -= 1
 }
 
-export async function cropImage(): Promise<[string | null, maa.FlatRect | null]> {
+export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
   if (!data.value) {
     return [null, null]
   }

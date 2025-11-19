@@ -41,15 +41,15 @@ export type CropWebToHost =
       // return void
       command: 'requestSave'
       image: string
-      crop: maa.FlatRect
-      roi: maa.FlatRect
-      expandRoi: maa.FlatRect
+      crop: maa.Rect
+      roi: maa.Rect
+      expandRoi: maa.Rect
     }
   | {
       // return string | null
       command: 'requestOCR'
       image: string
-      roi: maa.FlatRect
+      roi: maa.Rect
     }
   | {
       // return string | null

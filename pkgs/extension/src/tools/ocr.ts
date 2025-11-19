@@ -2,7 +2,7 @@ import { logger } from '@mse/utils'
 
 export async function performOcr(
   image: ArrayBuffer,
-  roi: maa.FlatRect,
+  roi: maa.Rect,
   resources: string[]
 ): Promise<string | null> {
   const ctrl = new maa.CustomController({

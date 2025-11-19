@@ -37,10 +37,10 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.knownTasks.sort()
 
     this.instance.tasker.add_sink(async (_, msg) => {
-      await this.pushNotify(msg.msg, JSON.stringify(msg))
+      await this.pushNotify(msg)
     })
     this.instance.tasker.add_context_sink(async (_, msg) => {
-      await this.pushNotify(msg.msg, JSON.stringify(msg))
+      await this.pushNotify(msg)
     })
   }
 
@@ -149,15 +149,18 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.pushState()
   }
 
-  async pushNotify(msg: string, details: string) {
+  async pushNotify(msg: maa.TaskerNotify | maa.TaskerContextNotify) {
     this.send({
       command: 'notifyStatus',
-      msg,
-      details
+      msg
     })
-    if (msg === 'Node.NextList.Starting') {
-      const task = JSON.parse(details).name as string
-      if (stateService.state.breakTasks?.includes(task)) {
+    if (
+      msg.msg === 'PipelineNode.Starting' ||
+      msg.msg === 'ActionNode.Starting' ||
+      msg.msg === 'RecognitionNode.Starting' ||
+      msg.msg === 'NextList.Starting'
+    ) {
+      if (stateService.state.breakTasks?.includes(msg.name)) {
         this.pause()
       }
     }

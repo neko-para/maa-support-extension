@@ -5,8 +5,7 @@ import { vscodeLocale } from '../utils/locale'
 import App from './App.vue'
 import { ipc } from './ipc'
 import { hostState } from './state'
-import type { Message } from './states/msg'
-import { taskList } from './states/task'
+import { launchGraph, reduceLaunchGraph } from './states/launch'
 
 createApp(App).mount('#app')
 
@@ -17,7 +16,7 @@ ipc.recv.value = data => {
       vscodeLocale.value = data.state.locale ?? 'zh'
       break
     case 'notifyStatus':
-      taskList.value.push(data.msg as Message, JSON.parse(data.details))
+      launchGraph.value = reduceLaunchGraph(launchGraph.value, data.msg)
       break
   }
 }

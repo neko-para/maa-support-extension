@@ -1,7 +1,7 @@
 {
   "name": "@mse/webview",
   "devDependencies": {
-    "@maaxyz/maa-node": "5.0.3",
+    "@maaxyz/maa-node": "5.0.4",
     "@mse/types": "workspace:*",
     "@types/node": "^20.17.9",
     "@types/vscode-webview": "^1.57.5",
@@ -10,6 +10,7 @@
     "@vitejs/plugin-vue-jsx": "^4.1.1",
     "@vue/tsconfig": "^0.5.1",
     "highlight.js": "^11.11.1",
+    "immer": "^10.2.0",
     "naive-ui": "^2.41.1",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { NButton, NCard, NDynamicTags, NFlex, NScrollbar, NTab, NTabs, NText } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 
 import { t } from '../../utils/locale'
 import InputTask from '../components/InputTask.vue'
-import NextList from '../components/NextList.vue'
+import NodeScopeItem from '../components/NodeScopeItem.vue'
+import TaskScopeItem from '../components/TaskScopeItem.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
-import { activeTask, followLast, taskList } from '../states/task'
+import { type LaunchGraph, launchGraph } from '../states/launch'
 
 function requestStop() {
   ipc.send({
@@ -37,6 +38,22 @@ function updateBreak(tasks: string[]) {
     tasks: [...new Set(tasks)]
   })
 }
+
+const followLast = ref(true)
+const selectTask = ref(0)
+const activeTask = computed<number>({
+  get() {
+    if (followLast.value && !hostState.value.stopped) {
+      return launchGraph.value.childs.length > 0 ? launchGraph.value.childs.length - 1 : 0
+    } else {
+      return selectTask.value
+    }
+  },
+  set(v) {
+    selectTask.value = v
+    followLast.value = false
+  }
+})
 </script>
 
 <template>
@@ -78,19 +95,16 @@ function updateBreak(tasks: string[]) {
 
     <n-tabs v-model:value="activeTask">
       <n-tab
-        v-for="(info, index) in taskList.info"
+        v-for="(info, index) in launchGraph.childs"
         :key="index"
         :name="index"
-        :label="info.info.entry"
+        :label="info.msg.entry"
       >
       </n-tab>
     </n-tabs>
 
-    <n-scrollbar>
-      <next-list
-        style="min-height: 0"
-        :items="taskList.info[activeTask as number]?.nexts"
-      ></next-list>
+    <n-scrollbar v-if="activeTask < launchGraph.childs.length">
+      <task-scope-item :item="launchGraph.childs[activeTask]"></task-scope-item>
     </n-scrollbar>
   </n-card>
 </template>

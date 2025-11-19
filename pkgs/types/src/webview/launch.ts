@@ -15,8 +15,7 @@ export type LaunchHostToWeb =
     }
   | {
       command: 'notifyStatus'
-      msg: string
-      details: string
+      msg: maa.TaskerNotify | maa.TaskerContextNotify
     }
 
 export type LaunchWebToHost =

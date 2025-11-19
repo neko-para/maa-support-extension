@@ -314,6 +314,10 @@ export class LaunchService extends BaseService {
     tasker.controller = controller
     tasker.resource = resource
 
+    client?.register_controller_sink(controller)
+    client?.register_resource_sink(resource)
+    client?.register_tasker_sink(tasker)
+
     if (!tasker.inited) {
       tasker.destroy()
       resource.destroy()

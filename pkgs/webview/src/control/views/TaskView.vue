@@ -7,6 +7,7 @@ import { t } from '../../utils/locale'
 import TaskCard from '../components/TaskCard.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
+import { makeBrief } from '../utils'
 
 const taskOptions = computed(() => {
   return (hostState.value.interfaceJson?.task ?? [])
@@ -19,7 +20,7 @@ const taskOptions = computed(() => {
     .map((info, index) => {
       return {
         value: info.name,
-        label: info.name
+        label: makeBrief(info.name)
       } satisfies SelectMixedOption
     })
 })

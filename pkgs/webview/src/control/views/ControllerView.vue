@@ -8,6 +8,7 @@ import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
+import { makeBrief } from '../utils'
 
 const controllerOptions = computed(() => {
   return (hostState.value.interfaceJson?.controller ?? []).map((info, index) => {
@@ -86,22 +87,15 @@ const currDevice = computed(() => {
 
 const refreshingDesktop = ref(false)
 
-const makeBrief = (dev: maa.DesktopDevice) => {
-  return dev
-    .map(x => {
-      if (x.length > 10) {
-        x = x.substring(0, 4) + '..' + x.substring(x.length - 4)
-      }
-      return x
-    })
-    .join('-')
+const makeBriefDev = (dev: maa.DesktopDevice) => {
+  return dev.map(makeBrief).join('-')
 }
 
 const desktopOptions = computed(() => {
   return desktopDevices.value.map((info, index) => {
     return {
       value: index,
-      label: makeBrief(info)
+      label: makeBriefDev(info)
     } satisfies SelectMixedOption
   })
 })

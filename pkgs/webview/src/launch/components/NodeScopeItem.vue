@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard } from 'naive-ui'
+import { NButton, NCard, NFlex } from 'naive-ui'
 import { ref } from 'vue'
 
 import { ipc } from '../ipc'
@@ -45,9 +45,11 @@ async function requestNode() {
     </template>
 
     <template v-if="item.type === 'pipeline_node'">
-      <template v-if="item.reco">
-        <next-list-scope-item :item="item.reco"></next-list-scope-item>
-      </template>
+      <n-flex vertical>
+        <template v-for="(reco, idx) in item.reco" :key="idx">
+          <next-list-scope-item :item="reco"></next-list-scope-item>
+        </template>
+      </n-flex>
     </template>
     <template v-else-if="item.type === 'reco_node'">
       <template v-if="item.reco">

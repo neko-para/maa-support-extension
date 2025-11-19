@@ -14,7 +14,7 @@ export type PipelineNodeScope = {
   type: 'pipeline_node'
   msg: maa.TaskerContextPipelineNodeNotify
   status: GeneralStatus
-  reco: NextListScope | null
+  reco: NextListScope[]
   action: ActionScope | null
 }
 
@@ -75,7 +75,7 @@ function iterateTracker(tracker: AllScope): AllScope | undefined {
       if (tracker.action) {
         return tracker.action
       } else {
-        return tracker.reco ?? undefined
+        return lastOf(tracker.reco)
       }
     case 'reco_node':
       return tracker.reco ?? undefined
@@ -135,7 +135,7 @@ export function reduceLaunchGraph(
             type: 'pipeline_node',
             msg,
             status: 'running',
-            reco: null,
+            reco: [],
             action: null
           })
           current.depth = current.depth + 1
@@ -184,7 +184,7 @@ export function reduceLaunchGraph(
               type: 'pipeline_node',
               msg,
               status: 'running',
-              reco: null,
+              reco: [],
               action: null
             })
             current.depth = current.depth + 1
@@ -247,12 +247,12 @@ export function reduceLaunchGraph(
 
         case 'NextList.Starting':
           if (tracker.type === 'pipeline_node') {
-            tracker.reco = {
+            tracker.reco.push({
               type: 'next',
               msg,
               status: 'running',
               childs: []
-            }
+            })
             current.depth = current.depth + 1
             return
           }

@@ -92,7 +92,8 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
       taskProp: new vscode.Range(0, 0, 0, 0),
       taskBody: new vscode.Range(0, 0, 0, 0),
       taskRef: [],
-      imageRef: []
+      imageRef: [],
+      anchorRef: []
     }
     this.index['__VSCE__INTERFACE__'] = [entryTaskInfo]
 
@@ -114,7 +115,8 @@ export class InterfaceLayer extends FSWatchFlushHelper implements PipelineLayer 
             taskProp: range,
             taskBody: new vscode.Range(0, 0, 0, 0),
             taskRef: [],
-            imageRef: []
+            imageRef: [],
+            anchorRef: []
           }
         }
       },

@@ -31,22 +31,13 @@ export class PipelineCompletionProvider
 
     if (info.type === 'task.ref') {
       const taskList = await taskIndexService.queryTaskList(layer.level + 1)
+      const anchorList = await taskIndexService.queryAnchorList(layer.level + 1)
 
       const result: vscode.CompletionItem[] = []
 
       if (info.attr) {
-        for (const attr of ['JumpBack', 'Anchor']) {
+        for (const attr of ['JumpBack']) {
           const text = `[${attr}]`
-          result.push({
-            label: text,
-            kind: vscode.CompletionItemKind.Enum,
-            insertText: text,
-            range: new vscode.Range(
-              info.range.start.translate(0, 1),
-              info.range.end.translate(0, -1)
-            )
-          })
-
           result.push(
             ...(await Promise.all(
               taskList.map(async task => {
@@ -69,6 +60,26 @@ export class PipelineCompletionProvider
             ))
           )
         }
+
+        {
+          const text = `[Anchor]`
+          result.push(
+            ...(await Promise.all(
+              anchorList.map(async anchor => {
+                const esc = JSON.stringify(text + anchor)
+                return {
+                  label: esc.substring(1, esc.length - 1),
+                  kind: vscode.CompletionItemKind.Reference,
+                  insertText: esc.substring(1, esc.length - 1),
+                  range: new vscode.Range(
+                    info.range.start.translate(0, 1),
+                    info.range.end.translate(0, -1)
+                  )
+                }
+              })
+            ))
+          )
+        }
       }
 
       result.push(
@@ -84,6 +95,30 @@ export class PipelineCompletionProvider
                 info.range.end.translate(0, -1)
               ),
               documentation: await taskIndexService.queryTaskDoc(task, layer.level + 1, position)
+            }
+          })
+        ))
+      )
+
+      return result
+    } else if (info.type === 'anchor.ref') {
+      const anchorList = await taskIndexService.queryAnchorList(layer.level + 1)
+
+      const result: vscode.CompletionItem[] = []
+
+      const text = `[Anchor]`
+      result.push(
+        ...(await Promise.all(
+          anchorList.map(async anchor => {
+            const esc = JSON.stringify(text + anchor)
+            return {
+              label: esc.substring(1, esc.length - 1),
+              kind: vscode.CompletionItemKind.Reference,
+              insertText: esc.substring(1, esc.length - 1),
+              range: new vscode.Range(
+                info.range.start.translate(0, 1),
+                info.range.end.translate(0, -1)
+              )
             }
           })
         ))

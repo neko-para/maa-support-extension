@@ -158,6 +158,30 @@ export class TaskIndexService extends BaseService {
               ]
             }
           }
+          for (const ref of info.anchorRef) {
+            if (ref.range.contains(pos)) {
+              return [
+                {
+                  type: 'anchor.ref',
+                  task: task,
+                  range: ref.range,
+                  target: ref.anchor
+                },
+                layer
+              ]
+            }
+          }
+          if (info.anchor?.range.contains(pos)) {
+            return [
+              {
+                type: 'anchor.def',
+                task,
+                range: info.anchor.range,
+                target: info.anchor.name
+              },
+              layer
+            ]
+          }
           return [
             {
               type: 'task.body',
@@ -274,6 +298,41 @@ export class TaskIndexService extends BaseService {
     return result
   }
 
+  async queryAnchor(anchor: string, level?: number, flush = true) {
+    if (flush) {
+      await this.flushDirty()
+    }
+
+    const allLayers = this.allLayers
+    if (level === undefined) {
+      level = allLayers.length
+    }
+    const result: {
+      uri: vscode.Uri
+      info: {
+        uri: vscode.Uri
+        range: vscode.Range
+      }
+    }[] = []
+
+    for (const layer of allLayers.slice(0, level)) {
+      for (const infos of Object.values(layer.index)) {
+        for (const info of infos) {
+          if (info.anchor && info.anchor.name === anchor) {
+            result.push({
+              uri: layer.uri,
+              info: {
+                uri: info.uri,
+                range: info.anchor.range
+              }
+            })
+          }
+        }
+      }
+    }
+    return result
+  }
+
   async queryTaskList(level?: number) {
     await this.flushDirty()
     if (level === undefined) {
@@ -282,6 +341,24 @@ export class TaskIndexService extends BaseService {
     const result: string[] = []
     for (const layer of this.layers.slice(0, level)) {
       result.push(...Object.keys(layer.index))
+    }
+    return [...new Set<string>(result)]
+  }
+
+  async queryAnchorList(level?: number) {
+    await this.flushDirty()
+    if (level === undefined) {
+      level = this.layers.length
+    }
+    const result: string[] = []
+    for (const layer of this.layers.slice(0, level)) {
+      for (const infos of Object.values(layer.index)) {
+        for (const info of infos) {
+          if (info.anchor) {
+            result.push(info.anchor.name)
+          }
+        }
+      }
     }
     return [...new Set<string>(result)]
   }

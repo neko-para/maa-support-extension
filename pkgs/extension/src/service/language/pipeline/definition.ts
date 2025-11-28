@@ -33,6 +33,9 @@ export class PipelineDefinitionProvider
         undefined // position 这里不传入position, 使得查找定义能够找到所有重复版本
       )
       return taskInfo.map(x => new vscode.Location(x.info.uri, x.info.taskProp))
+    } else if (info.type === 'anchor.ref' || info.type === 'anchor.def') {
+      const anchorInfo = await taskIndexService.queryAnchor(info.target, layer.level + 1)
+      return anchorInfo.map(x => new vscode.Location(x.info.uri, x.info.range))
     }
 
     return null

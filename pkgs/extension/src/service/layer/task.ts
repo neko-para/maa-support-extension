@@ -23,14 +23,22 @@ function addTaskRef(
 ) {
   if (!isMaaAssistantArknights) {
     if (acceptAttr) {
-      const match = /^\[(.+)\](.+)$/.exec(task)
+      const match = /^((?:\[.+\])*)(.+)$/.exec(task)
       if (match) {
-        state.taskRef.push({
-          task: match[2],
-          range: new vscode.Range(range.start.translate(0, match[1].length + 2), range.end),
-          belong,
-          attr: acceptAttr
-        })
+        const isAnchor = /\[Anchor\]/.test(match[1])
+        if (isAnchor) {
+          state.anchorRef.push({
+            anchor: match[2],
+            range: new vscode.Range(range.start.translate(0, match[1].length + 1), range.end)
+          })
+        } else {
+          state.taskRef.push({
+            task: match[2],
+            range: new vscode.Range(range.start.translate(0, match[1].length + 1), range.end),
+            belong,
+            attr: acceptAttr
+          })
+        }
         return
       }
     }
@@ -174,9 +182,10 @@ export function parsePipelineLiteral(
     case 'on_error':
       if (path.length >= 2 && path.length <= 3) {
         addTaskRef(state, value, range, 'next', true)
-      } else if (path.length === 4 && path[3] === 'name') {
-        addTaskRef(state, value, range, 'next')
       }
+      // else if (path.length === 4 && path[3] === 'name') {
+      //   addTaskRef(state, value, range, 'next')
+      // }
       break
     case 'pre_wait_freezes':
     case 'post_wait_freezes':
@@ -186,6 +195,14 @@ export function parsePipelineLiteral(
             addTaskRef(state, value, range, 'target')
           }
           break
+      }
+      break
+    case 'anchor':
+      if (path.length === 2) {
+        state.anchor = {
+          name: value,
+          range
+        }
       }
       break
   }
@@ -370,7 +387,8 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
           taskProp: range,
           taskBody: new vscode.Range(0, 0, 0, 0),
           taskRef: [],
-          imageRef: []
+          imageRef: [],
+          anchorRef: []
         }
       },
       onObjectEnd: (range, path, state) => {

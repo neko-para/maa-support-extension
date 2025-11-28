@@ -28,6 +28,18 @@ export type TaskQueryResult =
       range: vscode.Range
     }
   | {
+      type: 'anchor.def'
+      task: string
+      range: vscode.Range
+      target: string
+    }
+  | {
+      type: 'anchor.ref'
+      task: string
+      range: vscode.Range
+      target: string
+    }
+  | {
       type: 'task.ref.maa.#'
       task: string
       range: vscode.Range
@@ -64,6 +76,10 @@ export type TaskIndexInfo = {
   taskReferContent: string // whole lines
   taskProp: vscode.Range
   taskBody: vscode.Range
+  anchor?: {
+    name: string
+    range: vscode.Range
+  }
   taskRef: {
     task: string
     range: vscode.Range
@@ -73,6 +89,10 @@ export type TaskIndexInfo = {
   }[]
   imageRef: {
     path: string
+    range: vscode.Range
+  }[]
+  anchorRef: {
+    anchor: string
     range: vscode.Range
   }[]
 }

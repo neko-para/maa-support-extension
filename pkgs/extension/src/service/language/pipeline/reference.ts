@@ -52,6 +52,20 @@ export class PipelineReferenceProvider
         }
       }
       return result
+    } else if (info.type === 'anchor.def' || info.type === 'anchor.ref') {
+      const result: vscode.Location[] = []
+      for (const layer of taskIndexService.layers) {
+        for (const [task, taskInfos] of Object.entries(layer.index)) {
+          for (const taskInfo of taskInfos) {
+            for (const anchorRef of taskInfo.anchorRef) {
+              if (anchorRef.anchor === info.target) {
+                result.push(new vscode.Location(taskInfo.uri, anchorRef.range))
+              }
+            }
+          }
+        }
+      }
+      return result
     }
 
     return null

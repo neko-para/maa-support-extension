@@ -14,12 +14,32 @@ import {
 import { PipelineLayer, TaskBelong, TaskIndexInfo } from '../types'
 import { FSWatchFlushHelper } from '../utils/flush'
 
-function addTaskRef(state: TaskIndexInfo, task: string, range: vscode.Range, belong: TaskBelong) {
+function addTaskRef(
+  state: TaskIndexInfo,
+  task: string,
+  range: vscode.Range,
+  belong: TaskBelong,
+  acceptAttr = false
+) {
   if (!isMaaAssistantArknights) {
+    if (acceptAttr) {
+      const match = /^\[(.+)\](.+)$/.exec(task)
+      if (match) {
+        state.taskRef.push({
+          task: match[2],
+          range: new vscode.Range(range.start.translate(0, match[1].length + 2), range.end),
+          belong,
+          attr: acceptAttr
+        })
+        return
+      }
+    }
+
     state.taskRef.push({
       task,
       range,
-      belong
+      belong,
+      attr: acceptAttr
     })
     return
   }
@@ -153,6 +173,8 @@ export function parsePipelineLiteral(
     case 'interrupt':
     case 'on_error':
       if (path.length >= 2 && path.length <= 3) {
+        addTaskRef(state, value, range, 'next', true)
+      } else if (path.length === 4 && path[3] === 'name') {
         addTaskRef(state, value, range, 'next')
       }
       break

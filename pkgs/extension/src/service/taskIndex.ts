@@ -137,7 +137,8 @@ export class TaskIndexService extends BaseService {
                     type: 'task.ref',
                     task: task,
                     range: ref.range,
-                    target: ref.task
+                    target: ref.task,
+                    attr: ref.attr
                   },
                   layer
                 ]

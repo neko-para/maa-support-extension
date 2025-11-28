@@ -14,6 +14,7 @@ export type TaskQueryResult =
       task: string
       range: vscode.Range
       target: string
+      attr?: boolean
     }
   | {
       type: 'image.ref'
@@ -67,6 +68,7 @@ export type TaskIndexInfo = {
     task: string
     range: vscode.Range
     belong: TaskBelong
+    attr?: boolean
     fake?: 'maa.#' | 'maa.@' // 虚假任务，供补全
   }[]
   imageRef: {

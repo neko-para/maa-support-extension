@@ -16,7 +16,7 @@ defineProps<{
     </template>
     <template v-for="(reco, idx) in item.msg.list.slice(item.childs.length)" :key="`wait-${idx}`">
       <n-button size="small" ghost disabled>
-        {{ reco }}
+        {{ reco.jump_back ? '[JumpBack]' : '' }} {{ reco.anchor ? '[Anchor]' : '' }} {{ reco.name }}
       </n-button>
     </template>
   </n-flex>

@@ -12,6 +12,7 @@ import type { ActionScope, RecoScope } from '../states/launch'
 
 const props = defineProps<{
   item: RecoScope | ActionScope
+  useWarning?: boolean
 }>()
 
 const querying = ref(false)
@@ -42,7 +43,15 @@ async function requestReco(reco_id: number) {
     size="small"
     ghost
     :loading="item.status === 'running'"
-    :type="item.status === 'success' ? 'success' : item.status === 'failed' ? 'error' : undefined"
+    :type="
+      item.status === 'success'
+        ? 'success'
+        : item.status === 'failed'
+          ? useWarning
+            ? 'warning'
+            : 'error'
+          : undefined
+    "
     @click="requestDetail"
   >
     <template #icon>

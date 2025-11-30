@@ -384,6 +384,10 @@ export class LaunchService extends BaseService {
     }
 
     const mergeParams = (data: unknown[]) => {
+      // 目前空数组override会失败，临时修复下
+      if (data.length === 0) {
+        return {}
+      }
       return data as Record<string, unknown>[]
     }
     // const mergeParam = (data?: unknown) => {

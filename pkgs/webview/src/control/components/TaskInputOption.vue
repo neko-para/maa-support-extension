@@ -34,7 +34,7 @@ function revealOption() {
       <div v-html="optMeta.description"></div>
     </n-popover>
   </n-flex>
-  <template v-for="info in optMeta.input ?? []" :key="info.name">
+  <template v-for="info in optMeta.inputs ?? []" :key="info.name">
     <task-input-option-item
       v-if="task.__vscKey"
       :task-key="task.__vscKey"

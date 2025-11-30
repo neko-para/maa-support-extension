@@ -315,7 +315,7 @@ export class InterfaceService extends BaseService {
             params.push(csInfo.pipeline_override ?? {})
           } else if (optInfo.type === 'input') {
             const optValue = optEntry ?? {}
-            for (const subOpt of optInfo.input ?? []) {
+            for (const subOpt of optInfo.inputs ?? []) {
               if (!(subOpt.name in optValue)) {
                 optValue[subOpt.name] = subOpt.default ?? ''
               }
@@ -342,7 +342,7 @@ export class InterfaceService extends BaseService {
               } else if (typeof v === 'string') {
                 let finalType: InputItemType | undefined = undefined
                 let result = v
-                for (const subOpt of optInfo.input ?? []) {
+                for (const subOpt of optInfo.inputs ?? []) {
                   const idx = result.indexOf(`{${subOpt.name}}`)
                   if (idx !== -1) {
                     const expectType = subOpt.pipeline_type ?? 'string'

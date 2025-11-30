@@ -81,7 +81,7 @@ export type InputItem = EntryBase & {
 
 export type InputOption = EntryBase & {
   type: 'input'
-  input?: InputItem[]
+  inputs?: InputItem[]
   pipeline_override?: unknown
 }
 

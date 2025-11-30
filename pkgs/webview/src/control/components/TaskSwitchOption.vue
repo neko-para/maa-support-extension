@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NButton, NFlex, NPopover, NSelect } from 'naive-ui'
+import { NButton, NFlex, NPopover, NSwitch } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { SelectOption, TaskConfig } from '@mse/types'
+import type { SwitchOption, TaskConfig } from '@mse/types'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
@@ -10,7 +10,7 @@ import { ipc } from '../ipc'
 const props = defineProps<{
   task: TaskConfig
   opt: string
-  optMeta: SelectOption
+  optMeta: SwitchOption
 }>()
 
 const optValue = computed(() => {
@@ -99,23 +99,15 @@ function clearOption() {
       <div v-html="effectiveCase.description"></div>
     </n-popover>
   </n-flex>
-  <n-flex :wrap="false">
-    <n-select
-      :options="
-        optMeta.cases?.map(cs => ({
-          value: cs.name,
-          label: cs.name
-        })) ?? []
-      "
-      :value="optValue ?? null"
+  <n-flex :wrap="false" align="center">
+    <n-switch
+      :value="(optValue ?? defaultValue) === 'Yes'"
       @update:value="
         value => {
-          configTask(opt, value)
+          configTask(opt, value ? 'Yes' : 'No')
         }
       "
-      :placeholder="optValue !== undefined ? '' : defaultValue"
-      size="small"
-    ></n-select>
+    ></n-switch>
     <n-button :disabled="optValue === undefined" @click="clearOption" text> Reset </n-button>
   </n-flex>
 </template>

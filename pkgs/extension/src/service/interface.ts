@@ -303,7 +303,7 @@ export class InterfaceService extends BaseService {
 
           const optEntry = task.option?.[optName]
 
-          if (!optInfo.type || optInfo.type === 'Select') {
+          if (!optInfo.type || optInfo.type === 'select' || optInfo.type === 'switch') {
             const optValue = optEntry?.default ?? optInfo.default_case ?? optInfo.cases?.[0].name
 
             const csInfo = optInfo.cases?.find(x => x.name === optValue)
@@ -313,7 +313,7 @@ export class InterfaceService extends BaseService {
             }
 
             params.push(csInfo.pipeline_override ?? {})
-          } else if (optInfo.type === 'Input') {
+          } else if (optInfo.type === 'input') {
             const optValue = optEntry ?? {}
             for (const subOpt of optInfo.input ?? []) {
               if (!(subOpt.name in optValue)) {

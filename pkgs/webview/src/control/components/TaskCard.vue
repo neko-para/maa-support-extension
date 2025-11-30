@@ -2,12 +2,13 @@
 import { NButton, NCard, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { InputOption, SelectOption, TaskConfig } from '@mse/types'
+import type { InputOption, SelectOption, SwitchOption, TaskConfig } from '@mse/types'
 
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 import TaskInputOption from './TaskInputOption.vue'
 import TaskSelectOption from './TaskSelectOption.vue'
+import TaskSwitchOption from './TaskSwitchOption.vue'
 
 const props = defineProps<{
   task: TaskConfig
@@ -89,19 +90,26 @@ function cast<T>(val: unknown): T {
     <n-flex vertical>
       <template v-for="opt in allOptions" :key="opt">
         <template v-if="hostState.interfaceJson?.option?.[opt]">
-          <template v-if="(hostState.interfaceJson.option[opt].type ?? 'Select') === 'Select'">
+          <template v-if="(hostState.interfaceJson.option[opt].type ?? 'select') === 'select'">
             <task-select-option
               :task="task"
               :opt="opt"
               :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt])"
             ></task-select-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt].type === 'Input'">
+          <template v-else-if="hostState.interfaceJson.option[opt].type === 'input'">
             <task-input-option
               :task="task"
               :opt="opt"
               :opt-meta="cast<InputOption>(hostState.interfaceJson.option[opt])"
             ></task-input-option>
+          </template>
+          <template v-else-if="hostState.interfaceJson.option[opt].type === 'switch'">
+            <task-switch-option
+              :task="task"
+              :opt="opt"
+              :opt-meta="cast<SwitchOption>(hostState.interfaceJson.option[opt])"
+            ></task-switch-option>
           </template>
         </template>
       </template>

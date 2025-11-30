@@ -117,7 +117,7 @@ const status = computed<undefined | 'error'>(() => {
         <n-button @click="revealInput(item.name)" text> {{ item.name }} </n-button>
       </template>
 
-      <span> {{ item.description }} </span>
+      <div v-html="item.description"></div>
     </n-popover>
   </n-flex>
   <n-flex :wrap="false">

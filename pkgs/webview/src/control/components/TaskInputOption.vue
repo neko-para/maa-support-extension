@@ -31,7 +31,7 @@ function revealOption() {
         <n-button @click="revealOption()" text> {{ opt }} </n-button>
       </template>
 
-      <span> {{ optMeta.description }} </span>
+      <div v-html="optMeta.description"></div>
     </n-popover>
   </n-flex>
   <template v-for="info in optMeta.input ?? []" :key="info.name">

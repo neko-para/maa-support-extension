@@ -64,7 +64,7 @@ export type SelectCase = EntryBase & {
 }
 
 export type SelectOption = EntryBase & {
-  type?: 'Select'
+  type?: 'select'
   cases?: SelectCase[]
   default_case?: string
 }
@@ -80,12 +80,24 @@ export type InputItem = EntryBase & {
 }
 
 export type InputOption = EntryBase & {
-  type: 'Input'
+  type: 'input'
   input?: InputItem[]
   pipeline_override?: unknown
 }
 
-export type Option = SelectOption | InputOption
+export type SwitchCase = EntryBase & {
+  name: string
+  options?: string[]
+  pipeline_override?: unknown
+}
+
+export type SwitchOption = EntryBase & {
+  type: 'switch'
+  cases?: SwitchCase[]
+  default_case?: string
+}
+
+export type Option = SelectOption | InputOption | SwitchOption
 
 export type InterfaceV2 = EntryBase & {
   interface_version: 2

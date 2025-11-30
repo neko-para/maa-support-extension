@@ -4,8 +4,15 @@ import path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import { InputItemType, Interface, InterfaceConfig, InterfaceRuntime } from '@mse/types'
-import { t } from '@mse/utils'
+import {
+  InputItemType,
+  Interface,
+  InterfaceConfig,
+  InterfaceRuntime,
+  SelectOption,
+  SwitchOption
+} from '@mse/types'
+import { logger, t } from '@mse/utils'
 
 import { rootService } from '.'
 import { currentWorkspace } from '../utils/fs'
@@ -292,9 +299,56 @@ export class InterfaceService extends BaseService {
           return t('maa.pi.error.cannot-find-task', task.name)
         }
 
+        const getAllOption = () => {
+          const resolved: string[] = []
+          const options = [...(taskInfo.option ?? [])]
+          while (options.length > 0) {
+            const opt = options.shift()!
+            if (resolved.indexOf(opt) !== -1) {
+              continue
+            }
+            resolved.push(opt)
+
+            const optMeta = data.option?.[opt]
+            if (!optMeta) {
+              continue
+            }
+            if ((optMeta.type ?? 'select') === 'select') {
+              const selectMeta = optMeta as SelectOption
+
+              let optValue = task.option?.[opt]?.default
+              if (typeof optValue === 'object') {
+                optValue = undefined
+              }
+              const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0].name
+              if (val) {
+                const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
+                if (caseMeta?.option) {
+                  options.push(...caseMeta.option)
+                }
+              }
+            } else if (optMeta.type === 'switch') {
+              const switchMeta = optMeta as SwitchOption
+
+              let optValue = task.option?.[opt]?.default
+              if (typeof optValue === 'object') {
+                optValue = undefined
+              }
+              const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0].name
+              if (val) {
+                const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
+                if (caseMeta?.option) {
+                  options.push(...caseMeta.option)
+                }
+              }
+            }
+          }
+          return resolved
+        }
+
         const params: unknown[] = [taskInfo.pipeline_override ?? {}]
 
-        for (const optName of taskInfo.option ?? []) {
+        for (const optName of getAllOption()) {
           const optInfo = data.option?.[optName]
 
           if (!optInfo) {
@@ -376,6 +430,8 @@ export class InterfaceService extends BaseService {
             }
           }
         }
+
+        logger.debug(`${task.name} ${taskInfo.entry} ${JSON.stringify(params)}`)
 
         result.task.push({
           name: task.name,

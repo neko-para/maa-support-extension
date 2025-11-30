@@ -52,18 +52,32 @@ const allOptions = computed<string[]>(() => {
     if (!optMeta) {
       continue
     }
-    if ((optMeta.type ?? 'Select') === 'Select') {
+    if ((optMeta.type ?? 'select') === 'select') {
       const selectMeta = optMeta as SelectOption
 
-      let optValue = props.task.option?.[opt]?.value
+      let optValue = props.task.option?.[opt]?.default
       if (typeof optValue === 'object') {
         optValue = undefined
       }
       const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0].name
       if (val) {
         const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
-        if (caseMeta?.options) {
-          options.push(...caseMeta.options)
+        if (caseMeta?.option) {
+          options.push(...caseMeta.option)
+        }
+      }
+    } else if (optMeta.type === 'switch') {
+      const switchMeta = optMeta as SwitchOption
+
+      let optValue = props.task.option?.[opt]?.default
+      if (typeof optValue === 'object') {
+        optValue = undefined
+      }
+      const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0].name
+      if (val) {
+        const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
+        if (caseMeta?.option) {
+          options.push(...caseMeta.option)
         }
       }
     }

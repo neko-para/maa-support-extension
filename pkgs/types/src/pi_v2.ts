@@ -59,7 +59,7 @@ export type Task = EntryBase & {
 
 export type SelectCase = EntryBase & {
   name: string
-  options?: string[]
+  option?: string[]
   pipeline_override?: unknown
 }
 
@@ -87,7 +87,7 @@ export type InputOption = EntryBase & {
 
 export type SwitchCase = EntryBase & {
   name: string
-  options?: string[]
+  option?: string[]
   pipeline_override?: unknown
 }
 

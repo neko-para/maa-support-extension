@@ -51,11 +51,14 @@ export class LaunchService extends BaseService {
       return null
     }
 
-    const fixNum = (v?: string | number) => {
+    const fixNum = (v?: string | number, dic?: Record<string, string>) => {
       if (typeof v === 'number') {
         return `${v}`
+      } else if (dic && typeof v === 'string' && v in dic) {
+        return dic[v]
+      } else {
+        return v
       }
-      return v
     }
 
     if (ctrlInfo.type === 'Adb') {
@@ -70,10 +73,9 @@ export class LaunchService extends BaseService {
         ctype: 'adb',
         adb_path: config.adb.adb_path,
         address: config.adb.address,
-        screencap:
-          fixNum(ctrlInfo.adb?.screencap) ?? config.adb.screencap ?? maa.AdbScreencapMethod.Default,
-        input: fixNum(ctrlInfo.adb?.input) ?? config.adb.input ?? maa.AdbInputMethod.Default,
-        config: JSON.stringify(ctrlInfo.adb?.config ?? config.adb.config),
+        screencap: config.adb.screencap ?? maa.AdbScreencapMethod.Default,
+        input: config.adb.input ?? maa.AdbInputMethod.Default,
+        config: JSON.stringify(config.adb.config),
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
@@ -97,9 +99,14 @@ export class LaunchService extends BaseService {
       return {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        screencap: fixNum(ctrlInfo.win32?.screencap) ?? maa.Win32ScreencapMethod.DXGI_DesktopDup,
-        mouse: fixNum(ctrlInfo.win32?.mouse) ?? maa.Win32InputMethod.SendMessage,
-        keyboard: fixNum(ctrlInfo.win32?.keyboard) ?? maa.Win32InputMethod.SendMessage,
+        screencap:
+          fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
+          maa.Win32ScreencapMethod.DXGI_DesktopDup,
+        mouse:
+          fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
+        keyboard:
+          fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ??
+          maa.Win32InputMethod.SendMessage,
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,

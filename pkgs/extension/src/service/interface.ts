@@ -225,27 +225,29 @@ export class InterfaceService extends BaseService {
       return t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '')
     }
 
-    const fixNum = (v?: string | number) => {
+    const fixNum = (v?: string | number, dic?: Record<string, string>) => {
       if (typeof v === 'number') {
         return `${v}`
+      } else if (dic && typeof v === 'string' && v in dic) {
+        return dic[v]
+      } else {
+        return v
       }
-      return v
     }
 
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
         return t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '')
       }
-      const adb_config = ctrlInfo.adb?.config ?? {}
+      const adb_config = {}
       Object.assign(adb_config, config.adb?.config ?? {})
 
       result.controller_param = {
         ctype: 'adb',
         adb_path: config.adb.adb_path,
         address: config.adb.address,
-        screencap:
-          fixNum(ctrlInfo.adb?.screencap) ?? config.adb.screencap ?? maa.AdbScreencapMethod.Default,
-        input: fixNum(ctrlInfo.adb?.input) ?? config.adb.input ?? maa.AdbInputMethod.Default,
+        screencap: config.adb.screencap ?? maa.AdbScreencapMethod.Default,
+        input: config.adb.input ?? maa.AdbInputMethod.Default,
         config: JSON.stringify(adb_config)
       }
     } else if (ctrlInfo.type === 'Win32') {
@@ -259,9 +261,13 @@ export class InterfaceService extends BaseService {
       result.controller_param = {
         ctype: 'win32',
         hwnd: config.win32.hwnd,
-        screencap: fixNum(ctrlInfo.win32?.screencap) ?? maa.Win32ScreencapMethod.GDI,
-        mouse: fixNum(ctrlInfo.win32?.mouse) ?? maa.Win32InputMethod.SendMessage,
-        keyboard: fixNum(ctrlInfo.win32?.keyboard) ?? maa.Win32InputMethod.SendMessage
+        screencap:
+          fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
+          maa.Win32ScreencapMethod.GDI,
+        mouse:
+          fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
+        keyboard:
+          fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage
       }
     } else if (ctrlInfo.type === 'VscFixed') {
       if (!config.vscFixed) {

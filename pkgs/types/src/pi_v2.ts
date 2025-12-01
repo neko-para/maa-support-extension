@@ -14,11 +14,7 @@ export type ControllerBase = EntryBase & {
 
 export type AdbController = ControllerBase & {
   type: 'Adb'
-  adb?: {
-    screencap?: maa.ScreencapOrInputMethods | number
-    input?: maa.ScreencapOrInputMethods | number
-    config?: unknown
-  }
+  adb?: {}
   win32?: never
 }
 
@@ -28,9 +24,9 @@ export type Win32Controller = ControllerBase & {
   win32?: {
     class_regex?: string
     window_regex?: string
-    screencap?: maa.ScreencapOrInputMethods | number
-    mouse?: maa.ScreencapOrInputMethods | number
-    keyboard?: maa.ScreencapOrInputMethods | number
+    screencap?: keyof typeof maa.Win32ScreencapMethod
+    mouse?: keyof typeof maa.Win32InputMethod
+    keyboard?: keyof typeof maa.Win32InputMethod
   }
 }
 

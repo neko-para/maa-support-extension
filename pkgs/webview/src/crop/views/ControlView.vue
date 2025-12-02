@@ -24,6 +24,9 @@ import { toggleShow } from '../states/visible'
       </n-button>
       <n-button @click="controlSt.cropCeil()" size="small"> {{ t('maa.crop.ceil') }} </n-button>
       <n-button @click="controlSt.cropBound()" size="small"> {{ t('maa.crop.bound') }} </n-button>
+      <n-button :loading="imageSt.resizing.value" @click="imageSt.resize()" size="small">
+        {{ t('maa.crop.resize') }}
+      </n-button>
 
       <n-button @click="toggleShow('settings')" size="small">
         {{ t('maa.crop.settings') }}

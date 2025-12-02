@@ -35,6 +35,7 @@ export default {
   'maa.crop.reset-viewport': '重置视野',
   'maa.crop.ceil': '取整',
   'maa.crop.bound': '边界',
+  'maa.crop.resize': '缩放',
   'maa.crop.copy': '复制',
   'maa.crop.paste': '粘贴',
   'maa.crop.settings': '设置',

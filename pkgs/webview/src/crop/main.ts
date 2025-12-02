@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import { createApp } from 'vue'
 
 import '../utils/base.css'
@@ -6,6 +7,9 @@ import App from './App.vue'
 import { ipc } from './ipc'
 import { hostState } from './state'
 import * as imageSt from './states/image'
+
+// @ts-ignore
+globalThis.Buffer = Buffer
 
 createApp(App).mount('#app')
 

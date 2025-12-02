@@ -37,7 +37,6 @@ export class NativeService extends BaseService {
   version: string
 
   rootUri: vscode.Uri
-  cacheUri: vscode.Uri
   downloadUri: vscode.Uri
   installUri: vscode.Uri
 
@@ -49,15 +48,18 @@ export class NativeService extends BaseService {
     this.version = this.explicitVersion ?? defaultMaaVersion
 
     this.rootUri = vscode.Uri.joinPath(context.globalStorageUri, 'native')
-    this.cacheUri = vscode.Uri.joinPath(this.rootUri, 'cache')
     this.downloadUri = vscode.Uri.joinPath(this.rootUri, 'download')
     this.installUri = vscode.Uri.joinPath(this.rootUri, 'install')
+
+    const cacheDir = vscode.Uri.joinPath(this.rootUri, 'cache')
+    if (existsSync(cacheDir.fsPath)) {
+      fs.rm(cacheDir.fsPath, { recursive: true })
+    }
   }
 
   async init() {
     console.log('init NativeService')
 
-    await fs.mkdir(this.cacheUri.fsPath, { recursive: true })
     await fs.mkdir(this.installUri.fsPath, { recursive: true })
     await fs.mkdir(this.downloadUri.fsPath, { recursive: true })
 
@@ -209,8 +211,7 @@ export class NativeService extends BaseService {
     }
 
     const result = await pacote.packument('@maaxyz/maa-node', {
-      registry: this.registry,
-      cache: this.cacheUri.fsPath
+      registry: this.registry
     })
     await release()
     return Object.entries(result.versions).filter(([ver]) => {
@@ -225,8 +226,7 @@ export class NativeService extends BaseService {
     }
 
     const result = await pacote.manifest('@maaxyz/maa-node@latest', {
-      registry: this.registry,
-      cache: this.cacheUri.fsPath
+      registry: this.registry
     })
     await release()
     return result
@@ -272,8 +272,7 @@ export class NativeService extends BaseService {
           increment: 10
         })
         await pacote.extract(`@maaxyz/maa-node@${version}`, loaderTemp, {
-          registry: this.registry,
-          cache: this.cacheUri.fsPath
+          registry: this.registry
         })
         progress.report({
           message: t('maa.native.download.downloading-binary', version),
@@ -283,8 +282,7 @@ export class NativeService extends BaseService {
           `@maaxyz/maa-node-${process.platform}-${process.arch}@${version}`,
           binaryTemp,
           {
-            registry: this.registry,
-            cache: this.cacheUri.fsPath
+            registry: this.registry
           }
         )
         progress.report({

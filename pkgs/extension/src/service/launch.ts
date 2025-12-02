@@ -35,7 +35,7 @@ export class LaunchService extends BaseService {
     console.log('init LaunchService')
   }
 
-  async buildControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
+  buildControllerRuntime(): InterfaceRuntime['controller_param'] | null {
     const data = interfaceService.interfaceJson
     const config = interfaceService.interfaceConfigJson
     if (!data || !config) {
@@ -137,7 +137,7 @@ export class LaunchService extends BaseService {
   }
 
   async updateCache() {
-    const runtime = await this.buildControllerRuntime()
+    const runtime = this.buildControllerRuntime()
 
     if (!runtime) {
       return false

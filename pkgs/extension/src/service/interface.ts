@@ -14,7 +14,7 @@ import {
 } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
-import { rootService } from '.'
+import { launchService, rootService } from '.'
 import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 
@@ -220,70 +220,11 @@ export class InterfaceService extends BaseService {
 
     result.root = projectDir
 
-    const ctrlInfo = data.controller?.find(info => info.name === config.controller?.name)
-    if (!ctrlInfo) {
-      return t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '')
+    const ctrlRt = launchService.buildControllerRuntime()
+    if (!ctrlRt) {
+      return '构建controller失败'
     }
-
-    const fixNum = (v?: string | number, dic?: Record<string, string>) => {
-      if (typeof v === 'number') {
-        return `${v}`
-      } else if (dic && typeof v === 'string' && v in dic) {
-        return dic[v]
-      } else {
-        return v
-      }
-    }
-
-    if (ctrlInfo.type === 'Adb') {
-      if (!config.adb) {
-        return t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '')
-      }
-      const adb_config = {}
-      Object.assign(adb_config, config.adb?.config ?? {})
-
-      result.controller_param = {
-        ctype: 'adb',
-        adb_path: config.adb.adb_path,
-        address: config.adb.address,
-        screencap: config.adb.screencap ?? maa.AdbScreencapMethod.Default,
-        input: config.adb.input ?? maa.AdbInputMethod.Default,
-        config: JSON.stringify(adb_config)
-      }
-    } else if (ctrlInfo.type === 'Win32') {
-      if (!config.win32) {
-        return t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '')
-      }
-      if (!config.win32.hwnd) {
-        return t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '')
-      }
-
-      result.controller_param = {
-        ctype: 'win32',
-        hwnd: config.win32.hwnd,
-        screencap:
-          fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.GDI,
-        mouse:
-          fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
-        keyboard:
-          fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage
-      }
-    } else if (ctrlInfo.type === 'VscFixed') {
-      if (!config.vscFixed) {
-        return 'No vscFixed for controller'
-      }
-      if (!config.vscFixed.image) {
-        return 'No vscFixed image for controller'
-      }
-
-      result.controller_param = {
-        ctype: 'vscFixed',
-        image: config.vscFixed.image
-      }
-    } else {
-      return '???'
-    }
+    result.controller_param = ctrlRt
 
     const resInfo = data.resource?.find(info => info.name === config.resource)
     if (!resInfo) {

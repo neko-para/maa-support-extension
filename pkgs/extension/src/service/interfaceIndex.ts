@@ -74,7 +74,7 @@ export class InterfaceIndexService extends BaseService {
             this.refs.push({
               type: 'locale.ref',
               range,
-              value
+              value: value.substring(1)
             })
           }
 

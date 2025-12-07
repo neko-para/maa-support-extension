@@ -7,15 +7,15 @@
     "lint": "tsc -p pkgs/extension --noEmit && vue-tsc -p pkgs/webview --noEmit"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "@tsconfig/node20": "^20.1.5",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "esbuild": "^0.20.2",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@tsconfig/node20": "^20.1.8",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "esbuild": "^0.27.1",
     "jsonc-parser": "^3.3.1",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3",
-    "vite": "^5.4.19",
-    "vue-tsc": "^2.2.10"
+    "prettier": "^3.7.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6",
+    "vue-tsc": "^3.1.6"
   },
-  "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"
+  "packageManager": "pnpm@10.24.0"
 }

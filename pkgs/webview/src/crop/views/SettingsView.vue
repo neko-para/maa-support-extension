@@ -118,6 +118,14 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
       :show-button="false"
       @update:value="v => update('helperAxesThreshold', v ?? undefined)"
     ></n-input-number>
+    <n-text> {{ t('maa.crop.settings.pick-color-threshold') }} </n-text>
+    <n-input-number
+      :value="hostState.pickColorThreshold"
+      placeholder="10"
+      :min="0"
+      :show-button="false"
+      @update:value="v => update('pickColorThreshold', v ?? undefined)"
+    ></n-input-number>
     <n-text> {{ t('maa.crop.settings.ocr-result-color') }} </n-text>
     <n-input
       :value="hostState.ocrStroke"

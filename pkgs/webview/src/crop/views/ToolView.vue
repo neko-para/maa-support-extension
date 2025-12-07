@@ -3,6 +3,7 @@ import { NButton, NCard, NCode, NFlex, NSelect, NSwitch, NText } from 'naive-ui'
 
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
+import { hostState } from '../state'
 import * as ocrSt from '../states/ocr'
 import * as pickSt from '../states/pick'
 import * as recoSt from '../states/reco'
@@ -30,8 +31,12 @@ const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }
           <n-button size="small" @click="pickSt.copyCss()">
             {{ pickSt.cssText() }}
           </n-button>
-          <n-button size="small" @click="pickSt.copyArray()">
-            {{ pickSt.arrayText() }}
+          <n-button size="small" @click="pickSt.copyArray(0)"> {{ pickSt.arrayText(0) }} </n-button>
+          <n-button size="small" @click="pickSt.copyArray(hostState.pickColorThreshold ?? 10)">
+            upper: {{ pickSt.arrayText(hostState.pickColorThreshold ?? 10) }}
+          </n-button>
+          <n-button size="small" @click="pickSt.copyArray(-(hostState.pickColorThreshold ?? 10))">
+            lower: {{ pickSt.arrayText(-(hostState.pickColorThreshold ?? 10)) }}
           </n-button>
         </n-flex>
       </template>

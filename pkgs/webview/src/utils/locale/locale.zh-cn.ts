@@ -62,6 +62,7 @@ export default {
   'maa.crop.settings.helper-axes-mode-round': '圆形',
   'maa.crop.settings.helper-axes-radius': '辅助指示线半径',
   'maa.crop.settings.helper-axes-threshold': '辅助指示线展示阈值',
+  'maa.crop.settings.pick-color-threshold': '取色阈值',
   'maa.crop.settings.ocr-result-color': 'OCR结果颜色',
   'maa.crop.settings.ocr-result-font': 'OCR结果字体',
   'maa.crop.settings.reco-result-color': '识别结果颜色',

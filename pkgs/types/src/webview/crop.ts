@@ -12,6 +12,7 @@ export type CropHostState = HostStateBase & {
   helperAxesOverflow?: boolean
   helperAxesRadius?: number
   helperAxesThreshold?: number
+  pickColorThreshold?: number
   ocrStroke?: string
   ocrFont?: string
   recoStroke?: string

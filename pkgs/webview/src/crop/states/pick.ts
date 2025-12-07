@@ -25,12 +25,15 @@ export function copyCss() {
   }
 }
 
-export function arrayText() {
-  return color.value ? `[${color.value.join(', ')}]` : undefined
+export function arrayText(threshold: number) {
+  if (!color.value) {
+    return undefined
+  }
+  return `[${color.value.map(x => Math.min(Math.max(x + threshold, 0), 255)).join(', ')}]`
 }
 
-export function copyArray() {
-  const text = arrayText()
+export function copyArray(threshold: number) {
+  const text = arrayText(threshold)
   if (text) {
     ipc.send({
       command: 'writeClipboard',

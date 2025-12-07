@@ -56,6 +56,7 @@ export type CropViewContext = {
   helperAxesOverflow?: string
   helperAxesRadius?: string
   helperAxesThreshold?: string
+  pickColorThreshold?: number
   ocrStroke?: string
   ocrFont?: string
   recoStroke?: string

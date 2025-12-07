@@ -7,7 +7,7 @@ import * as ocrSt from '../states/ocr'
 import * as pickSt from '../states/pick'
 import * as recoSt from '../states/reco'
 
-const drawOptions = ['all', 'best', 'filter'].map(x => ({ value: x, label: x }))
+const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }))
 </script>
 
 <template>

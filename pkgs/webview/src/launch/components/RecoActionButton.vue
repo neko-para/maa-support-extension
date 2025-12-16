@@ -36,6 +36,10 @@ async function requestReco(reco_id: number) {
   })) as RecoInfo | null
   querying.value = false
 }
+
+function nodeId() {
+  return props.item.type === 'reco' ? props.item.msg.reco_id : props.item.msg.action_id
+}
 </script>
 
 <template>
@@ -59,6 +63,6 @@ async function requestReco(reco_id: number) {
       <check-outlined v-else-if="item.status === 'success'"></check-outlined>
     </template>
 
-    {{ item.msg.name }}
+    {{ item.msg.name }} {{ nodeId() }}
   </n-button>
 </template>

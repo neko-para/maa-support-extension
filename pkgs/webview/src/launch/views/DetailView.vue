@@ -4,7 +4,7 @@ import { NCard, NFlex, NScrollbar, NText } from 'naive-ui'
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
-import { recoInfo, taskInfo } from '../states/info'
+import { actInfo, recoInfo, taskInfo } from '../states/info'
 
 function openCrop(image: string) {
   ipc.send({
@@ -35,6 +35,18 @@ function openCrop(image: string) {
               :src="draw"
               @dblclick="openCrop(draw)"
             />
+          </n-flex>
+        </template>
+      </n-card>
+      <n-card
+        :title="t('maa.launch.act-detail')"
+        content-style="display: flex; flex-direction: column"
+        :closable="!!actInfo"
+        @close="actInfo = null"
+      >
+        <template v-if="actInfo">
+          <n-flex vertical>
+            <json-code :code="JSON.stringify(actInfo, null, 2)"></json-code>
           </n-flex>
         </template>
       </n-card>

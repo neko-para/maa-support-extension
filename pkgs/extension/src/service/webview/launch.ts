@@ -84,6 +84,17 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         })
         break
       }
+      case 'requestAct': {
+        const detailInfo = this.instance.tasker.action_detail(
+          data.action_id.toString() as maa.ActId
+        )
+        if (!detailInfo) {
+          this.response(data.seq, null)
+          break
+        }
+        this.response(data.seq, detailInfo)
+        break
+      }
       case 'requestNode': {
         const nodeData = this.instance.tasker.resource?.get_node_data(data.node) ?? null
         this.response(data.seq, nodeData)

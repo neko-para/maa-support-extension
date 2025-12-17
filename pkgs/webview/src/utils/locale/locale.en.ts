@@ -70,6 +70,7 @@ export default {
 
   'maa.launch.input-space-to-show-tasks': 'Input space to show all tasks',
   'maa.launch.reco-detail': 'Reco Detail',
+  'maa.launch.act-detail': 'Action Detail',
   'maa.launch.dbclick-to-open-in-crop': 'Double click image to open in crop tool',
   'maa.launch.task-definition': 'Task Definition',
   'maa.launch.process': 'Process',

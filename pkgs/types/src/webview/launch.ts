@@ -28,6 +28,11 @@ export type LaunchWebToHost =
       reco_id: number
     }
   | {
+      // return ActionInfo | null
+      command: 'requestAct'
+      action_id: number
+    }
+  | {
       // return string | null
       command: 'requestNode'
       node: string
@@ -52,3 +57,5 @@ export type RecoInfo = {
   draws: string[]
   info: maa.RecoDetailWithoutDraws
 }
+
+export type ActionInfo = maa.ActionDetail

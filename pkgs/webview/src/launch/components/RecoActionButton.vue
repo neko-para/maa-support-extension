@@ -4,10 +4,10 @@ import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
 import { NButton } from 'naive-ui'
 import { ref } from 'vue'
 
-import type { RecoInfo } from '@mse/types'
+import type { ActionInfo, RecoInfo } from '@mse/types'
 
 import { ipc } from '../ipc'
-import { recoInfo } from '../states/info'
+import { actInfo, recoInfo } from '../states/info'
 import type { ActionScope, RecoScope } from '../states/launch'
 
 const props = defineProps<{
@@ -21,7 +21,7 @@ async function requestDetail() {
   if (props.item.type === 'reco') {
     requestReco(props.item.msg.reco_id)
   } else {
-    // requestAct
+    requestAct(props.item.msg.action_id)
   }
 }
 
@@ -34,6 +34,18 @@ async function requestReco(reco_id: number) {
     command: 'requestReco',
     reco_id
   })) as RecoInfo | null
+  querying.value = false
+}
+
+async function requestAct(action_id: number) {
+  if (querying.value) {
+    return
+  }
+  querying.value = true
+  actInfo.value = (await ipc.call({
+    command: 'requestAct',
+    action_id
+  })) as ActionInfo | null
   querying.value = false
 }
 

@@ -4,6 +4,7 @@ import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@m
 import { WebviewPanelProvider, locale } from '@mse/utils'
 
 import { stateService } from '..'
+import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { TaskerInstance } from '../launch'
@@ -123,6 +124,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         })
         break
       }
+      case 'gotoTask':
+        vscode.commands.executeCommand(commands.GotoTask, data.task)
+        break
     }
     if (data.builtin) {
       super.recv(data)

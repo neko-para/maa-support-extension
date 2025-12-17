@@ -51,6 +51,10 @@ export type LaunchWebToHost =
       command: 'openCrop'
       image: string
     }
+  | {
+      command: 'gotoTask'
+      task: string
+    }
 
 export type RecoInfo = {
   raw: string

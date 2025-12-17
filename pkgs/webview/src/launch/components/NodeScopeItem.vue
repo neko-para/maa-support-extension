@@ -2,6 +2,7 @@
 import { NButton, NCard, NFlex } from 'naive-ui'
 import { ref } from 'vue'
 
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { taskInfo } from '../states/info'
 import type { AnyNodeScope } from '../states/launch'
@@ -28,14 +29,28 @@ async function requestNode() {
   ]
   querying.value = false
 }
+
+function gotoTask(task: string) {
+  ipc.send({
+    command: 'gotoTask',
+    task
+  })
+}
 </script>
 
 <template>
   <n-card size="small">
     <template #header>
-      <n-button @click="requestNode" :loading="querying" size="small">
-        {{ item.msg.name }}
-      </n-button>
+      <n-flex>
+        <n-button @click="requestNode" :loading="querying" size="small">
+          {{ item.msg.name }}
+        </n-button>
+        <template v-if="item.type === 'pipeline_node'">
+          <n-button @click="gotoTask(item.msg.name)" size="small">
+            {{ t('maa.launch.reveal') }}
+          </n-button>
+        </template>
+      </n-flex>
     </template>
 
     <template #header-extra>

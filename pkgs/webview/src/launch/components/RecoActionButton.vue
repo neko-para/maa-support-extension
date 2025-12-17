@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { default as CheckOutlined } from '@vicons/material/es/CheckOutlined'
 import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
-import { NButton } from 'naive-ui'
+import { NButton, NPopover } from 'naive-ui'
 import { ref } from 'vue'
 
 import type { ActionInfo, RecoInfo } from '@mse/types'
@@ -55,26 +55,32 @@ function nodeId() {
 </script>
 
 <template>
-  <n-button
-    size="small"
-    ghost
-    :loading="item.status === 'running'"
-    :type="
-      item.status === 'success'
-        ? 'success'
-        : item.status === 'failed'
-          ? useWarning
-            ? 'warning'
-            : 'error'
-          : undefined
-    "
-    @click="requestDetail"
-  >
-    <template #icon>
-      <close-outlined v-if="item.status === 'failed'"></close-outlined>
-      <check-outlined v-else-if="item.status === 'success'"></check-outlined>
+  <n-popover trigger="hover">
+    <template #trigger>
+      <n-button
+        size="small"
+        ghost
+        :loading="item.status === 'running'"
+        :type="
+          item.status === 'success'
+            ? 'success'
+            : item.status === 'failed'
+              ? useWarning
+                ? 'warning'
+                : 'error'
+              : undefined
+        "
+        @click="requestDetail"
+      >
+        <template #icon>
+          <close-outlined v-if="item.status === 'failed'"></close-outlined>
+          <check-outlined v-else-if="item.status === 'success'"></check-outlined>
+        </template>
+
+        {{ item.msg.name }}
+      </n-button>
     </template>
 
-    {{ item.msg.name }} {{ nodeId() }}
-  </n-button>
+    {{ nodeId() }}
+  </n-popover>
 </template>

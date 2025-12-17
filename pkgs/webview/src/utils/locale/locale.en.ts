@@ -80,5 +80,6 @@ export default {
   'maa.launch.stop': 'Stop',
   'maa.launch.add-breakpoint': 'Add Breakpoint',
   'maa.launch.show': 'Show',
-  'maa.launch.hide': 'Hide'
+  'maa.launch.hide': 'Hide',
+  'maa.launch.reveal': 'Reveal'
 } as const

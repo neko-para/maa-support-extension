@@ -80,5 +80,6 @@ export default {
   'maa.launch.stop': '停止',
   'maa.launch.add-breakpoint': '添加断点',
   'maa.launch.show': '显示',
-  'maa.launch.hide': '隐藏'
+  'maa.launch.hide': '隐藏',
+  'maa.launch.reveal': '查看'
 } as const

@@ -60,7 +60,7 @@ function nodeId() {
       <n-button
         size="small"
         ghost
-        :loading="item.status === 'running'"
+        :loading="item.status === 'running' || querying"
         :type="
           item.status === 'success'
             ? 'success'

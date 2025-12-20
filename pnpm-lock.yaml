@@ -15,7 +15,7 @@ importers:
     devDependencies:
       '@trivago/prettier-plugin-sort-imports':
         specifier: ^6.0.0
-        version: 6.0.0(@vue/compiler-sfc@3.5.13)(prettier@3.7.4)
+        version: 6.0.0(@vue/compiler-sfc@3.5.13)(prettier@3.6.2)
       '@tsconfig/node20':
         specifier: ^20.1.8
         version: 20.1.8
@@ -29,8 +29,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       prettier:
-        specifier: ^3.7.4
-        version: 3.7.4
+        specifier: 3.6.2
+        version: 3.6.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2158,8 +2158,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prettier@3.7.4:
-    resolution: {integrity: sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==}
+  prettier@3.6.2:
+    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -3492,7 +3492,7 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@trivago/prettier-plugin-sort-imports@6.0.0(@vue/compiler-sfc@3.5.13)(prettier@3.7.4)':
+  '@trivago/prettier-plugin-sort-imports@6.0.0(@vue/compiler-sfc@3.5.13)(prettier@3.6.2)':
     dependencies:
       '@babel/generator': 7.28.5
       '@babel/parser': 7.28.5
@@ -3502,7 +3502,7 @@ snapshots:
       lodash-es: 4.17.21
       minimatch: 9.0.5
       parse-imports-exports: 0.2.4
-      prettier: 3.7.4
+      prettier: 3.6.2
     optionalDependencies:
       '@vue/compiler-sfc': 3.5.13
     transitivePeerDependencies:
@@ -4455,7 +4455,7 @@ snapshots:
 
   prettier@3.5.3: {}
 
-  prettier@3.7.4: {}
+  prettier@3.6.2: {}
 
   proc-log@5.0.0: {}
 

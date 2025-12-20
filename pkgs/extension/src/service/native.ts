@@ -210,13 +210,18 @@ export class NativeService extends BaseService {
       return []
     }
 
-    const result = await pacote.packument('@maaxyz/maa-node', {
-      registry: this.registry
-    })
-    await release()
-    return Object.entries(result.versions).filter(([ver]) => {
-      return semVerCompare(ver, minimumMaaVersion) !== -1
-    })
+    try {
+      const result = await pacote.packument('@maaxyz/maa-node', {
+        registry: this.registry
+      })
+      await release()
+      return Object.entries(result.versions).filter(([ver]) => {
+        return semVerCompare(ver, minimumMaaVersion) !== -1
+      })
+    } catch {
+      await release()
+      return []
+    }
   }
 
   async fetchLatest() {
@@ -225,11 +230,16 @@ export class NativeService extends BaseService {
       return null
     }
 
-    const result = await pacote.manifest('@maaxyz/maa-node@latest', {
-      registry: this.registry
-    })
-    await release()
-    return result
+    try {
+      const result = await pacote.manifest('@maaxyz/maa-node@latest', {
+        registry: this.registry
+      })
+      await release()
+      return result
+    } catch {
+      await release()
+      return null
+    }
   }
 
   async update() {

@@ -140,7 +140,7 @@ export class InterfaceIndexService extends BaseService {
                             })
                           }
                           break
-                        case 'options':
+                        case 'option':
                           if (typeof path[5] === 'number' && path.length === 6) {
                             this.refs.push({
                               type: 'option.ref',
@@ -175,7 +175,6 @@ export class InterfaceIndexService extends BaseService {
                           }
                       }
                     }
-                    break
                     break
                 }
               }

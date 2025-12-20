@@ -6,6 +6,11 @@ export default {
   'maa.control.stop': '停止',
   'maa.control.launch': '执行',
 
+  'maa.control.toolkit.toolkit': '工具',
+  'maa.control.toolkit.open-maa-log': '打开Maa日志',
+  'maa.control.toolkit.open-ext-log': '打开插件日志',
+  'maa.control.toolkit.open-crop-tool': '打开截图工具',
+  'maa.control.toolkit.switch-maa-version': '切换Maa版本',
   'maa.control.interface.interface': '配置',
   'maa.control.interface.select-interface': '选择配置',
   'maa.control.resource.resource': '资源',

@@ -6,6 +6,11 @@ export default {
   'maa.control.stop': 'Stop',
   'maa.control.launch': 'Launch',
 
+  'maa.control.toolkit.toolkit': 'Toolkit',
+  'maa.control.toolkit.open-maa-log': 'Open Maa Log',
+  'maa.control.toolkit.open-ext-log': 'Open Extension Log',
+  'maa.control.toolkit.open-crop-tool': 'Open Crop Tool',
+  'maa.control.toolkit.switch-maa-version': 'Switch Maa Version',
   'maa.control.interface.interface': 'Interface',
   'maa.control.interface.select-interface': 'Select interface',
   'maa.control.resource.resource': 'Resource',

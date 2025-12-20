@@ -22,7 +22,13 @@ export type ControlHostToWeb = {
   state: ControlHostState
 }
 
+export type ToolkitJumpTarget = 'maa-log' | 'ext-log' | 'crop-tool' | 'switch-maa-ver'
+
 export type ControlWebToHost =
+  | {
+      command: 'toolkitJump'
+      target: ToolkitJumpTarget
+    }
   | {
       command: 'refreshInterface'
     }

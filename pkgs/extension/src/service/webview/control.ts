@@ -38,6 +38,23 @@ export class WebviewControlService extends BaseService {
         case '__init':
           this.pushState()
           break
+        case 'toolkitJump':
+          switch (data.target) {
+            case 'maa-log':
+              await vscode.commands.executeCommand(commands.OpenMaaLog)
+              break
+            case 'ext-log':
+              await vscode.commands.executeCommand(commands.OpenExtLog)
+              break
+            case 'crop-tool':
+              await vscode.commands.executeCommand(commands.OpenCrop)
+              break
+            case 'switch-maa-ver':
+              await vscode.commands.executeCommand(commands.NativeSelectMaa)
+              break
+          }
+          this.provider?.response(data.seq, null)
+          break
         case 'refreshInterface':
           await rootService.refresh()
           break

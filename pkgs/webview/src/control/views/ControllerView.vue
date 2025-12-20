@@ -88,7 +88,7 @@ const currDevice = computed(() => {
 const refreshingDesktop = ref(false)
 
 const makeBriefDev = (dev: maa.DesktopDevice) => {
-  return dev.map(makeBrief).join('-')
+  return [ dev[0], makeBrief(dev[1]), makeBrief(dev[2]) ].join('-')
 }
 
 const desktopOptions = computed(() => {
@@ -155,6 +155,14 @@ function uploadImage() {
     <n-card title="ADB" size="small">
       <template #header-extra>
         <n-flex>
+          <n-button
+            :loading="refreshingAdb"
+            :disabled="refreshingAdb"
+            @click="refreshAdb"
+            size="small"
+          >
+            {{ t('maa.control.scan') }}
+          </n-button>
           <n-dropdown
             :disabled="refreshingAdb || adbOptions.length === 0"
             trigger="hover"
@@ -166,14 +174,6 @@ function uploadImage() {
               {{ t('maa.control.controller.device-list') }}
             </n-button>
           </n-dropdown>
-          <n-button
-            :loading="refreshingAdb"
-            :disabled="refreshingAdb"
-            @click="refreshAdb"
-            size="small"
-          >
-            {{ t('maa.control.scan') }}
-          </n-button>
         </n-flex>
       </template>
       <n-flex v-if="hostState.interfaceConfigJson?.adb" vertical>
@@ -189,6 +189,14 @@ function uploadImage() {
     <n-card title="Win32" size="small">
       <template #header-extra>
         <n-flex>
+          <n-button
+            :loading="refreshingDesktop"
+            :disabled="refreshingDesktop"
+            @click="refreshDesktop"
+            size="small"
+          >
+            {{ t('maa.control.scan') }}
+          </n-button>
           <n-popselect
             :disabled="refreshingDesktop || desktopOptions.length === 0"
             trigger="hover"
@@ -201,14 +209,6 @@ function uploadImage() {
               {{ t('maa.control.controller.window-list') }}
             </n-button>
           </n-popselect>
-          <n-button
-            :loading="refreshingDesktop"
-            :disabled="refreshingDesktop"
-            @click="refreshDesktop"
-            size="small"
-          >
-            {{ t('maa.control.scan') }}
-          </n-button>
         </n-flex>
       </template>
       <n-flex v-if="hostState.interfaceConfigJson?.win32" vertical>

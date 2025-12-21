@@ -47,6 +47,7 @@ function switchController(index: number) {
 const adbDevices = ref<maa.AdbDevice[]>([])
 
 const refreshingAdb = ref(false)
+const selectingAdb = ref(false)
 
 const adbOptions = computed(() => {
   return adbDevices.value.map((info, index) => {
@@ -78,6 +79,24 @@ function configAdb(index: number) {
   })
 }
 
+async function nativeSelectAdb() {
+  selectingAdb.value = true
+  const choice = (await ipc.call({
+    command: 'showSelect',
+    options: adbDevices.value.map((info, index) => {
+      return {
+        value: index,
+        title: info[0],
+        subtitle: `${info[1]} ${info[2]}`
+      }
+    })
+  })) as number | null
+  if (typeof choice === 'number') {
+    configAdb(choice)
+  }
+  selectingAdb.value = false
+}
+
 const desktopDevices = ref<maa.DesktopDevice[]>([])
 const currDevice = computed(() => {
   return desktopDevices.value.find(
@@ -86,9 +105,10 @@ const currDevice = computed(() => {
 })
 
 const refreshingDesktop = ref(false)
+const selectingDesktop = ref(false)
 
 const makeBriefDev = (dev: maa.DesktopDevice) => {
-  return [ dev[0], makeBrief(dev[1]), makeBrief(dev[2]) ].join('-')
+  return [dev[0], makeBrief(dev[1]), makeBrief(dev[2])].join('-')
 }
 
 const desktopOptions = computed(() => {
@@ -133,6 +153,24 @@ function configDesktop(index: number) {
   })
 }
 
+async function nativeSelectDesktop() {
+  selectingDesktop.value = true
+  const choice = (await ipc.call({
+    command: 'showSelect',
+    options: desktopDevices.value.map((dev, index) => {
+      return {
+        value: index,
+        title: `${dev[0]} ${dev[2]}`,
+        subtitle: dev[1]
+      }
+    })
+  })) as number | null
+  if (typeof choice === 'number') {
+    configDesktop(choice)
+  }
+  selectingDesktop.value = false
+}
+
 function uploadImage() {
   ipc.send({
     command: 'uploadImage'
@@ -157,20 +195,25 @@ function uploadImage() {
         <n-flex>
           <n-button
             :loading="refreshingAdb"
-            :disabled="refreshingAdb"
+            :disabled="refreshingAdb || selectingAdb"
             @click="refreshAdb"
             size="small"
           >
             {{ t('maa.control.scan') }}
           </n-button>
           <n-dropdown
-            :disabled="refreshingAdb || adbOptions.length === 0"
+            :disabled="refreshingAdb || selectingAdb || adbOptions.length === 0"
             trigger="hover"
             :options="adbOptions"
             @select="configAdb"
             size="small"
           >
-            <n-button :disabled="refreshingAdb || adbOptions.length === 0" size="small">
+            <n-button
+              :loading="selectingAdb"
+              :disabled="refreshingAdb || selectingAdb || adbOptions.length === 0"
+              size="small"
+              @click="nativeSelectAdb"
+            >
               {{ t('maa.control.controller.device-list') }}
             </n-button>
           </n-dropdown>
@@ -191,21 +234,26 @@ function uploadImage() {
         <n-flex>
           <n-button
             :loading="refreshingDesktop"
-            :disabled="refreshingDesktop"
+            :disabled="refreshingDesktop || selectingDesktop"
             @click="refreshDesktop"
             size="small"
           >
             {{ t('maa.control.scan') }}
           </n-button>
           <n-popselect
-            :disabled="refreshingDesktop || desktopOptions.length === 0"
+            :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
             trigger="hover"
             :options="desktopOptions"
             @update:value="configDesktop"
             size="small"
             scrollable
           >
-            <n-button :disabled="refreshingDesktop || desktopOptions.length === 0" size="small">
+            <n-button
+              :loading="selectingDesktop"
+              :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+              size="small"
+              @click="nativeSelectDesktop"
+            >
               {{ t('maa.control.controller.window-list') }}
             </n-button>
           </n-popselect>

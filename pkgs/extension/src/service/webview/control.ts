@@ -38,6 +38,23 @@ export class WebviewControlService extends BaseService {
         case '__init':
           this.pushState()
           break
+        case 'showSelect': {
+          const choice = await vscode.window.showQuickPick<
+            vscode.QuickPickItem & {
+              value: string | number
+            }
+          >(
+            data.options.map(opt => {
+              return {
+                value: opt.value,
+                label: opt.title,
+                detail: opt.subtitle
+              }
+            })
+          )
+          this.provider?.response(data.seq, choice?.value ?? null)
+          break
+        }
         case 'toolkitJump':
           switch (data.target) {
             case 'maa-log':

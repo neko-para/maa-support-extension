@@ -22,10 +22,21 @@ export type ControlHostToWeb = {
   state: ControlHostState
 }
 
+export type NativeSelectOption = {
+  value: string | number
+  title: string
+  subtitle?: string
+}
 export type ToolkitJumpTarget = 'maa-log' | 'ext-log' | 'crop-tool' | 'switch-maa-ver'
 
 export type ControlWebToHost =
   | {
+      // return string | number | null
+      command: 'showSelect'
+      options: NativeSelectOption[]
+    }
+  | {
+      // return null
       command: 'toolkitJump'
       target: ToolkitJumpTarget
     }

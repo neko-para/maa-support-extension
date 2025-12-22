@@ -6,15 +6,17 @@ import type { SelectOption, TaskConfig } from '@mse/types'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
+import type { OptionInfo } from './types'
+import { revealOption } from './utils'
 
 const props = defineProps<{
   task: TaskConfig
-  opt: string
+  opt: OptionInfo
   optMeta: SelectOption
 }>()
 
 const optValue = computed(() => {
-  return props.task.option?.[props.opt]?.default
+  return props.task.option?.[props.opt.option]?.default
 })
 
 const defaultValue = computed(() => {
@@ -29,23 +31,13 @@ const effectiveCase = computed(() => {
   return props.optMeta.cases?.find(cs => cs.name === effectiveValue.value)
 })
 
-function revealOption() {
-  ipc.send({
-    command: 'revealInterface',
-    dest: {
-      type: 'option',
-      option: props.opt
-    }
-  })
-}
-
 function revealCase() {
   if (effectiveValue.value) {
     ipc.send({
       command: 'revealInterface',
       dest: {
         type: 'case',
-        option: props.opt,
+        option: props.opt.option,
         case: effectiveValue.value
       }
     })
@@ -73,7 +65,7 @@ function clearOption() {
   ipc.send({
     command: 'configTask',
     key: props.task.__vscKey,
-    option: props.opt,
+    option: props.opt.option,
     name: 'default'
   })
 }
@@ -83,11 +75,13 @@ function clearOption() {
   <n-flex>
     <n-popover trigger="hover" :disabled="!optMeta.description">
       <template #trigger>
-        <n-button @click="revealOption()" text> {{ opt }} </n-button>
+        <n-button @click="revealOption(opt.option)" text> {{ opt.option }} </n-button>
       </template>
 
-      <div v-html="optMeta.description"></div>
+      <div style="max-width: 80vw" v-html="optMeta.description"></div>
     </n-popover>
+
+    <n-button v-if="!!opt.intro" @click="revealOption(opt.intro)" text> @{{ opt.intro }} </n-button>
 
     <n-popover v-if="effectiveCase" trigger="hover" :disabled="!effectiveCase.description">
       <template #trigger>
@@ -96,7 +90,7 @@ function clearOption() {
         </n-button>
       </template>
 
-      <div v-html="effectiveCase.description"></div>
+      <div style="max-width: 80vw" v-html="effectiveCase.description"></div>
     </n-popover>
   </n-flex>
   <n-flex :wrap="false">
@@ -110,7 +104,7 @@ function clearOption() {
       :value="optValue ?? null"
       @update:value="
         value => {
-          configTask(opt, value)
+          configTask(opt.option, value)
         }
       "
       :placeholder="optValue !== undefined ? '' : defaultValue"

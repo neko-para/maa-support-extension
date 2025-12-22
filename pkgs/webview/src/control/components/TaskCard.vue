@@ -9,6 +9,7 @@ import { hostState } from '../state'
 import TaskInputOption from './TaskInputOption.vue'
 import TaskSelectOption from './TaskSelectOption.vue'
 import TaskSwitchOption from './TaskSwitchOption.vue'
+import type { OptionInfo } from './types'
 
 const props = defineProps<{
   task: TaskConfig
@@ -38,24 +39,26 @@ function revealEntry() {
   })
 }
 
-const allOptions = computed<string[]>(() => {
-  const resolved: string[] = []
-  const options = [...(taskMeta.value?.option ?? [])]
+const allOptions = computed<OptionInfo[]>(() => {
+  const resolved: OptionInfo[] = []
+  const options: OptionInfo[] = [...(taskMeta.value?.option ?? [])].map(option => ({
+    option
+  }))
   while (options.length > 0) {
     const opt = options.shift()!
-    if (resolved.indexOf(opt) !== -1) {
+    if (resolved.findIndex(info => info.option === opt.option) !== -1) {
       continue
     }
     resolved.push(opt)
 
-    const optMeta = hostState.value.interfaceJson?.option?.[opt]
+    const optMeta = hostState.value.interfaceJson?.option?.[opt.option]
     if (!optMeta) {
       continue
     }
     if ((optMeta.type ?? 'select') === 'select') {
       const selectMeta = optMeta as SelectOption
 
-      let optValue = props.task.option?.[opt]?.default
+      let optValue = props.task.option?.[opt.option]?.default
       if (typeof optValue === 'object') {
         optValue = undefined
       }
@@ -63,13 +66,18 @@ const allOptions = computed<string[]>(() => {
       if (val) {
         const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
         if (caseMeta?.option) {
-          options.push(...caseMeta.option)
+          options.push(
+            ...caseMeta.option.map(option => ({
+              option,
+              intro: opt.option
+            }))
+          )
         }
       }
     } else if (optMeta.type === 'switch') {
       const switchMeta = optMeta as SwitchOption
 
-      let optValue = props.task.option?.[opt]?.default
+      let optValue = props.task.option?.[opt.option]?.default
       if (typeof optValue === 'object') {
         optValue = undefined
       }
@@ -77,7 +85,12 @@ const allOptions = computed<string[]>(() => {
       if (val) {
         const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
         if (caseMeta?.option) {
-          options.push(...caseMeta.option)
+          options.push(
+            ...caseMeta.option.map(option => ({
+              option,
+              intro: opt.option
+            }))
+          )
         }
       }
     }
@@ -103,26 +116,28 @@ function cast<T>(val: unknown): T {
     </template>
     <n-flex vertical>
       <template v-for="opt in allOptions" :key="opt">
-        <template v-if="hostState.interfaceJson?.option?.[opt]">
-          <template v-if="(hostState.interfaceJson.option[opt].type ?? 'select') === 'select'">
+        <template v-if="hostState.interfaceJson?.option?.[opt.option]">
+          <template
+            v-if="(hostState.interfaceJson.option[opt.option].type ?? 'select') === 'select'"
+          >
             <task-select-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt])"
+              :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt.option])"
             ></task-select-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt].type === 'input'">
+          <template v-else-if="hostState.interfaceJson.option[opt.option].type === 'input'">
             <task-input-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<InputOption>(hostState.interfaceJson.option[opt])"
+              :opt-meta="cast<InputOption>(hostState.interfaceJson.option[opt.option])"
             ></task-input-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt].type === 'switch'">
+          <template v-else-if="hostState.interfaceJson.option[opt.option].type === 'switch'">
             <task-switch-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<SwitchOption>(hostState.interfaceJson.option[opt])"
+              :opt-meta="cast<SwitchOption>(hostState.interfaceJson.option[opt.option])"
             ></task-switch-option>
           </template>
         </template>

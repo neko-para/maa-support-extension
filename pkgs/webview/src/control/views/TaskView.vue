@@ -42,7 +42,7 @@ async function nativeSelectTask() {
     command: 'showSelect',
     options: allTasks.value.map((info, index) => {
       return {
-        value: index,
+        value: info.name,
         title: info.name,
         subtitle: info.entry
       }

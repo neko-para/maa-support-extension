@@ -1,3 +1,4 @@
+import path from 'path'
 import * as vscode from 'vscode'
 
 import { interfaceService, rootService } from '../..'
@@ -36,5 +37,9 @@ export class PipelineLanguageProvider extends BaseService {
       }
       this.provider = setup(filters)
     })
+  }
+
+  shouldFilter(doc: vscode.TextDocument) {
+    return interfaceService.shouldFilter(doc.uri)
   }
 }

@@ -21,6 +21,10 @@ export class PipelineCompletionProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
+    if (this.shouldFilter(document)) {
+      return null
+    }
+
     await taskIndexService.flushDirty()
 
     const [info, layer] = await taskIndexService.queryLocation(document.uri, position)

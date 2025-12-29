@@ -19,6 +19,10 @@ export class PipelineHoverProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
+    if (this.shouldFilter(document)) {
+      return null
+    }
+
     await taskIndexService.flushDirty()
 
     const [info, layer] = await taskIndexService.queryLocation(document.uri, position)

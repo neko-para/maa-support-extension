@@ -18,7 +18,12 @@ export class PipelineDocumentLinkProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
+    if (this.shouldFilter(document)) {
+      return []
+    }
+
     await taskIndexService.flushDirty()
+
     if (isMaaAssistantArknights) {
       await taskIndexService.flushImage()
     }

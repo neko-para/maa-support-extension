@@ -20,6 +20,10 @@ export class PipelineReferenceProvider
     context: vscode.ReferenceContext,
     token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
+    if (this.shouldFilter(document)) {
+      return null
+    }
+
     await taskIndexService.flushDirty()
 
     const [info, _] = await taskIndexService.queryLocation(document.uri, position)

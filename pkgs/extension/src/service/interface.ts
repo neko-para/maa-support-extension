@@ -200,6 +200,24 @@ export class InterfaceService extends BaseService {
     return this.resourcePaths.length > 0 ? this.resourcePaths[this.resourcePaths.length - 1] : null
   }
 
+  resolveRelative(uri: vscode.Uri) {
+    for (const res of this.resourcePaths) {
+      if (uri.fsPath.startsWith(res.fsPath)) {
+        return uri.fsPath.replace(res.fsPath, '')
+      }
+    }
+    return null
+  }
+
+  shouldFilter(uri: vscode.Uri) {
+    const rel = this.resolveRelative(uri)
+    if (rel) {
+      const segs = rel.split(/[\/\\]+/)
+      return !!segs.find(x => x.startsWith('.'))
+    }
+    return true
+  }
+
   buildRuntime(skipTask = false) {
     if (!rootService.activeResource) {
       return '无interface'

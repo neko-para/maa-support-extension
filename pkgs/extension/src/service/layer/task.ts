@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 
 import { JSONPath, visitJsonDocument } from '@mse/utils'
 
-import { context, diagnosticService } from '..'
+import { context, diagnosticService, interfaceService } from '..'
 import {
   currentWorkspace,
   imageSuffix,
@@ -317,7 +317,9 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
     const base = vscode.Uri.joinPath(uri, pipelineSuffix).fsPath + path.sep
     super(new vscode.RelativePattern(currentWorkspace()!, '**/*.{json,jsonc}'), u => {
       return (
-        u.fsPath.startsWith(base) && (u.fsPath.endsWith('.json') || u.fsPath.endsWith('.jsonc'))
+        u.fsPath.startsWith(base) &&
+        (u.fsPath.endsWith('.json') || u.fsPath.endsWith('.jsonc')) &&
+        !interfaceService.shouldFilter(u)
       )
     })
 

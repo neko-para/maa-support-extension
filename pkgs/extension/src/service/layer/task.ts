@@ -356,6 +356,9 @@ export class TaskLayer extends FSWatchFlushHelper implements PipelineLayer {
   async loadDir(dir: vscode.Uri) {
     try {
       for (const [name, type] of await vscode.workspace.fs.readDirectory(dir)) {
+        if (name.startsWith('.')) {
+          continue
+        }
         const subUri = vscode.Uri.joinPath(dir, name)
         if (type === vscode.FileType.File) {
           if (name.endsWith('.json') || name.endsWith('.jsonc')) {

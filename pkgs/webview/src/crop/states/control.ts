@@ -177,7 +177,7 @@ export function cropBound() {
   cropBox.value = cropBox.value.intersect(Box.from(new Pos(), imageSt.size.value))
 }
 
-function extractRect(text: string): [number, number, number, number] | null {
+export function extractRect(text: string): [number, number, number, number] | null {
   text = text.trim()
   text = text.replaceAll(/^\[(.+)\]$/g, '$1')
   const nums = text
@@ -201,15 +201,23 @@ export function roiDisp() {
   return cropBox.value.ceiled().flat().join(', ')
 }
 
-export function copyRoi() {
+export async function readClipboard() {
+  return (await ipc.call({ command: 'readClipboard' })) as string
+}
+
+export function writeClipboard(text: string) {
   ipc.send({
     command: 'writeClipboard',
-    text: roiText()
+    text
   })
 }
 
+export function copyRoi() {
+  writeClipboard(roiText())
+}
+
 export async function pasteRoi() {
-  const pb = (await ipc.call({ command: 'readClipboard' })) as string
+  const pb = await readClipboard()
   const rect = extractRect(pb)
   if (rect) {
     cropBox.value.set(Pos.from(rect[0], rect[1]), Size.from(rect[2], rect[3]))
@@ -225,10 +233,7 @@ export function roiExpandDisp() {
 }
 
 export function copyRoiExpand() {
-  ipc.send({
-    command: 'writeClipboard',
-    text: roiExpandText()
-  })
+  writeClipboard(roiExpandText())
 }
 
 // const resizing = ref(false)

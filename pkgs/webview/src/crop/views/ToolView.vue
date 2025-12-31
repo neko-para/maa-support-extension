@@ -1,14 +1,33 @@
 <script setup lang="ts">
 import { NButton, NCard, NCode, NFlex, NSelect, NSwitch, NText } from 'naive-ui'
+import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
+import RoiEdit from '../components/RoiEdit.vue'
 import { hostState } from '../state'
+import * as controlSt from '../states/control'
 import * as ocrSt from '../states/ocr'
 import * as pickSt from '../states/pick'
 import * as recoSt from '../states/reco'
 
 const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }))
+
+const srcRoi = ref<maa.Rect | undefined>([0, 0, 0, 0])
+const destRoi = ref<maa.Rect | undefined>([0, 0, 0, 0])
+const dltRoi = computed(() => {
+  if (srcRoi.value && destRoi.value) {
+    return Array.from(
+      { length: 4 },
+      (_, idx) => destRoi.value![idx] - srcRoi.value![idx]
+    ) as maa.Rect
+  }
+  return undefined
+})
+
+function copyDlt() {
+  controlSt.writeClipboard(JSON.stringify(dltRoi.value))
+}
 </script>
 
 <template>
@@ -40,6 +59,14 @@ const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }
           </n-button>
         </n-flex>
       </template>
+    </n-card>
+
+    <n-card :title="t('maa.crop.tools.roi-offset')" size="small">
+      <n-flex vertical>
+        <roi-edit v-model:value="srcRoi"></roi-edit>
+        <roi-edit v-model:value="destRoi"></roi-edit>
+        <roi-edit :value="dltRoi" readonly hide-use></roi-edit>
+      </n-flex>
     </n-card>
 
     <n-card :title="t('maa.crop.tools.quick-ocr')" size="small">

@@ -232,7 +232,7 @@ export class Box {
   }
 
   intersect(b: Box) {
-    return Box.from(this.lt.max(b.lt), this.rb.min(b.rb), true)
+    return Box.from(this.lt.max(b.lt).min(b.rb), this.rb.max(b.lt).min(b.rb), true)
   }
 
   union(b: Box) {

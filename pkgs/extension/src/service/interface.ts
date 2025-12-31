@@ -210,6 +210,10 @@ export class InterfaceService extends BaseService {
   }
 
   shouldFilter(uri: vscode.Uri) {
+    const fileName = path.basename(uri.fsPath)
+    if (fileName === 'interface.json' || fileName === 'interface.jsonc') {
+      return false
+    }
     const rel = this.resolveRelative(uri)
     if (rel) {
       const segs = rel.split(/[\/\\]+/)

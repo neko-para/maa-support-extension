@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/utils'
 
+import packageJson from '../../package.json'
 import { commands } from '../command'
 import { BaseService, context } from './context'
 
@@ -383,5 +384,17 @@ export class NativeService extends BaseService {
       }
     }
     await release()
+  }
+
+  get currentVersionInfo(): string[] {
+    let loadedVersion: string | undefined = undefined
+    if (globalThis.maa) {
+      loadedVersion = maa.Global.version
+    }
+
+    return [
+      `LoadedVer: ${this.version}${loadedVersion ? '' : ` <not loaded>`}`,
+      `ExtIntVer: ${packageJson.devDependencies['@maaxyz/maa-node']}`
+    ]
   }
 }

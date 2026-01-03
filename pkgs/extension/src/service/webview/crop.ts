@@ -4,7 +4,7 @@ import * as vscode from 'vscode'
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, locale, logger, t } from '@mse/utils'
 
-import { interfaceService, launchService, rootService, stateService } from '..'
+import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
 import { performOcr } from '../../tools/ocr'
 import { performReco } from '../../tools/reco'
@@ -184,6 +184,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
   get state(): CropHostState {
     return {
       isMAA: isMaaAssistantArknights,
+      fwStatus: nativeService.currentVersionInfo,
       locale,
 
       ...stateService.state.cropSettings

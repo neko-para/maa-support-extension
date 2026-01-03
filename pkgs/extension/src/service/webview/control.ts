@@ -9,6 +9,7 @@ import {
   interfaceIndexService,
   interfaceService,
   launchService,
+  nativeService,
   rootService,
   stateService
 } from '..'
@@ -272,6 +273,7 @@ export class WebviewControlService extends BaseService {
   get state(): ControlHostState {
     return {
       isMAA: isMaaAssistantArknights,
+      fwStatus: nativeService.currentVersionInfo,
       locale,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),

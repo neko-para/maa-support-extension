@@ -45,5 +45,6 @@ export type WebToHost<Impl extends ImplType> = (
 
 export type HostStateBase = {
   isMAA?: boolean
+  fwStatus?: string[]
   locale?: 'zh' | 'en'
 }

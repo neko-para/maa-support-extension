@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex } from 'naive-ui'
+import { NButton, NCard, NFlex, NText } from 'naive-ui'
 import { ref } from 'vue'
 
 import type { ToolkitJumpTarget } from '@mse/types'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
+import { hostState } from '../state'
 
 const loading = ref<string | null>(null)
 
@@ -43,17 +44,22 @@ async function jump(target: ToolkitJumpTarget) {
 
 <template>
   <n-card :title="t('maa.control.toolkit.toolkit')" size="small">
-    <n-flex wrap>
-      <template v-for="info in jumpTargets" :key="info.target">
-        <n-button
-          :disabled="!!loading"
-          :loading="loading === info.target"
-          @click="jump(info.target)"
-          size="small"
-        >
-          {{ info.label }}
-        </n-button>
-      </template>
+    <n-flex vertical>
+      <n-flex wrap>
+        <template v-for="info in jumpTargets" :key="info.target">
+          <n-button
+            :disabled="!!loading"
+            :loading="loading === info.target"
+            @click="jump(info.target)"
+            size="small"
+          >
+            {{ info.label }}
+          </n-button>
+        </template>
+      </n-flex>
+      <n-text v-if="!hostState.isMAA" v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
+        {{ info }}
+      </n-text>
     </n-flex>
   </n-card>
 </template>

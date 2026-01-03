@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, locale } from '@mse/utils'
 
-import { stateService } from '..'
+import { nativeService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
@@ -189,6 +189,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
   get state(): LaunchHostState {
     return {
       isMAA: isMaaAssistantArknights,
+      fwStatus: nativeService.currentVersionInfo,
       locale,
 
       stopped: this.stopped,

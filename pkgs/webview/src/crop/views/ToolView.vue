@@ -50,7 +50,10 @@ function copyDlt() {
           <n-button size="small" @click="pickSt.copyCss()">
             {{ pickSt.cssText() }}
           </n-button>
-          <n-button size="small" @click="pickSt.copyArray(0)"> {{ pickSt.arrayText(0) }} </n-button>
+          <n-button size="small" @click="pickSt.copyArray(0)">
+            rgb: {{ pickSt.arrayText(0) }}
+          </n-button>
+          <n-button size="small" @click="pickSt.copyHsv()"> hsv: {{ pickSt.hsvText() }} </n-button>
           <n-button size="small" @click="pickSt.copyArray(hostState.pickColorThreshold ?? 10)">
             upper: {{ pickSt.arrayText(hostState.pickColorThreshold ?? 10) }}
           </n-button>

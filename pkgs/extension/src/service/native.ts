@@ -393,8 +393,8 @@ export class NativeService extends BaseService {
     }
 
     return [
-      `LoadedVer: ${this.version}${loadedVersion ? '' : ` <not loaded>`}`,
-      `ExtIntVer: ${packageJson.devDependencies['@maaxyz/maa-node']}`
+      `${t('maa.native.loaded-ver')}: ${this.version}${loadedVersion ? '' : ` <${t('maa.status.not-loaded')}>`}`,
+      `${t('maa.native.ext-int-ver')}: ${defaultMaaVersion}`
     ]
   }
 }

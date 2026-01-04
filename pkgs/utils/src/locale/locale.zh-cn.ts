@@ -67,6 +67,8 @@ export default {
   'maa.native.download.downloading-scripts': '下载 MaaFramework {0} 脚本中',
   'maa.native.download.downloading-binary': '下载 MaaFramework {0} 二进制中',
   'maa.native.download.moving-folder': '移动目录中',
+  'maa.native.loaded-ver': '加载版本',
+  'maa.native.ext-int-ver': '接口版本',
 
   'maa.status.checking-task': 'MaaSupport 检查任务中',
   'maa.status.not-loaded': '未加载',

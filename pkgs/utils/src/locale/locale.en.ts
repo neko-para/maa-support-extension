@@ -68,6 +68,8 @@ export default {
   'maa.native.download.downloading-scripts': 'Downloading MaaFramework {0} scripts',
   'maa.native.download.downloading-binary': 'Downloading MaaFramework {0} binary',
   'maa.native.download.moving-folder': 'Moving folder',
+  'maa.native.loaded-ver': 'LoadedVer',
+  'maa.native.ext-int-ver': 'ExtIntVer',
 
   'maa.status.checking-task': 'MaaSupport checking task',
   'maa.status.not-loaded': 'Not loaded',

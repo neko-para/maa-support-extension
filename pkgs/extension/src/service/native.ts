@@ -22,7 +22,7 @@ function isValidRegistryType(key: unknown): key is keyof typeof registries {
 
 const defaultRegistryType = 'npm'
 
-const defaultMaaVersion = '5.2.0'
+const defaultMaaVersion = packageJson.devDependencies['@maaxyz/maa-node']
 const minimumMaaVersion = '5.1.0'
 
 function fixMinimumVersion(ver: string) {

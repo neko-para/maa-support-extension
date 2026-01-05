@@ -11,23 +11,23 @@ import { hostState } from '../state'
 const loading = ref<string | null>(null)
 
 const jumpTargets: {
-  label: string
+  label: () => string
   target: ToolkitJumpTarget
 }[] = [
   {
-    label: t('maa.control.toolkit.open-maa-log'),
+    label: () => t('maa.control.toolkit.open-maa-log'),
     target: 'maa-log'
   },
   {
-    label: t('maa.control.toolkit.open-ext-log'),
+    label: () => t('maa.control.toolkit.open-ext-log'),
     target: 'ext-log'
   },
   {
-    label: t('maa.control.toolkit.open-crop-tool'),
+    label: () => t('maa.control.toolkit.open-crop-tool'),
     target: 'crop-tool'
   },
   {
-    label: t('maa.control.toolkit.switch-maa-version'),
+    label: () => t('maa.control.toolkit.switch-maa-version'),
     target: 'switch-maa-ver'
   }
 ]
@@ -53,7 +53,7 @@ async function jump(target: ToolkitJumpTarget) {
             @click="jump(info.target)"
             size="small"
           >
-            {{ info.label }}
+            {{ info.label() }}
           </n-button>
         </template>
       </n-flex>

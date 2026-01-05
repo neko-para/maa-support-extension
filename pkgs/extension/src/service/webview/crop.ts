@@ -151,7 +151,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         let result = null
         try {
           result = await performReco(
-            Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64').buffer,
+            fromPngDataUrl(data.image),
             resources.map(u => u.fsPath)
           )
         } catch (err) {

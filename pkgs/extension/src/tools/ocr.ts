@@ -1,10 +1,73 @@
+import * as crypto from 'crypto'
+import { existsSync } from 'fs'
+import * as fs from 'fs/promises'
+import * as os from 'os'
+import * as path from 'path'
+
 import { logger } from '@mse/utils'
+
+import { isMaaAssistantArknights } from '../utils/fs'
+
+async function setupFakeResource(resources: string[]) {
+  const temp = path.join(os.tmpdir(), 'maavsc-models')
+  logger.info(`create fake resource under ${temp}`)
+
+  const realPaths: string[] = []
+  for (const res of resources) {
+    const hasher = crypto.createHash('sha256')
+    hasher.update(res)
+    const key = hasher.digest('hex').slice(0, 6)
+    const target = path.join(temp, key)
+    realPaths.push(target)
+
+    if (existsSync(target)) {
+      logger.info(`${target} exists, skip copy`)
+      continue
+    }
+
+    logger.info(`copy model from ${res} to ${target}`)
+
+    const ppocrPath = path.join(res, 'PaddleOCR')
+    const detPath = path.join(ppocrPath, 'det')
+    const recPath = path.join(ppocrPath, 'rec')
+    if (existsSync(ppocrPath)) {
+      const targetOcrPath = path.join(target, 'model', 'ocr')
+      await fs.mkdir(targetOcrPath, { recursive: true })
+      if (existsSync(detPath)) {
+        logger.debug('copy det')
+        await fs.copyFile(
+          path.join(detPath, 'inference.onnx'),
+          path.join(targetOcrPath, 'det.onnx')
+        )
+      }
+      if (existsSync(recPath)) {
+        logger.debug('copy rec')
+        await fs.copyFile(
+          path.join(recPath, 'inference.onnx'),
+          path.join(targetOcrPath, 'rec.onnx')
+        )
+        await fs.copyFile(path.join(recPath, 'keys.txt'), path.join(targetOcrPath, 'keys.txt'))
+      }
+    }
+  }
+
+  return realPaths
+}
 
 export async function performOcr(
   image: ArrayBuffer,
   roi: maa.Rect,
   resources: string[]
 ): Promise<string | null> {
+  if (isMaaAssistantArknights) {
+    try {
+      resources = await setupFakeResource(resources)
+    } catch (e) {
+      logger.error(`setup fake resource failed ${e}`)
+      return null
+    }
+  }
+
   const ctrl = new maa.CustomController({
     connect() {
       return true
@@ -16,6 +79,7 @@ export async function performOcr(
       return image
     }
   })
+  ctrl.screenshot_use_raw_size = true
   await ctrl.post_connection().wait()
   if (!ctrl.connected) {
     logger.error('ocr ctrl create failed')

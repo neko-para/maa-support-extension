@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 
 import { ipc } from '../ipc'
+import * as controlSt from './control'
 import * as imageSt from './image'
 
 export const loading = ref(false)
@@ -22,6 +23,9 @@ export async function perform() {
   if (!imageSt.data.value) {
     return
   }
+
+  controlSt.cropCeil()
+  controlSt.cropBound()
 
   loading.value = true
 

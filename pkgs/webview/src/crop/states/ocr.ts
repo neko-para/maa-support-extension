@@ -24,6 +24,9 @@ export async function perform() {
     return
   }
 
+  controlSt.cropCeil()
+  controlSt.cropBound()
+
   loading.value = true
 
   result.value = (await ipc.call({

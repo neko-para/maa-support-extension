@@ -16,6 +16,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
       return image
     }
   })
+  ctrl.screenshot_use_raw_size = true
   await ctrl.post_connection().wait()
   if (!ctrl.connected) {
     logger.error('quick reco ctrl create failed')

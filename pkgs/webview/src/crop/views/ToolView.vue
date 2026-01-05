@@ -96,7 +96,7 @@ function copyDlt() {
       </template>
     </n-card>
 
-    <n-card :title="t('maa.crop.tools.quick-reco')" size="small">
+    <n-card v-if="!hostState.isMAA" :title="t('maa.crop.tools.quick-reco')" size="small">
       <template #header-extra>
         <n-button size="small" :loading="recoSt.loading.value" @click="recoSt.perform()">
           {{ t('maa.control.launch') }}

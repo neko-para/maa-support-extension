@@ -7,5 +7,6 @@ export function toPngDataUrl(buffer: Uint8Array | ArrayBuffer) {
 }
 
 export function fromPngDataUrl(url: string) {
-  return Buffer.from(url.replace('data:image/png;base64,', ''), 'base64').buffer
+  const buf = Buffer.from(url.replace('data:image/png;base64,', ''), 'base64')
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }

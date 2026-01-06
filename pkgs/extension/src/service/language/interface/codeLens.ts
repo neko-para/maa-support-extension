@@ -46,17 +46,31 @@ export class InterfaceCodeLensProvider
     const result: vscode.CodeLens[] = []
     for (const decl of interfaceIndexService.resourceDecl) {
       const activated = interfaceService.interfaceConfigJson.resource === decl.name
+      const resourceInfo = interfaceService.interfaceJson.resource?.find(
+        res => res.name === decl.name
+      )
+      let disabled = false
+      if (resourceInfo?.controller && interfaceService.interfaceConfigJson.controller) {
+        disabled = !resourceInfo.controller.includes(
+          interfaceService.interfaceConfigJson.controller.name
+        )
+      }
       result.push(
         activated
           ? new vscode.CodeLens(decl.range, {
               title: t('maa.pipeline.codelens.resource-activated'),
               command: ''
             })
-          : new vscode.CodeLens(decl.range, {
-              title: t('maa.pipeline.codelens.resource-switch'),
-              command: commands.PISwitchResource,
-              arguments: [decl.name]
-            })
+          : disabled
+            ? new vscode.CodeLens(decl.range, {
+                title: t('maa.pipeline.codelens.resource-disabled'),
+                command: ''
+              })
+            : new vscode.CodeLens(decl.range, {
+                title: t('maa.pipeline.codelens.resource-switch'),
+                command: commands.PISwitchResource,
+                arguments: [decl.name]
+              })
       )
     }
     return result

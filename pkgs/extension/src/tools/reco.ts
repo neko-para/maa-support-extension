@@ -2,23 +2,14 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 
+import { setupFixedController } from './utils'
+
 let prevTask: string | undefined = undefined
 
 export async function performReco(image: ArrayBuffer, resources: string[]): Promise<string | null> {
-  const ctrl = new maa.CustomController({
-    connect() {
-      return true
-    },
-    request_uuid() {
-      return '0'
-    },
-    screencap() {
-      return image
-    }
-  })
-  ctrl.screenshot_use_raw_size = true
-  await ctrl.post_connection().wait()
-  if (!ctrl.connected) {
+  const ctrl = await setupFixedController(image)
+
+  if (!ctrl) {
     logger.error('quick reco ctrl create failed')
     return null
   }
@@ -65,25 +56,16 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
 
   res.register_custom_action('@mse/action', async self => {
     logger.info('quick reco action called')
-    await self.context.run_recognition(task, image)
-    return true
-  })
-
-  tasker.add_context_sink((ctx, msg) => {
-    if (msg.msg === 'Recognition.Succeeded' || msg.msg === 'Recognition.Failed') {
-      if (msg.name !== task) {
-        return
-      }
-      const resp = tasker.recognition_detail(`${msg.reco_id}` as maa.RecoId)
-      if (resp) {
-        const presp = {
-          ...resp
-        } as Partial<typeof resp>
-        delete presp.draws
-        delete presp.raw
-        result = JSON.stringify(presp)
-      }
+    const detail = await self.context.run_recognition(task, image)
+    if (detail?.hit) {
+      const presp = {
+        ...detail
+      } as Partial<typeof detail>
+      delete presp.draws
+      delete presp.raw
+      result = JSON.stringify(presp)
     }
+    return true
   })
 
   await tasker

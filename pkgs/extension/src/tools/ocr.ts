@@ -7,6 +7,7 @@ import * as path from 'path'
 import { logger } from '@mse/utils'
 
 import { isMaaAssistantArknights } from '../utils/fs'
+import { setupFixedController } from './utils'
 
 async function setupFakeResource(resources: string[]) {
   const temp = path.join(os.tmpdir(), 'maavsc-models')
@@ -68,20 +69,9 @@ export async function performOcr(
     }
   }
 
-  const ctrl = new maa.CustomController({
-    connect() {
-      return true
-    },
-    request_uuid() {
-      return '0'
-    },
-    screencap() {
-      return image
-    }
-  })
-  ctrl.screenshot_use_raw_size = true
-  await ctrl.post_connection().wait()
-  if (!ctrl.connected) {
+  const ctrl = await setupFixedController(image)
+
+  if (!ctrl) {
     logger.error('ocr ctrl create failed')
     return null
   }

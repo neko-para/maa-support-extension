@@ -7,8 +7,8 @@ import { t } from '../../utils/locale'
 import RoiEdit from '../components/RoiEdit.vue'
 import { hostState } from '../state'
 import * as controlSt from '../states/control'
-import * as ocrSt from '../states/ocr'
 import * as pickSt from '../states/pick'
+import * as matchSt from '../states/quickMatch'
 import * as recoSt from '../states/reco'
 
 const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }))
@@ -72,26 +72,39 @@ function copyDlt() {
       </n-flex>
     </n-card>
 
-    <n-card :title="t('maa.crop.tools.quick-ocr')" size="small">
+    <n-card :title="t('maa.crop.tools.quick-match')" size="small">
       <template #header-extra>
-        <n-button size="small" :loading="ocrSt.loading.value" @click="ocrSt.perform()">
-          {{ t('maa.control.launch') }}
-        </n-button>
+        <n-flex>
+          <n-button
+            size="small"
+            :loading="matchSt.loading.value"
+            @click="matchSt.perform('requestOCR')"
+          >
+            {{ t('maa.crop.tools.quick-match-ocr') }}
+          </n-button>
+          <n-button
+            size="small"
+            :loading="matchSt.loading.value"
+            @click="matchSt.perform('requestTmplateMatch')"
+          >
+            {{ t('maa.crop.tools.quick-match-tmpl') }}
+          </n-button>
+        </n-flex>
       </template>
 
-      <template v-if="ocrSt.result">
+      <template v-if="matchSt.result">
         <n-flex vertical>
           <n-flex>
-            <n-switch v-model:value="ocrSt.draw.value"> </n-switch>
+            <n-switch v-model:value="matchSt.draw.value"> </n-switch>
             <n-text> {{ t('maa.crop.tools.draw') }} </n-text>
           </n-flex>
           <n-text> {{ t('maa.crop.tools.draw-mode') }} </n-text>
           <n-select
-            v-model:value="ocrSt.drawType.value"
+            v-model:value="matchSt.drawType.value"
             :options="drawOptions"
             size="small"
           ></n-select>
-          <json-code :code="ocrSt.result.value ?? ''"></json-code>
+          <json-code :code="matchSt.result.value ?? ''"></json-code>
         </n-flex>
       </template>
     </n-card>

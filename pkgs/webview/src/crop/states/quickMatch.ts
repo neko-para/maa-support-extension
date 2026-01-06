@@ -19,7 +19,7 @@ export const resultObject = computed(() => {
   return rawData
 })
 
-export async function perform() {
+export async function perform(type: 'requestOCR' | 'requestTmplateMatch') {
   if (!imageSt.data.value) {
     return
   }
@@ -30,7 +30,7 @@ export async function perform() {
   loading.value = true
 
   result.value = (await ipc.call({
-    command: 'requestOCR',
+    command: type,
     image: imageSt.data.value,
     roi: controlSt.cropBox.value.ceiled().flat()
   })) as string | null

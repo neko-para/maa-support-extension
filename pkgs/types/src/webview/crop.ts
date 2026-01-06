@@ -54,6 +54,12 @@ export type CropWebToHost =
     }
   | {
       // return string | null
+      command: 'requestTmplateMatch'
+      image: string
+      roi: maa.Rect
+    }
+  | {
+      // return string | null
       command: 'requestReco'
       image: string
     }

@@ -4,8 +4,8 @@ import { hostState } from '../state'
 import { Box, Pos, Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as imageSt from './image'
-import * as ocrSt from './ocr'
 import * as pickSt from './pick'
+import * as matchSt from './quickMatch'
 import * as recoSt from './reco'
 import * as settingsSt from './settings'
 
@@ -34,7 +34,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     for (const [st, stroke, font] of [
-      [ocrSt, hostState.value.ocrStroke, hostState.value.ocrFont],
+      [matchSt, hostState.value.ocrStroke, hostState.value.ocrFont],
       [recoSt, hostState.value.recoStroke, hostState.value.recoFont]
     ] as const) {
       if (st.draw.value && st.resultObject.value) {

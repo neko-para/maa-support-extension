@@ -8,6 +8,7 @@ import { interfaceService, launchService, nativeService, rootService, stateServi
 import { Jimp } from '../../tools/jimp'
 import { performOcr } from '../../tools/ocr'
 import { performReco } from '../../tools/reco'
+import { performTemplateMatch } from '../../tools/templateMatch'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { fromPngDataUrl, toPngDataUrl } from '../utils/png'
@@ -138,6 +139,16 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           )
         } catch (err) {
           logger.error(`ocr failed, error ${err}`)
+        }
+        this.response(data.seq, result)
+        break
+      }
+      case 'requestTmplateMatch': {
+        let result = null
+        try {
+          result = await performTemplateMatch(fromPngDataUrl(data.image), data.roi)
+        } catch (err) {
+          logger.error(`tmpl match failed, error ${err}`)
         }
         this.response(data.seq, result)
         break

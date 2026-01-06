@@ -1,11 +1,13 @@
-import { readFile } from 'fs/promises'
-import path from 'path'
+import { existsSync } from 'fs'
+import * as fs from 'fs/promises'
+import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t } from '@mse/utils'
 
 import { debugService, interfaceService, nativeService } from '.'
+import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
 
@@ -18,7 +20,18 @@ export type TaskerInstance = {
   resource: maa.Resource
   controller: maa.Controller
   client?: maa.Client
-  agent?: vscode.TaskExecution
+  agent?: vscode.TaskExecution | vscode.DebugSession
+}
+
+export function stopAgent(agent?: vscode.TaskExecution | vscode.DebugSession) {
+  if (!agent) {
+    return
+  }
+  if ('task' in agent) {
+    agent.terminate()
+  } else {
+    vscode.debug.stopDebugging(agent)
+  }
 }
 
 export class LaunchService extends BaseService {
@@ -171,7 +184,7 @@ export class LaunchService extends BaseService {
         runtime.keyboard
       )
     } else if (runtime.ctype === 'vscFixed') {
-      const image = (await readFile(runtime.image)).buffer as ArrayBuffer
+      const image = (await fs.readFile(runtime.image)).buffer as ArrayBuffer
       controller = new maa.CustomController({
         connect() {
           return true
@@ -213,7 +226,13 @@ export class LaunchService extends BaseService {
 
   async setupResource(
     runtime: InterfaceRuntime
-  ): Promise<[maa.Resource | null, maa.Client | undefined, vscode.TaskExecution | undefined]> {
+  ): Promise<
+    [
+      maa.Resource | null,
+      maa.Client | undefined,
+      vscode.TaskExecution | vscode.DebugSession | undefined
+    ]
+  > {
     const resource = new maa.Resource()
 
     resource.add_sink((_, msg) => {
@@ -225,14 +244,64 @@ export class LaunchService extends BaseService {
     }
 
     let client: maa.Client | undefined = undefined
-    let agent: vscode.TaskExecution | undefined = undefined
+    let agent: vscode.TaskExecution | vscode.DebugSession | undefined = undefined
     if (runtime.agent) {
       client = new maa.Client(runtime.agent.identifier)
       const identifier = client.identifier ?? 'vsc-no-identifier'
 
       logger.info(`AgentClient listening ${identifier}`)
 
-      if (runtime.agent.child_exec) {
+      if (runtime.agent.debug_session) {
+        const launchJsonPath = path.join(currentWorkspace()!.fsPath, '.vscode', 'launch.json')
+        if (!existsSync(launchJsonPath)) {
+          logger.error('Cannot find launch.json')
+          resource.destroy()
+          return [null, undefined, undefined]
+        }
+        const launchJson = JSON.parse(await fs.readFile(launchJsonPath, 'utf8')) as {
+          configurations: vscode.DebugConfiguration[]
+        }
+        const config = launchJson.configurations.find(
+          cfg => cfg.name === runtime.agent?.debug_session
+        )
+        if (!config) {
+          logger.error(`Cannot find debug session ${runtime.agent.debug_session}`)
+          resource.destroy()
+          return [null, undefined, undefined]
+        }
+        let replaced = false
+        for (const key of Object.keys(config)) {
+          const val = config[key]
+          if (Array.isArray(val)) {
+            config[key] = val.map(v => {
+              if (typeof v === 'string' && v === '{AGENT_ID}') {
+                logger.info(`Replace {AGENT_ID} in ${key}`)
+                replaced = true
+                return identifier
+              } else {
+                return v
+              }
+            })
+          }
+        }
+        if (!replaced) {
+          logger.warn('No {AGENT_ID} found in config')
+        }
+
+        const disp = vscode.debug.onDidStartDebugSession(session => {
+          agent = session
+        })
+        const succ = await vscode.debug.startDebugging(
+          vscode.workspace.workspaceFolders![0],
+          config
+        )
+        disp.dispose()
+        if (!(succ && agent)) {
+          logger.error('Create debug session failed')
+          resource.destroy()
+          return [null, undefined, undefined]
+        }
+      } else if (runtime.agent.child_exec) {
         const task = new vscode.Task(
           {
             type: 'shell'
@@ -329,7 +398,7 @@ export class LaunchService extends BaseService {
       tasker.destroy()
       resource.destroy()
       client?.destroy()
-      agent?.terminate()
+      stopAgent(agent)
       return [false, t('maa.debug.init-instance-failed')]
     }
 

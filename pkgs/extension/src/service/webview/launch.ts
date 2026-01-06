@@ -7,7 +7,7 @@ import { nativeService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
-import { TaskerInstance } from '../launch'
+import { TaskerInstance, stopAgent } from '../launch'
 import { toPngDataUrl } from '../utils/png'
 import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
@@ -52,7 +52,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.stop().then(() => {
       this.instance.tasker.destroy()
       this.instance.resource.destroy()
-      this.instance.agent?.terminate()
+      stopAgent(this.instance.agent)
     })
   }
 

@@ -414,7 +414,8 @@ export class InterfaceService extends BaseService {
       result.agent = {
         child_exec: data.agent.child_exec ? replaceVar(data.agent.child_exec) : undefined,
         child_args: data.agent.child_args?.map(replaceVar),
-        identifier: data.agent.identifier
+        identifier: data.agent.identifier,
+        debug_session: data.agent.debug_session
       }
     }
 

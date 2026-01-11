@@ -130,6 +130,9 @@ function parseReco(value: string, range: vscode.Range, path: JSONPath, state: Ta
     case 'any_of':
       if (typeof path[2] === 'number') {
         parseReco(value, range, path.slice(2), state)
+        if (path[3] === 'recognition' && path[4] === 'param') {
+          parseReco(value, range, path.slice(4), state)
+        }
       }
       break
   }

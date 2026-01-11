@@ -49,15 +49,28 @@ export function draw(ctx: CanvasRenderingContext2D) {
         if (info.detail) {
           ctx.font = settingsSt.fontWithDefault(font, '24pt consolas')
 
-          let detailEntries: maa.RecoDetailWithoutDraws['detail'][] = [info.detail]
+          let detailEntries: {
+            name: string
+            entry: maa.RecoDetailWithoutDraws['detail']
+          }[] = [
+            {
+              name: info.name,
+              entry: info.detail
+            }
+          ]
           while (detailEntries.length > 0) {
             const fullEntry = detailEntries.shift()!
-            if (Array.isArray(fullEntry)) {
-              detailEntries.push(...fullEntry.map(x => x.detail))
+            if (Array.isArray(fullEntry.entry)) {
+              detailEntries.push(
+                ...fullEntry.entry.map(x => ({
+                  name: x.name,
+                  entry: x.detail
+                }))
+              )
               continue
             }
 
-            let entries = fullEntry[st.drawType.value] ?? []
+            let entries = fullEntry.entry[st.drawType.value] ?? []
             if (!Array.isArray(entries)) {
               entries = [entries]
             }
@@ -73,6 +86,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
               ctx.rect(...box.flat())
               ctx.stroke()
 
+              ctx.fillText(fullEntry.name ?? '', ...box.rt.add(Size.from(5, 0)).flat())
               ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
             }
           }

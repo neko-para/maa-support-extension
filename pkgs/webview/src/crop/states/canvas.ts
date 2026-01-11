@@ -49,20 +49,32 @@ export function draw(ctx: CanvasRenderingContext2D) {
         if (info.detail) {
           ctx.font = settingsSt.fontWithDefault(font, '24pt consolas')
 
-          let entries = info.detail[st.drawType.value] ?? []
-          if (!Array.isArray(entries)) {
-            entries = [entries]
-          }
-          for (const entry of entries) {
-            const entry_box = entry.box
-            const box = controlSt.viewport.value.toView(
-              Box.from(Pos.from(entry_box[0], entry_box[1]), Size.from(entry_box[2], entry_box[3]))
-            )
+          let detailEntries: maa.RecoDetailWithoutDraws['detail'][] = [info.detail]
+          while (detailEntries.length > 0) {
+            const fullEntry = detailEntries.shift()!
+            if (Array.isArray(fullEntry)) {
+              detailEntries.push(...fullEntry.map(x => x.detail))
+              continue
+            }
 
-            ctx.rect(...box.flat())
-            ctx.stroke()
+            let entries = fullEntry[st.drawType.value] ?? []
+            if (!Array.isArray(entries)) {
+              entries = [entries]
+            }
+            for (const entry of entries) {
+              const entry_box = entry.box
+              const box = controlSt.viewport.value.toView(
+                Box.from(
+                  Pos.from(entry_box[0], entry_box[1]),
+                  Size.from(entry_box[2], entry_box[3])
+                )
+              )
 
-            ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
+              ctx.rect(...box.flat())
+              ctx.stroke()
+
+              ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
+            }
           }
         }
 

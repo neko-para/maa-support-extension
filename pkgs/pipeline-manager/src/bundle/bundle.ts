@@ -1,22 +1,14 @@
-import { type Node, parseTree } from 'jsonc-parser'
+import type { Node } from 'jsonc-parser'
 import EventEmitter from 'node:events'
 import * as path from 'node:path'
 
-import type { IContentLoader } from './loader'
-import { ContentManager } from './manager'
-import type { IContentWatcher } from './watch'
+import { ContentJson } from '../content/json'
+import type { IContentLoader } from '../content/loader'
+import type { IContentWatcher } from '../content/watch'
+import { parseTreeWithoutParent } from '../utils/json'
+import { BundleManager } from './manager'
 
-const defaultPipelineFile = 'default_pipeline.json'
-
-function shrinkParent(node: Node) {
-  type DeepWriteable<T> = { -readonly [P in keyof T]: DeepWriteable<T[P]> }
-  delete (node as DeepWriteable<Node>).parent
-  for (const child of node.children ?? []) {
-    shrinkParent(child)
-  }
-}
-
-export type TaskInfo = {
+export type TaskDataInfo = {
   file: string
   content: string
   node: Node
@@ -26,18 +18,19 @@ export class Bundle extends EventEmitter<{
   reset: []
   taskChanged: [tasks: string[]]
   imageChanged: []
+  defaultChanged: []
 }> {
   root: string
 
-  defaultPipelinePath: string
   pipelineRoot: string
   imageRoot: string
 
   files: Record<string, string>
-  tasks: Record<string, TaskInfo[]>
+  tasks: Record<string, TaskDataInfo[]>
   images: Set<string>
 
-  content: ContentManager
+  manager: BundleManager
+  defaultPipeline: ContentJson
 
   imageChangedTimer?: NodeJS.Timeout
 
@@ -46,7 +39,6 @@ export class Bundle extends EventEmitter<{
 
     this.root = root
 
-    this.defaultPipelinePath = path.join(this.root, defaultPipelineFile)
     this.pipelineRoot = path.join(this.root, 'pipeline')
     this.imageRoot = path.join(this.root, 'image')
 
@@ -54,7 +46,23 @@ export class Bundle extends EventEmitter<{
     this.tasks = {}
     this.images = new Set()
 
-    this.content = new ContentManager(loader, watcher, root, this)
+    this.manager = new BundleManager(loader, watcher, root, this)
+    this.defaultPipeline = new ContentJson(
+      loader,
+      watcher,
+      path.join(this.root, 'default_pipeline.json'),
+      () => {
+        this.emit('defaultChanged')
+      }
+    )
+  }
+
+  async load() {
+    await Promise.all([this.manager.load(), this.defaultPipeline.load()])
+  }
+
+  async flush() {
+    await Promise.all([this.manager.flush(), this.defaultPipeline.flush()])
   }
 
   filterFile(file: string, isdir: boolean): boolean {
@@ -66,9 +74,7 @@ export class Bundle extends EventEmitter<{
         file.startsWith(this.pipelineRoot) || file.startsWith(this.imageRoot) || file === this.root
       )
     } else {
-      if (file === this.defaultPipelinePath) {
-        return true
-      } else if (file.startsWith(this.pipelineRoot)) {
+      if (file.startsWith(this.pipelineRoot)) {
         return file.endsWith('.json')
       } else if (file.startsWith(this.imageRoot)) {
         return file.endsWith('.png')
@@ -124,13 +130,8 @@ export class Bundle extends EventEmitter<{
 
     this.files[file] = content
 
-    if (file === defaultPipelineFile) {
-      return changed
-    }
-
-    const tree = parseTree(content)
+    const tree = parseTreeWithoutParent(content)
     if (tree && tree.type === 'object') {
-      shrinkParent(tree)
       for (const node of tree.children ?? []) {
         if (node.type !== 'property' || !node.children || node.children.length !== 2) {
           continue

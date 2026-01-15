@@ -1,9 +1,9 @@
 import path from 'node:path'
 
-import type { IContentLoader } from './loader'
-import type { IContentWatcher, IContentWatcherController } from './watch'
+import type { IContentLoader } from '../content/loader'
+import type { IContentWatcher, IContentWatcherController } from '../content/watch'
 
-export interface IContentManagerDelegate {
+export interface IBundleManagerDelegate {
   filterFile(file: string, isdir: boolean): boolean
   needContent(file: string): boolean
 
@@ -12,11 +12,11 @@ export interface IContentManagerDelegate {
   deleteFile(file: string, full: string): Promise<void>
 }
 
-export class ContentManager {
+export class BundleManager {
   loader: IContentLoader
   watcher: IContentWatcher
   root: string
-  delegate: IContentManagerDelegate
+  delegate: IBundleManagerDelegate
 
   changed: Set<string>
   removed: Set<string>
@@ -29,7 +29,7 @@ export class ContentManager {
     loader: IContentLoader,
     watcher: IContentWatcher,
     root: string,
-    delegate: IContentManagerDelegate
+    delegate: IBundleManagerDelegate
   ) {
     this.loader = loader
     this.watcher = watcher
@@ -122,11 +122,11 @@ export class ContentManager {
     if (this.needFlush) {
       setTimeout(() => {
         this.flush()
-      }, 50)
+      }, 100)
     }
   }
 
-  dispatchFlush(timeout = 50) {
+  dispatchFlush(timeout = 100) {
     if (this.needFlush) {
       return
     }

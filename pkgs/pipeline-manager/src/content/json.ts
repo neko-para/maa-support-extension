@@ -49,6 +49,7 @@ export class ContentJson {
         this.dispatchFlush()
       }
     })
+    await this.flush()
   }
 
   async flush() {

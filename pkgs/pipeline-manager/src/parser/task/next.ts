@@ -30,8 +30,9 @@ function parseSingle(node: Node, info: TaskInfo) {
     })
   } else if (node.type === 'object') {
     let loc: Node | null = null
-    const ref: Partial<TaskNextRefInfo> = {
-      type: 'task.next'
+    const ref: TaskNextRefInfo = {
+      type: 'task.next',
+      target: ''
     }
     for (const [key, obj] of parseObject(node)) {
       if (key === 'name' && isString(obj)) {
@@ -43,7 +44,7 @@ function parseSingle(node: Node, info: TaskInfo) {
         ref.anchor = obj.value
       }
     }
-    if (loc && ref.target) {
+    if (loc && ref.target.length > 0) {
       info.refs.push({
         location: loc,
         ...(ref as TaskNextRefInfo)

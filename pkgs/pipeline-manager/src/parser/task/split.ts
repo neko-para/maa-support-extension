@@ -14,9 +14,6 @@ export type TaskParts = {
 }
 
 export function splitNode(node: Node) {
-  if (node.type !== 'object') {
-    return null
-  }
   const result: TaskParts = {
     node,
     base: [],

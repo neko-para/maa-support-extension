@@ -89,9 +89,7 @@ function parseReco(props: PropPair[], info: TaskInfo, parent?: Node) {
       case 'any_of':
         for (const sub of parseArray(obj)) {
           const subInfo = splitNode(sub)
-          if (subInfo) {
-            parseReco(subInfo.reco, info, sub)
-          }
+          parseReco(subInfo.reco, info, sub)
         }
         break
       case 'sub_name':
@@ -117,11 +115,8 @@ function parseAct(props: PropPair[], info: TaskInfo) {
   }
 }
 
-export function parsePipeline(node: Node): TaskInfo | null {
+export function parseTask(node: Node): TaskInfo {
   const parts = splitNode(node)
-  if (!parts) {
-    return null
-  }
 
   const info: TaskInfo = {
     parts,

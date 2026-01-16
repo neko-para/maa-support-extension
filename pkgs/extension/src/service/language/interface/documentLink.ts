@@ -37,19 +37,6 @@ export class InterfaceDocumentLinkProvider
       }
     }
 
-    // TODO: locale
-
-    /*
-    for (const decl of interfaceIndexService.localeDecl) {
-      result.push(
-        new vscode.DocumentLink(
-          decl.range,
-          vscode.Uri.joinPath(rootService.activeResource.dirUri, decl.file)
-        )
-      )
-    }
-      */
-
     return result
   }
 }

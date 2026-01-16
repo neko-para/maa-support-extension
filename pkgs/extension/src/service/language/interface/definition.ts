@@ -57,36 +57,6 @@ export class InterfaceDefinitionProvider
       return decls.map(dr => convertRangeLocation(document, dr.location))
     }
 
-    return []
-
-    // TODO: locale
-
-    /*
-    await interfaceIndexService.flushDirty()
-
-    const info = await interfaceIndexService.queryLocation(document.uri, position)
-
-    if (!info) {
-      return null
-    }
-
-    if (info.type === 'locale.ref') {
-      const result: vscode.Definition = []
-      for (const [locale, index] of Object.entries(interfaceLocalizationService.localeIndex)) {
-        if (info.value in index) {
-          result.push(
-            new vscode.Location(
-              interfaceLocalizationService.activeConfig[locale],
-              index[info.value].propRange
-            )
-          )
-        }
-      }
-      return result
-    }
-
-    */
-
     return null
   }
 }

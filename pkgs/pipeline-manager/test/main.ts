@@ -25,7 +25,12 @@ async function main() {
 
   await int.load()
 
-  console.log(parseInterface(int.content.node!))
+  int.switchActive('B 服')
+
+  int.on('bundleReloaded', () => {
+    console.log(int.info)
+    console.log(int.paths)
+  })
 }
 
 main()

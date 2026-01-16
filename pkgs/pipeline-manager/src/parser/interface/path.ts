@@ -14,15 +14,20 @@ function parseSingle(node: Node, info: InterfaceInfo) {
       type: 'interface.resource_path',
       target
     })
+    return target
+  } else {
+    return ''
   }
 }
 
 export function parsePath(node: Node, info: InterfaceInfo) {
+  const result: string[] = []
   if (node.type !== 'array') {
-    parseSingle(node, info)
+    result.push(parseSingle(node, info))
   } else {
     for (const obj of parseArray(node)) {
-      parseSingle(obj, info)
+      result.push(parseSingle(obj, info))
     }
   }
+  return result.filter(res => res !== '')
 }

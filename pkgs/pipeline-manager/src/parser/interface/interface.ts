@@ -17,6 +17,7 @@ export type IntCtrlDeclInfo = {
 export type IntResDeclInfo = {
   type: 'interface.resource'
   name: string
+  paths: string[]
 }
 
 export type IntTaskDeclInfo = {
@@ -130,19 +131,22 @@ function parseController(node: Node, info: InterfaceInfo) {
 }
 
 function parseResource(node: Node, info: InterfaceInfo) {
+  let loc: Node | null = null
+  const decl: IntResDeclInfo = {
+    type: 'interface.resource',
+    name: '',
+    paths: []
+  }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
         if (isString(obj)) {
-          info.decls.push({
-            location: obj,
-            type: 'interface.resource',
-            name: obj.value
-          })
+          loc = obj
+          decl.name = obj.value
         }
         break
       case 'path':
-        parsePath(obj, info)
+        decl.paths = parsePath(obj, info)
         break
       case 'controller':
         parseCtrlRef(obj, info)
@@ -151,6 +155,12 @@ function parseResource(node: Node, info: InterfaceInfo) {
         parseOptionRef(obj, info)
         break
     }
+  }
+  if (loc && decl.name.length > 0) {
+    info.decls.push({
+      location: loc,
+      ...decl
+    })
   }
 }
 

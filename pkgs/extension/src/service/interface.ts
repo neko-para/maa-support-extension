@@ -4,6 +4,8 @@ import path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
+import { InterfaceBundle, VscodeContentLoader, VscodeContentWatcher } from '@mse/pipeline-manager'
+import { ContentJson } from '@mse/pipeline-manager/src/content/json'
 import {
   InputItemType,
   Interface,
@@ -19,10 +21,23 @@ import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {
-  interfaceJson: Partial<Interface> = {}
-  interfaceConfigJson: Partial<InterfaceConfig> = {}
+  interfaceBundle?: InterfaceBundle<Partial<Interface>>
+  interfaceConfigFile?: ContentJson<Partial<InterfaceConfig>>
 
-  resourcePaths: vscode.Uri[] = []
+  get interfaceJson(): Partial<Interface> {
+    return this.interfaceBundle?.content.object ?? {}
+  }
+  get interfaceConfigJson(): Partial<InterfaceConfig> {
+    return this.interfaceConfigFile?.object ?? {}
+  }
+
+  get resourcePaths(): vscode.Uri[] {
+    return (
+      this.interfaceBundle?.paths.map(dir =>
+        vscode.Uri.file(path.join(this.interfaceBundle!.root, dir))
+      ) ?? []
+    )
+  }
 
   watchInterface?: vscode.Disposable
 
@@ -72,128 +87,110 @@ export class InterfaceService extends BaseService {
   }
 
   async loadInterface() {
-    this.watchInterface?.dispose()
+    this.interfaceBundle?.stop()
+    this.interfaceConfigFile?.stop()
 
-    this.interfaceJson = {}
-    this.interfaceConfigJson = {}
+    this.interfaceBundle = undefined
+    this.interfaceConfigFile = undefined
 
     const root = rootService.activeResource
     if (!root) {
       return
     }
 
-    const doLoadInterface = async () => {
-      try {
-        const doc = await vscode.workspace.openTextDocument(root.interfaceUri)
-        this.interfaceJson = parse(doc.getText())
-        setTimeout(() => {
-          this.interfaceChanged.fire()
-        }, 0)
-      } catch {
-        this.interfaceChanged.fire()
-      }
-    }
-
-    const doLoadInterfaceConfig = async () => {
-      try {
-        const doc = await vscode.workspace.openTextDocument(root.configUri)
-        this.interfaceConfigJson = parse(doc.getText())
-      } catch {}
-
-      const fixConfig: Partial<InterfaceConfig> = {}
-
-      let resFixed = false
-      const prevRes = this.interfaceJson.resource?.find(
-        x => x.name === this.interfaceConfigJson.resource
-      )
-      if (!prevRes && this.interfaceJson.resource) {
-        resFixed = true
-        fixConfig.resource = this.interfaceJson.resource[0].name
-      }
-
-      let taskFixed = false
-      const tasks = this.interfaceConfigJson.task ?? []
-      const fixedTasks = tasks.map(task => {
-        const newTask = {
-          ...task
-        }
-        if (!newTask.__vscKey) {
-          taskFixed = true
-          newTask.__vscKey = v4()
-        }
-        if (Array.isArray(newTask.option)) {
-          const newOptions: Record<string, Record<string, string>> = {}
-          for (const { name, value } of newTask.option as { name: string; value: string }[]) {
-            newOptions[name] = {
-              default: value
-            }
-          }
-          taskFixed = true
-          newTask.option = newOptions
-        }
-        return newTask
-      })
-      if (taskFixed) {
-        fixConfig.task = fixedTasks
-      }
-
-      if (resFixed || taskFixed) {
-        setTimeout(() => {
-          this.reduceConfig(fixConfig)
-        }, 0)
-      } else {
-        setTimeout(() => {
-          this.interfaceConfigChanged.fire()
-        }, 0)
-      }
-    }
-
-    this.watchInterface = vscode.workspace.onDidChangeTextDocument(event => {
-      if (event.document.uri.fsPath === root.interfaceUri.fsPath) {
-        doLoadInterface()
-      } else if (event.document.uri.fsPath === root.configUri.fsPath) {
-        doLoadInterfaceConfig()
-      }
+    this.interfaceBundle = new InterfaceBundle(
+      new VscodeContentLoader(vscode),
+      new VscodeContentWatcher(vscode),
+      root.dirUri.fsPath,
+      path.basename(root.interfaceUri.fsPath)
+    )
+    this.interfaceBundle.on('interfaceChanged', () => {
+      this.interfaceChanged.fire()
     })
+    this.interfaceBundle.on('pathChanged', () => {
+      this.resourceChanged.fire()
+    })
+    await this.interfaceBundle.load()
 
-    await doLoadInterface()
-    await doLoadInterfaceConfig()
+    this.interfaceConfigFile = new ContentJson(
+      new VscodeContentLoader(vscode),
+      new VscodeContentWatcher(vscode),
+      root.configUri.fsPath,
+      () => {
+        this.interfaceConfigChanged.fire()
+      }
+    )
+    await this.interfaceConfigFile.load()
+
+    const fixCfg = this.fixConfig()
+    if (fixCfg) {
+      setTimeout(() => {
+        this.reduceConfig(fixCfg)
+      }, 0)
+    }
   }
 
-  async saveInterfaceConfig() {
-    const root = rootService.activeResource
-    if (!root) {
-      return
+  fixConfig() {
+    const fixConfig: Partial<InterfaceConfig> = {}
+
+    let resFixed = false
+    const prevRes = this.interfaceJson.resource?.find(
+      x => x.name === this.interfaceConfigJson.resource
+    )
+    if (!prevRes && this.interfaceJson.resource) {
+      resFixed = true
+      fixConfig.resource = this.interfaceJson.resource[0].name
     }
 
-    const configPath = root.configUri.fsPath
-    await fs.mkdir(path.dirname(configPath), { recursive: true })
-    await fs.writeFile(configPath, JSON.stringify(this.interfaceConfigJson, null, 4))
+    let taskFixed = false
+    const tasks = this.interfaceConfigJson.task ?? []
+    const fixedTasks = tasks.map(task => {
+      const newTask = {
+        ...task
+      }
+      if (!newTask.__vscKey) {
+        taskFixed = true
+        newTask.__vscKey = v4()
+      }
+      if (Array.isArray(newTask.option)) {
+        const newOptions: Record<string, Record<string, string>> = {}
+        for (const { name, value } of newTask.option as { name: string; value: string }[]) {
+          newOptions[name] = {
+            default: value
+          }
+        }
+        taskFixed = true
+        newTask.option = newOptions
+      }
+      return newTask
+    })
+    if (taskFixed) {
+      fixConfig.task = fixedTasks
+    }
+    if (resFixed || taskFixed) {
+      return fixConfig
+    } else {
+      return null
+    }
   }
 
   async reduceConfig(config?: Partial<InterfaceConfig>) {
-    this.interfaceConfigJson = {
+    const newCfg = {
       ...this.interfaceConfigJson,
       ...config
     }
-    await this.saveInterfaceConfig()
-    this.interfaceConfigChanged.fire()
+
+    const root = rootService.activeResource
+    if (!root) {
+      return
+    }
+    const configPath = root.configUri.fsPath
+    await fs.mkdir(path.dirname(configPath), { recursive: true })
+    await fs.writeFile(configPath, JSON.stringify(newCfg, null, 4))
   }
 
   updateResource() {
-    const resInfo = this.interfaceJson.resource?.find(
-      x => x.name === this.interfaceConfigJson?.resource
-    )
-    const rootPath = rootService.activeResource?.dirUri.fsPath
-    if (!resInfo || !rootPath) {
-      this.resourcePaths = []
-    } else {
-      this.resourcePaths = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
-        .map(x => x.replace('{PROJECT_DIR}', rootPath))
-        .map(x => path.resolve(rootPath, x)) // 移除路径结尾的sep, 防止后续比较的时候加多了
-        .map(x => vscode.Uri.file(x))
-    }
-    this.resourceChanged.fire()
+    this.interfaceBundle?.switchActive(this.interfaceConfigJson?.resource ?? '')
   }
 
   suggestResource() {

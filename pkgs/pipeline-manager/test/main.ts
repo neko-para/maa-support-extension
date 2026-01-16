@@ -1,4 +1,11 @@
-import { Bundle, FsContentLoader, FsContentWatcher, Interface, parseInterface, parseTask } from '..'
+import {
+  Bundle,
+  FsContentLoader,
+  FsContentWatcher,
+  InterfaceBundle,
+  parseInterface,
+  parseTask
+} from '..'
 
 async function main() {
   // const bundle = new Bundle(
@@ -17,7 +24,7 @@ async function main() {
   //   // console.log('image changed')
   // })
 
-  const int = new Interface(
+  const int = new InterfaceBundle(
     new FsContentLoader(),
     new FsContentWatcher(),
     '/Users/nekosu/Documents/Projects/MAA/M9A/assets'

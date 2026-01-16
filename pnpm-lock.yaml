@@ -55,6 +55,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.3.3
         version: 5.3.3
+      '@mse/pipeline-manager':
+        specifier: workspace:*
+        version: link:../pipeline-manager
       '@mse/types':
         specifier: workspace:*
         version: link:../types

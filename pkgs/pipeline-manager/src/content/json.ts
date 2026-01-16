@@ -53,6 +53,10 @@ export class ContentJson<T = any> {
     await this.flush()
   }
 
+  stop() {
+    this.watcherCtrl?.stop()
+  }
+
   async flush() {
     if (this.duringFlush) {
       return new Promise<void>(resolve => {

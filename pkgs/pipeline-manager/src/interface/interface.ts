@@ -8,7 +8,7 @@ import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
 
-export class Interface extends EventEmitter<{
+export class InterfaceBundle<T extends any> extends EventEmitter<{
   interfaceChanged: []
   activeChanged: []
   pathChanged: []
@@ -16,7 +16,7 @@ export class Interface extends EventEmitter<{
 }> {
   root: string
 
-  content: ContentJson
+  content: ContentJson<T>
 
   info?: InterfaceInfo
 
@@ -67,6 +67,13 @@ export class Interface extends EventEmitter<{
     await this.content.load()
   }
 
+  stop() {
+    this.content.stop()
+    for (const bundle of this.bundles) {
+      bundle.stop()
+    }
+  }
+
   async flush() {
     await this.content.flush()
   }
@@ -78,6 +85,10 @@ export class Interface extends EventEmitter<{
   }
 
   updatePaths() {
+    for (const bundle of this.bundles) {
+      bundle.stop()
+    }
+
     const resInfo = this.info?.decls
       .filter(decl => decl.type === 'interface.resource')
       .find(info => info.name === this.active)

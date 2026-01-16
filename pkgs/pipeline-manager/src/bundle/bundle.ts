@@ -5,6 +5,7 @@ import * as path from 'node:path'
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
+import { type TaskInfo, parseTask } from '../parser/task/task'
 import { parseTreeWithoutParent } from '../utils/json'
 import { BundleManager } from './manager'
 
@@ -12,6 +13,7 @@ export type TaskDataInfo = {
   file: string
   content: string
   node: Node
+  info: TaskInfo
 }
 
 export class Bundle extends EventEmitter<{
@@ -59,6 +61,11 @@ export class Bundle extends EventEmitter<{
 
   async load() {
     await Promise.all([this.manager.load(), this.defaultPipeline.load()])
+  }
+
+  stop() {
+    this.manager.stop()
+    this.defaultPipeline.stop()
   }
 
   async flush() {
@@ -147,7 +154,8 @@ export class Bundle extends EventEmitter<{
         this.tasks[prop.value].push({
           file,
           content: content.slice(obj.offset, obj.length),
-          node
+          node,
+          info: parseTask(node)
         })
         changed.push(prop.value)
       }

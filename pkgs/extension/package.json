@@ -5,6 +5,7 @@
     "@jimp/js-png": "^1.6.0",
     "@jimp/plugin-crop": "^1.6.0",
     "@maaxyz/maa-node": "5.3.3",
+    "@mse/pipeline-manager": "workspace:*",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",

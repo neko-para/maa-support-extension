@@ -1,5 +1,8 @@
 import * as vscode from 'vscode'
 
+import { parseObject } from '@mse/pipeline-manager/src/parser/utils'
+
+import { interfaceService } from '../..'
 import { convertRangeLocation, findDeclRef } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
@@ -32,6 +35,24 @@ export class InterfaceDefinitionProvider
       const refs = this.makeRefs(index, decl, ref) ?? []
       return [...decls, ...refs].map(dr => convertRangeLocation(document, dr.location))
     } else if (ref) {
+      if (ref.type === 'interface.locale') {
+        const result: vscode.Definition = []
+        for (const loc of interfaceService.interfaceBundle?.langs ?? []) {
+          if (!loc.node) {
+            continue
+          }
+          for (const [key, obj, prop] of parseObject(loc.node)) {
+            if (key === ref.target) {
+              try {
+                const doc = await vscode.workspace.openTextDocument(loc.file)
+                result.push(convertRangeLocation(doc, prop))
+              } catch {}
+            }
+          }
+        }
+        return result
+      }
+
       const decls = this.makeDecls(index, decl, ref) ?? []
       return decls.map(dr => convertRangeLocation(document, dr.location))
     }

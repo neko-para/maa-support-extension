@@ -11,6 +11,7 @@ import { type InterfaceInfo, parseInterface } from '../parser/interface/interfac
 export class InterfaceBundle<T extends any> extends EventEmitter<{
   interfaceChanged: []
   activeChanged: []
+  langChanged: []
   pathChanged: []
   bundleReloaded: []
 }> {
@@ -23,6 +24,9 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   active: string
   paths: string[]
   bundles: Bundle[]
+
+  langFiles: [string, string][]
+  langs: ContentJson<Record<string, string>>[]
 
   constructor(
     loader: IContentLoader,
@@ -48,12 +52,20 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.paths = []
     this.bundles = []
 
+    this.langFiles = []
+    this.langs = []
+
     this.on('interfaceChanged', () => {
       this.updatePaths()
+      this.updateLangs()
     })
 
     this.on('activeChanged', () => {
       this.updatePaths()
+    })
+
+    this.on('langChanged', async () => {
+      await Promise.all(this.langs.map(content => content.load()))
     })
 
     this.on('pathChanged', async () => {
@@ -85,10 +97,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   }
 
   updatePaths() {
-    for (const bundle of this.bundles) {
-      bundle.stop()
-    }
-
     const resInfo = this.info?.decls
       .filter(decl => decl.type === 'interface.resource')
       .find(info => info.name === this.active)
@@ -96,15 +104,51 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       if (JSON.stringify(this.paths) === JSON.stringify(resInfo.paths)) {
         return // paths not changed
       }
+      for (const content of this.langs) {
+        content.stop()
+      }
       this.paths = resInfo.paths
       this.bundles = this.paths.map(dir => {
         return new Bundle(this.content.loader, this.content.watcher, dir)
       })
     } else {
+      for (const bundle of this.bundles) {
+        bundle.stop()
+      }
       this.paths = []
       this.bundles = []
     }
 
     this.emit('pathChanged')
+  }
+
+  updateLangs() {
+    const langInfos = this.info?.decls.filter(decl => decl.type === 'interface.language')
+    if (langInfos) {
+      const newFiles = langInfos.map(info => [info.name, info.path] as [string, string])
+      if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
+        return // paths not changed
+      }
+      for (const content of this.langs) {
+        content.stop()
+      }
+      this.langFiles = newFiles
+      this.langs = newFiles.map(([locale, file]) => {
+        return new ContentJson(
+          this.content.loader,
+          this.content.watcher,
+          path.join(this.root, file),
+          () => {}
+        )
+      })
+    } else {
+      for (const content of this.langs) {
+        content.stop()
+      }
+      this.langFiles = []
+      this.langs = []
+    }
+
+    this.emit('langChanged')
   }
 }

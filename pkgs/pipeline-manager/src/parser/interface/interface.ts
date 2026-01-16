@@ -3,11 +3,19 @@ import type { Node } from 'jsonc-parser'
 import type { TaskInfo } from '../task/task'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
+import { locKeys } from './keys'
+import { parseLanguage } from './language'
 import { parseOption } from './option'
 import { parseOptionRef } from './optionRef'
 import { parseOverride } from './override'
 import { parsePath } from './path'
 import { parseResRef } from './resRef'
+
+export type IntLangDeclInfo = {
+  type: 'interface.language'
+  name: string
+  path: string
+}
 
 export type IntCtrlDeclInfo = {
   type: 'interface.controller'
@@ -47,6 +55,7 @@ export type IntInputDeclInfo = {
 export type InterfaceDeclInfo = {
   location: Node
 } & (
+  | IntLangDeclInfo
   | IntCtrlDeclInfo
   | IntResDeclInfo
   | IntTaskDeclInfo
@@ -54,6 +63,16 @@ export type InterfaceDeclInfo = {
   | IntCaseDeclInfo
   | IntInputDeclInfo
 )
+
+export type IntLangPathRefInfo = {
+  type: 'interface.language_path'
+  target: string
+}
+
+export type IntLocaleRefInfo = {
+  type: 'interface.locale'
+  target: string
+}
 
 export type IntResPathRefInfo = {
   type: 'interface.resource_path'
@@ -96,6 +115,8 @@ export type IntInputRefInfo = {
 export type InterfaceRefInfo = {
   location: Node
 } & (
+  | IntLangPathRefInfo
+  | IntLocaleRefInfo
   | IntResPathRefInfo
   | IntCtrlRefInfo
   | IntResRefInfo
@@ -202,6 +223,26 @@ function parseTaskSec(node: Node, info: InterfaceInfo) {
   }
 }
 
+function parseLocalization(node: Node, info: InterfaceInfo) {
+  if (node.type === 'object') {
+    for (const [key, obj] of parseObject(node)) {
+      if (locKeys.includes(key) && isString(obj) && obj.value.startsWith('$')) {
+        info.refs.push({
+          location: obj,
+          type: 'interface.locale',
+          target: obj.value.substring(1)
+        })
+      } else {
+        parseLocalization(obj, info)
+      }
+    }
+  } else if (node.type === 'array') {
+    for (const obj of parseArray(node)) {
+      parseLocalization(obj, info)
+    }
+  }
+}
+
 export function parseInterface(node: Node) {
   const info: InterfaceInfo = {
     decls: [],
@@ -210,6 +251,9 @@ export function parseInterface(node: Node) {
   }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
+      case 'languages':
+        parseLanguage(obj, info)
+        break
       case 'controller':
         for (const sub of parseArray(obj)) {
           parseController(sub, info)
@@ -230,5 +274,8 @@ export function parseInterface(node: Node) {
         break
     }
   }
+
+  parseLocalization(node, info)
+
   return info
 }

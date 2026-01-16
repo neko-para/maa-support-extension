@@ -1,11 +1,9 @@
 import * as fs from 'fs/promises'
-import { parse } from 'jsonc-parser'
 import path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { InterfaceBundle, VscodeContentLoader, VscodeContentWatcher } from '@mse/pipeline-manager'
-import { ContentJson } from '@mse/pipeline-manager/src/content/json'
 import {
   InputItemType,
   Interface,
@@ -22,13 +20,10 @@ import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle<Partial<Interface>>
-  interfaceConfigFile?: ContentJson<Partial<InterfaceConfig>>
+  interfaceConfigJson: Partial<InterfaceConfig>
 
   get interfaceJson(): Partial<Interface> {
     return this.interfaceBundle?.content.object ?? {}
-  }
-  get interfaceConfigJson(): Partial<InterfaceConfig> {
-    return this.interfaceConfigFile?.object ?? {}
   }
 
   get resourcePaths(): vscode.Uri[] {
@@ -60,6 +55,8 @@ export class InterfaceService extends BaseService {
     super()
     console.log('construct InterfaceService')
 
+    this.interfaceConfigJson = {}
+
     this.defer = this.interfaceChanged
     this.defer = this.resourceChanged
 
@@ -88,10 +85,9 @@ export class InterfaceService extends BaseService {
 
   async loadInterface() {
     this.interfaceBundle?.stop()
-    this.interfaceConfigFile?.stop()
 
     this.interfaceBundle = undefined
-    this.interfaceConfigFile = undefined
+    this.interfaceConfigJson = {}
 
     const root = rootService.activeResource
     if (!root) {
@@ -112,21 +108,17 @@ export class InterfaceService extends BaseService {
     })
     await this.interfaceBundle.load()
 
-    this.interfaceConfigFile = new ContentJson(
-      new VscodeContentLoader(vscode),
-      new VscodeContentWatcher(vscode),
-      root.configUri.fsPath,
-      () => {
-        this.interfaceConfigChanged.fire()
-      }
-    )
-    await this.interfaceConfigFile.load()
+    try {
+      this.interfaceConfigJson = JSON.parse(await fs.readFile(root.configUri.fsPath, 'utf8'))
+    } catch {
+      this.interfaceConfigJson = {}
+    }
 
     const fixCfg = this.fixConfig()
     if (fixCfg) {
-      setTimeout(() => {
-        this.reduceConfig(fixCfg)
-      }, 0)
+      this.reduceConfig(fixCfg)
+    } else {
+      this.interfaceConfigChanged.fire()
     }
   }
 
@@ -175,10 +167,11 @@ export class InterfaceService extends BaseService {
   }
 
   async reduceConfig(config?: Partial<InterfaceConfig>) {
-    const newCfg = {
+    this.interfaceConfigJson = {
       ...this.interfaceConfigJson,
       ...config
     }
+    this.interfaceConfigChanged.fire()
 
     const root = rootService.activeResource
     if (!root) {
@@ -186,7 +179,7 @@ export class InterfaceService extends BaseService {
     }
     const configPath = root.configUri.fsPath
     await fs.mkdir(path.dirname(configPath), { recursive: true })
-    await fs.writeFile(configPath, JSON.stringify(newCfg, null, 4))
+    await fs.writeFile(configPath, JSON.stringify(this.interfaceConfigJson, null, 4))
   }
 
   updateResource() {

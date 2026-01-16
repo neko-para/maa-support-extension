@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { isString, parseObject } from '@mse/pipeline-manager/src/parser/utils'
+import { isString, parseObject } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
 import { findDeclRef } from '../utils'

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { parseObject } from '@mse/pipeline-manager/src/parser/utils'
+import { parseObject } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
 import { convertRangeLocation, findDeclRef } from '../utils'

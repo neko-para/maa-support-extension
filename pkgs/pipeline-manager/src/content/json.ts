@@ -1,15 +1,16 @@
 import type { Node } from 'jsonc-parser'
 
-import { parseTreeWithoutParent } from '../utils/json'
+import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import type { IContentLoader } from './loader'
 import type { IContentWatcher, IContentWatcherController } from './watch'
 
-export class ContentJson {
+export class ContentJson<T = any> {
   loader: IContentLoader
   watcher: IContentWatcher
   file: string
-  changed: (node?: Node) => void | Promise<void>
+  changed: (node?: Node, obj?: T) => void | Promise<void>
   node?: Node
+  object?: T
 
   watcherCtrl?: IContentWatcherController
   duringFlush: boolean
@@ -20,7 +21,7 @@ export class ContentJson {
     loader: IContentLoader,
     watcher: IContentWatcher,
     file: string,
-    changed: (node?: Node) => void | Promise<void>
+    changed: (node?: Node, obj?: T) => void | Promise<void>
   ) {
     this.loader = loader
     this.watcher = watcher
@@ -68,8 +69,13 @@ export class ContentJson {
     } else {
       this.node = undefined
     }
+    if (this.node) {
+      this.object = buildTree(this.node)
+    } else {
+      this.object = undefined
+    }
 
-    await this.changed(this.node)
+    await this.changed(this.node, this.object)
 
     const resolves = this.flushResolve
     this.flushResolve = []

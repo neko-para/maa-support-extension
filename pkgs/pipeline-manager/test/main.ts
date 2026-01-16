@@ -24,11 +24,12 @@ async function main() {
   )
 
   await int.load()
+  console.log(int.content.object)
 
   int.switchActive('B 服')
 
   int.on('bundleReloaded', () => {
-    console.log(int.info)
+    // console.log(int.info)
     console.log(int.paths)
   })
 }

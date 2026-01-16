@@ -48,6 +48,7 @@ export type Task = EntryBase & {
   name: string
   default_check?: boolean
   resource?: string[]
+  controller?: string[]
   entry: string
   pipeline_override?: unknown
   option?: string[]
@@ -65,7 +66,7 @@ export type SelectOption = EntryBase & {
   default_case?: string
 }
 
-export type InputItemType = 'string' | 'int'
+export type InputItemType = 'string' | 'int' | 'bool'
 
 export type InputItem = EntryBase & {
   name: string
@@ -73,6 +74,7 @@ export type InputItem = EntryBase & {
   default?: string
   pipeline_type?: InputItemType
   verify?: string
+  pattern_msg?: string
 }
 
 export type InputOption = EntryBase & {

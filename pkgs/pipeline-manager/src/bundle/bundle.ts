@@ -30,7 +30,7 @@ export class Bundle extends EventEmitter<{
   images: Set<string>
 
   manager: BundleManager
-  defaultPipeline: ContentJson
+  defaultPipeline: ContentJson<Record<'Default' | maa.RecognitionType | maa.ActionType, any>>
 
   imageChangedTimer?: NodeJS.Timeout
 

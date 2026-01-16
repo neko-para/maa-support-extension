@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { interfaceIndexService } from '../..'
+import { convertRange, findDeclRef } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceCompletionProvider
@@ -19,22 +19,31 @@ export class InterfaceCompletionProvider
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
   ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
-    await interfaceIndexService.flushDirty()
+    const index = await this.flushIndex()
+    if (!index) {
+      return []
+    }
 
-    const info = await interfaceIndexService.queryLocation(document.uri, position)
+    const offset = document.offsetAt(position)
+    const ref = findDeclRef(index.refs, offset)
 
-    if (!info) {
+    if (!ref) {
       return null
     }
 
-    if (info.type === 'option.ref') {
-      return interfaceIndexService.optionDecl.map(decl => {
-        const esc = JSON.stringify(decl.option)
+    if (ref.type === 'interface.option') {
+      const range = convertRange(document, ref.location, -1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.option')
+        .map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
         return {
           label: esc,
           kind: vscode.CompletionItemKind.Reference,
           insertText: esc.substring(0, esc.length - 1),
-          range: new vscode.Range(info.range.start, info.range.end.translate(0, -1))
+          range
         }
       })
     }

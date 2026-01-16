@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { interfaceIndexService, interfaceLocalizationService, rootService } from '../..'
+import { convertRangeLocation, findDeclRef } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceDefinitionProvider
@@ -18,6 +18,29 @@ export class InterfaceDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
+    const index = await this.flushIndex()
+    if (!index) {
+      return null
+    }
+
+    const offset = document.offsetAt(position)
+    const decl = findDeclRef(index.decls, offset)
+    const ref = findDeclRef(index.refs, offset)
+
+    if (decl) {
+      const decls = this.makeDecls(index, decl, ref) ?? []
+      const refs = this.makeRefs(index, decl, ref) ?? []
+      return [...decls, ...refs].map(dr => convertRangeLocation(document, dr.location))
+    } else if (ref) {
+      const decls = this.makeDecls(index, decl, ref) ?? []
+      return decls.map(dr => convertRangeLocation(document, dr.location))
+    }
+
+    return []
+
+    // TODO: locale
+
+    /*
     await interfaceIndexService.flushDirty()
 
     const info = await interfaceIndexService.queryLocation(document.uri, position)
@@ -26,19 +49,7 @@ export class InterfaceDefinitionProvider
       return null
     }
 
-    if (info.type === 'option.ref') {
-      const optionInfo = interfaceIndexService.optionDecl.find(x => x.option === info.option)
-      return optionInfo
-        ? new vscode.Location(rootService.activeResource!.interfaceUri, optionInfo.range)
-        : null
-    } else if (info.type === 'case.ref') {
-      const caseInfo = interfaceIndexService.caseDecl.find(
-        x => x.option === info.option && x.case === info.case
-      )
-      return caseInfo
-        ? new vscode.Location(rootService.activeResource!.interfaceUri, caseInfo.range)
-        : null
-    } else if (info.type === 'locale.ref') {
+    if (info.type === 'locale.ref') {
       const result: vscode.Definition = []
       for (const [locale, index] of Object.entries(interfaceLocalizationService.localeIndex)) {
         if (info.value in index) {
@@ -52,6 +63,8 @@ export class InterfaceDefinitionProvider
       }
       return result
     }
+
+    */
 
     return null
   }

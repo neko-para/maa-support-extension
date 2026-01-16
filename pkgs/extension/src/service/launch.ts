@@ -214,7 +214,7 @@ export class LaunchService extends BaseService {
 
     await controller.post_connection().wait()
 
-    if (controller.connected) {
+    if (await controller.connected) {
       this.cache = { controller }
       this.cacheKey = key
       return true

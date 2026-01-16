@@ -4,6 +4,7 @@ import { isString, parseArray } from '../utils'
 import type { InterfaceInfo } from './interface'
 
 export function parseCtrlRef(node: Node, info: InterfaceInfo) {
+  const refs: string[] = []
   for (const obj of parseArray(node)) {
     if (isString(obj)) {
       info.refs.push({
@@ -11,6 +12,8 @@ export function parseCtrlRef(node: Node, info: InterfaceInfo) {
         type: 'interface.controller',
         target: obj.value
       })
+      refs.push(obj.value)
     }
   }
+  return refs
 }

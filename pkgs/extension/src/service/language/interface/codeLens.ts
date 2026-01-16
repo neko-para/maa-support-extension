@@ -2,9 +2,10 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/utils'
 
-import { interfaceIndexService, interfaceService } from '../..'
+import { interfaceService } from '../..'
 import { commands } from '../../../command'
 import { debounce } from '../../utils/debounce'
+import { convertRange } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceCodeLensProvider
@@ -41,38 +42,41 @@ export class InterfaceCodeLensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
-    await interfaceIndexService.flushDirty()
+    const index = await this.flushIndex()
+    if (!index) {
+      return []
+    }
+
+    const decls = index.decls.filter(info => info.type === 'interface.resource')
 
     const result: vscode.CodeLens[] = []
-    for (const decl of interfaceIndexService.resourceDecl) {
-      const activated = interfaceService.interfaceConfigJson.resource === decl.name
-      const resourceInfo = interfaceService.interfaceJson.resource?.find(
-        res => res.name === decl.name
-      )
-      let disabled = false
-      if (resourceInfo?.controller && interfaceService.interfaceConfigJson.controller) {
-        disabled = !resourceInfo.controller.includes(
-          interfaceService.interfaceConfigJson.controller.name
-        )
-      }
+    for (const decl of decls) {
+      const activated = decl.name === interfaceService.interfaceConfigJson.resource
+      const disabled =
+        decl.controller &&
+        !decl.controller.includes(interfaceService.interfaceConfigJson.controller?.name ?? '')
+
+      const range = convertRange(document, decl.location)
+
       result.push(
         activated
-          ? new vscode.CodeLens(decl.range, {
+          ? new vscode.CodeLens(range, {
               title: t('maa.pipeline.codelens.resource-activated'),
               command: ''
             })
           : disabled
-            ? new vscode.CodeLens(decl.range, {
+            ? new vscode.CodeLens(range, {
                 title: t('maa.pipeline.codelens.resource-disabled'),
                 command: ''
               })
-            : new vscode.CodeLens(decl.range, {
+            : new vscode.CodeLens(range, {
                 title: t('maa.pipeline.codelens.resource-switch'),
                 command: commands.PISwitchResource,
                 arguments: [decl.name]
               })
       )
     }
+
     return result
   }
 }

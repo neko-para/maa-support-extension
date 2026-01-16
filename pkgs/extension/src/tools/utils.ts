@@ -12,7 +12,7 @@ export async function setupFixedController(image: ArrayBuffer) {
   })
   ctrl.screenshot_use_raw_size = true
   await ctrl.post_connection().wait()
-  if (!ctrl.connected) {
+  if (!(await ctrl.connected)) {
     ctrl.destroy()
     return null
   }

@@ -18,6 +18,7 @@ export type IntResDeclInfo = {
   type: 'interface.resource'
   name: string
   paths: string[]
+  controller?: string[]
 }
 
 export type IntTaskDeclInfo = {
@@ -149,7 +150,7 @@ function parseResource(node: Node, info: InterfaceInfo) {
         decl.paths = parsePath(obj, info)
         break
       case 'controller':
-        parseCtrlRef(obj, info)
+        decl.controller = parseCtrlRef(obj, info)
         break
       case 'option':
         parseOptionRef(obj, info)

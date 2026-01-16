@@ -5,16 +5,11 @@ import * as path from 'node:path'
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
-import { type TaskInfo, parseTask } from '../parser/task/task'
+import { LayerInfo } from '../layer/layer'
+import { parseTask } from '../parser/task/task'
+import { parseObject } from '../parser/utils'
 import { parseTreeWithoutParent } from '../utils/json'
 import { BundleManager } from './manager'
-
-export type TaskDataInfo = {
-  file: string
-  content: string
-  node: Node
-  info: TaskInfo
-}
 
 export class Bundle extends EventEmitter<{
   reset: []
@@ -28,8 +23,7 @@ export class Bundle extends EventEmitter<{
   imageRoot: string
 
   files: Record<string, string>
-  tasks: Record<string, TaskDataInfo[]>
-  images: Set<string>
+  layer: LayerInfo
 
   manager: BundleManager
   defaultPipeline: ContentJson<Record<'Default' | maa.RecognitionType | maa.ActionType, any>>
@@ -45,8 +39,7 @@ export class Bundle extends EventEmitter<{
     this.imageRoot = path.join(this.root, 'image')
 
     this.files = {}
-    this.tasks = {}
-    this.images = new Set()
+    this.layer = new LayerInfo('resource')
 
     this.manager = new BundleManager(loader, watcher, root, this)
     this.defaultPipeline = new ContentJson(
@@ -96,8 +89,7 @@ export class Bundle extends EventEmitter<{
 
   async reset(): Promise<void> {
     this.files = {}
-    this.tasks = {}
-    this.images = new Set()
+    this.layer = new LayerInfo('resource')
     this.emit('reset')
   }
 
@@ -108,8 +100,8 @@ export class Bundle extends EventEmitter<{
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      if (!this.images.has(file)) {
-        this.images.add(file)
+      if (!this.layer.images.has(file)) {
+        this.layer.images.add(file)
         this.dispatchImageChanged()
       }
     }
@@ -122,7 +114,7 @@ export class Bundle extends EventEmitter<{
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      if (this.images.delete(file)) {
+      if (this.layer.images.delete(file)) {
         this.dispatchImageChanged()
       }
     }
@@ -139,25 +131,18 @@ export class Bundle extends EventEmitter<{
 
     const tree = parseTreeWithoutParent(content)
     if (tree && tree.type === 'object') {
-      for (const node of tree.children ?? []) {
-        if (node.type !== 'property' || !node.children || node.children.length !== 2) {
+      for (const [key, obj, prop] of parseObject(tree)) {
+        if (key.startsWith('$')) {
           continue
         }
-        const [prop, obj] = node.children
-        if (prop.type !== 'string' || obj.type !== 'object') {
-          continue
-        }
-        if (typeof prop.value !== 'string' || prop.value.startsWith('$')) {
-          continue
-        }
-        this.tasks[prop.value] = this.tasks[prop.value] ?? []
-        this.tasks[prop.value].push({
+
+        this.layer.getTaskInfo(key).push({
           file,
-          content: content.slice(obj.offset, obj.length),
-          node,
-          info: parseTask(node)
+          prop,
+          data: obj,
+          info: parseTask(obj)
         })
-        changed.push(prop.value)
+        changed.push(key)
       }
     }
     return changed
@@ -167,7 +152,7 @@ export class Bundle extends EventEmitter<{
     const changed: string[] = []
     delete this.files[file]
 
-    for (const [task, infos] of Object.entries(this.tasks)) {
+    for (const [task, infos] of Object.entries(this.layer.tasks)) {
       const newInfos = infos.filter(info => info.file !== file)
       if (infos.length !== newInfos.length) {
         infos.splice(0, infos.length, ...newInfos)

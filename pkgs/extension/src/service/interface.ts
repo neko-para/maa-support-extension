@@ -1,5 +1,5 @@
 import * as fs from 'fs/promises'
-import path from 'path'
+import * as path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 

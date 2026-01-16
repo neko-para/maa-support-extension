@@ -1,6 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
-import type { TaskInfo } from '../task/task'
+import { LayerInfo } from '../../layer/layer'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
 import { locKeys } from './keys'
@@ -129,11 +129,7 @@ export type InterfaceRefInfo = {
 export type InterfaceInfo = {
   decls: InterfaceDeclInfo[]
   refs: InterfaceRefInfo[]
-  tasks: {
-    name: string
-    prop: Node
-    info: TaskInfo
-  }[]
+  layer: LayerInfo
 }
 
 function parseController(node: Node, info: InterfaceInfo) {
@@ -186,7 +182,7 @@ function parseResource(node: Node, info: InterfaceInfo) {
   }
 }
 
-function parseTaskSec(node: Node, info: InterfaceInfo) {
+function parseTaskSec(node: Node, info: InterfaceInfo, file: string) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
@@ -205,6 +201,11 @@ function parseTaskSec(node: Node, info: InterfaceInfo) {
             type: 'interface.task_entry',
             target: obj.value
           })
+          info.layer.extraRefs.push({
+            location: obj,
+            type: 'task.entry',
+            target: obj.value
+          })
         }
         break
       case 'resource':
@@ -214,7 +215,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo) {
         parseCtrlRef(obj, info)
         break
       case 'pipeline_override':
-        parseOverride(obj, info)
+        parseOverride(obj, info, file)
         break
       case 'option':
         parseOptionRef(obj, info)
@@ -243,11 +244,11 @@ function parseLocalization(node: Node, info: InterfaceInfo) {
   }
 }
 
-export function parseInterface(node: Node) {
+export function parseInterface(node: Node, file: string) {
   const info: InterfaceInfo = {
     decls: [],
     refs: [],
-    tasks: []
+    layer: new LayerInfo('interface')
   }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
@@ -266,11 +267,11 @@ export function parseInterface(node: Node) {
         break
       case 'task':
         for (const sub of parseArray(obj)) {
-          parseTaskSec(sub, info)
+          parseTaskSec(sub, info, file)
         }
         break
       case 'option':
-        parseOption(obj, info)
+        parseOption(obj, info, file)
         break
     }
   }

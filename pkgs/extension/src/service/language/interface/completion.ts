@@ -1,6 +1,8 @@
 import * as vscode from 'vscode'
 
-import { convertRange, findDeclRef } from '../utils'
+import { findDeclRef } from '@mse/pipeline-manager'
+
+import { convertRange } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceCompletionProvider

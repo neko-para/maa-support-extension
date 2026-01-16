@@ -33,9 +33,13 @@ export class InterfaceLanguageProvider extends BaseService {
     })
   }
 
-  async flushIndex() {
+  async flush() {
     await interfaceService.interfaceBundle?.flush()
-    return interfaceService.interfaceBundle?.info ?? null
+    return interfaceService.interfaceBundle ?? null
+  }
+
+  async flushIndex() {
+    return (await this.flush())?.info ?? null
   }
 
   findDecls<Type extends InterfaceDeclInfo['type']>(index: InterfaceInfo, type: Type) {

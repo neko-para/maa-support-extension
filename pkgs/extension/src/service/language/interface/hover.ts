@@ -1,9 +1,8 @@
 import * as vscode from 'vscode'
 
-import { isString, parseObject } from '@mse/pipeline-manager'
+import { findDeclRef, isString, parseObject } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
-import { findDeclRef } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceHoverProvider

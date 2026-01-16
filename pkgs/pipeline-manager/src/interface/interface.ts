@@ -6,6 +6,7 @@ import { Bundle } from '../bundle/bundle'
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
+import type { LayerInfo } from '../layer/layer'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
 
 export class InterfaceBundle<T extends any> extends EventEmitter<{
@@ -16,6 +17,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   bundleReloaded: []
 }> {
   root: string
+  file: string
 
   content: ContentJson<T>
 
@@ -37,10 +39,11 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     super()
 
     this.root = root
+    this.file = path.join(this.root, file)
 
-    this.content = new ContentJson(loader, watcher, path.join(this.root, file), () => {
+    this.content = new ContentJson(loader, watcher, this.file, () => {
       if (this.content.node) {
-        this.info = parseInterface(this.content.node)
+        this.info = parseInterface(this.content.node, this.file)
       } else {
         this.info = undefined
       }
@@ -150,5 +153,18 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     }
 
     this.emit('langChanged')
+  }
+
+  locateLayer(file: string): LayerInfo | null {
+    if (file === this.file) {
+      return this.info?.layer ?? null
+    } else {
+      for (const bundle of this.bundles) {
+        if (file.startsWith(path.join(bundle.root, 'pipeline'))) {
+          return bundle.layer
+        }
+      }
+    }
+    return null
   }
 }

@@ -32,7 +32,7 @@ export class PipelineLanguageProvider extends BaseService {
       const root = rootService.activeResource
       if (root) {
         filters.push({
-          pattern: new vscode.RelativePattern(root.dirUri, 'interface.json')
+          pattern: new vscode.RelativePattern(root.dirUri, path.basename(root.interfaceUri.fsPath))
         })
       }
       this.provider = setup(filters)
@@ -41,5 +41,14 @@ export class PipelineLanguageProvider extends BaseService {
 
   shouldFilter(doc: vscode.TextDocument) {
     return interfaceService.shouldFilter(doc.uri)
+  }
+
+  async flush() {
+    await interfaceService.interfaceBundle?.flush()
+    return interfaceService.interfaceBundle ?? null
+  }
+
+  async flushIndex() {
+    return (await this.flush())?.info ?? null
   }
 }

@@ -37,13 +37,13 @@ function parseInputRef(
   }
 }
 
-function parseOptionSec(node: Node, info: InterfaceInfo, option: string) {
+function parseOptionSec(node: Node, info: InterfaceInfo, option: string, file: string) {
   let inputNames: string[] = []
   let overrideNode: Node | null = null
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'cases':
-        parseCases(obj, info, option)
+        parseCases(obj, info, option, file)
         break
       case 'inputs':
         inputNames = parseInputs(obj, info, option)
@@ -69,11 +69,11 @@ function parseOptionSec(node: Node, info: InterfaceInfo, option: string) {
       names.push([name, new RegExp('\\{' + name + '\\}', 'g')])
     }
     parseInputRef(overrideNode, info, option, names)
-    parseOverride(overrideNode, info)
+    parseOverride(overrideNode, info, file)
   }
 }
 
-export function parseOption(node: Node, info: InterfaceInfo) {
+export function parseOption(node: Node, info: InterfaceInfo, file: string) {
   for (const [key, obj, prop] of parseObject(node)) {
     info.decls.push({
       location: prop,
@@ -81,6 +81,6 @@ export function parseOption(node: Node, info: InterfaceInfo) {
       name: key
     })
 
-    parseOptionSec(obj, info, key)
+    parseOptionSec(obj, info, key, file)
   }
 }

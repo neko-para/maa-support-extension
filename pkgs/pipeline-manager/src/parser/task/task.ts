@@ -28,6 +28,7 @@ export type TaskDeclInfo = {
 export type TaskNextRefInfo = {
   type: 'task.next'
   target: string
+  objMode: boolean
   jumpBack?: boolean
   anchor?: boolean
 }
@@ -47,9 +48,14 @@ export type TaskTemplateRefInfo = {
   target: string
 }
 
+export type TaskEntryRefInfo = {
+  type: 'task.entry'
+  target: string
+}
+
 export type TaskRefInfo = {
   location: Node
-} & (TaskNextRefInfo | TaskTargetRefInfo | TaskRoiRefInfo | TaskTemplateRefInfo)
+} & (TaskNextRefInfo | TaskTargetRefInfo | TaskRoiRefInfo | TaskTemplateRefInfo | TaskEntryRefInfo)
 
 export type TaskInfo = {
   parts: TaskParts

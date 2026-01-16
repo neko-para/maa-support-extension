@@ -5,7 +5,7 @@ import type { InterfaceInfo } from './interface'
 import { parseOptionRef } from './optionRef'
 import { parseOverride } from './override'
 
-function parseCase(node: Node, info: InterfaceInfo, option: string) {
+function parseCase(node: Node, info: InterfaceInfo, option: string, file: string) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
@@ -22,14 +22,14 @@ function parseCase(node: Node, info: InterfaceInfo, option: string) {
         parseOptionRef(obj, info)
         break
       case 'pipeline_override':
-        parseOverride(obj, info)
+        parseOverride(obj, info, file)
         break
     }
   }
 }
 
-export function parseCases(node: Node, info: InterfaceInfo, option: string) {
+export function parseCases(node: Node, info: InterfaceInfo, option: string, file: string) {
   for (const obj of parseArray(node)) {
-    parseCase(obj, info, option)
+    parseCase(obj, info, option, file)
   }
 }

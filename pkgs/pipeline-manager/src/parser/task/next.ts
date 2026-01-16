@@ -7,7 +7,8 @@ function parseSingle(node: Node, info: TaskInfo) {
   if (isString(node)) {
     const ref: TaskNextRefInfo = {
       type: 'task.next',
-      target: ''
+      target: '',
+      objMode: false
     }
     let name = node.value
     while (true) {
@@ -32,7 +33,8 @@ function parseSingle(node: Node, info: TaskInfo) {
     let loc: Node | null = null
     const ref: TaskNextRefInfo = {
       type: 'task.next',
-      target: ''
+      target: '',
+      objMode: true
     }
     for (const [key, obj] of parseObject(node)) {
       if (key === 'name' && isString(obj)) {

@@ -4,11 +4,16 @@ import { parseTask } from '../task/task'
 import { parseObject } from '../utils'
 import type { InterfaceInfo } from './interface'
 
-export function parseOverride(node: Node, info: InterfaceInfo) {
+export function parseOverride(node: Node, info: InterfaceInfo, file: string) {
   for (const [key, obj, prop] of parseObject(node)) {
-    info.tasks.push({
-      name: key,
+    if (key.startsWith('$')) {
+      continue
+    }
+
+    info.layer.getTaskInfo(key).push({
+      file,
       prop,
+      data: obj,
       info: parseTask(obj)
     })
   }

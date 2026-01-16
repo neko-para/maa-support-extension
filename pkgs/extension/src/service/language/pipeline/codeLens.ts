@@ -6,6 +6,7 @@ import { interfaceService, taskIndexService } from '../..'
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { debounce } from '../../utils/debounce'
+import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineCodeLensProvider
@@ -42,19 +43,41 @@ export class PipelineCodeLensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
-    if (this.shouldFilter(document)) {
+    const intBundle = await this.flush()
+    if (!intBundle) {
       return null
     }
 
-    await taskIndexService.flushDirty()
-
-    const layer = taskIndexService.getLayer(document.uri)
-
+    const layer = intBundle.locateLayer(document.uri.fsPath)
     if (!layer) {
-      return []
+      return null
     }
 
     const result: vscode.CodeLens[] = []
+    for (const [name, taskInfos] of Object.entries(layer.tasks)) {
+      for (const taskInfo of taskInfos) {
+        if (taskInfo.file !== document.uri.fsPath) {
+          continue
+        }
+
+        if (isMaaAssistantArknights) {
+          // TODO
+        } else {
+          const range = convertRange(document, taskInfo.prop)
+          result.push(
+            new vscode.CodeLens(range, {
+              title: t('maa.pipeline.codelens.launch'),
+              command: commands.LaunchTask,
+              arguments: [name]
+            })
+          )
+        }
+      }
+    }
+    return result
+
+    /*
+
     for (const [taskName, taskInfos] of Object.entries(layer.index)) {
       for (const taskInfo of taskInfos) {
         if (taskInfo.uri.fsPath !== document.uri.fsPath) {
@@ -80,5 +103,6 @@ export class PipelineCodeLensProvider
       }
     }
     return result
+    */
   }
 }

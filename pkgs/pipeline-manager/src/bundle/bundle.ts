@@ -100,6 +100,7 @@ export class Bundle extends EventEmitter<{
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
+      file = file.replaceAll(path.sep, '/').replace('image/', '')
       if (!this.layer.images.has(file)) {
         this.layer.images.add(file)
         this.dispatchImageChanged()

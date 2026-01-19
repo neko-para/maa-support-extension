@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 import { findDeclRef } from '@mse/pipeline-manager'
 
-import { convertRange } from '../utils'
+import { convertRangeWithDelta } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceCompletionProvider
@@ -34,7 +34,7 @@ export class InterfaceCompletionProvider
     }
 
     if (ref.type === 'interface.option') {
-      const range = convertRange(document, ref.location, -1)
+      const range = convertRangeWithDelta(document, ref.location, -1)
 
       const opts = index.decls
         .filter(decl => decl.type === 'interface.option')

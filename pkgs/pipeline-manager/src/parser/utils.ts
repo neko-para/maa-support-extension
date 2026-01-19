@@ -34,14 +34,14 @@ export function* parseArray(node: Node | undefined | null) {
   }
 }
 
-export function isString(
-  node: Node
-): node is Omit<Node, 'type' | 'value'> & { type: 'string'; value: string } {
+export type StringNode = Omit<Node, 'type' | 'value'> & { type: 'string'; value: string }
+
+export function isString(node: Node): node is StringNode {
   return node.type === 'string' && typeof node.value === 'string'
 }
 
-export function isBool(
-  node: Node
-): node is Omit<Node, 'type' | 'value'> & { type: 'boolean'; value: boolean } {
+export type BoolNode = Omit<Node, 'type' | 'value'> & { type: 'boolean'; value: boolean }
+
+export function isBool(node: Node): node is BoolNode {
   return node.type === 'boolean' && typeof node.value === 'boolean'
 }

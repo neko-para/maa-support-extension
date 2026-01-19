@@ -1,6 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
-import { type PropPair, parseArray, parseObject } from '../utils'
+import { type PropPair, type StringNode, parseArray, parseObject } from '../utils'
 import { parseAnchor } from './anchor'
 import { parseFreeze } from './freeze'
 import { parseNextList } from './next'
@@ -29,6 +29,7 @@ export type TaskNextRefInfo = {
   type: 'task.next'
   target: string
   objMode: boolean
+  offset?: number
   jumpBack?: boolean
   anchor?: boolean
 }
@@ -41,6 +42,7 @@ export type TaskTargetRefInfo = {
 export type TaskRoiRefInfo = {
   type: 'task.roi'
   target: string
+  prev: StringNode[]
 }
 
 export type TaskTemplateRefInfo = {
@@ -82,11 +84,12 @@ function parseBase(props: PropPair[], info: TaskInfo) {
   }
 }
 
-function parseReco(props: PropPair[], info: TaskInfo, parent?: Node) {
+function parseReco(props: PropPair[], info: TaskInfo, prev: StringNode[], parent?: Node) {
+  let subName: StringNode | null = null
   for (const [prop, obj] of props) {
     switch (prop) {
       case 'roi':
-        parseRoi(obj, info)
+        parseRoi(obj, info, prev)
         break
       case 'template':
         parseTemplate(obj, info)
@@ -95,15 +98,18 @@ function parseReco(props: PropPair[], info: TaskInfo, parent?: Node) {
       case 'any_of':
         for (const sub of parseArray(obj)) {
           const subInfo = splitNode(sub)
-          parseReco(subInfo.reco, info, sub)
+          parseReco(subInfo.reco, info, prev, sub)
         }
         break
       case 'sub_name':
         if (parent) {
-          parseSubName(obj, info, parent)
+          subName = parseSubName(obj, info, parent)
         }
         break
     }
+  }
+  if (subName) {
+    prev.push(subName)
   }
 }
 
@@ -131,7 +137,7 @@ export function parseTask(node: Node): TaskInfo {
   }
 
   parseBase(info.parts.base, info)
-  parseReco(parts.reco, info)
+  parseReco(parts.reco, info, [])
   parseAct(parts.act, info)
 
   return info

@@ -11,5 +11,8 @@ export function parseSubName(node: Node, info: TaskInfo, parent: Node) {
       name: node.value,
       reco: parent
     })
+    return node
+  } else {
+    return null
   }
 }

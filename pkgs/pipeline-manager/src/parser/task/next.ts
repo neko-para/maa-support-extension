@@ -11,20 +11,24 @@ function parseSingle(node: Node, info: TaskInfo) {
       objMode: false
     }
     let name = node.value
+    let offset = 0
     while (true) {
       if (name.startsWith('[JumpBack]')) {
         ref.jumpBack = true
-        name = name.substring('[JumpBack]'.length)
+        name = name.substring(10)
+        offset += 10
         continue
       }
       if (name.startsWith('[Anchor]')) {
         ref.anchor = true
-        name = name.substring('[Anchor]'.length)
+        name = name.substring(8)
+        offset += 8
         continue
       }
       break
     }
     ref.target = name
+    ref.offset = offset
     info.refs.push({
       location: node,
       ...ref
@@ -46,10 +50,10 @@ function parseSingle(node: Node, info: TaskInfo) {
         ref.anchor = obj.value
       }
     }
-    if (loc && ref.target.length > 0) {
+    if (loc) {
       info.refs.push({
         location: loc,
-        ...(ref as TaskNextRefInfo)
+        ...ref
       })
     }
   }

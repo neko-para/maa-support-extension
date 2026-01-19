@@ -48,15 +48,16 @@ export class PipelineCodeLensProvider
       return null
     }
 
-    const layer = intBundle.locateLayer(document.uri.fsPath)
-    if (!layer) {
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath)
+    if (!layerInfo) {
       return null
     }
+    const [layer, file] = layerInfo
 
     const result: vscode.CodeLens[] = []
     for (const [name, taskInfos] of Object.entries(layer.tasks)) {
       for (const taskInfo of taskInfos) {
-        if (taskInfo.file !== document.uri.fsPath) {
+        if (taskInfo.file !== file) {
           continue
         }
 

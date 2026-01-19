@@ -29,7 +29,7 @@ function parseInput(node: Node, info: InterfaceInfo, option: string) {
         break
     }
   }
-  if (loc && decl.name.length > 0) {
+  if (loc) {
     info.decls.push({
       location: loc,
       ...decl

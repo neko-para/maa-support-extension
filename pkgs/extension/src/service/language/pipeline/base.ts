@@ -44,7 +44,7 @@ export class PipelineLanguageProvider extends BaseService {
   }
 
   async flush() {
-    await interfaceService.interfaceBundle?.flush()
+    await interfaceService.interfaceBundle?.flush(true)
     return interfaceService.interfaceBundle ?? null
   }
 

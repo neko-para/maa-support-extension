@@ -72,6 +72,14 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     })
 
     this.on('pathChanged', async () => {
+      let prev: LayerInfo | undefined = undefined
+      for (const bundle of this.bundles) {
+        bundle.layer.parent = prev
+        prev = bundle.layer
+      }
+      if (this.info) {
+        this.info.layer.parent = prev
+      }
       await Promise.all(this.bundles.map(bundle => bundle.load()))
 
       this.emit('bundleReloaded')
@@ -89,8 +97,11 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     }
   }
 
-  async flush() {
+  async flush(flushBundles = false) {
     await this.content.flush()
+    if (flushBundles) {
+      await Promise.all(this.bundles.map(bundle => bundle.flush()))
+    }
   }
 
   switchActive(active: string) {
@@ -112,7 +123,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       }
       this.paths = resInfo.paths
       this.bundles = this.paths.map(dir => {
-        return new Bundle(this.content.loader, this.content.watcher, dir)
+        return new Bundle(this.content.loader, this.content.watcher, path.join(this.root, dir))
       })
     } else {
       for (const bundle of this.bundles) {
@@ -155,13 +166,14 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.emit('langChanged')
   }
 
-  locateLayer(file: string): LayerInfo | null {
+  locateLayer(file: string): [layer: LayerInfo, relative: string] | null {
     if (file === this.file) {
-      return this.info?.layer ?? null
+      const layer = this.info?.layer
+      return layer ? [layer, file] : null
     } else {
       for (const bundle of this.bundles) {
         if (file.startsWith(path.join(bundle.root, 'pipeline'))) {
-          return bundle.layer
+          return [bundle.layer, path.relative(bundle.root, file)]
         }
       }
     }

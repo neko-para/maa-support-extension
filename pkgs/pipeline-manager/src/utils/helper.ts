@@ -2,7 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 export function filterDeclRef<T extends { location: Node }>(infos: T[], offset: number) {
   return infos.filter(
-    info => info.location.offset <= offset && info.location.offset + info.location.length > offset
+    info => info.location.offset <= offset && info.location.offset + info.location.length >= offset
   )
 }
 

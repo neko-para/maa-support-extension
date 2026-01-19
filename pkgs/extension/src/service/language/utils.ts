@@ -1,10 +1,22 @@
 import { Node } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
-export function convertRange(document: vscode.TextDocument, location: Node, deltaLen = 0) {
+export function convertRange(document: vscode.TextDocument, location: Node) {
   return new vscode.Range(
     document.positionAt(location.offset),
-    document.positionAt(location.offset + location.length + deltaLen)
+    document.positionAt(location.offset + location.length)
+  )
+}
+
+export function convertRangeWithDelta(
+  document: vscode.TextDocument,
+  location: Node,
+  deltaRight = 0,
+  deltaLeft = 0
+) {
+  return new vscode.Range(
+    document.positionAt(location.offset + deltaLeft),
+    document.positionAt(location.offset + location.length + deltaRight)
   )
 }
 

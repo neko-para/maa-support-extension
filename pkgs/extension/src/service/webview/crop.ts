@@ -107,7 +107,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         }
         const imageRoot = vscode.Uri.joinPath(resource, imageSuffix)
         const name = await vscode.window.showInputBox({
-          title: t('maa.pi.title.input-image')
+          title: t('maa.pi.title.input-image'),
+          ignoreFocusOut: true
         })
         if (!name) {
           this.response(data.seq, null)

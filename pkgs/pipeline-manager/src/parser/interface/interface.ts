@@ -1,5 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
+import type { IContentLoader } from '../../content/loader'
 import { LayerInfo } from '../../layer/layer'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
@@ -244,11 +245,11 @@ function parseLocalization(node: Node, info: InterfaceInfo) {
   }
 }
 
-export function parseInterface(node: Node, file: string) {
+export function parseInterface(loader: IContentLoader, node: Node, file: string) {
   const info: InterfaceInfo = {
     decls: [],
     refs: [],
-    layer: new LayerInfo('interface')
+    layer: new LayerInfo(loader, file, 'interface')
   }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {

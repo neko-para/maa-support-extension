@@ -1,7 +1,7 @@
+import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { taskIndexService } from '../..'
-import { isMaaAssistantArknights } from '../../../utils/fs'
+import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDocumentLinkProvider
@@ -18,6 +18,34 @@ export class PipelineDocumentLinkProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
+    const intBundle = await this.flush()
+    if (!intBundle) {
+      return []
+    }
+
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath)
+    if (!layerInfo) {
+      return []
+    }
+    const [layer, file] = layerInfo
+
+    const [decls, refs] = layer.mergeDeclsRefs(file)
+
+    const result: vscode.DocumentLink[] = []
+    for (const ref of refs) {
+      if (ref.type !== 'task.template') {
+        continue
+      }
+
+      result.push(
+        new vscode.DocumentLink(
+          convertRange(document, ref.location),
+          vscode.Uri.file(path.join(layer.root, 'image', ref.target))
+        )
+      )
+    }
+
+    /*
     if (this.shouldFilter(document)) {
       return []
     }
@@ -49,7 +77,7 @@ export class PipelineDocumentLinkProvider
         }
       }
     }
-
+*/
     return result
   }
 }

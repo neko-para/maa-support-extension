@@ -1,12 +1,12 @@
 import type { Node } from 'jsonc-parser'
 
-import { type PropPair, parseObject } from '../utils'
+import { type PropPair, type StringNode, isString, parseObject } from '../utils'
 import { actKeys, nodeKeys, recoKeys } from './keys'
 
 export type TaskParts = {
   node: Node
-  recoType?: Node
-  actType?: Node
+  recoType?: StringNode
+  actType?: StringNode
   base: PropPair[]
   reco: PropPair[]
   act: PropPair[]
@@ -30,17 +30,17 @@ export function splitNode(node: Node) {
     } else if (actKeys.includes(key)) {
       result.act.push(pair)
     } else if (key === 'recognition') {
-      if (obj.type === 'string') {
+      if (isString(obj)) {
         result.recoType = obj
       } else if (obj.type === 'object') {
         const type = obj.children?.find(
-          node => node.children?.[0].value === 'type' && node.children?.[1].type === 'string'
+          node => node.children?.[0].value === 'type' && isString(node.children?.[1])
         )
         const param = obj.children?.find(
           node => node.children?.[0].value === 'param' && node.children?.[1].type === 'object'
         )
         if (type) {
-          result.recoType = type.children![1]
+          result.recoType = type.children![1] as StringNode
         }
         for (const pair of parseObject(param?.children?.[1])) {
           if (recoKeys.includes(pair[0])) {
@@ -49,15 +49,15 @@ export function splitNode(node: Node) {
         }
       }
     } else if (key === 'action') {
-      if (obj.type === 'string') {
+      if (isString(obj)) {
         result.actType = obj
       } else if (obj.type === 'object') {
         const type = obj.children?.find(
-          node => node.children?.[0].value === 'type' && node.children?.[1].type === 'string'
+          node => node.children?.[0].value === 'type' && isString(node.children?.[1])
         )
         const param = obj.children?.find(node => node.children?.[0].value === 'param')
         if (type) {
-          result.actType = type.children![1]
+          result.actType = type.children![1] as StringNode
         }
         for (const pair of parseObject(param?.children?.[1])) {
           if (actKeys.includes(pair[0])) {

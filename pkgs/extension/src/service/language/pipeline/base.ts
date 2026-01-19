@@ -1,6 +1,8 @@
 import path from 'path'
 import * as vscode from 'vscode'
 
+import { LayerInfo } from '@mse/pipeline-manager/src/layer/layer'
+
 import { interfaceService, rootService } from '../..'
 import { pipelineSuffix } from '../../../utils/fs'
 import { BaseService } from '../../context'
@@ -50,5 +52,33 @@ export class PipelineLanguageProvider extends BaseService {
 
   async flushIndex() {
     return (await this.flush())?.info ?? null
+  }
+
+  getTaskBrief(layer: LayerInfo, task: string) {
+    const info = layer.getTaskBriefInfo(task)
+    return `Reco: ${info.reco ?? 'DirectHit'}\n\nAct: ${info.act ?? 'DoNothing'}`
+  }
+
+  async getTaskHover(layer: LayerInfo, task: string) {
+    const taskInfos = layer.getTask(task)
+    const content: string[] = []
+    for (const { layer, infos } of taskInfos) {
+      for (const info of infos) {
+        const doc = await vscode.workspace.openTextDocument(path.join(layer.root, info.file))
+        const begin = doc.positionAt(info.prop.offset)
+        const end = doc.positionAt(info.data.offset + info.data.length)
+        const range = new vscode.Range(
+          new vscode.Position(begin.line, 0),
+          new vscode.Position(end.line + 1, 0)
+        )
+        content.push(`${layer.root}
+
+\`\`\`json
+${doc.getText(range)}
+\`\`\`
+`)
+      }
+    }
+    return content.join('\n')
   }
 }

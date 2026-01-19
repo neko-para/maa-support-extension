@@ -1,12 +1,10 @@
-import path from 'path'
 import * as vscode from 'vscode'
 
 import { findDeclRef } from '@mse/pipeline-manager'
 
-import { taskIndexService } from '../..'
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
-import { convertRange, convertRangeWithDelta } from '../utils'
+import { convertRangeWithDelta } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineCompletionProvider
@@ -68,8 +66,8 @@ export class PipelineCompletionProvider
           label: task,
           kind: vscode.CompletionItemKind.Class,
           range,
-          sortText: '1_' + task
-          // TODO: document
+          sortText: '1_' + task,
+          detail: this.getTaskBrief(layer, task)
         }
         result.push(item)
       }
@@ -87,13 +85,13 @@ export class PipelineCompletionProvider
         }
       }
     } else if (ref.type === 'task.next' && ref.objMode && ref.anchor) {
-      for (const anchor of layer.getAnchorList()) {
+      for (const [anchor, decl] of layer.getAnchorList()) {
         const item: vscode.CompletionItem = {
           label: anchor,
           kind: vscode.CompletionItemKind.Variable,
           range: convertRangeWithDelta(document, ref.location, -1, 1),
-          sortText: anchor
-          // TODO: document
+          sortText: anchor,
+          detail: decl.task
         }
         result.push(item)
       }
@@ -126,13 +124,13 @@ export class PipelineCompletionProvider
         result.push(item)
       }
       if (ref.anchor) {
-        for (const anchor of layer.getAnchorList()) {
+        for (const [anchor, decl] of layer.getAnchorList()) {
           const item: vscode.CompletionItem = {
             label: anchor,
             kind: vscode.CompletionItemKind.Variable,
             range,
-            sortText: '1_' + anchor
-            // TODO: document
+            sortText: '1_' + anchor,
+            detail: decl.task
           }
           result.push(item)
         }
@@ -142,8 +140,8 @@ export class PipelineCompletionProvider
             label: task,
             kind: vscode.CompletionItemKind.Class,
             range,
-            sortText: '1_' + task
-            // TODO: document
+            sortText: '1_' + task,
+            detail: this.getTaskBrief(layer, task)
           }
           result.push(item)
         }

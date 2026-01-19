@@ -103,7 +103,7 @@ export class InterfaceService extends BaseService {
     this.interfaceBundle.on('interfaceChanged', () => {
       this.interfaceChanged.fire()
     })
-    this.interfaceBundle.on('pathChanged', () => {
+    this.interfaceBundle.on('bundleReloaded', () => {
       this.resourceChanged.fire()
     })
     await this.interfaceBundle.load()

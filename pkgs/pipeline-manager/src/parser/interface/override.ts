@@ -10,11 +10,11 @@ export function parseOverride(node: Node, info: InterfaceInfo, file: string) {
       continue
     }
 
-    info.layer.getTaskInfo(key).push({
+    info.layer.mutableTaskInfo(key).push({
       file,
       prop,
       data: obj,
-      info: parseTask(obj)
+      info: parseTask(obj, key)
     })
   }
 }

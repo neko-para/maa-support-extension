@@ -13,6 +13,7 @@ import { parseTemplate } from './template'
 export type TaskAnchorDeclInfo = {
   type: 'task.anchor'
   anchor: string
+  task: string
 }
 
 export type TaskSubRecoDeclInfo = {
@@ -65,7 +66,7 @@ export type TaskInfo = {
   refs: TaskRefInfo[]
 }
 
-function parseBase(props: PropPair[], info: TaskInfo) {
+function parseBase(props: PropPair[], info: TaskInfo, task: string) {
   for (const [prop, obj] of props) {
     switch (prop) {
       case 'next':
@@ -73,7 +74,7 @@ function parseBase(props: PropPair[], info: TaskInfo) {
         parseNextList(obj, info)
         break
       case 'anchor':
-        parseAnchor(obj, info)
+        parseAnchor(obj, info, task)
         break
       case 'pre_wait_freezes':
       case 'post_wait_freezes':
@@ -127,7 +128,7 @@ function parseAct(props: PropPair[], info: TaskInfo) {
   }
 }
 
-export function parseTask(node: Node): TaskInfo {
+export function parseTask(node: Node, task: string): TaskInfo {
   const parts = splitNode(node)
 
   const info: TaskInfo = {
@@ -136,7 +137,7 @@ export function parseTask(node: Node): TaskInfo {
     refs: []
   }
 
-  parseBase(info.parts.base, info)
+  parseBase(info.parts.base, info, task)
   parseReco(parts.reco, info, [])
   parseAct(parts.act, info)
 

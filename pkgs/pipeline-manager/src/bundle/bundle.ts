@@ -39,7 +39,7 @@ export class Bundle extends EventEmitter<{
     this.imageRoot = path.join(this.root, 'image')
 
     this.files = {}
-    this.layer = new LayerInfo('resource')
+    this.layer = new LayerInfo(loader, this.root, 'resource')
 
     this.manager = new BundleManager(loader, watcher, root, this)
     this.defaultPipeline = new ContentJson(
@@ -89,7 +89,7 @@ export class Bundle extends EventEmitter<{
 
   async reset(): Promise<void> {
     this.files = {}
-    this.layer = new LayerInfo('resource')
+    this.layer = new LayerInfo(this.manager.loader, this.root, 'resource')
     this.emit('reset')
   }
 
@@ -137,11 +137,11 @@ export class Bundle extends EventEmitter<{
           continue
         }
 
-        this.layer.getTaskInfo(key).push({
+        this.layer.mutableTaskInfo(key).push({
           file,
           prop,
           data: obj,
-          info: parseTask(obj)
+          info: parseTask(obj, key)
         })
         changed.push(key)
       }

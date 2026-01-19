@@ -43,7 +43,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     this.content = new ContentJson(loader, watcher, this.file, () => {
       if (this.content.node) {
-        this.info = parseInterface(this.content.node, this.file)
+        this.info = parseInterface(this.content.loader, this.content.node, this.file)
       } else {
         this.info = undefined
       }
@@ -80,6 +80,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       if (this.info) {
         this.info.layer.parent = prev
       }
+
       await Promise.all(this.bundles.map(bundle => bundle.load()))
 
       this.emit('bundleReloaded')

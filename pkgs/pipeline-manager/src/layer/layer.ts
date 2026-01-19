@@ -1,7 +1,7 @@
 import type { Node } from 'jsonc-parser'
 
-import type { TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
-import { findDeclRef } from '../utils/helper'
+import type { IContentLoader } from '../content/loader'
+import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
 
 export type LayerTaskInfo = {
   file: string
@@ -11,6 +11,9 @@ export type LayerTaskInfo = {
 }
 
 export class LayerInfo {
+  loader: IContentLoader
+
+  root: string
   parent?: LayerInfo
 
   type: 'interface' | 'resource'
@@ -19,7 +22,9 @@ export class LayerInfo {
   images: Set<string>
   extraRefs: TaskRefInfo[]
 
-  constructor(type: 'interface' | 'resource') {
+  constructor(loader: IContentLoader, root: string, type: 'interface' | 'resource') {
+    this.loader = loader
+    this.root = root
     this.type = type
 
     this.tasks = {}
@@ -27,7 +32,7 @@ export class LayerInfo {
     this.extraRefs = []
   }
 
-  getTaskInfo(name: string) {
+  mutableTaskInfo(name: string) {
     this.tasks[name] = this.tasks[name] ?? []
     return this.tasks[name]
   }
@@ -54,16 +59,50 @@ export class LayerInfo {
     return [...new Set(tasks)]
   }
 
-  getAnchorList(): string[] {
-    const anchors = this.parent?.getTaskList() ?? []
+  getAnchorList(): [anchor: string, decl: TaskAnchorDeclInfo][] {
+    const anchors = this.parent?.getAnchorList() ?? []
     const [decls, refs] = this.mergeDeclsRefs()
-    anchors.push(...decls.filter(decls => decls.type === 'task.anchor').map(decl => decl.anchor))
-    return [...new Set(anchors)]
+    anchors.push(
+      ...decls
+        .filter(decls => decls.type === 'task.anchor')
+        .map(decl => [decl.anchor, decl] as [anchor: string, decl: TaskAnchorDeclInfo])
+    )
+    return anchors
   }
 
   getImageList(): string[] {
     const images = this.parent?.getImageList() ?? []
     images.push(...this.images)
     return [...new Set(images)]
+  }
+
+  getTask(task: string): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
+    const tasks = this.parent?.getTask(task) ?? []
+    tasks.unshift({
+      layer: this,
+      infos: this.tasks[task] ?? []
+    })
+    return tasks.filter(x => x.infos.length > 0)
+  }
+
+  getTaskBriefInfo(task: string) {
+    const result: {
+      reco?: maa.RecognitionType
+      act?: maa.ActionType
+    } = {}
+    for (const { layer, infos } of this.getTask(task)) {
+      for (const info of infos) {
+        if (!result.reco && info.info.parts.recoType) {
+          result.reco = info.info.parts.recoType.value as maa.RecognitionType
+        } else if (!result.act && info.info.parts.actType) {
+          result.act = info.info.parts.actType.value as maa.ActionType
+        }
+        if (result.reco && result.act) {
+          return result
+        }
+      }
+    }
+
+    return result
   }
 }

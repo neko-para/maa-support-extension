@@ -36,12 +36,12 @@ export function* parseArray(node: Node | undefined | null) {
 
 export type StringNode = Omit<Node, 'type' | 'value'> & { type: 'string'; value: string }
 
-export function isString(node: Node): node is StringNode {
-  return node.type === 'string' && typeof node.value === 'string'
+export function isString(node?: Node): node is StringNode {
+  return !!node && node.type === 'string' && typeof node.value === 'string'
 }
 
 export type BoolNode = Omit<Node, 'type' | 'value'> & { type: 'boolean'; value: boolean }
 
-export function isBool(node: Node): node is BoolNode {
-  return node.type === 'boolean' && typeof node.value === 'boolean'
+export function isBool(node?: Node): node is BoolNode {
+  return !!node && node.type === 'boolean' && typeof node.value === 'boolean'
 }

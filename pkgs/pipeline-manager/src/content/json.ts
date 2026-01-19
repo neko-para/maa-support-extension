@@ -12,6 +12,7 @@ export class ContentJson<T = any> {
   node?: Node
   object?: T
 
+  dirty: boolean
   watcherCtrl?: IContentWatcherController
   duringFlush: boolean
   flushResolve: (() => void)[]
@@ -28,6 +29,7 @@ export class ContentJson<T = any> {
     this.file = file
     this.changed = changed
 
+    this.dirty = true
     this.duringFlush = false
     this.flushResolve = []
     this.needFlush = false
@@ -35,18 +37,22 @@ export class ContentJson<T = any> {
 
   async load() {
     this.watcherCtrl?.stop()
+    this.dirty = true
 
     this.watcherCtrl = await this.watcher.watch(this.file, {
       filter: (file, isdir) => {
         return true
       },
       fileAdded: file => {
+        this.dirty = true
         this.dispatchFlush()
       },
       fileChanged: file => {
+        this.dirty = true
         this.dispatchFlush()
       },
       fileDeleted: file => {
+        this.dirty = true
         this.dispatchFlush()
       }
     })
@@ -67,19 +73,23 @@ export class ContentJson<T = any> {
     this.duringFlush = true
     this.needFlush = false
 
-    const content = await this.loader.get(this.file)
-    if (typeof content === 'string') {
-      this.node = parseTreeWithoutParent(content)
-    } else {
-      this.node = undefined
-    }
-    if (this.node) {
-      this.object = buildTree(this.node)
-    } else {
-      this.object = undefined
-    }
+    if (this.dirty) {
+      const content = await this.loader.get(this.file)
+      if (typeof content === 'string') {
+        this.node = parseTreeWithoutParent(content)
+      } else {
+        this.node = undefined
+      }
+      if (this.node) {
+        this.object = buildTree(this.node)
+      } else {
+        this.object = undefined
+      }
 
-    await this.changed(this.node, this.object)
+      await this.changed(this.node, this.object)
+
+      this.dirty = false
+    }
 
     const resolves = this.flushResolve
     this.flushResolve = []

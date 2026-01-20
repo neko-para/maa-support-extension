@@ -56,7 +56,7 @@ export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect) {
   tasker.controller = ctrl
   tasker.resource = res
 
-  if (!tasker.inited) {
+  if (!(await tasker.inited)) {
     logger.error('tmpl match tasker create failed')
     tasker.destroy()
     res.destroy()

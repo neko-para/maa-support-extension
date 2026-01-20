@@ -88,7 +88,7 @@ export async function performOcr(
   const tasker = new maa.Tasker()
   tasker.controller = ctrl
   tasker.resource = res
-  if (!tasker.inited) {
+  if (!(await tasker.inited)) {
     logger.error('ocr tasker create failed')
     return null
   }

@@ -394,7 +394,7 @@ export class LaunchService extends BaseService {
     client?.register_resource_sink(resource)
     client?.register_tasker_sink(tasker)
 
-    if (!tasker.inited) {
+    if (!(await tasker.inited)) {
       tasker.destroy()
       resource.destroy()
       client?.destroy()

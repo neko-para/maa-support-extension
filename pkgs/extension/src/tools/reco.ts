@@ -47,7 +47,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
   const tasker = new maa.Tasker()
   tasker.controller = ctrl
   tasker.resource = res
-  if (!tasker.inited) {
+  if (!(await tasker.inited)) {
     logger.error('quick reco tasker create failed')
     return null
   }

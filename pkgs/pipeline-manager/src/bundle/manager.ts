@@ -2,24 +2,25 @@ import path from 'node:path'
 
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher, IContentWatcherController } from '../content/watch'
+import { type AbsolutePath, type RelativePath, relativePath } from '../utils/types'
 
 export interface IBundleManagerDelegate {
-  filterFile(file: string, isdir: boolean): boolean
-  needContent(file: string): boolean
+  filterFile(file: AbsolutePath, isdir: boolean): boolean
+  needContent(file: AbsolutePath): boolean
 
   reset(): Promise<void>
-  loadFile(file: string, full: string, content?: string): Promise<void>
-  deleteFile(file: string, full: string): Promise<void>
+  loadFile(file: RelativePath, full: AbsolutePath, content?: string): Promise<void>
+  deleteFile(file: RelativePath, full: AbsolutePath): Promise<void>
 }
 
 export class BundleManager {
   loader: IContentLoader
   watcher: IContentWatcher
-  root: string
+  root: AbsolutePath
   delegate: IBundleManagerDelegate
 
-  changed: Set<string>
-  removed: Set<string>
+  changed: Set<AbsolutePath>
+  removed: Set<AbsolutePath>
   watcherCtrl?: IContentWatcherController
   duringFlush: boolean
   flushResolve: (() => void)[]
@@ -28,7 +29,7 @@ export class BundleManager {
   constructor(
     loader: IContentLoader,
     watcher: IContentWatcher,
-    root: string,
+    root: AbsolutePath,
     delegate: IBundleManagerDelegate
   ) {
     this.loader = loader
@@ -51,23 +52,23 @@ export class BundleManager {
 
     this.watcherCtrl = await this.watcher.watch(this.root, {
       filter: (file: string, isdir: boolean) => {
-        return this.delegate.filterFile(file, isdir)
+        return this.delegate.filterFile(file as AbsolutePath, isdir)
       },
       fileAdded: (file: string) => {
-        this.changed.add(file)
-        this.removed.delete(file)
+        this.changed.add(file as AbsolutePath)
+        this.removed.delete(file as AbsolutePath)
 
         this.dispatchFlush()
       },
       fileChanged: (file: string) => {
-        this.changed.add(file)
-        this.removed.delete(file)
+        this.changed.add(file as AbsolutePath)
+        this.removed.delete(file as AbsolutePath)
 
         this.dispatchFlush()
       },
       fileDeleted: (file: string) => {
-        this.removed.add(file)
-        this.changed.delete(file)
+        this.removed.add(file as AbsolutePath)
+        this.changed.delete(file as AbsolutePath)
 
         this.dispatchFlush()
       }
@@ -96,19 +97,19 @@ export class BundleManager {
     this.removed = new Set()
 
     for (const file of removed) {
-      await this.delegate.deleteFile(path.relative(this.root, file), file)
+      await this.delegate.deleteFile(relativePath(this.root, file), file)
     }
 
     for (const file of changed) {
       if (this.delegate.needContent(file)) {
         const content = await this.loader.get(file)
         if (typeof content === 'string') {
-          await this.delegate.loadFile(path.relative(this.root, file), file, content)
+          await this.delegate.loadFile(relativePath(this.root, file), file, content)
         } else {
-          await this.delegate.deleteFile(path.relative(this.root, file), file)
+          await this.delegate.deleteFile(relativePath(this.root, file), file)
         }
       } else {
-        await this.delegate.loadFile(path.relative(this.root, file), file)
+        await this.delegate.loadFile(relativePath(this.root, file), file)
       }
     }
 

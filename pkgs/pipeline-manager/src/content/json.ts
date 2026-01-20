@@ -1,13 +1,14 @@
 import type { Node } from 'jsonc-parser'
 
 import { buildTree, parseTreeWithoutParent } from '../utils/json'
+import type { AbsolutePath } from '../utils/types'
 import type { IContentLoader } from './loader'
 import type { IContentWatcher, IContentWatcherController } from './watch'
 
 export class ContentJson<T = any> {
   loader: IContentLoader
   watcher: IContentWatcher
-  file: string
+  file: AbsolutePath
   changed: (node?: Node, obj?: T) => void | Promise<void>
   node?: Node
   object?: T
@@ -21,7 +22,7 @@ export class ContentJson<T = any> {
   constructor(
     loader: IContentLoader,
     watcher: IContentWatcher,
-    file: string,
+    file: AbsolutePath,
     changed: (node?: Node, obj?: T) => void | Promise<void>
   ) {
     this.loader = loader

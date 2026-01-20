@@ -9,6 +9,13 @@ import { LayerInfo } from '../layer/layer'
 import { parseTask } from '../parser/task/task'
 import { parseObject } from '../parser/utils'
 import { parseTreeWithoutParent } from '../utils/json'
+import {
+  type AbsolutePath,
+  type ImageRelativePath,
+  type RelativePath,
+  type TaskName,
+  joinPath
+} from '../utils/types'
 import { BundleManager } from './manager'
 
 export class Bundle extends EventEmitter<{
@@ -17,12 +24,12 @@ export class Bundle extends EventEmitter<{
   imageChanged: []
   defaultChanged: []
 }> {
-  root: string
+  root: AbsolutePath
 
-  pipelineRoot: string
-  imageRoot: string
+  pipelineRoot: AbsolutePath
+  imageRoot: AbsolutePath
 
-  files: Record<string, string>
+  files: Record<RelativePath, string>
   layer: LayerInfo
 
   manager: BundleManager
@@ -33,19 +40,19 @@ export class Bundle extends EventEmitter<{
   constructor(loader: IContentLoader, watcher: IContentWatcher, root: string) {
     super()
 
-    this.root = root
+    this.root = root as AbsolutePath
 
-    this.pipelineRoot = path.join(this.root, 'pipeline')
-    this.imageRoot = path.join(this.root, 'image')
+    this.pipelineRoot = joinPath(this.root, 'pipeline')
+    this.imageRoot = joinPath(this.root, 'image')
 
     this.files = {}
     this.layer = new LayerInfo(loader, this.root, 'resource')
 
-    this.manager = new BundleManager(loader, watcher, root, this)
+    this.manager = new BundleManager(loader, watcher, this.root, this)
     this.defaultPipeline = new ContentJson(
       loader,
       watcher,
-      path.join(this.root, 'default_pipeline.json'),
+      joinPath(this.root, 'default_pipeline.json'),
       () => {
         this.emit('defaultChanged')
       }
@@ -93,35 +100,36 @@ export class Bundle extends EventEmitter<{
     this.emit('reset')
   }
 
-  async loadFile(file: string, full: string, content?: string): Promise<void> {
+  async loadFile(file: RelativePath, full: AbsolutePath, content?: string): Promise<void> {
     if (file.endsWith('.json')) {
       const changed = this.loadFileImpl(file, content)
       if (changed.length > 0) {
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      file = file.replaceAll(path.sep, '/').replace('image/', '')
-      if (!this.layer.images.has(file)) {
-        this.layer.images.add(file)
+      const imageFile = file.replaceAll(path.sep, '/').replace('image/', '') as ImageRelativePath
+      if (!this.layer.images.has(imageFile)) {
+        this.layer.images.add(imageFile)
         this.dispatchImageChanged()
       }
     }
   }
 
-  async deleteFile(file: string, full: string): Promise<void> {
+  async deleteFile(file: RelativePath, full: AbsolutePath): Promise<void> {
     if (file.endsWith('.json')) {
       const changed = this.deleteFileImpl(file)
       if (changed.length > 0) {
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      if (this.layer.images.delete(file)) {
+      const imageFile = file.replaceAll(path.sep, '/').replace('image/', '') as ImageRelativePath
+      if (this.layer.images.delete(imageFile)) {
         this.dispatchImageChanged()
       }
     }
   }
 
-  loadFileImpl(file: string, content?: string): string[] {
+  loadFileImpl(file: RelativePath, content?: string): string[] {
     const changed: string[] = []
     changed.push(...this.deleteFileImpl(file))
     if (!content) {
@@ -137,11 +145,11 @@ export class Bundle extends EventEmitter<{
           continue
         }
 
-        this.layer.mutableTaskInfo(key).push({
-          file,
+        this.layer.mutableTaskInfo(key as TaskName).push({
+          file: joinPath(this.root, file),
           prop,
           data: obj,
-          info: parseTask(obj, key)
+          info: parseTask(obj, prop)
         })
         changed.push(key)
       }
@@ -149,12 +157,12 @@ export class Bundle extends EventEmitter<{
     return changed
   }
 
-  deleteFileImpl(file: string): string[] {
+  deleteFileImpl(file: RelativePath): string[] {
     const changed: string[] = []
     delete this.files[file]
 
     for (const [task, infos] of Object.entries(this.layer.tasks)) {
-      const newInfos = infos.filter(info => info.file !== file)
+      const newInfos = infos.filter(info => info.file !== joinPath(this.root, file))
       if (infos.length !== newInfos.length) {
         infos.splice(0, infos.length, ...newInfos)
         changed.push(task)

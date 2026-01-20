@@ -1,5 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
+import type { ImageRelativePath } from '../../utils/types'
 import { isString, parseArray } from '../utils'
 import type { TaskInfo } from './task'
 
@@ -8,7 +9,7 @@ function parseSingle(node: Node, info: TaskInfo) {
     info.refs.push({
       location: node,
       type: 'task.template',
-      target: node.value
+      target: node.value as ImageRelativePath
     })
   }
 }

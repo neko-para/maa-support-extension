@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 
+import { AbsolutePath } from '@mse/pipeline-manager'
 import { t } from '@mse/utils'
 
 import { interfaceService, taskIndexService } from '../..'
@@ -48,7 +49,7 @@ export class PipelineCodeLensProvider
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath)
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
     if (!layerInfo) {
       return null
     }

@@ -2,9 +2,10 @@ import type { Node } from 'jsonc-parser'
 
 import type { IContentLoader } from '../content/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
+import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../utils/types'
 
 export type LayerTaskInfo = {
-  file: string
+  file: AbsolutePath
   prop: Node
   data: Node
   info: TaskInfo
@@ -13,16 +14,16 @@ export type LayerTaskInfo = {
 export class LayerInfo {
   loader: IContentLoader
 
-  root: string
+  root: AbsolutePath
   parent?: LayerInfo
 
   type: 'interface' | 'resource'
 
-  tasks: Record<string, LayerTaskInfo[]>
-  images: Set<string>
+  tasks: Record<TaskName, LayerTaskInfo[]>
+  images: Set<ImageRelativePath>
   extraRefs: TaskRefInfo[]
 
-  constructor(loader: IContentLoader, root: string, type: 'interface' | 'resource') {
+  constructor(loader: IContentLoader, root: AbsolutePath, type: 'interface' | 'resource') {
     this.loader = loader
     this.root = root
     this.type = type
@@ -32,12 +33,12 @@ export class LayerInfo {
     this.extraRefs = []
   }
 
-  mutableTaskInfo(name: string) {
+  mutableTaskInfo(name: TaskName) {
     this.tasks[name] = this.tasks[name] ?? []
     return this.tasks[name]
   }
 
-  mergeDeclsRefs(file?: string): [decls: TaskDeclInfo[], refs: TaskRefInfo[]] {
+  mergeDeclsRefs(file?: AbsolutePath): [decls: TaskDeclInfo[], refs: TaskRefInfo[]] {
     const result: [decls: TaskDeclInfo[], refs: TaskRefInfo[]] = [[], []]
     for (const [name, taskInfos] of Object.entries(this.tasks)) {
       for (const taskInfo of taskInfos) {
@@ -53,30 +54,41 @@ export class LayerInfo {
     return result
   }
 
-  getTaskList(): string[] {
+  mergeDeclsWithFile(): [decl: TaskDeclInfo, file: AbsolutePath][] {
+    type Result = [decl: TaskDeclInfo, file: AbsolutePath]
+    const result: Result[] = []
+    for (const [name, taskInfos] of Object.entries(this.tasks)) {
+      for (const taskInfo of taskInfos) {
+        result.push(...taskInfo.info.decls.map(decl => [decl, taskInfo.file] as Result))
+      }
+    }
+    return result
+  }
+
+  getTaskList(): TaskName[] {
     const tasks = this.parent?.getTaskList() ?? []
-    tasks.push(...Object.keys(this.tasks))
+    tasks.push(...(Object.keys(this.tasks) as TaskName[]))
     return [...new Set(tasks)]
   }
 
-  getAnchorList(): [anchor: string, decl: TaskAnchorDeclInfo][] {
+  getAnchorList(): [anchor: AnchorName, decl: TaskAnchorDeclInfo][] {
     const anchors = this.parent?.getAnchorList() ?? []
     const [decls, refs] = this.mergeDeclsRefs()
     anchors.push(
       ...decls
         .filter(decls => decls.type === 'task.anchor')
-        .map(decl => [decl.anchor, decl] as [anchor: string, decl: TaskAnchorDeclInfo])
+        .map(decl => [decl.anchor, decl] as [anchor: AnchorName, decl: TaskAnchorDeclInfo])
     )
     return anchors
   }
 
-  getImageList(): string[] {
+  getImageList(): ImageRelativePath[] {
     const images = this.parent?.getImageList() ?? []
     images.push(...this.images)
     return [...new Set(images)]
   }
 
-  getTask(task: string): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
+  getTask(task: TaskName): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
     const tasks = this.parent?.getTask(task) ?? []
     tasks.unshift({
       layer: this,
@@ -85,7 +97,7 @@ export class LayerInfo {
     return tasks.filter(x => x.infos.length > 0)
   }
 
-  getTaskBriefInfo(task: string) {
+  getTaskBriefInfo(task: TaskName) {
     const result: {
       reco?: maa.RecognitionType
       act?: maa.ActionType

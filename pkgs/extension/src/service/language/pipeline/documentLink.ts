@@ -1,6 +1,8 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { AbsolutePath, joinImagePath, joinPath } from '@mse/pipeline-manager'
+
 import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -23,7 +25,7 @@ export class PipelineDocumentLinkProvider
       return []
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath)
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
     if (!layerInfo) {
       return []
     }
@@ -40,7 +42,7 @@ export class PipelineDocumentLinkProvider
       result.push(
         new vscode.DocumentLink(
           convertRange(document, ref.location),
-          vscode.Uri.file(path.join(layer.root, 'image', ref.target))
+          vscode.Uri.file(joinImagePath(layer.root, ref.target))
         )
       )
     }

@@ -1,13 +1,13 @@
 import type { Node } from 'jsonc-parser'
 
-export type PropPair = [prop: string, value: Node, propNode: Node]
+export type PropPair = [prop: string, value: Node, propNode: StringNode]
 
 function parseProp(prop: Node): PropPair | null {
   if (prop.type !== 'property' || !prop.children || prop.children.length !== 2) {
     return null
   }
   const [key, obj] = prop.children
-  if (key.type !== 'string' || typeof key.value !== 'string') {
+  if (!isString(key)) {
     return null
   }
   return [key.value, obj, key]

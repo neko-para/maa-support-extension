@@ -8,6 +8,7 @@ import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import type { LayerInfo } from '../layer/layer'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
+import { type AbsolutePath, type RelativePath, joinPath, relativePath } from '../utils/types'
 
 export class InterfaceBundle<T extends any> extends EventEmitter<{
   interfaceChanged: []
@@ -16,18 +17,18 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   pathChanged: []
   bundleReloaded: []
 }> {
-  root: string
-  file: string
+  root: AbsolutePath
+  file: AbsolutePath
 
   content: ContentJson<T>
 
   info?: InterfaceInfo
 
   active: string
-  paths: string[]
+  paths: RelativePath[]
   bundles: Bundle[]
 
-  langFiles: [string, string][]
+  langFiles: [string, RelativePath][]
   langs: ContentJson<Record<string, string>>[]
 
   constructor(
@@ -38,8 +39,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   ) {
     super()
 
-    this.root = root
-    this.file = path.join(this.root, file)
+    this.root = root as AbsolutePath
+    this.file = joinPath(this.root, file)
 
     this.content = new ContentJson(loader, watcher, this.file, () => {
       if (this.content.node) {
@@ -140,7 +141,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   updateLangs() {
     const langInfos = this.info?.decls.filter(decl => decl.type === 'interface.language')
     if (langInfos) {
-      const newFiles = langInfos.map(info => [info.name, info.path] as [string, string])
+      const newFiles = langInfos.map(info => [info.name, info.path] as [string, RelativePath])
       if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
         return // paths not changed
       }
@@ -152,7 +153,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
         return new ContentJson(
           this.content.loader,
           this.content.watcher,
-          path.join(this.root, file),
+          joinPath(this.root, file),
           () => {}
         )
       })
@@ -167,14 +168,14 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.emit('langChanged')
   }
 
-  locateLayer(file: string): [layer: LayerInfo, relative: string] | null {
+  locateLayer(file: AbsolutePath): [layer: LayerInfo, absolute: AbsolutePath] | null {
     if (file === this.file) {
       const layer = this.info?.layer
       return layer ? [layer, file] : null
     } else {
       for (const bundle of this.bundles) {
-        if (file.startsWith(path.join(bundle.root, 'pipeline'))) {
-          return [bundle.layer, path.relative(bundle.root, file)]
+        if (file.startsWith(joinPath(bundle.root, 'pipeline'))) {
+          return [bundle.layer, file]
         }
       }
     }

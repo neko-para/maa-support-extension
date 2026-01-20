@@ -1,5 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
+import type { AbsolutePath } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCases } from './case'
 import { parseInputs } from './input'
@@ -37,7 +38,7 @@ function parseInputRef(
   }
 }
 
-function parseOptionSec(node: Node, info: InterfaceInfo, option: string, file: string) {
+function parseOptionSec(node: Node, info: InterfaceInfo, option: string, file: AbsolutePath) {
   let inputNames: string[] = []
   let overrideNode: Node | null = null
   for (const [key, obj] of parseObject(node)) {
@@ -73,7 +74,7 @@ function parseOptionSec(node: Node, info: InterfaceInfo, option: string, file: s
   }
 }
 
-export function parseOption(node: Node, info: InterfaceInfo, file: string) {
+export function parseOption(node: Node, info: InterfaceInfo, file: AbsolutePath) {
   for (const [key, obj, prop] of parseObject(node)) {
     info.decls.push({
       location: prop,

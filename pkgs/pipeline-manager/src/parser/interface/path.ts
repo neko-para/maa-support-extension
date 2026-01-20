@@ -1,9 +1,10 @@
 import type { Node } from 'jsonc-parser'
 
+import type { RelativePath } from '../../utils/types'
 import { isString, parseArray } from '../utils'
 import type { InterfaceInfo } from './interface'
 
-function parseSingle(node: Node, info: InterfaceInfo) {
+function parseSingle(node: Node, info: InterfaceInfo): RelativePath {
   if (isString(node)) {
     let target = node.value
     if (target.startsWith('{PROJECT_DIR}')) {
@@ -12,16 +13,16 @@ function parseSingle(node: Node, info: InterfaceInfo) {
     info.refs.push({
       location: node,
       type: 'interface.resource_path',
-      target
+      target: target as RelativePath
     })
-    return target
+    return target as RelativePath
   } else {
-    return ''
+    return '' as RelativePath
   }
 }
 
 export function parsePath(node: Node, info: InterfaceInfo) {
-  const result: string[] = []
+  const result: RelativePath[] = []
   if (node.type !== 'array') {
     result.push(parseSingle(node, info))
   } else {

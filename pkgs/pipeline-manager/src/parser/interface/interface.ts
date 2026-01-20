@@ -2,6 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import type { IContentLoader } from '../../content/loader'
 import { LayerInfo } from '../../layer/layer'
+import type { AbsolutePath, RelativePath } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
 import { locKeys } from './keys'
@@ -26,7 +27,7 @@ export type IntCtrlDeclInfo = {
 export type IntResDeclInfo = {
   type: 'interface.resource'
   name: string
-  paths: string[]
+  paths: RelativePath[]
   controller?: string[]
 }
 
@@ -77,7 +78,7 @@ export type IntLocaleRefInfo = {
 
 export type IntResPathRefInfo = {
   type: 'interface.resource_path'
-  target: string
+  target: RelativePath
 }
 
 export type IntCtrlRefInfo = {
@@ -183,7 +184,7 @@ function parseResource(node: Node, info: InterfaceInfo) {
   }
 }
 
-function parseTaskSec(node: Node, info: InterfaceInfo, file: string) {
+function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
@@ -245,7 +246,7 @@ function parseLocalization(node: Node, info: InterfaceInfo) {
   }
 }
 
-export function parseInterface(loader: IContentLoader, node: Node, file: string) {
+export function parseInterface(loader: IContentLoader, node: Node, file: AbsolutePath) {
   const info: InterfaceInfo = {
     decls: [],
     refs: [],

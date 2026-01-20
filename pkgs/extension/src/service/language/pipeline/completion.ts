@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { findDeclRef } from '@mse/pipeline-manager'
+import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
 
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
@@ -35,7 +35,7 @@ export class PipelineCompletionProvider
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath)
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
     if (!layerInfo) {
       return null
     }

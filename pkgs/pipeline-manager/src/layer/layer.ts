@@ -23,6 +23,10 @@ export class LayerInfo {
   images: Set<ImageRelativePath>
   extraRefs: TaskRefInfo[]
 
+  dirty: boolean
+  mergedDeclsCache: TaskDeclInfo[]
+  mergedRefsCache: TaskRefInfo[]
+
   constructor(loader: IContentLoader, root: AbsolutePath, type: 'interface' | 'resource') {
     this.loader = loader
     this.root = root
@@ -31,12 +35,20 @@ export class LayerInfo {
     this.tasks = {}
     this.images = new Set()
     this.extraRefs = []
+
+    this.dirty = true
+    this.mergedDeclsCache = []
+    this.mergedRefsCache = []
   }
 
   reset() {
     this.tasks = {}
     this.images = new Set()
     this.extraRefs = []
+
+    this.dirty = true
+    this.mergedDeclsCache = []
+    this.mergedRefsCache = []
   }
 
   mutableTaskInfo(name: TaskName) {
@@ -44,34 +56,45 @@ export class LayerInfo {
     return this.tasks[name]
   }
 
-  mergeDeclsRefs(file?: AbsolutePath): [decls: TaskDeclInfo[], refs: TaskRefInfo[]] {
-    const result: [decls: TaskDeclInfo[], refs: TaskRefInfo[]] = [[], []]
-    for (const [name, taskInfos] of Object.entries(this.tasks)) {
-      for (const taskInfo of taskInfos) {
-        if (file && taskInfo.file !== file) {
-          continue
-        }
-
-        result[0].push(...taskInfo.info.decls)
-        result[1].push(...taskInfo.info.refs)
-      }
-    }
-    result[1].push(...this.extraRefs)
-    return result
+  markDirty() {
+    this.dirty = true
   }
 
-  mergeAllDeclsRefs(): [decls: TaskDeclInfo[], refs: TaskRefInfo[]] {
-    const upper = this.parent?.mergeAllDeclsRefs()
-    const [decls, refs] = this.mergeDeclsRefs()
-    if (upper) {
-      const [upperDecls, upperRefs] = upper
-      return [
-        [...decls, ...upperDecls],
-        [...refs, ...upperRefs]
-      ]
-    } else {
-      return [decls, refs]
+  get mergedDecls() {
+    this.flushMergedDeclsRefs()
+    return this.mergedDeclsCache
+  }
+
+  get mergedRefs() {
+    this.flushMergedDeclsRefs()
+    return this.mergedRefsCache
+  }
+
+  get mergedAllDecls(): TaskDeclInfo[] {
+    const upper = this.parent?.mergedAllDecls ?? []
+    return upper.concat(this.mergedDecls)
+  }
+
+  get mergedAllRefs(): TaskRefInfo[] {
+    const upper = this.parent?.mergedAllRefs ?? []
+    return upper.concat(this.mergedRefs)
+  }
+
+  flushMergedDeclsRefs() {
+    if (!this.dirty) {
+      return
     }
+
+    this.mergedDeclsCache = []
+    this.mergedRefsCache = []
+    for (const taskInfos of Object.values(this.tasks)) {
+      for (const taskInfo of taskInfos) {
+        this.mergedDeclsCache.push(...taskInfo.info.decls)
+        this.mergedRefsCache.push(...taskInfo.info.refs)
+      }
+    }
+    this.mergedRefsCache.push(...this.extraRefs)
+    this.dirty = false
   }
 
   getTaskList(): TaskName[] {
@@ -82,11 +105,9 @@ export class LayerInfo {
 
   getAnchorList(): [anchor: AnchorName, decl: TaskAnchorDeclInfo][] {
     const anchors = this.parent?.getAnchorList() ?? []
-    const [decls, refs] = this.mergeDeclsRefs()
+    const decls = this.mergedDecls.filter(decl => decl.type === 'task.anchor')
     anchors.push(
-      ...decls
-        .filter(decls => decls.type === 'task.anchor')
-        .map(decl => [decl.anchor, decl] as [anchor: AnchorName, decl: TaskAnchorDeclInfo])
+      ...decls.map(decl => [decl.anchor, decl] as [anchor: AnchorName, decl: TaskAnchorDeclInfo])
     )
     return anchors
   }

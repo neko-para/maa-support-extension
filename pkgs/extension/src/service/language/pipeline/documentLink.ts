@@ -30,7 +30,7 @@ export class PipelineDocumentLinkProvider
     }
     const [layer, file] = layerInfo
 
-    const [decls, refs] = layer.mergeDeclsRefs(file)
+    const refs = layer.mergedRefs.filter(ref => ref.file === file)
 
     const result: vscode.DocumentLink[] = []
     for (const ref of refs) {

@@ -27,7 +27,7 @@ export class PipelineWorkspaceSymbolProvider
 
     const result: vscode.SymbolInformation[] = []
 
-    const [decls, refs] = intBundle.info.layer.mergeAllDeclsRefs()
+    const decls = intBundle.info.layer.mergedAllDecls
     for (const decl of decls) {
       if (decl.type !== 'task.decl') {
         continue

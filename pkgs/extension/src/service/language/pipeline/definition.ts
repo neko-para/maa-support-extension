@@ -33,12 +33,14 @@ export class PipelineDefinitionProvider
     const [layer, file] = layerInfo
 
     const offset = document.offsetAt(position)
-    const [decls, refs] = layer.mergeDeclsRefs(file)
+    const decls = layer.mergedDecls.filter(decl => decl.file === file)
+    const refs = layer.mergedRefs.filter(ref => ref.file === file)
 
     const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
-    const [allDecls, allRefs] = intBundle.info.layer.mergeAllDeclsRefs()
+    const allDecls = intBundle.info.layer.mergedAllDecls
+    const allRefs = intBundle.info.layer.mergedAllRefs
 
     if (decl) {
       const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []

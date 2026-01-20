@@ -155,6 +155,7 @@ export class Bundle extends EventEmitter<{
             task: prop
           })
         })
+        this.layer.markDirty()
         changed.push(key)
       }
     }
@@ -172,6 +173,7 @@ export class Bundle extends EventEmitter<{
         changed.push(task)
       }
     }
+    this.layer.markDirty()
     return changed
   }
 

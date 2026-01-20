@@ -30,7 +30,8 @@ export class PipelineHoverProvider
     }
     const [layer, file] = layerInfo
 
-    const [decls, refs] = layer.mergeDeclsRefs(file)
+    const decls = layer.mergedDecls.filter(decl => decl.file === file)
+    const refs = layer.mergedRefs.filter(ref => ref.file === file)
 
     const offset = document.offsetAt(position)
     const decl = findDeclRef(decls, offset)

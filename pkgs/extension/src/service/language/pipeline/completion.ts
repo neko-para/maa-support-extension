@@ -42,7 +42,7 @@ export class PipelineCompletionProvider
     const [layer, file] = layerInfo
 
     const offset = document.offsetAt(position)
-    const [decls, refs] = layer.mergeDeclsRefs(file)
+    const refs = layer.mergedRefs.filter(ref => ref.file === file)
     const ref = findDeclRef(refs, offset)
 
     if (!ref) {

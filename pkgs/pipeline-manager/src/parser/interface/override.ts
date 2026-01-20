@@ -20,5 +20,6 @@ export function parseOverride(node: Node, info: InterfaceInfo, file: AbsolutePat
         task: prop
       })
     })
+    info.layer.markDirty()
   }
 }

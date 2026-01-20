@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import { AbsolutePath } from '@mse/pipeline-manager'
 import { t } from '@mse/utils'
 
-import { interfaceService, taskIndexService } from '../..'
+import { interfaceService } from '../..'
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { debounce } from '../../utils/debounce'

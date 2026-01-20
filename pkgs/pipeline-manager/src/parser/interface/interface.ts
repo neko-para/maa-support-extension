@@ -205,6 +205,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
             target: obj.value as TaskName
           })
           info.layer.extraRefs.push({
+            file,
             location: obj,
             type: 'task.entry',
             target: obj.value as TaskName

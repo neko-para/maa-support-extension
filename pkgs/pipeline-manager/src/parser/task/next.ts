@@ -2,9 +2,9 @@ import type { Node } from 'jsonc-parser'
 
 import type { TaskName } from '../../utils/types'
 import { isBool, isString, parseArray, parseObject } from '../utils'
-import type { TaskInfo, TaskNextRefInfo, TaskRefInfo } from './task'
+import type { TaskInfo, TaskNextRefInfo, TaskParseContext } from './task'
 
-function parseSingle(node: Node, info: TaskInfo) {
+function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
   if (isString(node)) {
     const ref: TaskNextRefInfo = {
       type: 'task.next',
@@ -31,6 +31,7 @@ function parseSingle(node: Node, info: TaskInfo) {
     ref.target = name as TaskName
     ref.offset = offset
     info.refs.push({
+      file: ctx.file,
       location: node,
       ...ref
     })
@@ -53,6 +54,7 @@ function parseSingle(node: Node, info: TaskInfo) {
     }
     if (loc) {
       info.refs.push({
+        file: ctx.file,
         location: loc,
         ...ref
       })
@@ -60,12 +62,12 @@ function parseSingle(node: Node, info: TaskInfo) {
   }
 }
 
-export function parseNextList(node: Node, info: TaskInfo) {
+export function parseNextList(node: Node, info: TaskInfo, ctx: TaskParseContext) {
   if (node.type !== 'array') {
-    parseSingle(node, info)
+    parseSingle(node, info, ctx)
   } else {
     for (const obj of parseArray(node)) {
-      parseSingle(obj, info)
+      parseSingle(obj, info, ctx)
     }
   }
 }

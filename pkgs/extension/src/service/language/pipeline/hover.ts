@@ -2,8 +2,6 @@ import * as vscode from 'vscode'
 
 import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
 
-import { taskIndexService } from '../..'
-import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineHoverProvider
@@ -45,6 +43,15 @@ export class PipelineHoverProvider
         ref.type === 'task.roi' ||
         ref.type === 'task.entry'
       ) {
+        if (ref.type === 'task.next' && ref.anchor) {
+          return null
+        } else if (ref.type === 'task.roi') {
+          const prev = ref.prev.filter(decl => decl.value === ref.target)
+          if (prev.length > 0) {
+            // TODO: 展示下?
+            return null
+          }
+        }
         const hover = await this.getTaskHover(layer, ref.target)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.template') {

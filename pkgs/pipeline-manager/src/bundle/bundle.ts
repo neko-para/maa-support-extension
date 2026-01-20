@@ -137,6 +137,7 @@ export class Bundle extends EventEmitter<{
     }
 
     this.files[file] = content
+    const full = joinPath(this.root, file)
 
     const tree = parseTreeWithoutParent(content)
     if (tree && tree.type === 'object') {
@@ -146,10 +147,13 @@ export class Bundle extends EventEmitter<{
         }
 
         this.layer.mutableTaskInfo(key as TaskName).push({
-          file: joinPath(this.root, file),
+          file: full,
           prop,
           data: obj,
-          info: parseTask(obj, prop)
+          info: parseTask(obj, {
+            file: full,
+            task: prop
+          })
         })
         changed.push(key)
       }

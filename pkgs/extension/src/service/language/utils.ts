@@ -1,6 +1,8 @@
 import { Node } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
+import { AbsolutePath } from '@mse/pipeline-manager'
+
 export function convertRange(document: vscode.TextDocument, location: Node) {
   return new vscode.Range(
     document.positionAt(location.offset),
@@ -22,4 +24,9 @@ export function convertRangeWithDelta(
 
 export function convertRangeLocation(document: vscode.TextDocument, location: Node) {
   return new vscode.Location(document.uri, convertRange(document, location))
+}
+
+export async function autoConvertRangeLocation(dr: { file: AbsolutePath; location: Node }) {
+  const doc = await vscode.workspace.openTextDocument(dr.file)
+  return convertRangeLocation(doc, dr.location)
 }

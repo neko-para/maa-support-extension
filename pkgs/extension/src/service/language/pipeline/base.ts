@@ -1,8 +1,15 @@
 import path from 'path'
 import * as vscode from 'vscode'
 
-import { ImageRelativePath, TaskName, joinImagePath, joinPath } from '@mse/pipeline-manager'
-import { LayerInfo } from '@mse/pipeline-manager/src/layer/layer'
+import {
+  AnchorName,
+  ImageRelativePath,
+  LayerInfo,
+  TaskDeclInfo,
+  TaskName,
+  TaskRefInfo,
+  joinImagePath
+} from '@mse/pipeline-manager'
 
 import { interfaceService, rootService } from '../..'
 import { pipelineSuffix } from '../../../utils/fs'
@@ -93,5 +100,100 @@ ${doc.getText(range)}
 ![](${vscode.Uri.file(full).toString()})`)
     }
     return content.join('\n\n')
+  }
+
+  extractTaskRef(r: TaskRefInfo): TaskName | null {
+    if (r.type === 'task.target' || r.type === 'task.entry') {
+      return r.target
+    } else if (r.type === 'task.next') {
+      return !r.anchor ? r.target : null
+    } else if (r.type === 'task.roi') {
+      const prev = r.prev.filter(decl => decl.value === r.target)
+      return prev.length === 0 ? r.target : null
+    } else {
+      return null
+    }
+  }
+
+  makeDecls(
+    decls: TaskDeclInfo[],
+    refs: TaskRefInfo[],
+    decl: TaskDeclInfo | null,
+    ref: TaskRefInfo | null
+  ): TaskDeclInfo[] {
+    if (decl) {
+      if (decl.type === 'task.decl') {
+        return decls.filter(d => d.type === 'task.decl' && d.task === decl.task)
+      } else if (decl.type === 'task.anchor') {
+        return decls.filter(d => d.type === 'task.anchor' && d.anchor === decl.anchor)
+      } else if (decl.type === 'task.sub_reco') {
+        return decls.filter(
+          d => d.type === 'task.sub_reco' && d.name === decl.name && d.task === decl.task
+        )
+      }
+    } else if (ref) {
+      const task = this.extractTaskRef(ref)
+      if (task) {
+        return decls.filter(d => d.type === 'task.decl' && d.task === ref.target)
+      } else if (ref.type === 'task.next' && ref.anchor) {
+        return decls.filter(
+          d => d.type === 'task.anchor' && d.anchor === (ref.target as string as AnchorName)
+        )
+      } else if (ref.type === 'task.roi') {
+        return decls.filter(
+          d => d.type === 'task.sub_reco' && d.name === ref.target && d.task === ref.task
+        )
+      }
+    }
+    return []
+  }
+
+  makeRefs(
+    decls: TaskDeclInfo[],
+    refs: TaskRefInfo[],
+    decl: TaskDeclInfo | null,
+    ref: TaskRefInfo | null
+  ): TaskRefInfo[] {
+    const findTask = (task: TaskName) => {
+      return refs.filter(r => {
+        if (r.type === 'task.target' || r.type === 'task.entry') {
+          return r.target === task
+        } else if (r.type === 'task.next') {
+          return r.target === task && !r.anchor
+        } else if (r.type === 'task.roi') {
+          const prev = r.prev.filter(decl => decl.value === r.target)
+          return prev.length === 0 && r.target === task
+        } else {
+          return false
+        }
+      })
+    }
+
+    if (decl) {
+      if (decl.type === 'task.decl') {
+        return findTask(decl.task)
+      } else if (decl.type === 'task.anchor') {
+        return refs.filter(
+          r =>
+            r.type === 'task.next' && r.anchor && (r.target as string as AnchorName) === decl.anchor
+        )
+      } else if (decl.type === 'task.sub_reco') {
+        return refs.filter(
+          r => r.type === 'task.roi' && r.target === decl.name && r.task === decl.task
+        )
+      }
+    } else if (ref) {
+      const task = this.extractTaskRef(ref)
+      if (task) {
+        return findTask(task)
+      } else if (ref.type === 'task.next' && ref.anchor) {
+        return refs.filter(r => r.type === 'task.next' && r.anchor && r.target === ref.target)
+      } else if (ref.type === 'task.roi') {
+        return refs.filter(
+          r => r.type === 'task.roi' && r.target === ref.target && r.task === ref.task
+        )
+      }
+    }
+    return []
   }
 }

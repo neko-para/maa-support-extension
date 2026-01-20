@@ -60,15 +60,18 @@ export class LayerInfo {
     return result
   }
 
-  mergeDeclsWithFile(): [decl: TaskDeclInfo, file: AbsolutePath][] {
-    type Result = [decl: TaskDeclInfo, file: AbsolutePath]
-    const result: Result[] = []
-    for (const [name, taskInfos] of Object.entries(this.tasks)) {
-      for (const taskInfo of taskInfos) {
-        result.push(...taskInfo.info.decls.map(decl => [decl, taskInfo.file] as Result))
-      }
+  mergeAllDeclsRefs(): [decls: TaskDeclInfo[], refs: TaskRefInfo[]] {
+    const upper = this.parent?.mergeAllDeclsRefs()
+    const [decls, refs] = this.mergeDeclsRefs()
+    if (upper) {
+      const [upperDecls, upperRefs] = upper
+      return [
+        [...decls, ...upperDecls],
+        [...refs, ...upperRefs]
+      ]
+    } else {
+      return [decls, refs]
     }
-    return result
   }
 
   getTaskList(): TaskName[] {

@@ -15,7 +15,10 @@ export function parseOverride(node: Node, info: InterfaceInfo, file: AbsolutePat
       file,
       prop,
       data: obj,
-      info: parseTask(obj, prop)
+      info: parseTask(obj, {
+        file,
+        task: prop
+      })
     })
   }
 }

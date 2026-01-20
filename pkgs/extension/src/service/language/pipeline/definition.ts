@@ -1,6 +1,9 @@
 import * as vscode from 'vscode'
 
+import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
+
 import { taskIndexService } from '../..'
+import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDefinitionProvider
@@ -18,6 +21,35 @@ export class PipelineDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
+    const intBundle = await this.flush()
+    if (!intBundle || !intBundle.info?.layer) {
+      return null
+    }
+
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
+    if (!layerInfo) {
+      return null
+    }
+    const [layer, file] = layerInfo
+
+    const offset = document.offsetAt(position)
+    const [decls, refs] = layer.mergeDeclsRefs(file)
+
+    const decl = findDeclRef(decls, offset)
+    const ref = findDeclRef(refs, offset)
+
+    const [allDecls, allRefs] = intBundle.info.layer.mergeAllDeclsRefs()
+
+    if (decl) {
+      const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
+      const refs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
+      return await Promise.all([...decls, ...refs].map(autoConvertRangeLocation))
+    } else if (ref) {
+      const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
+      return await Promise.all(decls.map(autoConvertRangeLocation))
+    }
+
+    /*
     if (this.shouldFilter(document)) {
       return null
     }
@@ -42,6 +74,7 @@ export class PipelineDefinitionProvider
       return anchorInfo.map(x => new vscode.Location(x.info.uri, x.info.range))
     }
 
+    */
     return null
   }
 }

@@ -29,22 +29,22 @@ export class PipelineWorkspaceSymbolProvider
 
     let layer = intBundle.info?.layer
     while (layer) {
-      const decls = layer.mergeDeclsWithFile() // TODO: fix file absolute problem
-      for (const [decl, file] of decls) {
+      const [decls, refs] = layer.mergeDeclsRefs() // TODO: fix file absolute problem
+      for (const decl of decls) {
         if (decl.type !== 'task.decl') {
           continue
         }
         if (decl.task.toLowerCase().indexOf(query) === -1) {
           continue
         }
-        const uri = vscode.Uri.file(file)
+        const uri = vscode.Uri.file(decl.file)
         const doc = await vscode.workspace.openTextDocument(uri)
         const loc = convertRangeLocation(doc, decl.location)
         result.push(
           new vscode.SymbolInformation(
             decl.task,
             vscode.SymbolKind.Class,
-            `${path.basename(file)}:${loc.range.start.line + 1}`,
+            `${path.basename(decl.file)}:${loc.range.start.line + 1}`,
             loc
           )
         )

@@ -1,6 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
-import type { AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
+import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
 import { type PropPair, type StringNode, parseArray, parseObject } from '../utils'
 import { parseAnchor } from './anchor'
 import { parseFreeze } from './freeze'
@@ -26,15 +26,17 @@ export type TaskSubRecoDeclInfo = {
   type: 'task.sub_reco'
   name: string
   reco: Node
+  task: TaskName
 }
 
 export type TaskDeclInfo = {
+  file: AbsolutePath
   location: Node
 } & (TaskPropDeclInfo | TaskAnchorDeclInfo | TaskSubRecoDeclInfo)
 
 export type TaskNextRefInfo = {
   type: 'task.next'
-  target: TaskName
+  target: TaskName // 有可能是 AnchorName
   objMode: boolean
   offset?: number
   jumpBack?: boolean
@@ -48,8 +50,9 @@ export type TaskTargetRefInfo = {
 
 export type TaskRoiRefInfo = {
   type: 'task.roi'
-  target: TaskName
+  target: TaskName // 有可能是 sub_name
   prev: StringNode[]
+  task: TaskName
 }
 
 export type TaskTemplateRefInfo = {
@@ -63,6 +66,7 @@ export type TaskEntryRefInfo = {
 }
 
 export type TaskRefInfo = {
+  file: AbsolutePath
   location: Node
 } & (TaskNextRefInfo | TaskTargetRefInfo | TaskRoiRefInfo | TaskTemplateRefInfo | TaskEntryRefInfo)
 
@@ -72,45 +76,56 @@ export type TaskInfo = {
   refs: TaskRefInfo[]
 }
 
-function parseBase(props: PropPair[], info: TaskInfo, task: TaskName) {
+export type TaskParseContext = {
+  file: AbsolutePath
+  task: StringNode
+}
+
+function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
   for (const [prop, obj] of props) {
     switch (prop) {
       case 'next':
       case 'on_error':
-        parseNextList(obj, info)
+        parseNextList(obj, info, ctx)
         break
       case 'anchor':
-        parseAnchor(obj, info, task)
+        parseAnchor(obj, info, ctx)
         break
       case 'pre_wait_freezes':
       case 'post_wait_freezes':
       case 'repeat_wait_freezes':
-        parseFreeze(obj, info)
+        parseFreeze(obj, info, ctx)
         break
     }
   }
 }
 
-function parseReco(props: PropPair[], info: TaskInfo, prev: StringNode[], parent?: Node) {
+function parseReco(
+  props: PropPair[],
+  info: TaskInfo,
+  prev: StringNode[],
+  ctx: TaskParseContext,
+  parent?: Node
+) {
   let subName: StringNode | null = null
   for (const [prop, obj] of props) {
     switch (prop) {
       case 'roi':
-        parseRoi(obj, info, prev)
+        parseRoi(obj, info, prev, ctx)
         break
       case 'template':
-        parseTemplate(obj, info)
+        parseTemplate(obj, info, ctx)
         break
       case 'all_of':
       case 'any_of':
         for (const sub of parseArray(obj)) {
           const subInfo = splitNode(sub)
-          parseReco(subInfo.reco, info, prev, sub)
+          parseReco(subInfo.reco, info, prev, ctx, sub)
         }
         break
       case 'sub_name':
         if (parent) {
-          subName = parseSubName(obj, info, parent)
+          subName = parseSubName(obj, info, parent, ctx)
         }
         break
     }
@@ -120,21 +135,21 @@ function parseReco(props: PropPair[], info: TaskInfo, prev: StringNode[], parent
   }
 }
 
-function parseAct(props: PropPair[], info: TaskInfo) {
+function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
   for (const [prop, obj] of props) {
     switch (prop) {
       case 'target':
       case 'begin':
-        parseTarget(obj, info)
+        parseTarget(obj, info, ctx)
         break
       case 'end':
-        parseTarget(obj, info, true)
+        parseTarget(obj, info, ctx, true)
         break
     }
   }
 }
 
-export function parseTask(node: Node, task: StringNode): TaskInfo {
+export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
   const parts = splitNode(node)
 
   const info: TaskInfo = {
@@ -144,14 +159,15 @@ export function parseTask(node: Node, task: StringNode): TaskInfo {
   }
 
   info.decls.push({
-    location: task,
+    file: ctx.file,
+    location: ctx.task,
     type: 'task.decl',
-    task: task.value as TaskName
+    task: ctx.task.value as TaskName
   })
 
-  parseBase(info.parts.base, info, task.value as TaskName)
-  parseReco(parts.reco, info, [])
-  parseAct(parts.act, info)
+  parseBase(info.parts.base, info, ctx)
+  parseReco(parts.reco, info, [], ctx)
+  parseAct(parts.act, info, ctx)
 
   return info
 }

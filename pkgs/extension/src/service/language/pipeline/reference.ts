@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 
-import { taskIndexService } from '../..'
-import { isMaaAssistantArknights } from '../../../utils/fs'
+import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
+
+import { autoConvertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineReferenceProvider
@@ -20,6 +21,31 @@ export class PipelineReferenceProvider
     context: vscode.ReferenceContext,
     token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
+    const intBundle = await this.flush()
+    if (!intBundle || !intBundle.info?.layer) {
+      return null
+    }
+
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
+    if (!layerInfo) {
+      return null
+    }
+    const [layer, file] = layerInfo
+
+    const offset = document.offsetAt(position)
+    const [decls, refs] = layer.mergeDeclsRefs(file)
+
+    const decl = findDeclRef(decls, offset)
+    const ref = findDeclRef(refs, offset)
+
+    const [allDecls, allRefs] = intBundle.info.layer.mergeAllDeclsRefs()
+
+    const resultDecls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
+    const resultRefs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
+    return await Promise.all([...resultDecls, ...resultRefs].map(autoConvertRangeLocation))
+
+    /*
+
     if (this.shouldFilter(document)) {
       return null
     }
@@ -71,7 +97,7 @@ export class PipelineReferenceProvider
       }
       return result
     }
-
+*/
     return null
   }
 }

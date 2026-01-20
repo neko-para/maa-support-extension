@@ -96,7 +96,7 @@ export class Bundle extends EventEmitter<{
 
   async reset(): Promise<void> {
     this.files = {}
-    this.layer = new LayerInfo(this.manager.loader, this.root, 'resource')
+    this.layer.reset()
     this.emit('reset')
   }
 

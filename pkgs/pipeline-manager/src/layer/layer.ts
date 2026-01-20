@@ -33,6 +33,12 @@ export class LayerInfo {
     this.extraRefs = []
   }
 
+  reset() {
+    this.tasks = {}
+    this.images = new Set()
+    this.extraRefs = []
+  }
+
   mutableTaskInfo(name: TaskName) {
     this.tasks[name] = this.tasks[name] ?? []
     return this.tasks[name]

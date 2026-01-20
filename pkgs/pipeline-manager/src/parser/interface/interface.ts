@@ -1,4 +1,5 @@
 import type { Node } from 'jsonc-parser'
+import * as path from 'path'
 
 import type { IContentLoader } from '../../content/loader'
 import { LayerInfo } from '../../layer/layer'
@@ -250,7 +251,7 @@ export function parseInterface(loader: IContentLoader, node: Node, file: Absolut
   const info: InterfaceInfo = {
     decls: [],
     refs: [],
-    layer: new LayerInfo(loader, file, 'interface')
+    layer: new LayerInfo(loader, path.dirname(file) as AbsolutePath, 'interface')
   }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {

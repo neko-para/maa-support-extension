@@ -1,3 +1,4 @@
+import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { convertRangeLocation } from '../utils'
@@ -38,12 +39,13 @@ export class PipelineWorkspaceSymbolProvider
         }
         const uri = vscode.Uri.file(file)
         const doc = await vscode.workspace.openTextDocument(uri)
+        const loc = convertRangeLocation(doc, decl.location)
         result.push(
           new vscode.SymbolInformation(
             decl.task,
             vscode.SymbolKind.Class,
-            file,
-            convertRangeLocation(doc, decl.location)
+            `${path.basename(file)}:${loc.range.start.line + 1}`,
+            loc
           )
         )
       }
@@ -51,7 +53,5 @@ export class PipelineWorkspaceSymbolProvider
     }
 
     return result
-
-    // return taskIndexService.queryWorkspaceSymbol(query)
   }
 }

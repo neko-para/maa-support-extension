@@ -24,7 +24,7 @@ export class FsContentWatcher implements IContentWatcher {
         if (!stats) {
           return false
         }
-        return !delegate.filter(file, stats.isDirectory())
+        return !delegate.filter(path.normalize(file), stats.isDirectory())
       }
     })
 

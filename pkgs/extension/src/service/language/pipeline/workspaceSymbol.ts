@@ -19,7 +19,7 @@ export class PipelineWorkspaceSymbolProvider
     token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation[]> {
     const intBundle = await this.flush()
-    if (!intBundle) {
+    if (!intBundle || !intBundle.info?.layer) {
       return []
     }
 
@@ -27,29 +27,25 @@ export class PipelineWorkspaceSymbolProvider
 
     const result: vscode.SymbolInformation[] = []
 
-    let layer = intBundle.info?.layer
-    while (layer) {
-      const [decls, refs] = layer.mergeDeclsRefs() // TODO: fix file absolute problem
-      for (const decl of decls) {
-        if (decl.type !== 'task.decl') {
-          continue
-        }
-        if (decl.task.toLowerCase().indexOf(query) === -1) {
-          continue
-        }
-        const uri = vscode.Uri.file(decl.file)
-        const doc = await vscode.workspace.openTextDocument(uri)
-        const loc = convertRangeLocation(doc, decl.location)
-        result.push(
-          new vscode.SymbolInformation(
-            decl.task,
-            vscode.SymbolKind.Class,
-            `${path.basename(decl.file)}:${loc.range.start.line + 1}`,
-            loc
-          )
-        )
+    const [decls, refs] = intBundle.info.layer.mergeAllDeclsRefs()
+    for (const decl of decls) {
+      if (decl.type !== 'task.decl') {
+        continue
       }
-      layer = layer.parent
+      if (decl.task.toLowerCase().indexOf(query) === -1) {
+        continue
+      }
+      const uri = vscode.Uri.file(decl.file)
+      const doc = await vscode.workspace.openTextDocument(uri)
+      const loc = convertRangeLocation(doc, decl.location)
+      result.push(
+        new vscode.SymbolInformation(
+          decl.task,
+          vscode.SymbolKind.Class,
+          `${path.basename(decl.file)}:${loc.range.start.line + 1}`,
+          loc
+        )
+      )
     }
 
     return result

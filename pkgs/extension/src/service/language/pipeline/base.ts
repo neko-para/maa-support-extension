@@ -108,8 +108,7 @@ ${doc.getText(range)}
     } else if (r.type === 'task.next') {
       return !r.anchor ? r.target : null
     } else if (r.type === 'task.roi') {
-      const prev = r.prev.filter(decl => decl.value === r.target)
-      return prev.length === 0 ? r.target : null
+      return r.prevRef ? null : r.target
     } else {
       return null
     }

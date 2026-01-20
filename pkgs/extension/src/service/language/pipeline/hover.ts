@@ -47,9 +47,7 @@ export class PipelineHoverProvider
         if (ref.type === 'task.next' && ref.anchor) {
           return null
         } else if (ref.type === 'task.roi') {
-          const prev = ref.prev.filter(decl => decl.value === ref.target)
-          if (prev.length > 0) {
-            // TODO: 展示下?
+          if (ref.prevRef) {
             return null
           }
         }

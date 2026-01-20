@@ -50,10 +50,18 @@ export type TaskTargetRefInfo = {
 
 export type TaskRoiRefInfo = {
   type: 'task.roi'
-  target: TaskName // 有可能是 sub_name
   prev: StringNode[]
   task: TaskName
-}
+} & (
+  | {
+      prevRef?: false
+      target: TaskName
+    }
+  | {
+      prevRef: true
+      target: string // SubName
+    }
+)
 
 export type TaskTemplateRefInfo = {
   type: 'task.template'

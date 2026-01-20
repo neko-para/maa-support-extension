@@ -1,7 +1,7 @@
 import path from 'path'
 import * as vscode from 'vscode'
 
-import { TaskName } from '@mse/pipeline-manager'
+import { ImageRelativePath, TaskName, joinImagePath, joinPath } from '@mse/pipeline-manager'
 import { LayerInfo } from '@mse/pipeline-manager/src/layer/layer'
 
 import { interfaceService, rootService } from '../..'
@@ -55,13 +55,13 @@ export class PipelineLanguageProvider extends BaseService {
     return (await this.flush())?.info ?? null
   }
 
-  getTaskBrief(layer: LayerInfo, task: string) {
-    const info = layer.getTaskBriefInfo(task as TaskName)
+  getTaskBrief(layer: LayerInfo, task: TaskName) {
+    const info = layer.getTaskBriefInfo(task)
     return `Reco: ${info.reco ?? 'DirectHit'}\n\nAct: ${info.act ?? 'DoNothing'}`
   }
 
-  async getTaskHover(layer: LayerInfo, task: string) {
-    const taskInfos = layer.getTask(task as TaskName)
+  async getTaskHover(layer: LayerInfo, task: TaskName) {
+    const taskInfos = layer.getTask(task)
     const content: string[] = []
     for (const { layer, infos } of taskInfos) {
       for (const info of infos) {
@@ -72,7 +72,7 @@ export class PipelineLanguageProvider extends BaseService {
           new vscode.Position(begin.line, 0),
           new vscode.Position(end.line + 1, 0)
         )
-        content.push(`${layer.root}
+        content.push(`${rootService.relativeToRoot(layer.root)}
 
 \`\`\`json
 ${doc.getText(range)}
@@ -80,6 +80,18 @@ ${doc.getText(range)}
 `)
       }
     }
-    return content.join('\n')
+    return content.join('\n\n')
+  }
+
+  async getImageHover(layer: LayerInfo, image: ImageRelativePath) {
+    const layers = layer.getImage(image)
+    const content: string[] = []
+    for (const layer of layers) {
+      const full = joinImagePath(layer.root, image)
+      content.push(`${rootService.relativeToRoot(layer.root)} - [${image}](${vscode.Uri.file(full).toString()})
+
+![](${vscode.Uri.file(full).toString()})`)
+    }
+    return content.join('\n\n')
   }
 }

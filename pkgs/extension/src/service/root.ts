@@ -1,5 +1,7 @@
 import * as vscode from 'vscode'
 
+import { AbsolutePath, RelativePath, relativePath } from '@mse/pipeline-manager'
+
 import { stateService } from '.'
 import { ResourceRoot, locateResourceRoot } from '../utils/fs'
 import { BaseService } from './context'
@@ -96,6 +98,14 @@ export class RootService extends BaseService {
       return uri.fsPath.replace(root.fsPath, '')
     } else {
       return uri.fsPath
+    }
+  }
+
+  relativeToRoot(file: AbsolutePath): RelativePath {
+    if (this.activeResource) {
+      return relativePath(this.activeResource.dirUri.fsPath as AbsolutePath, file)
+    } else {
+      return file as string as RelativePath
     }
   }
 }

@@ -2,7 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import type { IContentLoader } from '../../content/loader'
 import { LayerInfo } from '../../layer/layer'
-import type { AbsolutePath, RelativePath } from '../../utils/types'
+import type { AbsolutePath, RelativePath, TaskName } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
 import { locKeys } from './keys'
@@ -33,7 +33,7 @@ export type IntResDeclInfo = {
 
 export type IntTaskDeclInfo = {
   type: 'interface.task'
-  name: string
+  name: TaskName
 }
 
 export type IntOptionDeclInfo = {
@@ -93,7 +93,7 @@ export type IntResRefInfo = {
 
 export type IntTaskEntryRefInfo = {
   type: 'interface.task_entry'
-  target: string
+  target: TaskName
 }
 
 export type IntOptionRefInfo = {
@@ -192,7 +192,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
           info.decls.push({
             location: obj,
             type: 'interface.task',
-            name: obj.value
+            name: obj.value as TaskName
           })
         }
         break
@@ -201,12 +201,12 @@ function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
           info.refs.push({
             location: obj,
             type: 'interface.task_entry',
-            target: obj.value
+            target: obj.value as TaskName
           })
           info.layer.extraRefs.push({
             location: obj,
             type: 'task.entry',
-            target: obj.value
+            target: obj.value as TaskName
           })
         }
         break

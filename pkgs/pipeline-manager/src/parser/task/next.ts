@@ -1,5 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
+import type { TaskName } from '../../utils/types'
 import { isBool, isString, parseArray, parseObject } from '../utils'
 import type { TaskInfo, TaskNextRefInfo, TaskRefInfo } from './task'
 
@@ -7,7 +8,7 @@ function parseSingle(node: Node, info: TaskInfo) {
   if (isString(node)) {
     const ref: TaskNextRefInfo = {
       type: 'task.next',
-      target: '',
+      target: '' as TaskName,
       objMode: false
     }
     let name = node.value
@@ -27,7 +28,7 @@ function parseSingle(node: Node, info: TaskInfo) {
       }
       break
     }
-    ref.target = name
+    ref.target = name as TaskName
     ref.offset = offset
     info.refs.push({
       location: node,
@@ -37,12 +38,12 @@ function parseSingle(node: Node, info: TaskInfo) {
     let loc: Node | null = null
     const ref: TaskNextRefInfo = {
       type: 'task.next',
-      target: '',
+      target: '' as TaskName,
       objMode: true
     }
     for (const [key, obj] of parseObject(node)) {
       if (key === 'name' && isString(obj)) {
-        ref.target = obj.value
+        ref.target = obj.value as TaskName
         loc = obj
       } else if (key === 'jump_back' && isBool(obj)) {
         ref.jumpBack = obj.value

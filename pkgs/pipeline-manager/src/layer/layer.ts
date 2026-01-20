@@ -97,6 +97,14 @@ export class LayerInfo {
     return tasks.filter(x => x.infos.length > 0)
   }
 
+  getImage(image: ImageRelativePath): LayerInfo[] {
+    const layers = this.parent?.getImage(image) ?? []
+    if (this.images.has(image)) {
+      layers.unshift(this)
+    }
+    return layers
+  }
+
   getTaskBriefInfo(task: TaskName) {
     const result: {
       reco?: maa.RecognitionType

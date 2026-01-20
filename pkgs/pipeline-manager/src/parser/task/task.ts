@@ -34,7 +34,7 @@ export type TaskDeclInfo = {
 
 export type TaskNextRefInfo = {
   type: 'task.next'
-  target: string
+  target: TaskName
   objMode: boolean
   offset?: number
   jumpBack?: boolean
@@ -43,12 +43,12 @@ export type TaskNextRefInfo = {
 
 export type TaskTargetRefInfo = {
   type: 'task.target'
-  target: string
+  target: TaskName
 }
 
 export type TaskRoiRefInfo = {
   type: 'task.roi'
-  target: string
+  target: TaskName
   prev: StringNode[]
 }
 
@@ -59,7 +59,7 @@ export type TaskTemplateRefInfo = {
 
 export type TaskEntryRefInfo = {
   type: 'task.entry'
-  target: string
+  target: TaskName
 }
 
 export type TaskRefInfo = {

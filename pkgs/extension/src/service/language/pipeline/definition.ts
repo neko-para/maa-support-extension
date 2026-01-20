@@ -2,8 +2,7 @@ import * as vscode from 'vscode'
 
 import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
 
-import { taskIndexService } from '../..'
-import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
+import { autoConvertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDefinitionProvider

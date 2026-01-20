@@ -37,6 +37,9 @@ export class PipelineDocumentLinkProvider
       if (ref.type !== 'task.template') {
         continue
       }
+      if (!ref.target.endsWith('.png')) {
+        continue
+      }
 
       result.push(
         new vscode.DocumentLink(

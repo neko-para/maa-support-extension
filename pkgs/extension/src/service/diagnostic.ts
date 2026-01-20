@@ -1,10 +1,17 @@
 import * as vscode from 'vscode'
 
+import {
+  AnchorName,
+  ImageRelativePath,
+  TaskName,
+  TaskRefInfo,
+  extractTaskRef
+} from '@mse/pipeline-manager'
 import { t } from '@mse/utils'
 
-import { rootService, taskIndexService } from '.'
-import { isMaaAssistantArknights } from '../utils/fs'
+import { interfaceService, rootService } from '.'
 import { BaseService } from './context'
+import { autoConvertRange } from './language/utils'
 import { debounce } from './utils/debounce'
 import { FlushHelper } from './utils/flush'
 
@@ -34,29 +41,26 @@ class DiagnosticScanner extends FlushHelper {
   }
 
   async doFlushImpl() {
-    await taskIndexService.flushDirty()
+    const intBundle = interfaceService.interfaceBundle
+    if (!intBundle?.info?.layer) {
+      return
+    }
+    await intBundle.flush(true)
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
 
-    if (isMaaAssistantArknights) {
-      // MAA的template支持后缀搜索，先构建个索引，不然太慢了
-      await taskIndexService.flushImage()
-    }
-
-    for (const layer of taskIndexService.allLayers) {
-      for (const [task, taskInfos] of Object.entries(layer.index)) {
-        // check conflict task
-        if (taskInfos.length > 1 && layer !== taskIndexService.interfaceLayer) {
-          // interface layer contains same override
+    for (const layer of intBundle.allLayers) {
+      for (const [name, taskInfos] of Object.entries(layer.tasks)) {
+        if (taskInfos.length > 0 && layer.type !== 'interface') {
           for (const taskInfo of taskInfos.slice(1)) {
             result.push([
-              taskInfo.uri,
+              vscode.Uri.file(taskInfo.file),
               new vscode.Diagnostic(
-                taskInfo.taskProp,
+                await autoConvertRange(taskInfo.prop, taskInfo.file),
                 t(
                   'maa.pipeline.error.conflict-task',
-                  task,
-                  rootService.relativePathToRoot(taskInfos[0].uri)
+                  name,
+                  rootService.relativeToRoot(taskInfos[0].file)
                 ),
                 vscode.DiagnosticSeverity.Error
               )
@@ -65,89 +69,102 @@ class DiagnosticScanner extends FlushHelper {
         }
 
         for (const taskInfo of taskInfos) {
-          // check missing task
-          for (const ref of taskInfo.taskRef) {
-            if (ref.task.startsWith('__VSCE__')) {
-              continue
-            }
-            const taskRes = await taskIndexService.queryTask(
-              ref.task,
-              layer.level + 1,
-              undefined,
-              false
-            )
-            if (taskRes.length === 0) {
+          const uri = vscode.Uri.file(taskInfo.file)
+          const existsNext = new Set<TaskName>()
+          const refs = taskInfo.info.refs.filter(
+            ref => ref.type === 'task.next' && !ref.anchor
+          ) as (TaskRefInfo & {
+            type: 'task.next'
+          })[]
+          refs.sort((a, b) => a.location.offset - b.location.offset)
+          for (const ref of refs) {
+            const loc = await autoConvertRange(ref.location, ref.file)
+            if (existsNext.has(ref.target)) {
               result.push([
-                taskInfo.uri,
+                uri,
                 new vscode.Diagnostic(
-                  ref.range,
-                  t('maa.pipeline.error.unknown-task', ref.task),
+                  loc,
+                  t('maa.pipeline.error.duplicate-next', ref.target),
                   vscode.DiagnosticSeverity.Error
                 )
               ])
-            }
-          }
-
-          // check missing image
-          for (const ref of taskInfo.imageRef) {
-            let imagePath = ref.path
-            if (imagePath.includes('\\')) {
-              result.push([
-                taskInfo.uri,
-                new vscode.Diagnostic(
-                  ref.range,
-                  t('maa.pipeline.warning.image-path-backslash'),
-                  vscode.DiagnosticSeverity.Warning
-                )
-              ])
-              imagePath = imagePath.replaceAll('\\', '/')
-            }
-            if (isMaaAssistantArknights && !imagePath.endsWith('.png')) {
-              result.push([
-                taskInfo.uri,
-                new vscode.Diagnostic(
-                  ref.range,
-                  t('maa.pipeline.warning.image-path-missing-png'),
-                  vscode.DiagnosticSeverity.Warning
-                )
-              ])
-            }
-            const imageRes = await taskIndexService.queryImage(imagePath, layer.level + 1, false)
-            if (imageRes.length === 0) {
-              result.push([
-                taskInfo.uri,
-                new vscode.Diagnostic(
-                  ref.range,
-                  t('maa.pipeline.error.unknown-image', ref.path),
-                  vscode.DiagnosticSeverity.Error
-                )
-              ])
-            }
-          }
-
-          // check duplicate next task
-          if (!isMaaAssistantArknights) {
-            const nextRefs = taskInfo.taskRef.filter(x => x.belong === 'next')
-            const nextFirst: Set<string> = new Set()
-            for (const ref of nextRefs) {
-              if (nextFirst.has(ref.task)) {
-                result.push([
-                  taskInfo.uri,
-                  new vscode.Diagnostic(
-                    ref.range,
-                    t('maa.pipeline.error.duplicate-next', ref.task),
-                    vscode.DiagnosticSeverity.Error
-                  )
-                ])
-              } else {
-                nextFirst.add(ref.task)
-              }
+            } else {
+              existsNext.add(ref.target)
             }
           }
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, 0))
+      const refs = layer.mergedRefs
+      const tasks = new Set(layer.getTaskListNotUnique())
+      const anchors = new Set(layer.getAnchorList().map(([anchor]) => anchor))
+      const images = new Set(layer.getImageListNotUnique())
+      for (const ref of refs) {
+        const uri = vscode.Uri.file(ref.file)
+        const loc = await autoConvertRange(ref.location, ref.file)
+        const task = extractTaskRef(ref)
+        if (task) {
+          if (!tasks.has(task)) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                loc,
+                t('maa.pipeline.error.unknown-task', ref.target),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        } else if (ref.type === 'task.template') {
+          let imagePath = ref.target
+          if (!imagePath.endsWith('.png')) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                loc,
+                t('maa.pipeline.warning.image-path-dynamic'),
+                vscode.DiagnosticSeverity.Warning
+              )
+            ])
+            continue
+          }
+          if (imagePath.includes('\\')) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                loc,
+                t('maa.pipeline.warning.image-path-backslash'),
+                vscode.DiagnosticSeverity.Warning
+              )
+            ])
+            imagePath = imagePath.replaceAll('\\', '/') as ImageRelativePath
+          }
+          if (imagePath.startsWith('./')) {
+            imagePath = imagePath.replace('./', '') as ImageRelativePath
+          }
+          // TODO: maa logic
+          if (!images.has(imagePath)) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                loc,
+                t('maa.pipeline.error.unknown-image', ref.target),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        } else if (ref.type === 'task.next' && ref.anchor) {
+          if (!anchors.has(ref.target as string as AnchorName)) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                loc,
+                t('maa.pipeline.error.unknown-anchor', ref.target),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        }
+      }
     }
 
     if (result.length === 0) {

@@ -14,7 +14,7 @@ import {
 } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
-import { launchService, rootService } from '.'
+import { diagnosticService, launchService, rootService } from '.'
 import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 
@@ -51,6 +51,11 @@ export class InterfaceService extends BaseService {
     return this.resourceChanged.event
   }
 
+  pipelineChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onPipelineChanged() {
+    return this.pipelineChanged.event
+  }
+
   constructor() {
     super()
     console.log('construct InterfaceService')
@@ -59,6 +64,7 @@ export class InterfaceService extends BaseService {
 
     this.defer = this.interfaceChanged
     this.defer = this.resourceChanged
+    this.defer = this.pipelineChanged
 
     this.defer = {
       dispose: () => {
@@ -72,10 +78,15 @@ export class InterfaceService extends BaseService {
 
     this.defer = this.onInterfaceChanged(() => {
       this.updateResource()
+      diagnosticService.scanner.scheduleFlush()
     })
 
     this.defer = this.onInterfaceConfigChanged(() => {
       this.updateResource()
+    })
+
+    this.defer = this.onPipelineChanged(() => {
+      diagnosticService.scanner.scheduleFlush()
     })
   }
 
@@ -105,6 +116,9 @@ export class InterfaceService extends BaseService {
     })
     this.interfaceBundle.on('bundleReloaded', () => {
       this.resourceChanged.fire()
+    })
+    this.interfaceBundle.on('pipelineChanged', () => {
+      this.pipelineChanged.fire()
     })
     await this.interfaceBundle.load()
 

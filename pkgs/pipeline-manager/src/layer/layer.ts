@@ -97,10 +97,13 @@ export class LayerInfo {
     this.dirty = false
   }
 
-  getTaskList(): TaskName[] {
+  getTaskListNotUnique(): TaskName[] {
     const tasks = this.parent?.getTaskList() ?? []
-    tasks.push(...(Object.keys(this.tasks) as TaskName[]))
-    return [...new Set(tasks)]
+    return tasks.concat(Object.keys(this.tasks) as TaskName[])
+  }
+
+  getTaskList(): TaskName[] {
+    return [...new Set(this.getTaskListNotUnique())]
   }
 
   getAnchorList(): [anchor: AnchorName, decl: TaskAnchorDeclInfo][] {
@@ -112,10 +115,13 @@ export class LayerInfo {
     return anchors
   }
 
-  getImageList(): ImageRelativePath[] {
+  getImageListNotUnique(): ImageRelativePath[] {
     const images = this.parent?.getImageList() ?? []
-    images.push(...this.images)
-    return [...new Set(images)]
+    return images.concat(...this.images)
+  }
+
+  getImageList(): ImageRelativePath[] {
+    return [...new Set(this.getImageListNotUnique())]
   }
 
   getTask(task: TaskName): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {

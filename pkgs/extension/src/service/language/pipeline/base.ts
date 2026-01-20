@@ -8,6 +8,7 @@ import {
   TaskDeclInfo,
   TaskName,
   TaskRefInfo,
+  extractTaskRef,
   joinImagePath
 } from '@mse/pipeline-manager'
 
@@ -102,18 +103,6 @@ ${doc.getText(range)}
     return content.join('\n\n')
   }
 
-  extractTaskRef(r: TaskRefInfo): TaskName | null {
-    if (r.type === 'task.target' || r.type === 'task.entry') {
-      return r.target
-    } else if (r.type === 'task.next') {
-      return !r.anchor ? r.target : null
-    } else if (r.type === 'task.roi') {
-      return r.prevRef ? null : r.target
-    } else {
-      return null
-    }
-  }
-
   makeDecls(
     decls: TaskDeclInfo[],
     refs: TaskRefInfo[],
@@ -131,7 +120,7 @@ ${doc.getText(range)}
         )
       }
     } else if (ref) {
-      const task = this.extractTaskRef(ref)
+      const task = extractTaskRef(ref)
       if (task) {
         return decls.filter(d => d.type === 'task.decl' && d.task === ref.target)
       } else if (ref.type === 'task.next' && ref.anchor) {
@@ -182,7 +171,7 @@ ${doc.getText(range)}
         )
       }
     } else if (ref) {
-      const task = this.extractTaskRef(ref)
+      const task = extractTaskRef(ref)
       if (task) {
         return findTask(task)
       } else if (ref.type === 'task.next' && ref.anchor) {

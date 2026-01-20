@@ -16,6 +16,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   langChanged: []
   pathChanged: []
   bundleReloaded: []
+  pipelineChanged: []
 }> {
   root: AbsolutePath
   file: AbsolutePath
@@ -88,6 +89,23 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       await Promise.all(this.bundles.map(bundle => bundle.load()))
 
       this.emit('bundleReloaded')
+    })
+
+    this.on('bundleReloaded', () => {
+      for (const bundle of this.bundles) {
+        bundle.on('reset', () => {
+          this.emit('pipelineChanged')
+        })
+        bundle.on('taskChanged', () => {
+          this.emit('pipelineChanged')
+        })
+        bundle.on('imageChanged', () => {
+          this.emit('pipelineChanged')
+        })
+        bundle.on('defaultChanged', () => {
+          this.emit('pipelineChanged')
+        })
+      }
     })
   }
 
@@ -183,5 +201,13 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       }
     }
     return null
+  }
+
+  get allLayers() {
+    const layers = this.bundles.map(bundle => bundle.layer)
+    if (this.info?.layer) {
+      layers.push(this.info.layer)
+    }
+    return layers
   }
 }

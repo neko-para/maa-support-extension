@@ -26,6 +26,11 @@ export function convertRangeLocation(document: vscode.TextDocument, location: No
   return new vscode.Location(document.uri, convertRange(document, location))
 }
 
+export async function autoConvertRange(location: Node, file: AbsolutePath) {
+  const doc = await vscode.workspace.openTextDocument(file)
+  return convertRange(doc, location)
+}
+
 export async function autoConvertRangeLocation(dr: { file: AbsolutePath; location: Node }) {
   const doc = await vscode.workspace.openTextDocument(dr.file)
   return convertRangeLocation(doc, dr.location)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NCode, NFlex, NSelect, NSwitch, NText } from 'naive-ui'
+import { NButton, NCard, NCode, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'
@@ -85,10 +85,18 @@ function copyDlt() {
           <n-button
             size="small"
             :loading="matchSt.loading.value"
-            @click="matchSt.perform('requestTmplateMatch')"
+            @click="matchSt.perform('requestTemplateMatch')"
           >
             {{ t('maa.crop.tools.quick-match-tmpl') }}
           </n-button>
+          <n-input-number
+            v-model:value="matchSt.threshold.value"
+            :min="0"
+            :max="1"
+            :step="0.01"
+            size="small"
+            style="width: 84px"
+          />
         </n-flex>
       </template>
 

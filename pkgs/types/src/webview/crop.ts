@@ -13,6 +13,7 @@ export type CropHostState = HostStateBase & {
   helperAxesRadius?: number
   helperAxesThreshold?: number
   pickColorThreshold?: number
+  templateMatchThreshold?: number
   ocrStroke?: string
   ocrFont?: string
   recoStroke?: string
@@ -54,9 +55,10 @@ export type CropWebToHost =
     }
   | {
       // return string | null
-      command: 'requestTmplateMatch'
+      command: 'requestTemplateMatch'
       image: string
       roi: maa.Rect
+      threshold?: number
     }
   | {
       // return string | null

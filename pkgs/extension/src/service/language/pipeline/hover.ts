@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
+import { AbsolutePath, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
@@ -44,6 +44,18 @@ export class PipelineHoverProvider
         return new vscode.Hover(hover)
       }
     } else if (ref) {
+      if (isMaaAssistantArknights) {
+        if (ref && (ref.type === 'task.maa.base_task' || ref.type === 'task.maa.expr')) {
+          const taskRef = findMaaDeclRef(ref.tasks, offset - ref.location.offset)
+          if (taskRef) {
+            const hover = await this.getTaskHover(intBundle.topLayer!, taskRef.taskSuffix)
+            return new vscode.Hover(hover)
+          } else {
+            return null
+          }
+        }
+      }
+
       if (
         ref.type === 'task.next' ||
         ref.type === 'task.target' ||

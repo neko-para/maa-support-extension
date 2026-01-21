@@ -139,10 +139,19 @@ export class LayerInfo {
 
   getTask(task: TaskName): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
     const tasks = this.parent?.getTask(task) ?? []
-    tasks.unshift({
+    const infos = {
       layer: this,
-      infos: this.tasks[task] ?? []
-    })
+      infos: [...(this.tasks[task] ?? [])]
+    }
+    tasks.unshift(infos)
+    if (this.maa) {
+      let current = task
+      while (current.indexOf('@') !== -1) {
+        const next = current.replace(/^[^@]+@/, '') as TaskName
+        infos.infos.push(...(this.tasks[next] ?? []))
+        current = next
+      }
+    }
     return tasks.filter(x => x.infos.length > 0)
   }
 

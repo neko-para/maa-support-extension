@@ -101,6 +101,7 @@ export default class SimpleParser {
    */
   *doLex(text) {
     let offset = 0
+    let lastOffset = null
     while (text.length > 0) {
       const [r, i] = this.canLex(text, this.lexRule.ignore)
       if (r) {
@@ -124,6 +125,10 @@ export default class SimpleParser {
           break
         }
       }
+      if (lastOffset === offset) {
+        throw `parse error: lex failed since >>${text.substring(0, 10)}<<`
+      }
+      lastOffset = offset
     }
   }
   matchGrammar(grammar, gptr, ptr, cache, result) {

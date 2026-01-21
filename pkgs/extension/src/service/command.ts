@@ -183,6 +183,12 @@ export class CommandService extends BaseService {
         return true
       }
     )
+
+    this.defer = vscode.commands.registerCommand(commands.TriggerCompletion, () => {
+      setTimeout(() => {
+        vscode.commands.executeCommand('editor.action.triggerSuggest')
+      }, 50)
+    })
   }
 
   async init() {

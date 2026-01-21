@@ -9,12 +9,11 @@ import {
   TaskDeclInfo,
   TaskName,
   TaskRefInfo,
-  extractTaskRef,
-  joinImagePath
+  extractTaskRef
 } from '@mse/pipeline-manager'
 
 import { interfaceService, rootService } from '../..'
-import { pipelineSuffix } from '../../../utils/fs'
+import { isMaaAssistantArknights, pipelineSuffix } from '../../../utils/fs'
 import { BaseService } from '../../context'
 
 export class PipelineLanguageProvider extends BaseService {
@@ -66,7 +65,11 @@ export class PipelineLanguageProvider extends BaseService {
 
   getTaskBrief(layer: LayerInfo, task: TaskName) {
     const info = layer.getTaskBriefInfo(task)
-    return `Reco: ${info.reco ?? 'DirectHit'}\n\nAct: ${info.act ?? 'DoNothing'}`
+    if (isMaaAssistantArknights) {
+      return `Algo: ${info.reco ?? 'TemplateMatch'}\n\nAct: ${info.act ?? 'JustReturn'}`
+    } else {
+      return `Reco: ${info.reco ?? 'DirectHit'}\n\nAct: ${info.act ?? 'DoNothing'}`
+    }
   }
 
   async getTaskHover(layer: LayerInfo, task: TaskName) {

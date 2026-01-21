@@ -1,22 +1,23 @@
 import type { Node } from 'jsonc-parser'
 
-import type { AbsolutePath, TaskName } from '../../utils/types'
+import type { TaskName } from '../../utils/types'
 import { parseTask } from '../task/task'
 import { parseObject } from '../utils'
-import type { InterfaceInfo } from './interface'
+import type { InterfaceInfo, InterfaceParseContext } from './interface'
 
-export function parseOverride(node: Node, info: InterfaceInfo, file: AbsolutePath) {
+export function parseOverride(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj, prop] of parseObject(node)) {
     if (key.startsWith('$')) {
       continue
     }
 
     info.layer.mutableTaskInfo(key as TaskName).push({
-      file,
+      file: ctx.file,
       prop,
       data: obj,
       info: parseTask(obj, {
-        file,
+        maa: ctx.maa,
+        file: ctx.file,
         task: prop
       })
     })

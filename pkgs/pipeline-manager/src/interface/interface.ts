@@ -18,6 +18,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   bundleReloaded: []
   pipelineChanged: []
 }> {
+  maa: boolean
   root: AbsolutePath
   file: AbsolutePath
 
@@ -35,17 +36,22 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   constructor(
     loader: IContentLoader,
     watcher: IContentWatcher,
+    maa: boolean,
     root: string,
     file = 'interface.json'
   ) {
     super()
 
+    this.maa = maa
     this.root = root as AbsolutePath
     this.file = joinPath(this.root, file)
 
     this.content = new ContentJson(loader, watcher, this.file, () => {
       if (this.content.node) {
-        this.info = parseInterface(this.content.loader, this.content.node, this.file)
+        this.info = parseInterface(this.content.loader, this.content.node, {
+          maa: this.maa,
+          file: this.file
+        })
         if (this.bundles.length > 0) {
           this.info.layer = this.bundles[this.bundles.length - 1].layer
         }
@@ -146,7 +152,12 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       }
       this.paths = resInfo.paths
       this.bundles = this.paths.map(dir => {
-        return new Bundle(this.content.loader, this.content.watcher, path.join(this.root, dir))
+        return new Bundle(
+          this.content.loader,
+          this.content.watcher,
+          this.maa,
+          path.join(this.root, dir)
+        )
       })
     } else {
       for (const bundle of this.bundles) {

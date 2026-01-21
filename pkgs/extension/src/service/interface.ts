@@ -15,7 +15,7 @@ import {
 import { logger, t } from '@mse/utils'
 
 import { diagnosticService, launchService, rootService } from '.'
-import { currentWorkspace } from '../utils/fs'
+import { currentWorkspace, isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {
@@ -108,6 +108,7 @@ export class InterfaceService extends BaseService {
     this.interfaceBundle = new InterfaceBundle(
       new VscodeContentLoader(vscode),
       new VscodeContentWatcher(vscode),
+      isMaaAssistantArknights,
       root.dirUri.fsPath,
       path.basename(root.interfaceUri.fsPath)
     )

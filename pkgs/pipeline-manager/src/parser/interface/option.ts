@@ -4,7 +4,7 @@ import type { AbsolutePath } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCases } from './case'
 import { parseInputs } from './input'
-import type { InterfaceInfo } from './interface'
+import type { InterfaceInfo, InterfaceParseContext } from './interface'
 import { parseOverride } from './override'
 
 function parseInputRef(
@@ -38,13 +38,18 @@ function parseInputRef(
   }
 }
 
-function parseOptionSec(node: Node, info: InterfaceInfo, option: string, file: AbsolutePath) {
+function parseOptionSec(
+  node: Node,
+  info: InterfaceInfo,
+  option: string,
+  ctx: InterfaceParseContext
+) {
   let inputNames: string[] = []
   let overrideNode: Node | null = null
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'cases':
-        parseCases(obj, info, option, file)
+        parseCases(obj, info, option, ctx)
         break
       case 'inputs':
         inputNames = parseInputs(obj, info, option)
@@ -70,11 +75,11 @@ function parseOptionSec(node: Node, info: InterfaceInfo, option: string, file: A
       names.push([name, new RegExp('\\{' + name + '\\}', 'g')])
     }
     parseInputRef(overrideNode, info, option, names)
-    parseOverride(overrideNode, info, file)
+    parseOverride(overrideNode, info, ctx)
   }
 }
 
-export function parseOption(node: Node, info: InterfaceInfo, file: AbsolutePath) {
+export function parseOption(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj, prop] of parseObject(node)) {
     info.decls.push({
       location: prop,
@@ -82,6 +87,6 @@ export function parseOption(node: Node, info: InterfaceInfo, file: AbsolutePath)
       name: key
     })
 
-    parseOptionSec(obj, info, key, file)
+    parseOptionSec(obj, info, key, ctx)
   }
 }

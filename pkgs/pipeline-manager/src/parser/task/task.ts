@@ -85,6 +85,7 @@ export type TaskInfo = {
 }
 
 export type TaskParseContext = {
+  maa: boolean
   file: AbsolutePath
   task: StringNode
 }

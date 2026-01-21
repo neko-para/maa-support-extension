@@ -24,6 +24,7 @@ export class Bundle extends EventEmitter<{
   imageChanged: []
   defaultChanged: []
 }> {
+  maa: boolean
   root: AbsolutePath
 
   pipelineRoot: AbsolutePath
@@ -37,9 +38,10 @@ export class Bundle extends EventEmitter<{
 
   imageChangedTimer?: NodeJS.Timeout
 
-  constructor(loader: IContentLoader, watcher: IContentWatcher, root: string) {
+  constructor(loader: IContentLoader, watcher: IContentWatcher, maa: boolean, root: string) {
     super()
 
+    this.maa = maa
     this.root = root as AbsolutePath
 
     this.pipelineRoot = joinPath(this.root, 'pipeline')
@@ -151,6 +153,7 @@ export class Bundle extends EventEmitter<{
           prop,
           data: obj,
           info: parseTask(obj, {
+            maa: this.maa,
             file: full,
             task: prop
           })

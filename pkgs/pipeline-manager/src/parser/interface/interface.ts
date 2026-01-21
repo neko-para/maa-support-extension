@@ -135,6 +135,11 @@ export type InterfaceInfo = {
   layer: LayerInfo
 }
 
+export type InterfaceParseContext = {
+  maa: boolean
+  file: AbsolutePath
+}
+
 function parseController(node: Node, info: InterfaceInfo) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
@@ -185,7 +190,7 @@ function parseResource(node: Node, info: InterfaceInfo) {
   }
 }
 
-function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
+function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
@@ -205,7 +210,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
             target: obj.value as TaskName
           })
           info.layer.extraRefs.push({
-            file,
+            file: ctx.file,
             location: obj,
             type: 'task.entry',
             target: obj.value as TaskName
@@ -219,7 +224,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo, file: AbsolutePath) {
         parseCtrlRef(obj, info)
         break
       case 'pipeline_override':
-        parseOverride(obj, info, file)
+        parseOverride(obj, info, ctx)
         break
       case 'option':
         parseOptionRef(obj, info)
@@ -248,11 +253,11 @@ function parseLocalization(node: Node, info: InterfaceInfo) {
   }
 }
 
-export function parseInterface(loader: IContentLoader, node: Node, file: AbsolutePath) {
+export function parseInterface(loader: IContentLoader, node: Node, ctx: InterfaceParseContext) {
   const info: InterfaceInfo = {
     decls: [],
     refs: [],
-    layer: new LayerInfo(loader, path.dirname(file) as AbsolutePath, 'interface')
+    layer: new LayerInfo(loader, path.dirname(ctx.file) as AbsolutePath, 'interface')
   }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
@@ -271,11 +276,11 @@ export function parseInterface(loader: IContentLoader, node: Node, file: Absolut
         break
       case 'task':
         for (const sub of parseArray(obj)) {
-          parseTaskSec(sub, info, file)
+          parseTaskSec(sub, info, ctx)
         }
         break
       case 'option':
-        parseOption(obj, info, file)
+        parseOption(obj, info, ctx)
         break
     }
   }

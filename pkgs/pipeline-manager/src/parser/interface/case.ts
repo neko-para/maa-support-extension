@@ -1,12 +1,11 @@
 import type { Node } from 'jsonc-parser'
 
-import type { AbsolutePath } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
-import type { InterfaceInfo } from './interface'
+import type { InterfaceInfo, InterfaceParseContext } from './interface'
 import { parseOptionRef } from './optionRef'
 import { parseOverride } from './override'
 
-function parseCase(node: Node, info: InterfaceInfo, option: string, file: AbsolutePath) {
+function parseCase(node: Node, info: InterfaceInfo, option: string, ctx: InterfaceParseContext) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
@@ -23,14 +22,19 @@ function parseCase(node: Node, info: InterfaceInfo, option: string, file: Absolu
         parseOptionRef(obj, info)
         break
       case 'pipeline_override':
-        parseOverride(obj, info, file)
+        parseOverride(obj, info, ctx)
         break
     }
   }
 }
 
-export function parseCases(node: Node, info: InterfaceInfo, option: string, file: AbsolutePath) {
+export function parseCases(
+  node: Node,
+  info: InterfaceInfo,
+  option: string,
+  ctx: InterfaceParseContext
+) {
   for (const obj of parseArray(node)) {
-    parseCase(obj, info, option, file)
+    parseCase(obj, info, option, ctx)
   }
 }

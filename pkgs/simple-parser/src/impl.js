@@ -84,6 +84,10 @@ export default class SimpleParser {
     }
     this.rule = rule
   }
+  /**
+   * @param {string} text
+   * @param {RegExp} rule
+   */
   canLex(text, rule) {
     const match = rule.exec(text)
     if (match && match.index === 0) {
@@ -92,11 +96,16 @@ export default class SimpleParser {
       return [false, -1]
     }
   }
+  /**
+   * @param {string} text
+   */
   *doLex(text) {
+    let offset = 0
     while (text.length > 0) {
       const [r, i] = this.canLex(text, this.lexRule.ignore)
       if (r) {
-        text = text.substr(i)
+        text = text.substring(i)
+        offset += i
         continue
       }
       for (const [name, rule] of this.lexRule.token) {
@@ -109,8 +118,9 @@ export default class SimpleParser {
         }
         const [r, i] = this.canLex(text, rule)
         if (r) {
-          yield { name: `%${name}`, value: text.substr(0, i) }
-          text = text.substr(i)
+          yield { name: `%${name}`, value: text.substring(0, i), range: [offset, i] }
+          text = text.substring(i)
+          offset += i
           break
         }
       }
@@ -131,13 +141,18 @@ export default class SimpleParser {
       cache.pop()
     }
   }
+  /**
+   * @param {string} name
+   * @param {number} ptr
+   */
   doParse(name, ptr = 0) {
     if (ptr >= this.tokens.length) {
       return [false, []]
     }
     if (name.startsWith('%')) {
-      if (this.tokens[ptr].name === name) {
-        return [true, [[this.tokens[ptr].value, 1]]]
+      const token = this.tokens[ptr]
+      if (token.name === name) {
+        return [true, [[{ value: token.value, range: token.range }, 1]]]
       } else {
         return [false, []]
       }
@@ -151,12 +166,15 @@ export default class SimpleParser {
     }
     return [result.length > 0, result]
   }
+  /**
+   * @param {string} text
+   */
   parse(text) {
-    this.tokens = [{ name: '%$begin' }]
+    this.tokens = [{ name: '%$begin', range: [0, 0] }]
     for (const token of this.doLex(text)) {
       this.tokens.push(token)
     }
-    this.tokens.push({ name: '%$end' })
+    this.tokens.push({ name: '%$end', range: [text.length, 0] })
     const [state, result] = this.doParse('$')
     if (state && result.length === 1) {
       return result[0][0]

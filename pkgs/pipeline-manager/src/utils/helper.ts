@@ -40,3 +40,15 @@ export function extractTaskRef(r: TaskRefInfo): TaskName | null {
     return null
   }
 }
+
+export function findMaaDeclRef<T extends { offset: number; length: number }>(
+  infos: T[],
+  offset: number
+): T | null {
+  for (const info of infos) {
+    if (offset >= info.offset && offset <= info.offset + info.length) {
+      return info
+    }
+  }
+  return null
+}

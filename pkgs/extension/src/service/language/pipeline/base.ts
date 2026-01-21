@@ -2,6 +2,7 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import {
+  AbsolutePath,
   AnchorName,
   ImageRelativePath,
   LayerInfo,
@@ -182,5 +183,53 @@ ${doc.getText(range)}
       }
     }
     return []
+  }
+
+  async makeMaaDecls(decls: TaskDeclInfo[], task: TaskName) {
+    const result: [file: AbsolutePath, offset: number][] = []
+    const prefix = task + '@'
+    for (const decl of decls) {
+      if (decl.type !== 'task.decl') {
+        continue
+      }
+      for (const taskRef of decl.tasks) {
+        if (taskRef.taskSuffix === task || taskRef.taskSuffix.startsWith(prefix)) {
+          result.push([decl.file, decl.location.offset + 1 + taskRef.offset])
+        }
+      }
+    }
+    return await Promise.all(
+      result.map(async ([file, offset]) => {
+        const doc = await vscode.workspace.openTextDocument(file)
+        return new vscode.Location(
+          doc.uri,
+          new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + task.length))
+        )
+      })
+    )
+  }
+
+  async makeMaaRefs(refs: TaskRefInfo[], task: TaskName) {
+    const result: [file: AbsolutePath, offset: number][] = []
+    const prefix = task + '@'
+    for (const ref of refs) {
+      if (ref.type !== 'task.maa.base_task' && ref.type !== 'task.maa.expr') {
+        continue
+      }
+      for (const taskRef of ref.tasks) {
+        if (taskRef.taskSuffix === task || taskRef.taskSuffix.startsWith(prefix)) {
+          result.push([ref.file, ref.location.offset + 1 + taskRef.offset])
+        }
+      }
+    }
+    return await Promise.all(
+      result.map(async ([file, offset]) => {
+        const doc = await vscode.workspace.openTextDocument(file)
+        return new vscode.Location(
+          doc.uri,
+          new vscode.Range(doc.positionAt(offset), doc.positionAt(offset + task.length))
+        )
+      })
+    )
   }
 }

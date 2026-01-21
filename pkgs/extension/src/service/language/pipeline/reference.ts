@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
+import { AbsolutePath, TaskMaaTaskRef, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
 
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -43,64 +44,28 @@ export class PipelineReferenceProvider
     const allDecls = topLayer.mergedAllDecls
     const allRefs = topLayer.mergedAllRefs
 
+    if (isMaaAssistantArknights) {
+      let taskRef: TaskMaaTaskRef | null = null
+      if (decl && decl.type === 'task.decl') {
+        taskRef = findMaaDeclRef(decl.tasks, offset - decl.location.offset)
+      } else if (ref && (ref.type === 'task.maa.base_task' || ref.type === 'task.maa.expr')) {
+        taskRef = findMaaDeclRef(ref.tasks, offset - ref.location.offset)
+      }
+      if (taskRef) {
+        const result = await this.makeMaaDecls(allDecls, taskRef.task)
+        result.push(...(await this.makeMaaRefs(allRefs, taskRef.task)))
+        if (taskRef.taskSuffix !== taskRef.task) {
+          result.push(...(await this.makeMaaDecls(allDecls, taskRef.taskSuffix)))
+          result.push(...(await this.makeMaaRefs(allRefs, taskRef.taskSuffix)))
+        }
+        return result
+      } else {
+        return null
+      }
+    }
+
     const resultDecls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
     const resultRefs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
     return await Promise.all([...resultDecls, ...resultRefs].map(autoConvertRangeLocation))
-
-    /*
-
-    if (this.shouldFilter(document)) {
-      return null
-    }
-
-    await taskIndexService.flushDirty()
-
-    const [info, _] = await taskIndexService.queryLocation(document.uri, position)
-
-    if (!info) {
-      return null
-    }
-
-    if (info.type === 'task.ref' || info.type === 'task.prop') {
-      const result: vscode.Location[] = []
-      for (const layer of taskIndexService.layers) {
-        for (const [task, taskInfos] of Object.entries(layer.index)) {
-          for (const taskInfo of taskInfos) {
-            for (const refInfo of taskInfo.taskRef) {
-              if (refInfo.task === info.target) {
-                result.push(new vscode.Location(taskInfo.uri, refInfo.range))
-              }
-              if (isMaaAssistantArknights) {
-                if (refInfo.task.endsWith('@' + info.target)) {
-                  result.push(new vscode.Location(taskInfo.uri, refInfo.range))
-                }
-              }
-            }
-            if (isMaaAssistantArknights) {
-              if (task.endsWith('@' + info.target)) {
-                result.push(new vscode.Location(taskInfo.uri, taskInfo.taskProp))
-              }
-            }
-          }
-        }
-      }
-      return result
-    } else if (info.type === 'anchor.def' || info.type === 'anchor.ref') {
-      const result: vscode.Location[] = []
-      for (const layer of taskIndexService.layers) {
-        for (const [task, taskInfos] of Object.entries(layer.index)) {
-          for (const taskInfo of taskInfos) {
-            for (const anchorRef of taskInfo.anchorRef) {
-              if (anchorRef.anchor === info.target) {
-                result.push(new vscode.Location(taskInfo.uri, anchorRef.range))
-              }
-            }
-          }
-        }
-      }
-      return result
-    }
-*/
-    return null
   }
 }

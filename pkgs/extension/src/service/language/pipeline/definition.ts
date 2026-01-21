@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
+import { AbsolutePath, TaskMaaTaskRef, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
 
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -42,6 +43,32 @@ export class PipelineDefinitionProvider
     const allDecls = topLayer.mergedAllDecls
     const allRefs = topLayer.mergedAllRefs
 
+    if (isMaaAssistantArknights) {
+      let taskRef: TaskMaaTaskRef | null = null
+      let addRef = false
+      if (decl && decl.type === 'task.decl') {
+        taskRef = findMaaDeclRef(decl.tasks, offset - decl.location.offset)
+        addRef = true
+      } else if (ref && (ref.type === 'task.maa.base_task' || ref.type === 'task.maa.expr')) {
+        taskRef = findMaaDeclRef(ref.tasks, offset - ref.location.offset)
+      }
+      if (taskRef) {
+        const result = await this.makeMaaDecls(allDecls, taskRef.task)
+        if (addRef) {
+          result.push(...(await this.makeMaaRefs(allRefs, taskRef.task)))
+        }
+        if (taskRef.taskSuffix !== taskRef.task) {
+          result.push(...(await this.makeMaaDecls(allDecls, taskRef.taskSuffix)))
+          if (addRef) {
+            result.push(...(await this.makeMaaRefs(allRefs, taskRef.taskSuffix)))
+          }
+        }
+        return result
+      } else {
+        return null
+      }
+    }
+
     if (decl) {
       const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
       const refs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
@@ -51,32 +78,6 @@ export class PipelineDefinitionProvider
       return await Promise.all(decls.map(autoConvertRangeLocation))
     }
 
-    /*
-    if (this.shouldFilter(document)) {
-      return null
-    }
-
-    await taskIndexService.flushDirty()
-
-    const [info, layer] = await taskIndexService.queryLocation(document.uri, position)
-
-    if (!info || !layer) {
-      return null
-    }
-
-    if (info.type === 'task.ref' || info.type === 'task.prop') {
-      const taskInfo = await taskIndexService.queryTask(
-        info.target,
-        layer.level + 1,
-        undefined // position 这里不传入position, 使得查找定义能够找到所有重复版本
-      )
-      return taskInfo.map(x => new vscode.Location(x.info.uri, x.info.taskProp))
-    } else if (info.type === 'anchor.ref' || info.type === 'anchor.def') {
-      const anchorInfo = await taskIndexService.queryAnchor(info.target, layer.level + 1)
-      return anchorInfo.map(x => new vscode.Location(x.info.uri, x.info.range))
-    }
-
-    */
     return null
   }
 }

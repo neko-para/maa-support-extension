@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 
 import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
 
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineHoverProvider
@@ -37,7 +38,12 @@ export class PipelineHoverProvider
     const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
-    if (ref) {
+    if (decl) {
+      if (decl.type === 'task.decl') {
+        const hover = await this.getTaskHover(intBundle.topLayer!, decl.task)
+        return new vscode.Hover(hover)
+      }
+    } else if (ref) {
       if (
         ref.type === 'task.next' ||
         ref.type === 'task.target' ||
@@ -58,13 +64,7 @@ export class PipelineHoverProvider
         return new vscode.Hover(hover)
       }
       // TODO: show image for task prop, and for maa
-    } else if (decl) {
-      if (decl.type === 'task.decl') {
-        const hover = await this.getTaskHover(intBundle.topLayer!, decl.task)
-        return new vscode.Hover(hover)
-      }
     }
-
     /*
 
     if (this.shouldFilter(document)) {

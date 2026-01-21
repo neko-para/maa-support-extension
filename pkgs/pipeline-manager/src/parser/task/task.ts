@@ -1,12 +1,8 @@
 import type { Node } from 'jsonc-parser'
 
-import type {
-  AbsolutePath,
-  AnchorName,
-  ImageRelativePath,
-  MaaExprName,
-  TaskName
-} from '../../utils/types'
+import type { MaaTaskExpr } from '@nekosu/maa-tasker'
+
+import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
 import { type PropPair, type StringNode, parseArray, parseObject } from '../utils'
 import { parseAnchor } from './anchor'
 import { parseFreeze } from './freeze'
@@ -19,9 +15,17 @@ import { parseSubName } from './subName'
 import { parseTarget } from './target'
 import { parseTemplate } from './template'
 
+export type TaskMaaTaskRef = {
+  task: TaskName
+  taskSuffix: TaskName // 从当前位置到最右边
+  offset: number
+  length: number
+}
+
 export type TaskPropDeclInfo = {
   type: 'task.decl'
   task: TaskName
+  tasks: TaskMaaTaskRef[]
 }
 
 export type TaskAnchorDeclInfo = {
@@ -91,11 +95,13 @@ type MaaFwTaskRefInfo =
 export type TaskMaaBaseTaskRefInfo = {
   type: 'task.maa.base_task'
   target: TaskName
+  tasks: TaskMaaTaskRef[]
 }
 
 export type TaskMaaExprRefInfo = {
   type: 'task.maa.expr'
-  target: MaaExprName
+  target: MaaTaskExpr
+  tasks: TaskMaaTaskRef[]
 }
 
 type MaaTaskRefInfo = TaskMaaBaseTaskRefInfo | TaskMaaExprRefInfo
@@ -213,6 +219,26 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
   }
 }
 
+export function buildTaskRef(task: TaskName) {
+  let offset = 0
+  const tasks = (task.split('@') as TaskName[]).map(task => {
+    const result: TaskMaaTaskRef = {
+      task,
+      taskSuffix: task,
+      offset,
+      length: task.length
+    }
+    offset += task.length + 1
+    return result
+  })
+  let suffix = tasks[tasks.length - 1].task
+  for (let idx = tasks.length - 2; idx >= 0; idx--) {
+    suffix = `${tasks[idx].task}@${suffix}` as TaskName
+    tasks[idx].taskSuffix = suffix
+  }
+  return tasks
+}
+
 export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
   const parts = splitNode(node, ctx.maa)
 
@@ -226,7 +252,8 @@ export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
     file: ctx.file,
     location: ctx.task,
     type: 'task.decl',
-    task: ctx.task.value as TaskName
+    task: ctx.task.value as TaskName,
+    tasks: buildTaskRef(ctx.task.value as TaskName)
   })
 
   if (ctx.maa) {

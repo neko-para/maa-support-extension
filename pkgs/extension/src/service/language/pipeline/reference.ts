@@ -22,7 +22,7 @@ export class PipelineReferenceProvider
     token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
     const intBundle = await this.flush()
-    if (!intBundle || !intBundle.info?.layer) {
+    if (!intBundle) {
       return null
     }
 
@@ -31,6 +31,7 @@ export class PipelineReferenceProvider
       return null
     }
     const [layer, file] = layerInfo
+    const topLayer = intBundle.topLayer!
 
     const offset = document.offsetAt(position)
     const decls = layer.mergedDecls.filter(decl => decl.file === file)
@@ -39,8 +40,8 @@ export class PipelineReferenceProvider
     const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
-    const allDecls = intBundle.info.layer.mergedAllDecls
-    const allRefs = intBundle.info.layer.mergedAllRefs
+    const allDecls = topLayer.mergedAllDecls
+    const allRefs = topLayer.mergedAllRefs
 
     const resultDecls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
     const resultRefs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []

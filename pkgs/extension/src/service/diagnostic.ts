@@ -69,27 +69,29 @@ class DiagnosticScanner extends FlushHelper {
           }
         }
 
-        for (const taskInfo of taskInfos) {
-          const uri = vscode.Uri.file(taskInfo.file)
-          const existsNext = new Set<TaskName>()
-          const refs = taskInfo.info.refs.filter(
-            ref => ref.type === 'task.next' && !ref.anchor
-          ) as (TaskRefInfo & {
-            type: 'task.next'
-          })[]
-          refs.sort((a, b) => a.location.offset - b.location.offset)
-          for (const ref of refs) {
-            if (existsNext.has(ref.target)) {
-              result.push([
-                uri,
-                new vscode.Diagnostic(
-                  await autoConvertRange(ref.location, ref.file),
-                  t('maa.pipeline.error.duplicate-next', ref.target),
-                  vscode.DiagnosticSeverity.Error
-                )
-              ])
-            } else {
-              existsNext.add(ref.target)
+        if (!isMaaAssistantArknights) {
+          for (const taskInfo of taskInfos) {
+            const uri = vscode.Uri.file(taskInfo.file)
+            const existsNext = new Set<TaskName>()
+            const refs = taskInfo.info.refs.filter(
+              ref => ref.type === 'task.next' && !ref.anchor
+            ) as (TaskRefInfo & {
+              type: 'task.next'
+            })[]
+            refs.sort((a, b) => a.location.offset - b.location.offset)
+            for (const ref of refs) {
+              if (existsNext.has(ref.target)) {
+                result.push([
+                  uri,
+                  new vscode.Diagnostic(
+                    await autoConvertRange(ref.location, ref.file),
+                    t('maa.pipeline.error.duplicate-next', ref.target),
+                    vscode.DiagnosticSeverity.Error
+                  )
+                ])
+              } else {
+                existsNext.add(ref.target)
+              }
             }
           }
         }

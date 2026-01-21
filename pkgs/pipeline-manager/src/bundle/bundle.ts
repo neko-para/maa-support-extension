@@ -44,11 +44,11 @@ export class Bundle extends EventEmitter<{
     this.maa = maa
     this.root = root as AbsolutePath
 
-    this.pipelineRoot = joinPath(this.root, 'pipeline')
-    this.imageRoot = joinPath(this.root, 'image')
+    this.pipelineRoot = joinPath(this.root, this.maa ? 'tasks' : 'pipeline')
+    this.imageRoot = joinPath(this.root, this.maa ? 'template' : 'image')
 
     this.files = {}
-    this.layer = new LayerInfo(loader, this.root, 'resource')
+    this.layer = new LayerInfo(loader, this.maa, this.root, 'resource')
 
     this.manager = new BundleManager(loader, watcher, this.root, this)
     this.defaultPipeline = new ContentJson(
@@ -109,7 +109,9 @@ export class Bundle extends EventEmitter<{
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      const imageFile = file.replaceAll(path.sep, '/').replace('image/', '') as ImageRelativePath
+      const imageFile = file
+        .replaceAll(path.sep, '/')
+        .replace(this.maa ? 'template/' : 'image/', '') as ImageRelativePath
       if (!this.layer.images.has(imageFile)) {
         this.layer.images.add(imageFile)
         this.dispatchImageChanged()

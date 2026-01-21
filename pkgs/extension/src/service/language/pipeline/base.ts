@@ -94,9 +94,8 @@ ${doc.getText(range)}
   async getImageHover(layer: LayerInfo, image: ImageRelativePath) {
     const layers = layer.getImage(image)
     const content: string[] = []
-    for (const layer of layers) {
-      const full = joinImagePath(layer.root, image)
-      content.push(`${rootService.relativeToRoot(layer.root)} - [${image}](${vscode.Uri.file(full).toString()})
+    for (const [layer, full, file] of layers) {
+      content.push(`${rootService.relativeToRoot(layer.root)} - [${file}](${vscode.Uri.file(full).toString()})
 
 ![](${vscode.Uri.file(full).toString()})`)
     }

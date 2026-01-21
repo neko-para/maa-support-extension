@@ -206,7 +206,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       return layer ? [layer, file] : null
     } else {
       for (const bundle of this.bundles) {
-        if (file.startsWith(joinPath(bundle.root, 'pipeline'))) {
+        if (file.startsWith(joinPath(bundle.root, this.maa ? 'tasks' : 'pipeline'))) {
           return [bundle.layer, file]
         }
       }
@@ -220,5 +220,15 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       layers.push(this.info.layer)
     }
     return layers
+  }
+
+  get topLayer() {
+    if (this.info?.layer) {
+      return this.info.layer
+    }
+    if (this.bundles.length > 0) {
+      return this.bundles[this.bundles.length - 1].layer
+    }
+    return null
   }
 }

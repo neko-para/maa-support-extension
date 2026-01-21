@@ -72,3 +72,55 @@ export const actKeys = [
   'custom_action',
   'custom_action_param'
 ]
+
+export const maaNodeKeys = [
+  'baseTask',
+  // 'algorithm',
+  // 'action',
+  'sub',
+  'subErrorIgnored',
+  'next',
+  'maxTimes',
+  'exceededNext',
+  'onErrorNext',
+  'preDelay',
+  'postDelay',
+  'roi',
+  'cache',
+  'rectMove',
+  'reduceOtherTimes',
+  'specificRect',
+  'specialParams',
+  'highResolutionSwipeFix'
+]
+
+export const maaRecoKeys = [
+  // MatchTemplate
+  'template',
+  'templThreshold',
+  'maskRange',
+  'colorScales',
+  'colorWithClose',
+  'pureColor',
+  'method',
+
+  // OcrDetect
+  'text',
+  'ocrReplace',
+  'fullMatch',
+  'isAscii',
+  'withoutDet',
+  'useRaw',
+  'binThreshold',
+
+  // FeatureMatch
+  // 'template',
+  'count',
+  'ratio',
+  'detector'
+]
+
+export const maaActKeys = [
+  // Input
+  'inputText'
+]

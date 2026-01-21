@@ -257,7 +257,7 @@ export function parseInterface(loader: IContentLoader, node: Node, ctx: Interfac
   const info: InterfaceInfo = {
     decls: [],
     refs: [],
-    layer: new LayerInfo(loader, path.dirname(ctx.file) as AbsolutePath, 'interface')
+    layer: new LayerInfo(loader, ctx.maa, path.dirname(ctx.file) as AbsolutePath, 'interface')
   }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {

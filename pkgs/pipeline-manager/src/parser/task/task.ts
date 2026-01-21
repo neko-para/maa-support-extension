@@ -1,9 +1,17 @@
 import type { Node } from 'jsonc-parser'
 
-import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
+import type {
+  AbsolutePath,
+  AnchorName,
+  ImageRelativePath,
+  MaaExprName,
+  TaskName
+} from '../../utils/types'
 import { type PropPair, type StringNode, parseArray, parseObject } from '../utils'
 import { parseAnchor } from './anchor'
 import { parseFreeze } from './freeze'
+import { parseMaaBaseTask } from './maa/baseTask'
+import { parseMaaExprList } from './maa/expr'
 import { parseNextList } from './next'
 import { parseRoi } from './roi'
 import { type TaskParts, splitNode } from './split'
@@ -73,10 +81,29 @@ export type TaskEntryRefInfo = {
   target: TaskName
 }
 
+type MaaFwTaskRefInfo =
+  | TaskNextRefInfo
+  | TaskTargetRefInfo
+  | TaskRoiRefInfo
+  | TaskTemplateRefInfo
+  | TaskEntryRefInfo
+
+export type TaskMaaBaseTaskRefInfo = {
+  type: 'task.maa.base_task'
+  target: TaskName
+}
+
+export type TaskMaaExprRefInfo = {
+  type: 'task.maa.expr'
+  target: MaaExprName
+}
+
+type MaaTaskRefInfo = TaskMaaBaseTaskRefInfo | TaskMaaExprRefInfo
+
 export type TaskRefInfo = {
   file: AbsolutePath
   location: Node
-} & (TaskNextRefInfo | TaskTargetRefInfo | TaskRoiRefInfo | TaskTemplateRefInfo | TaskEntryRefInfo)
+} & (MaaFwTaskRefInfo | MaaTaskRefInfo)
 
 export type TaskInfo = {
   parts: TaskParts
@@ -88,6 +115,24 @@ export type TaskParseContext = {
   maa: boolean
   file: AbsolutePath
   task: StringNode
+}
+
+function parseMaaBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
+  for (const [prop, obj] of props) {
+    switch (prop) {
+      case 'baseTask':
+        parseMaaBaseTask(obj, info, ctx)
+        break
+
+      case 'sub':
+      case 'next':
+      case 'exceededNext':
+      case 'onErrorNext':
+      case 'reduceOtherTimes':
+        parseMaaExprList(obj, info, ctx)
+        break
+    }
+  }
 }
 
 function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
@@ -104,6 +149,16 @@ function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
       case 'post_wait_freezes':
       case 'repeat_wait_freezes':
         parseFreeze(obj, info, ctx)
+        break
+    }
+  }
+}
+
+function parseMaaReco(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
+  for (const [prop, obj] of props) {
+    switch (prop) {
+      case 'template':
+        parseTemplate(obj, info, ctx)
         break
     }
   }
@@ -128,7 +183,7 @@ function parseReco(
       case 'all_of':
       case 'any_of':
         for (const sub of parseArray(obj)) {
-          const subInfo = splitNode(sub)
+          const subInfo = splitNode(sub, false)
           parseReco(subInfo.reco, info, prev, ctx, sub)
         }
         break
@@ -159,7 +214,7 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
 }
 
 export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
-  const parts = splitNode(node)
+  const parts = splitNode(node, ctx.maa)
 
   const info: TaskInfo = {
     parts,
@@ -174,9 +229,14 @@ export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
     task: ctx.task.value as TaskName
   })
 
-  parseBase(info.parts.base, info, ctx)
-  parseReco(parts.reco, info, [], ctx)
-  parseAct(parts.act, info, ctx)
+  if (ctx.maa) {
+    parseMaaBase(info.parts.base, info, ctx)
+    parseMaaReco(parts.reco, info, ctx)
+  } else {
+    parseBase(info.parts.base, info, ctx)
+    parseReco(parts.reco, info, [], ctx)
+    parseAct(parts.act, info, ctx)
+  }
 
   return info
 }

@@ -2,7 +2,13 @@ import type { Node } from 'jsonc-parser'
 
 import type { IContentLoader } from '../content/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
-import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../utils/types'
+import {
+  type AbsolutePath,
+  type AnchorName,
+  type ImageRelativePath,
+  type TaskName,
+  joinImagePath
+} from '../utils/types'
 
 export type LayerTaskInfo = {
   file: AbsolutePath
@@ -14,6 +20,7 @@ export type LayerTaskInfo = {
 export class LayerInfo {
   loader: IContentLoader
 
+  maa: boolean
   root: AbsolutePath
   parent?: LayerInfo
 
@@ -27,8 +34,14 @@ export class LayerInfo {
   mergedDeclsCache: TaskDeclInfo[]
   mergedRefsCache: TaskRefInfo[]
 
-  constructor(loader: IContentLoader, root: AbsolutePath, type: 'interface' | 'resource') {
+  constructor(
+    loader: IContentLoader,
+    maa: boolean,
+    root: AbsolutePath,
+    type: 'interface' | 'resource'
+  ) {
     this.loader = loader
+    this.maa = maa
     this.root = root
     this.type = type
 
@@ -133,10 +146,20 @@ export class LayerInfo {
     return tasks.filter(x => x.infos.length > 0)
   }
 
-  getImage(image: ImageRelativePath): LayerInfo[] {
+  getImage(
+    image: ImageRelativePath
+  ): [layer: LayerInfo, image: AbsolutePath, rel: ImageRelativePath][] {
     const layers = this.parent?.getImage(image) ?? []
     if (this.images.has(image)) {
-      layers.unshift(this)
+      layers.unshift([this, joinImagePath(this.maa, this.root, image), image])
+    }
+    if (this.maa) {
+      const suffix = '/' + image
+      for (const file of this.images) {
+        if (file.endsWith(suffix)) {
+          layers.unshift([this, joinImagePath(this.maa, this.root, file), file])
+        }
+      }
     }
     return layers
   }

@@ -1,7 +1,7 @@
 import type { Node } from 'jsonc-parser'
 
 import { type PropPair, type StringNode, isString, parseObject } from '../utils'
-import { actKeys, nodeKeys, recoKeys } from './keys'
+import { actKeys, maaActKeys, maaNodeKeys, maaRecoKeys, nodeKeys, recoKeys } from './keys'
 
 export type TaskParts = {
   node: Node
@@ -10,16 +10,35 @@ export type TaskParts = {
   base: PropPair[]
   reco: PropPair[]
   act: PropPair[]
-  unknown: [key: string, value: Node][]
+  unknown: PropPair[]
 }
 
-export function splitNode(node: Node) {
+export function splitNode(node: Node, maa: boolean) {
   const result: TaskParts = {
     node,
     base: [],
     reco: [],
     act: [],
     unknown: []
+  }
+  if (maa) {
+    for (const pair of parseObject(node)) {
+      const [key, obj] = pair
+      if (key === 'algorithm' && isString(obj)) {
+        result.recoType = obj
+      } else if (key === 'action' && isString(obj)) {
+        result.actType = obj
+      } else if (maaNodeKeys.includes(key)) {
+        result.base.push(pair)
+      } else if (maaRecoKeys.includes(key)) {
+        result.reco.push(pair)
+      } else if (maaActKeys.includes(key)) {
+        result.act.push(pair)
+      } else {
+        result.unknown.push(pair)
+      }
+    }
+    return result
   }
   for (const pair of parseObject(node)) {
     const [key, obj] = pair
@@ -65,6 +84,8 @@ export function splitNode(node: Node) {
           }
         }
       }
+    } else {
+      result.unknown.push(pair)
     }
   }
   return result

@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 
 import { AbsolutePath, joinImagePath } from '@mse/pipeline-manager'
 
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -29,6 +30,7 @@ export class PipelineDocumentLinkProvider
       return []
     }
     const [layer, file] = layerInfo
+    const topLayer = intBundle.topLayer!
 
     const refs = layer.mergedRefs.filter(ref => ref.file === file)
 
@@ -41,12 +43,13 @@ export class PipelineDocumentLinkProvider
         continue
       }
 
-      result.push(
-        new vscode.DocumentLink(
-          convertRange(document, ref.location),
-          vscode.Uri.file(joinImagePath(layer.root, ref.target))
+      const layers = topLayer.getImage(ref.target)
+      for (const [, full] of layers) {
+        result.push(
+          new vscode.DocumentLink(convertRange(document, ref.location), vscode.Uri.file(full))
         )
-      )
+        break // 只要最顶层的最匹配的那个
+      }
     }
 
     return result

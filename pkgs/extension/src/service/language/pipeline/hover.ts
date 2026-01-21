@@ -51,16 +51,16 @@ export class PipelineHoverProvider
             return null
           }
         }
-        const hover = await this.getTaskHover(layer, ref.target)
+        const hover = await this.getTaskHover(intBundle.topLayer!, ref.target)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.template') {
-        const hover = await this.getImageHover(layer, ref.target)
+        const hover = await this.getImageHover(intBundle.topLayer!, ref.target)
         return new vscode.Hover(hover)
       }
       // TODO: show image for task prop, and for maa
     } else if (decl) {
       if (decl.type === 'task.decl') {
-        const hover = await this.getTaskHover(layer, decl.task)
+        const hover = await this.getTaskHover(intBundle.topLayer!, decl.task)
         return new vscode.Hover(hover)
       }
     }

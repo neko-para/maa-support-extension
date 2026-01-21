@@ -62,8 +62,13 @@ function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
   }
 }
 
-export function parseNextList(node: Node, info: TaskInfo, ctx: TaskParseContext) {
-  if (node.type !== 'array') {
+export function parseNextList(
+  node: Node,
+  info: TaskInfo,
+  ctx: TaskParseContext,
+  forceArray = false
+) {
+  if (!forceArray && node.type !== 'array') {
     parseSingle(node, info, ctx)
   } else {
     for (const obj of parseArray(node)) {

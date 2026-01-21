@@ -10,6 +10,7 @@ import {
 import { t } from '@mse/utils'
 
 import { interfaceService, rootService } from '.'
+import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { autoConvertRange } from './language/utils'
 import { debounce } from './utils/debounce'
@@ -78,12 +79,11 @@ class DiagnosticScanner extends FlushHelper {
           })[]
           refs.sort((a, b) => a.location.offset - b.location.offset)
           for (const ref of refs) {
-            const loc = await autoConvertRange(ref.location, ref.file)
             if (existsNext.has(ref.target)) {
               result.push([
                 uri,
                 new vscode.Diagnostic(
-                  loc,
+                  await autoConvertRange(ref.location, ref.file),
                   t('maa.pipeline.error.duplicate-next', ref.target),
                   vscode.DiagnosticSeverity.Error
                 )
@@ -101,14 +101,14 @@ class DiagnosticScanner extends FlushHelper {
       const images = new Set(layer.getImageListNotUnique())
       for (const ref of refs) {
         const uri = vscode.Uri.file(ref.file)
-        const loc = await autoConvertRange(ref.location, ref.file)
+        const loc = () => autoConvertRange(ref.location, ref.file)
         const task = extractTaskRef(ref)
         if (task) {
           if (!tasks.has(task)) {
             result.push([
               uri,
               new vscode.Diagnostic(
-                loc,
+                await loc(),
                 t('maa.pipeline.error.unknown-task', ref.target),
                 vscode.DiagnosticSeverity.Error
               )
@@ -120,7 +120,7 @@ class DiagnosticScanner extends FlushHelper {
             result.push([
               uri,
               new vscode.Diagnostic(
-                loc,
+                await loc(),
                 t('maa.pipeline.warning.image-path-dynamic'),
                 vscode.DiagnosticSeverity.Warning
               )
@@ -131,7 +131,7 @@ class DiagnosticScanner extends FlushHelper {
             result.push([
               uri,
               new vscode.Diagnostic(
-                loc,
+                await loc(),
                 t('maa.pipeline.warning.image-path-backslash'),
                 vscode.DiagnosticSeverity.Warning
               )
@@ -139,25 +139,55 @@ class DiagnosticScanner extends FlushHelper {
             imagePath = imagePath.replaceAll('\\', '/') as ImageRelativePath
           }
           if (imagePath.startsWith('./')) {
-            imagePath = imagePath.replace('./', '') as ImageRelativePath
-          }
-          // TODO: maa logic
-          if (!images.has(imagePath)) {
             result.push([
               uri,
               new vscode.Diagnostic(
-                loc,
-                t('maa.pipeline.error.unknown-image', ref.target),
-                vscode.DiagnosticSeverity.Error
+                await loc(),
+                t('maa.pipeline.warning.image-path-dot-slash'),
+                vscode.DiagnosticSeverity.Warning
               )
             ])
+            imagePath = imagePath.replace('./', '') as ImageRelativePath
+          }
+          if (isMaaAssistantArknights && !imagePath.endsWith('.png')) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                await loc(),
+                t('maa.pipeline.warning.image-path-missing-png'),
+                vscode.DiagnosticSeverity.Warning
+              )
+            ])
+            imagePath = (imagePath + '.png') as ImageRelativePath
+          }
+          if (!images.has(imagePath)) {
+            let found = false
+            if (isMaaAssistantArknights) {
+              const suffix = '/' + imagePath
+              for (const image of images) {
+                if (image.endsWith(suffix)) {
+                  found = true
+                  break
+                }
+              }
+            }
+            if (!found) {
+              result.push([
+                uri,
+                new vscode.Diagnostic(
+                  await loc(),
+                  t('maa.pipeline.error.unknown-image', ref.target),
+                  vscode.DiagnosticSeverity.Error
+                )
+              ])
+            }
           }
         } else if (ref.type === 'task.next' && ref.anchor) {
           if (!anchors.has(ref.target as string as AnchorName)) {
             result.push([
               uri,
               new vscode.Diagnostic(
-                loc,
+                await loc(),
                 t('maa.pipeline.error.unknown-anchor', ref.target),
                 vscode.DiagnosticSeverity.Error
               )

@@ -55,6 +55,7 @@ export default {
   'maa.pipeline.error.unknown-anchor': '未知Anchor {0}',
   'maa.pipeline.error.duplicate-next': '重复路由 {0}',
   'maa.pipeline.warning.image-path-backslash': '图片路径中包含反斜杠, 应使用正斜杠',
+  'maa.pipeline.warning.image-path-dot-slash': '图片路径中包含 ./ , 应移除',
   'maa.pipeline.warning.image-path-missing-png': '图片路径不应省略.png',
   'maa.pipeline.warning.image-path-dynamic': '检测到动态图片路径',
 

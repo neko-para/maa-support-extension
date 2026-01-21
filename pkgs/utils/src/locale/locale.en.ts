@@ -56,6 +56,7 @@ export default {
   'maa.pipeline.error.duplicate-next': 'Duplicate route {0}',
   'maa.pipeline.warning.image-path-backslash':
     'Image path contains backslash, shall use forward slash instead',
+  'maa.pipeline.warning.image-path-dot-slash': 'Image path contains ./ , shall omit instead',
   'maa.pipeline.warning.image-path-missing-png': 'Image path shall not omit .png',
   'maa.pipeline.warning.image-path-dynamic': 'Dynamic image path detected',
 

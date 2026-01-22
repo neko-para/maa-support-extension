@@ -74,7 +74,7 @@ export class Bundle extends EventEmitter<{
     await Promise.all([this.manager.flush(), this.defaultPipeline.flush()])
   }
 
-  filterFile(file: string, isdir: boolean): boolean {
+  filterFile(file: AbsolutePath, isdir: boolean): boolean {
     if (path.basename(file).startsWith('.')) {
       return false
     }
@@ -92,7 +92,7 @@ export class Bundle extends EventEmitter<{
     return false
   }
 
-  needContent(file: string): boolean {
+  needContent(file: AbsolutePath): boolean {
     return file.endsWith('.json')
   }
 
@@ -103,6 +103,9 @@ export class Bundle extends EventEmitter<{
   }
 
   async loadFile(file: RelativePath, full: AbsolutePath, content?: string): Promise<void> {
+    if (!this.filterFile(full, false)) {
+      return
+    }
     if (file.endsWith('.json')) {
       const changed = this.loadFileImpl(file, content)
       if (changed.length > 0) {
@@ -120,6 +123,9 @@ export class Bundle extends EventEmitter<{
   }
 
   async deleteFile(file: RelativePath, full: AbsolutePath): Promise<void> {
+    if (!this.filterFile(full, false)) {
+      return
+    }
     if (file.endsWith('.json')) {
       const changed = this.deleteFileImpl(file)
       if (changed.length > 0) {

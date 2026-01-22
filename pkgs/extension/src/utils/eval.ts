@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 
+import { TaskName } from '@mse/pipeline-manager'
 import { logger, t } from '@mse/utils'
 import {
   MaaEvalContext,
@@ -9,20 +10,27 @@ import {
   type MaaTaskWithTraceInfo
 } from '@nekosu/maa-tasker'
 
-import { rootService, taskIndexService } from '../service'
+import { interfaceService, rootService } from '../service'
 import { isMaaAssistantArknights } from './fs'
 
 class MaaEvalDelegateImpl extends MaaEvalDelegate {
-  async query(task: string): Promise<[task: MaaTask, anchor: string][]> {
-    return (await taskIndexService.queryTask(task, undefined, undefined, false, false)).map(x => {
-      const obj = JSON.parse(x.info.taskContent) as MaaTask
+  query(task: string): [task: MaaTask, anchor: string][] {
+    const intBundle = interfaceService.interfaceBundle
+    // await intBundle?.flush()
+    const topLayer = intBundle?.topLayer
+    if (!topLayer) {
+      return []
+    }
 
+    const infos = topLayer.getTask(task as TaskName, false)
+    infos.reverse() // 内部需要从底层到上层
+    return infos.map(({ layer, infos }) => {
+      const info = infos[0]
       // 这里硬编码了下逻辑
-      const path = rootService.relativePathToRoot(x.uri).replaceAll('\\', '/')
+      const path = rootService.relativeToRoot(layer.root).replaceAll('\\', '/')
       const match = /global\/(.+)\//.exec(path)
       const anchor = match ? match[1] : 'Official'
-
-      return [obj, anchor]
+      return [info.obj as MaaTask, anchor]
     })
   }
 
@@ -56,11 +64,11 @@ export async function maaEvalTask(task: string): Promise<MaaTaskWithTraceInfo<Ma
     return null
   }
 
-  await taskIndexService.flushDirty()
+  await interfaceService.interfaceBundle?.flush(true)
 
   const context = new MaaEvalContext(new MaaEvalDelegateImpl())
 
-  const result = await context.evalTask(task)
+  const result = context.evalTask(task)
   if (result) {
     delete (result.task as MaaTask).__baseTaskResolved
   }
@@ -76,11 +84,11 @@ export async function maaEvalExpr(
     return null
   }
 
-  await taskIndexService.flushDirty()
+  await interfaceService.interfaceBundle?.flush(true)
 
   const context = new MaaEvalContext(new MaaEvalDelegateImpl())
 
-  return await context.evalExpr(expr, self, strip)
+  return context.evalExpr(expr, self, strip)
 }
 
 function makeUnique(input: string[], keepLast = false): string[] {

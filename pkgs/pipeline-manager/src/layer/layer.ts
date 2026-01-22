@@ -15,6 +15,7 @@ export type LayerTaskInfo = {
   prop: Node
   data: Node
   info: TaskInfo
+  obj: unknown
 }
 
 export class LayerInfo {
@@ -137,14 +138,14 @@ export class LayerInfo {
     return [...new Set(this.getImageListNotUnique())]
   }
 
-  getTask(task: TaskName): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
+  getTask(task: TaskName, maaTrace = true): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
     const tasks = this.parent?.getTask(task) ?? []
     const infos = {
       layer: this,
       infos: [...(this.tasks[task] ?? [])]
     }
     tasks.unshift(infos)
-    if (this.maa) {
+    if (this.maa && maaTrace) {
       let current = task
       while (current.indexOf('@') !== -1) {
         const next = current.replace(/^[^@]+@/, '') as TaskName

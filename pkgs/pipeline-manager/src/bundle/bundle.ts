@@ -8,7 +8,7 @@ import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
 import { parseTask } from '../parser/task/task'
 import { parseObject } from '../parser/utils'
-import { parseTreeWithoutParent } from '../utils/json'
+import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import {
   type AbsolutePath,
   type ImageRelativePath,
@@ -158,7 +158,8 @@ export class Bundle extends EventEmitter<{
             maa: this.maa,
             file: full,
             task: prop
-          })
+          }),
+          obj: buildTree(obj)
         })
         this.layer.markDirty()
         changed.push(key)

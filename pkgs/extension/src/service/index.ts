@@ -25,7 +25,6 @@ import { NativeService } from './native'
 import { RootService } from './root'
 import { StateService } from './state'
 import { StatusBarService } from './statusBar'
-import { TaskIndexService } from './taskIndex'
 import { WebviewControlService } from './webview/control'
 
 export { context } from './context'
@@ -34,7 +33,6 @@ export let stateService: StateService
 export let nativeService: NativeService
 export let rootService: RootService
 export let interfaceService: InterfaceService
-export let taskIndexService: TaskIndexService
 export let launchService: LaunchService
 export let debugService: DebugService
 export let commandService: CommandService
@@ -53,7 +51,6 @@ export async function init(ctx: vscode.ExtensionContext) {
   nativeService = new NativeService()
   rootService = new RootService()
   interfaceService = new InterfaceService()
-  taskIndexService = new TaskIndexService()
   launchService = new LaunchService()
   debugService = new DebugService()
   commandService = new CommandService()
@@ -85,7 +82,6 @@ export async function init(ctx: vscode.ExtensionContext) {
   await nativeService.init()
   await rootService.init()
   await interfaceService.init()
-  await taskIndexService.init()
   await launchService.init()
   await debugService.init()
   await commandService.init()

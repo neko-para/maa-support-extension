@@ -1,5 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
+import { buildTree } from '../../utils/json'
 import type { TaskName } from '../../utils/types'
 import { parseTask } from '../task/task'
 import { parseObject } from '../utils'
@@ -19,7 +20,8 @@ export function parseOverride(node: Node, info: InterfaceInfo, ctx: InterfacePar
         maa: ctx.maa,
         file: ctx.file,
         task: prop
-      })
+      }),
+      obj: buildTree(obj)
     })
     info.layer.markDirty()
   }

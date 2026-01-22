@@ -6,7 +6,6 @@ import { MaaTaskExpr, TaskExprProps, TaskExprPropsVirtsMap, shouldStrip } from '
 
 import { interfaceService, launchService, rootService, stateService } from '.'
 import { commands } from '../command'
-import { maaEvalExpr, maaEvalTask } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { convertRange } from './language/utils'
@@ -108,12 +107,19 @@ export class CommandService extends BaseService {
     })
 
     this.defer = vscode.commands.registerCommand(commands.EvalTask, async (task?: string) => {
-      if (!isMaaAssistantArknights || typeof task !== 'string') {
+      if (
+        !isMaaAssistantArknights ||
+        typeof task !== 'string' ||
+        !interfaceService.interfaceBundle
+      ) {
         vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
         return false
       }
 
-      const result = await maaEvalTask(task)
+      const intBundle = interfaceService.interfaceBundle
+      await intBundle.flush(true)
+
+      const result = intBundle.maaEvalTask(task)
       if (!result) {
         vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
         return false
@@ -128,7 +134,7 @@ export class CommandService extends BaseService {
 
             const listResult: string[] = []
             for (const expr of list) {
-              const exprResult = await maaEvalExpr(
+              const exprResult = intBundle.maaEvalExpr(
                 expr,
                 task,
                 shouldStrip(TaskExprPropsVirtsMap[prop])
@@ -174,13 +180,17 @@ export class CommandService extends BaseService {
           !isMaaAssistantArknights ||
           typeof expr !== 'string' ||
           typeof host !== 'string' ||
-          typeof strip !== 'boolean'
+          typeof strip !== 'boolean' ||
+          !interfaceService.interfaceBundle
         ) {
           vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
           return false
         }
 
-        const result = await maaEvalExpr(expr as MaaTaskExpr, host, strip)
+        const intBundle = interfaceService.interfaceBundle
+        await intBundle.flush(true)
+
+        const result = intBundle.maaEvalExpr(expr as MaaTaskExpr, host, strip)
         if (!result) {
           vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
           return false

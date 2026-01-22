@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
+import { AbsolutePath, TaskName, findDeclRef } from '@mse/pipeline-manager'
 
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
@@ -17,9 +17,13 @@ const virtKeys = [
   'reduce_other_times'
 ]
 
+type CustomCompletionItem = vscode.CompletionItem & {
+  fillTaskDetail?: () => string
+}
+
 export class PipelineCompletionProvider
   extends PipelineLanguageProvider
-  implements vscode.CompletionItemProvider
+  implements vscode.CompletionItemProvider<CustomCompletionItem>
 {
   constructor() {
     super(sel => {
@@ -33,7 +37,7 @@ export class PipelineCompletionProvider
     position: vscode.Position,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
+  ): Promise<CustomCompletionItem[] | null> {
     const intBundle = await this.flush()
     if (!intBundle) {
       return null
@@ -53,7 +57,7 @@ export class PipelineCompletionProvider
       return null
     }
 
-    const result: vscode.CompletionItem[] = []
+    const result: CustomCompletionItem[] = []
 
     if (isMaaAssistantArknights) {
       const findTaskWordRange = () => {
@@ -85,11 +89,11 @@ export class PipelineCompletionProvider
           )
           const taskRange = findTaskWordRange() ?? range
           for (const task of layer.getTaskList()) {
-            const item: vscode.CompletionItem = {
+            const item: CustomCompletionItem = {
               label: task,
               kind: vscode.CompletionItemKind.Class,
               range: taskRange,
-              detail: this.getTaskBrief(layer, task)
+              detail: this.getTaskBrief(intBundle, layer, task)
             }
             result.push(item)
           }
@@ -99,11 +103,11 @@ export class PipelineCompletionProvider
         if (offset === ref.location.offset + 1 || /[ @+^(a-zA-Z0-9_-]/.test(lastChar)) {
           const taskRange = findTaskWordRange() ?? range
           for (const task of layer.getTaskList()) {
-            const item: vscode.CompletionItem = {
+            const item: CustomCompletionItem = {
               label: task,
               kind: vscode.CompletionItemKind.Class,
               range: taskRange,
-              detail: this.getTaskBrief(layer, task),
+              detail: this.getTaskBrief(intBundle, layer, task),
               command: {
                 command: commands.TriggerCompletion,
                 title: 'trigger next'
@@ -113,7 +117,7 @@ export class PipelineCompletionProvider
           }
           if (lastChar !== '@') {
             for (const virt of virtKeys) {
-              const item: vscode.CompletionItem = {
+              const item: CustomCompletionItem = {
                 label: '#' + virt,
                 kind: vscode.CompletionItemKind.EnumMember,
                 range
@@ -123,7 +127,7 @@ export class PipelineCompletionProvider
           }
         } else if (lastChar === '#') {
           for (const virt of virtKeys) {
-            const item: vscode.CompletionItem = {
+            const item: CustomCompletionItem = {
               label: virt,
               kind: vscode.CompletionItemKind.EnumMember,
               range
@@ -132,7 +136,7 @@ export class PipelineCompletionProvider
           }
         } else {
           for (const virt of virtKeys) {
-            const item: vscode.CompletionItem = {
+            const item: CustomCompletionItem = {
               label: '#' + virt,
               kind: vscode.CompletionItemKind.EnumMember,
               range
@@ -153,43 +157,42 @@ export class PipelineCompletionProvider
     ) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
       for (const task of layer.getTaskList()) {
-        const item: vscode.CompletionItem = {
+        const item: CustomCompletionItem = {
           label: task,
           kind: vscode.CompletionItemKind.Class,
           range,
           sortText: '1_' + task,
-          detail: this.getTaskBrief(layer, task)
+          fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task)
         }
         result.push(item)
       }
 
       if (ref.type === 'task.roi') {
         for (const subName of ref.prev) {
-          const item: vscode.CompletionItem = {
+          const item: CustomCompletionItem = {
             label: subName.value,
             kind: vscode.CompletionItemKind.Reference,
             range,
             sortText: '0_' + subName.value
-            // TODO: document
           }
           result.push(item)
         }
       }
     } else if (ref.type === 'task.next' && ref.objMode && ref.anchor) {
-      for (const [anchor, decl] of layer.getAnchorList()) {
-        const item: vscode.CompletionItem = {
+      const anchors = layer.getAnchorList().map(([anchor]) => anchor)
+      for (const anchor of new Set(anchors)) {
+        const item: CustomCompletionItem = {
           label: anchor,
           kind: vscode.CompletionItemKind.Variable,
           range: convertRangeWithDelta(document, ref.location, -1, 1),
-          sortText: anchor,
-          detail: decl.task
+          sortText: anchor
         }
         result.push(item)
       }
     } else if (ref.type === 'task.next' && !ref.objMode) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1 + (ref.offset ?? 0))
       if (!ref.jumpBack) {
-        const item: vscode.CompletionItem = {
+        const item: CustomCompletionItem = {
           label: '[JumpBack]',
           kind: vscode.CompletionItemKind.Property,
           range,
@@ -202,7 +205,7 @@ export class PipelineCompletionProvider
         result.push(item)
       }
       if (!ref.anchor) {
-        const item: vscode.CompletionItem = {
+        const item: CustomCompletionItem = {
           label: '[Anchor]',
           kind: vscode.CompletionItemKind.Property,
           range,
@@ -215,185 +218,49 @@ export class PipelineCompletionProvider
         result.push(item)
       }
       if (ref.anchor) {
-        for (const [anchor, decl] of layer.getAnchorList()) {
-          const item: vscode.CompletionItem = {
+        const anchors = layer.getAnchorList().map(([anchor]) => anchor)
+        for (const anchor of new Set(anchors)) {
+          const item: CustomCompletionItem = {
             label: anchor,
             kind: vscode.CompletionItemKind.Variable,
             range,
-            sortText: '1_' + anchor,
-            detail: decl.task
+            sortText: '1_' + anchor
           }
           result.push(item)
         }
       } else {
         for (const task of layer.getTaskList()) {
-          const item: vscode.CompletionItem = {
+          const item: CustomCompletionItem = {
             label: task,
             kind: vscode.CompletionItemKind.Class,
             range,
             sortText: '1_' + task,
-            detail: this.getTaskBrief(layer, task)
+            fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task)
           }
           result.push(item)
         }
       }
     } else if (ref.type === 'task.template') {
       for (const image of layer.getImageList()) {
-        const item: vscode.CompletionItem = {
+        const item: CustomCompletionItem = {
           label: image,
           kind: vscode.CompletionItemKind.File,
           range: convertRangeWithDelta(document, ref.location, -1, 1),
           sortText: image
-          // TODO: document
         }
         result.push(item)
       }
     }
-
-    /*
-
-    if (this.shouldFilter(document)) {
-      return null
-    }
-
-    await taskIndexService.flushDirty()
-
-    const [info, layer] = await taskIndexService.queryLocation(document.uri, position)
-
-    if (!info || !layer) {
-      return null
-    }
-
-    if (info.type === 'task.ref') {
-      const taskList = await taskIndexService.queryTaskList(layer.level + 1)
-      const anchorList = await taskIndexService.queryAnchorList(layer.level + 1)
-
-      const result: vscode.CompletionItem[] = []
-
-      if (info.attr) {
-        for (const attr of ['JumpBack']) {
-          const text = `[${attr}]`
-          const esc = JSON.stringify(text)
-          result.push({
-            label: esc.substring(1, esc.length - 1),
-            kind: vscode.CompletionItemKind.Reference,
-            insertText: esc.substring(1, esc.length - 1),
-            range: new vscode.Range(
-              info.range.start.translate(0, 1),
-              info.range.end.translate(0, -1)
-            ),
-            command: {
-              command: commands.TriggerCompletion,
-              title: 'trigger next'
-            }
-          } satisfies vscode.CompletionItem)
-        }
-
-        {
-          const text = `[Anchor]`
-          result.push(
-            ...(await Promise.all(
-              anchorList.map(async anchor => {
-                const esc = JSON.stringify(text + anchor)
-                return {
-                  label: esc.substring(1, esc.length - 1),
-                  kind: vscode.CompletionItemKind.Reference,
-                  insertText: esc.substring(1, esc.length - 1),
-                  range: new vscode.Range(
-                    info.range.start.translate(0, 1),
-                    info.range.end.translate(0, -1)
-                  )
-                }
-              })
-            ))
-          )
-        }
-      }
-
-      result.push(
-        ...(await Promise.all(
-          taskList.map(async task => {
-            const esc = JSON.stringify(task)
-            return {
-              label: esc.substring(1, esc.length - 1),
-              kind: vscode.CompletionItemKind.Reference,
-              insertText: esc.substring(1, esc.length - 1),
-              range: new vscode.Range(
-                info.range.start.translate(0, 1),
-                info.range.end.translate(0, -1)
-              ),
-              documentation: await taskIndexService.queryTaskDoc(task, layer.level + 1, position)
-            }
-          })
-        ))
-      )
-
-      return result
-    } else if (info.type === 'anchor.ref') {
-      const anchorList = await taskIndexService.queryAnchorList(layer.level + 1)
-
-      const result: vscode.CompletionItem[] = []
-
-      const text = `[Anchor]`
-      result.push(
-        ...(await Promise.all(
-          anchorList.map(async anchor => {
-            const esc = JSON.stringify(text + anchor)
-            return {
-              label: esc.substring(1, esc.length - 1),
-              kind: vscode.CompletionItemKind.Reference,
-              insertText: esc.substring(1, esc.length - 1),
-              range: new vscode.Range(
-                info.range.start.translate(0, 1),
-                info.range.end.translate(0, -1)
-              )
-            }
-          })
-        ))
-      )
-
-      return result
-    } else if (info.type === 'task.ref.maa.#') {
-      return ['self', 'back', 'sub', 'next'].map(key => {
-        return {
-          label: key,
-          kind: vscode.CompletionItemKind.Constant,
-          insertText: key,
-          range: new vscode.Range(info.range.start, info.range.end)
-        }
-      })
-    } else if (info.type === 'task.ref.maa.@') {
-      const taskList = (await taskIndexService.queryTaskList(layer.level + 1)).filter(
-        x => !/@/.test(x)
-      )
-
-      return taskList.map(task => {
-        return {
-          label: task,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: task,
-          range: new vscode.Range(info.range.start, info.range.end)
-        }
-      })
-    } else if (info.type === 'image.ref') {
-      const imageList = await taskIndexService.queryImageList(layer.level + 1)
-
-      return await Promise.all(
-        imageList.map(async path => {
-          const esc = JSON.stringify(path)
-          return {
-            label: esc,
-            kind: vscode.CompletionItemKind.File,
-            insertText: esc.substring(0, esc.length - 1),
-            range: new vscode.Range(info.range.start, info.range.end.translate(0, -1)),
-            documentation: await taskIndexService.queryImageDoc(path, layer.level + 1)
-          }
-        })
-      )
-    }
-
-    */
-
     return result
+  }
+
+  async resolveCompletionItem(
+    item: CustomCompletionItem,
+    token: vscode.CancellationToken
+  ): Promise<CustomCompletionItem> {
+    if (item.fillTaskDetail) {
+      item.detail = item.fillTaskDetail()
+    }
+    return item
   }
 }

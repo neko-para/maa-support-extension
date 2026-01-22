@@ -2,13 +2,55 @@ import type { Node } from 'jsonc-parser'
 import EventEmitter from 'node:events'
 import * as path from 'node:path'
 
+import {
+  MaaErrorDelegate,
+  MaaEvalContext,
+  MaaEvalDelegate,
+  type MaaTask,
+  type MaaTaskExpr,
+  type MaaTaskWithTraceInfo
+} from '@nekosu/maa-tasker'
+
 import { Bundle } from '../bundle/bundle'
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import type { LayerInfo } from '../layer/layer'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
-import { type AbsolutePath, type RelativePath, joinPath, relativePath } from '../utils/types'
+import {
+  type AbsolutePath,
+  type RelativePath,
+  type TaskName,
+  joinPath,
+  relativePath
+} from '../utils/types'
+
+class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
+  intBundle: InterfaceBundle<T>
+
+  constructor(intBundle: InterfaceBundle<T>) {
+    super(new MaaErrorDelegate())
+
+    this.intBundle = intBundle
+  }
+
+  query(task: string): [task: MaaTask, anchor: string][] {
+    const topLayer = this.intBundle.topLayer
+    if (!topLayer) {
+      return []
+    }
+
+    const infos = topLayer.getTask(task as TaskName, false)
+    infos.reverse() // 内部需要从底层到上层
+    return infos.map(({ layer, infos }) => {
+      const info = infos[0]
+      // 这里硬编码了下逻辑
+      const match = /resource\/global\/(.+)\//.exec(layer.root)
+      const anchor = match ? match[1] : 'Official'
+      return [info.obj as MaaTask, anchor]
+    })
+  }
+}
 
 export class InterfaceBundle<T extends any> extends EventEmitter<{
   interfaceChanged: []
@@ -32,6 +74,12 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   langFiles: [string, RelativePath][]
   langs: ContentJson<Record<string, string>>[]
+
+  eval: MaaEvalDelegateImpl<T>
+
+  set evalErrorDelegate(delegate: MaaErrorDelegate) {
+    this.eval.error = delegate
+  }
 
   constructor(
     loader: IContentLoader,
@@ -68,6 +116,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     this.langFiles = []
     this.langs = []
+
+    this.eval = new MaaEvalDelegateImpl(this)
 
     this.on('interfaceChanged', () => {
       this.updatePaths()
@@ -230,5 +280,29 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       return this.bundles[this.bundles.length - 1].layer
     }
     return null
+  }
+
+  maaEvalTask(task: string): MaaTaskWithTraceInfo<MaaTask> | null {
+    if (!this.maa) {
+      return null
+    }
+
+    const context = new MaaEvalContext(this.eval)
+
+    const result = context.evalTask(task)
+    if (result) {
+      delete (result.task as MaaTask).__baseTaskResolved
+    }
+    return result
+  }
+
+  maaEvalExpr(expr: MaaTaskExpr, self: string, strip: boolean): string[] | null {
+    if (!this.maa) {
+      return null
+    }
+
+    const context = new MaaEvalContext(this.eval)
+
+    return context.evalExpr(expr, self, strip)
   }
 }

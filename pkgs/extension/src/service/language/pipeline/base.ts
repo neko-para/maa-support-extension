@@ -5,12 +5,14 @@ import {
   AbsolutePath,
   AnchorName,
   ImageRelativePath,
+  InterfaceBundle,
   LayerInfo,
   TaskDeclInfo,
   TaskName,
   TaskRefInfo,
   extractTaskRef
 } from '@mse/pipeline-manager'
+import { Interface } from '@mse/types'
 
 import { interfaceService, rootService } from '../..'
 import { isMaaAssistantArknights, pipelineSuffix } from '../../../utils/fs'
@@ -63,11 +65,16 @@ export class PipelineLanguageProvider extends BaseService {
     return (await this.flush())?.info ?? null
   }
 
-  getTaskBrief(layer: LayerInfo, task: TaskName) {
-    const info = layer.getTaskBriefInfo(task)
+  getTaskBrief(intBundle: InterfaceBundle<Partial<Interface>>, layer: LayerInfo, task: TaskName) {
     if (isMaaAssistantArknights) {
-      return `Algo: ${info.reco ?? 'TemplateMatch'}\n\nAct: ${info.act ?? 'JustReturn'}`
+      const final = intBundle.maaEvalTask(task)
+      if (!final) {
+        return 'Unknown'
+      } else {
+        return `Algo: ${final.task.algorithm ?? 'TemplateMatch'}\n\nAct: ${final.task.action ?? 'JustReturn'}`
+      }
     } else {
+      const info = layer.getTaskBriefInfo(task)
       return `Reco: ${info.reco ?? 'DirectHit'}\n\nAct: ${info.act ?? 'DoNothing'}`
     }
   }

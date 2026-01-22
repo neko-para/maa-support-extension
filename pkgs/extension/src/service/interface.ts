@@ -15,6 +15,7 @@ import {
 import { logger, t } from '@mse/utils'
 
 import { diagnosticService, launchService, rootService } from '.'
+import { MaaErrorDelegateImpl } from '../utils/eval'
 import { currentWorkspace, isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 
@@ -112,6 +113,7 @@ export class InterfaceService extends BaseService {
       root.dirUri.fsPath,
       path.basename(root.interfaceUri.fsPath)
     )
+    this.interfaceBundle.evalErrorDelegate = new MaaErrorDelegateImpl()
     this.interfaceBundle.on('interfaceChanged', () => {
       this.interfaceChanged.fire()
     })

@@ -17,11 +17,7 @@ type ChainContext = {
   exprGetPropChain: string[]
 }
 
-export class MaaEvalDelegate {
-  query(task: string): [task: MaaTask, anchor: string][] {
-    return []
-  }
-
+export class MaaErrorDelegate {
   taskLoopDetected(tasks: string[]): void {
     console.error(`task loop detected ${tasks.join(' -> ')}`)
   }
@@ -44,6 +40,18 @@ export class MaaEvalDelegate {
 
   exprTooLarge(count: number): void {
     console.error(`expr expand too large ${count}`)
+  }
+}
+
+export class MaaEvalDelegate {
+  error: MaaErrorDelegate
+
+  constructor(error: MaaErrorDelegate) {
+    this.error = error
+  }
+
+  query(task: string): [task: MaaTask, anchor: string][] {
+    return []
   }
 }
 
@@ -104,7 +112,7 @@ class MaaEvalContextImpl {
       try {
         expr = parseExpr(expr)
       } catch (err) {
-        this.delegate.parseExprError(expr as MaaTaskExpr, `${err}`)
+        this.delegate.error.parseExprError(expr as MaaTaskExpr, `${err}`)
         return null
       }
     }
@@ -150,7 +158,7 @@ class MaaEvalContextImpl {
           count *= stage.length
         }
         if (count > 100000) {
-          this.delegate.exprTooLarge(count)
+          this.delegate.error.exprTooLarge(count)
           return null
         }
         while (stages.length > 1) {
@@ -251,7 +259,7 @@ class MaaEvalContextImpl {
 
     if (context.taskChain.indexOf(key) !== -1) {
       context.taskChain.push(key)
-      this.delegate.taskLoopDetected(context.taskChain)
+      this.delegate.error.taskLoopDetected(context.taskChain)
       return null
     }
 
@@ -276,7 +284,7 @@ class MaaEvalContextImpl {
     if (infos.length === 0) {
       // 没有找到直接定义，递归提取@
       if (segs.length === 1) {
-        this.delegate.cannotFindTask(task, parent)
+        this.delegate.error.cannotFindTask(task, parent)
         context.taskChain.pop()
         return null
       }
@@ -301,7 +309,7 @@ class MaaEvalContextImpl {
         const seg = segs.shift()!
         const base = this.evalTask(segs, context)
         if (!base) {
-          this.delegate.warnCannotFindBaseTask(segs.join('@'))
+          this.delegate.error.warnCannotFindBaseTask(segs.join('@'))
         }
 
         let result: MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null = null
@@ -368,7 +376,7 @@ class MaaEvalContextImpl {
 
     if (context.exprGetPropChain.indexOf(key) !== -1) {
       context.exprGetPropChain.push(key)
-      this.delegate.exprPropLoopDetected(context.exprGetPropChain)
+      this.delegate.error.exprPropLoopDetected(context.exprGetPropChain)
       return null
     }
 

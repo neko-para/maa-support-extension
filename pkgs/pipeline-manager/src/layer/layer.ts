@@ -142,14 +142,14 @@ export class LayerInfo {
     const tasks = this.parent?.getTask(task) ?? []
     const infos = {
       layer: this,
-      infos: [...(this.tasks[task] ?? [])]
+      infos: this.mutableTaskInfo(task).map(x => x)
     }
     tasks.unshift(infos)
     if (this.maa && maaTrace) {
       let current = task
       while (current.indexOf('@') !== -1) {
         const next = current.replace(/^[^@]+@/, '') as TaskName
-        infos.infos.push(...(this.tasks[next] ?? []))
+        infos.infos.push(...this.mutableTaskInfo(next))
         current = next
       }
     }

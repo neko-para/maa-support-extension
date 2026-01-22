@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 
-import { taskIndexService } from '../..'
-import { isMaaAssistantArknights } from '../../../utils/fs'
+import { AbsolutePath } from '@mse/pipeline-manager'
+
+import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDocumentLinkProvider
@@ -18,35 +19,35 @@ export class PipelineDocumentLinkProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
-    if (this.shouldFilter(document)) {
+    const intBundle = await this.flush()
+    if (!intBundle) {
       return []
     }
 
-    await taskIndexService.flushDirty()
-
-    if (isMaaAssistantArknights) {
-      await taskIndexService.flushImage()
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
+    if (!layerInfo) {
+      return []
     }
+    const [layer, file] = layerInfo
+    const topLayer = intBundle.topLayer!
+
+    const refs = layer.mergedRefs.filter(ref => ref.file === file)
 
     const result: vscode.DocumentLink[] = []
+    for (const ref of refs) {
+      if (ref.type !== 'task.template') {
+        continue
+      }
+      if (!ref.target.endsWith('.png')) {
+        continue
+      }
 
-    const layer = taskIndexService.getLayer(document.uri)
-    if (!layer) {
-      return result
-    }
-
-    for (const [task, infos] of Object.entries(layer.index)) {
-      for (const info of infos) {
-        if (info.uri.fsPath !== document.uri.fsPath) {
-          continue
-        }
-
-        for (const ref of info.imageRef) {
-          const ii = await taskIndexService.queryImage(ref.path, layer.level + 1)
-          if (ii.length > 0) {
-            result.push(new vscode.DocumentLink(ref.range, ii[ii.length - 1].info.uri))
-          }
-        }
+      const layers = topLayer.getImage(ref.target)
+      for (const [, full] of layers) {
+        result.push(
+          new vscode.DocumentLink(convertRange(document, ref.location), vscode.Uri.file(full))
+        )
+        break // 只要最顶层的最匹配的那个
       }
     }
 

@@ -52,10 +52,13 @@ export default {
   'maa.pipeline.error.conflict-task': 'Conflict task {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
+  'maa.pipeline.error.unknown-anchor': 'Unknown anchor {0}',
   'maa.pipeline.error.duplicate-next': 'Duplicate route {0}',
   'maa.pipeline.warning.image-path-backslash':
     'Image path contains backslash, shall use forward slash instead',
+  'maa.pipeline.warning.image-path-dot-slash': 'Image path contains ./ , shall omit instead',
   'maa.pipeline.warning.image-path-missing-png': 'Image path shall not omit .png',
+  'maa.pipeline.warning.image-path-dynamic': 'Dynamic image path detected',
 
   'maa.native.in-use': 'In use',
   'maa.native.downloaded': 'Downloaded',

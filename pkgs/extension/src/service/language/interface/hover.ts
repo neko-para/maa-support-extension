@@ -1,6 +1,8 @@
 import * as vscode from 'vscode'
 
-import { interfaceIndexService, interfaceLocalizationService, rootService } from '../..'
+import { findDeclRef, isString, parseObject } from '@mse/pipeline-manager'
+
+import { interfaceService } from '../..'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceHoverProvider
@@ -18,24 +20,31 @@ export class InterfaceHoverProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
-    if (document.uri.fsPath !== rootService.activeResource?.interfaceUri.fsPath) {
+    const index = await this.flushIndex()
+    if (!index) {
       return null
     }
 
-    const info = await interfaceIndexService.queryLocation(document.uri, position)
+    const offset = document.offsetAt(position)
+    const ref = findDeclRef(index.refs, offset)
 
-    if (!info) {
-      return null
-    }
-
-    if (info.type === 'locale.ref') {
+    if (ref?.type === 'interface.locale') {
       const content: string[] = []
-      for (const [locale, index] of Object.entries(interfaceLocalizationService.localeIndex)) {
-        if (info.value in index) {
-          const uri = interfaceLocalizationService.activeConfig[locale]
-          content.push(
-            `| [${locale}](${uri.toString()}#L${index[info.value].propRange.start.line + 1}) | ${index[info.value].value} |`
-          )
+      for (const [idx, loc] of (interfaceService.interfaceBundle?.langs ?? []).entries()) {
+        const id = interfaceService.interfaceBundle?.langFiles[idx][0]
+        if (!loc.node || !id) {
+          continue
+        }
+        for (const [key, obj, prop] of parseObject(loc.node)) {
+          if (key === ref.target && isString(obj)) {
+            try {
+              const doc = await vscode.workspace.openTextDocument(loc.file)
+              const pos = doc.positionAt(obj.offset)
+              content.push(
+                `| [${id}](${vscode.Uri.file(loc.file)}#L${pos.line + 1}) | ${obj.value} |`
+              )
+            } catch {}
+          }
         }
       }
       if (content.length > 0) {

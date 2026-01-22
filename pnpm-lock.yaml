@@ -21,7 +21,7 @@ importers:
         version: 20.1.8
       '@vitejs/plugin-vue':
         specifier: ^6.0.2
-        version: 6.0.2(vite@7.2.6(@types/node@24.10.1)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))
+        version: 6.0.2(vite@7.2.6(@types/node@24.10.9)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))
       esbuild:
         specifier: ^0.27.1
         version: 0.27.1
@@ -36,7 +36,7 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^7.2.6
-        version: 7.2.6(@types/node@24.10.1)(jiti@1.21.7)(yaml@2.8.0)
+        version: 7.2.6(@types/node@24.10.9)(jiti@1.21.7)(yaml@2.8.0)
       vue-tsc:
         specifier: ^3.1.6
         version: 3.1.6(typescript@5.9.3)
@@ -55,6 +55,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.3.3
         version: 5.3.3
+      '@mse/pipeline-manager':
+        specifier: workspace:*
+        version: link:../pipeline-manager
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -127,6 +130,33 @@ importers:
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
+
+  pkgs/pipeline-manager:
+    devDependencies:
+      '@maaxyz/maa-node':
+        specifier: 5.3.3
+        version: 5.3.3
+      '@nekosu/maa-tasker':
+        specifier: workspace:*
+        version: link:../maa-tasker
+      '@tsconfig/node20':
+        specifier: ^20.1.8
+        version: 20.1.8
+      '@types/node':
+        specifier: ^24.10.7
+        version: 24.10.9
+      '@types/vscode':
+        specifier: ^1.106.1
+        version: 1.106.1
+      chokidar:
+        specifier: ^5.0.0
+        version: 5.0.0
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   pkgs/simple-parser:
     devDependencies:
@@ -1396,6 +1426,9 @@ packages:
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
 
+  '@types/node@24.10.9':
+    resolution: {integrity: sha512-ne4A0IpG3+2ETuREInjPNhUGis1SFjv1d5asp8MzEAGtOZeTeHVDOYqOgqfhvseqg/iXty2hjBf1zAOb7RNiNw==}
+
   '@types/npm-package-arg@6.1.4':
     resolution: {integrity: sha512-vDgdbMy2QXHnAruzlv68pUtXCjmqUk3WrBAsRboRovsOmxbfn/WiYCjmecyKjGztnMps5dWp4Uq2prp+Ilo17Q==}
 
@@ -1600,6 +1633,10 @@ packages:
 
   caniuse-lite@1.0.30001721:
     resolution: {integrity: sha512-cOuvmUVtKrtEaoKiO0rSc29jcjwMwX5tOHDy4MgVFEWiUXj4uBMJkwI8MDySkgXidpMiHUcviogAvFi4pA2hDQ==}
+
+  chokidar@5.0.0:
+    resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
+    engines: {node: '>= 20.19.0'}
 
   chownr@3.0.0:
     resolution: {integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==}
@@ -2185,6 +2222,10 @@ packages:
   readable-web-to-node-stream@3.0.2:
     resolution: {integrity: sha512-ePeK6cc1EcKLEhJFt/AebMCLL+GgSKhuygrZ/GLaKZYEecIgIECf4UaUuaByiGtzckwR4ain9VzUh95T1exYGw==}
     engines: {node: '>=8'}
+
+  readdirp@5.0.0:
+    resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
+    engines: {node: '>= 20.19.0'}
 
   retry@0.12.0:
     resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
@@ -3531,7 +3572,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.9
       form-data: 4.0.3
 
   '@types/node@16.9.1': {}
@@ -3544,11 +3585,15 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
+  '@types/node@24.10.9':
+    dependencies:
+      undici-types: 7.16.0
+
   '@types/npm-package-arg@6.1.4': {}
 
   '@types/npm-registry-fetch@8.0.8':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.9
       '@types/node-fetch': 2.6.12
       '@types/npm-package-arg': 6.1.4
       '@types/npmlog': 7.0.0
@@ -3556,7 +3601,7 @@ snapshots:
 
   '@types/npmlog@7.0.0':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.9
 
   '@types/pacote@11.1.8':
     dependencies:
@@ -3579,7 +3624,7 @@ snapshots:
 
   '@types/ssri@7.1.5':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.9
 
   '@types/triple-beam@1.3.5': {}
 
@@ -3589,7 +3634,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.9
 
   '@vicons/material@0.13.0': {}
 
@@ -3608,10 +3653,10 @@ snapshots:
       vite: 6.0.3(@types/node@20.17.9)(jiti@1.21.7)(yaml@2.8.0)
       vue: 3.5.13(typescript@5.8.3)
 
-  '@vitejs/plugin-vue@6.0.2(vite@7.2.6(@types/node@24.10.1)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))':
+  '@vitejs/plugin-vue@6.0.2(vite@7.2.6(@types/node@24.10.9)(jiti@1.21.7)(yaml@2.8.0))(vue@3.5.13(typescript@5.9.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-beta.50
-      vite: 7.2.6(@types/node@24.10.1)(jiti@1.21.7)(yaml@2.8.0)
+      vite: 7.2.6(@types/node@24.10.9)(jiti@1.21.7)(yaml@2.8.0)
       vue: 3.5.13(typescript@5.9.3)
 
   '@volar/language-core@2.4.26':
@@ -3811,6 +3856,10 @@ snapshots:
       function-bind: 1.1.2
 
   caniuse-lite@1.0.30001721: {}
+
+  chokidar@5.0.0:
+    dependencies:
+      readdirp: 5.0.0
 
   chownr@3.0.0: {}
 
@@ -4482,6 +4531,8 @@ snapshots:
     dependencies:
       readable-stream: 3.6.2
 
+  readdirp@5.0.0: {}
+
   retry@0.12.0: {}
 
   rollup@4.28.1:
@@ -4720,7 +4771,7 @@ snapshots:
       jiti: 1.21.7
       yaml: 2.8.0
 
-  vite@7.2.6(@types/node@24.10.1)(jiti@1.21.7)(yaml@2.8.0):
+  vite@7.2.6(@types/node@24.10.9)(jiti@1.21.7)(yaml@2.8.0):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -4729,7 +4780,7 @@ snapshots:
       rollup: 4.53.3
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 24.10.1
+      '@types/node': 24.10.9
       fsevents: 2.3.3
       jiti: 1.21.7
       yaml: 2.8.0

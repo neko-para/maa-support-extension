@@ -1,5 +1,7 @@
 import SimpleParser, { type TokenFilter } from './impl'
 
+export type Range = [offset: number, length: number]
+
 type TokenDecl = [token: string, grammar: RegExp]
 
 type TokenArray<Decls extends TokenDecl[], Results extends string[] = []> = Decls extends [
@@ -20,7 +22,11 @@ type GetType<
   Tokens extends string,
   Exprs extends Record<string, unknown>,
   Expr extends Tokens | keyof Exprs
-> = Expr extends Tokens ? string : Expr extends keyof Exprs ? Exprs[Expr] : never
+> = Expr extends Tokens
+  ? { value: string; range: Range }
+  : Expr extends keyof Exprs
+    ? Exprs[Expr]
+    : never
 
 type ConvertArguments<
   Tokens extends string,

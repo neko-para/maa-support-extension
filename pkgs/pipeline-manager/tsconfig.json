@@ -1,0 +1,12 @@
+{
+  "extends": ["@tsconfig/node20/tsconfig.json"],
+  "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowArbitraryExtensions": true,
+    "verbatimModuleSyntax": true,
+    "types": ["@maaxyz/maa-node", "@types/node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

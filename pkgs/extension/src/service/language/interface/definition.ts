@@ -1,6 +1,9 @@
 import * as vscode from 'vscode'
 
-import { interfaceIndexService, interfaceLocalizationService, rootService } from '../..'
+import { findDeclRef, parseObject } from '@mse/pipeline-manager'
+
+import { interfaceService } from '../..'
+import { convertRangeLocation } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceDefinitionProvider
@@ -18,39 +21,40 @@ export class InterfaceDefinitionProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
-    await interfaceIndexService.flushDirty()
-
-    const info = await interfaceIndexService.queryLocation(document.uri, position)
-
-    if (!info) {
+    const index = await this.flushIndex()
+    if (!index) {
       return null
     }
 
-    if (info.type === 'option.ref') {
-      const optionInfo = interfaceIndexService.optionDecl.find(x => x.option === info.option)
-      return optionInfo
-        ? new vscode.Location(rootService.activeResource!.interfaceUri, optionInfo.range)
-        : null
-    } else if (info.type === 'case.ref') {
-      const caseInfo = interfaceIndexService.caseDecl.find(
-        x => x.option === info.option && x.case === info.case
-      )
-      return caseInfo
-        ? new vscode.Location(rootService.activeResource!.interfaceUri, caseInfo.range)
-        : null
-    } else if (info.type === 'locale.ref') {
-      const result: vscode.Definition = []
-      for (const [locale, index] of Object.entries(interfaceLocalizationService.localeIndex)) {
-        if (info.value in index) {
-          result.push(
-            new vscode.Location(
-              interfaceLocalizationService.activeConfig[locale],
-              index[info.value].propRange
-            )
-          )
+    const offset = document.offsetAt(position)
+    const decl = findDeclRef(index.decls, offset)
+    const ref = findDeclRef(index.refs, offset)
+
+    if (decl) {
+      const decls = this.makeDecls(index, decl, ref) ?? []
+      const refs = this.makeRefs(index, decl, ref) ?? []
+      return [...decls, ...refs].map(dr => convertRangeLocation(document, dr.location))
+    } else if (ref) {
+      if (ref.type === 'interface.locale') {
+        const result: vscode.Definition = []
+        for (const loc of interfaceService.interfaceBundle?.langs ?? []) {
+          if (!loc.node) {
+            continue
+          }
+          for (const [key, obj, prop] of parseObject(loc.node)) {
+            if (key === ref.target) {
+              try {
+                const doc = await vscode.workspace.openTextDocument(loc.file)
+                result.push(convertRangeLocation(doc, prop))
+              } catch {}
+            }
+          }
         }
+        return result
       }
-      return result
+
+      const decls = this.makeDecls(index, decl, ref) ?? []
+      return decls.map(dr => convertRangeLocation(document, dr.location))
     }
 
     return null

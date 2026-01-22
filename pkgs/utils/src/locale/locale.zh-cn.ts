@@ -52,9 +52,12 @@ export default {
   'maa.pipeline.error.conflict-task': '冲突任务 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-task': '未知任务 {0}',
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
+  'maa.pipeline.error.unknown-anchor': '未知Anchor {0}',
   'maa.pipeline.error.duplicate-next': '重复路由 {0}',
   'maa.pipeline.warning.image-path-backslash': '图片路径中包含反斜杠, 应使用正斜杠',
+  'maa.pipeline.warning.image-path-dot-slash': '图片路径中包含 ./ , 应移除',
   'maa.pipeline.warning.image-path-missing-png': '图片路径不应省略.png',
+  'maa.pipeline.warning.image-path-dynamic': '检测到动态图片路径',
 
   'maa.native.in-use': '正在使用',
   'maa.native.downloaded': '已下载',

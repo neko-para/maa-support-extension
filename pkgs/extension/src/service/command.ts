@@ -1,14 +1,14 @@
 import * as vscode from 'vscode'
 
-import { logger, t } from '@mse/utils'
+import { TaskDeclInfo } from '@mse/pipeline-manager'
+import { t } from '@mse/utils'
 import { MaaTaskExpr, TaskExprProps, TaskExprPropsVirtsMap, shouldStrip } from '@nekosu/maa-tasker'
 
-import { interfaceService, launchService, rootService, stateService, taskIndexService } from '.'
+import { interfaceService, launchService, rootService, stateService } from '.'
 import { commands } from '../command'
-import { maaEvalExpr, maaEvalTask } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
-import { TaskIndexInfo } from './types'
+import { convertRange } from './language/utils'
 import { WebviewCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
@@ -28,7 +28,9 @@ export class CommandService extends BaseService {
 
     this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
       if (!task) {
-        const taskRes = await vscode.window.showQuickPick(await taskIndexService.queryTaskList(), {
+        await interfaceService.interfaceBundle?.flush()
+        const taskList = interfaceService.interfaceBundle?.topLayer?.getTaskList() ?? []
+        const taskRes = await vscode.window.showQuickPick(taskList, {
           title: t('maa.pi.title.select-task')
         })
         if (!taskRes) {
@@ -63,33 +65,41 @@ export class CommandService extends BaseService {
     })
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async (task?: string) => {
+      await interfaceService.interfaceBundle?.flush()
+      const topLayer = interfaceService.interfaceBundle?.topLayer
+      if (!topLayer) {
+        return
+      }
       if (!task) {
-        const taskList = await taskIndexService.queryTaskList()
+        const taskList = topLayer.getTaskList()
         task = await vscode.window.showQuickPick(taskList)
       }
       if (task) {
-        const infos = await taskIndexService.queryTask(task)
-        let info: TaskIndexInfo
-        if (infos.length > 1) {
+        const decls = topLayer.mergedAllDecls.filter(
+          decl => decl.type === 'task.decl' && decl.task === task
+        )
+        let info: TaskDeclInfo
+        if (decls.length > 1) {
           const res = await vscode.window.showQuickPick(
-            infos.map((info, index) => ({
-              label: rootService.relativePathToRoot(info.info.uri),
+            decls.map((decl, index) => ({
+              label: rootService.relativeToRoot(decl.file),
               index: index
             }))
           )
           if (!res) {
             return
           }
-          info = infos[res.index].info
-        } else if (infos.length === 1) {
-          info = infos[0].info
+          info = decls[res.index]
+        } else if (decls.length === 1) {
+          info = decls[0]
         } else {
           return
         }
         try {
-          const doc = await vscode.workspace.openTextDocument(info.uri)
+          const doc = await vscode.workspace.openTextDocument(info.file)
           const editor = await vscode.window.showTextDocument(doc)
-          const targetSelection = new vscode.Selection(info.taskBody.start, info.taskBody.end)
+          const range = convertRange(doc, info.location)
+          const targetSelection = new vscode.Selection(range.start, range.end)
           editor.selection = targetSelection
           editor.revealRange(targetSelection)
         } catch {}
@@ -97,12 +107,19 @@ export class CommandService extends BaseService {
     })
 
     this.defer = vscode.commands.registerCommand(commands.EvalTask, async (task?: string) => {
-      if (!isMaaAssistantArknights || typeof task !== 'string') {
+      if (
+        !isMaaAssistantArknights ||
+        typeof task !== 'string' ||
+        !interfaceService.interfaceBundle
+      ) {
         vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
         return false
       }
 
-      const result = await maaEvalTask(task)
+      const intBundle = interfaceService.interfaceBundle
+      await intBundle.flush(true)
+
+      const result = intBundle.maaEvalTask(task)
       if (!result) {
         vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
         return false
@@ -117,7 +134,7 @@ export class CommandService extends BaseService {
 
             const listResult: string[] = []
             for (const expr of list) {
-              const exprResult = await maaEvalExpr(
+              const exprResult = intBundle.maaEvalExpr(
                 expr,
                 task,
                 shouldStrip(TaskExprPropsVirtsMap[prop])
@@ -163,13 +180,17 @@ export class CommandService extends BaseService {
           !isMaaAssistantArknights ||
           typeof expr !== 'string' ||
           typeof host !== 'string' ||
-          typeof strip !== 'boolean'
+          typeof strip !== 'boolean' ||
+          !interfaceService.interfaceBundle
         ) {
           vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
           return false
         }
 
-        const result = await maaEvalExpr(expr as MaaTaskExpr, host, strip)
+        const intBundle = interfaceService.interfaceBundle
+        await intBundle.flush(true)
+
+        const result = intBundle.maaEvalExpr(expr as MaaTaskExpr, host, strip)
         if (!result) {
           vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
           return false
@@ -183,6 +204,12 @@ export class CommandService extends BaseService {
         return true
       }
     )
+
+    this.defer = vscode.commands.registerCommand(commands.TriggerCompletion, () => {
+      setTimeout(() => {
+        vscode.commands.executeCommand('editor.action.triggerSuggest')
+      }, 50)
+    })
   }
 
   async init() {

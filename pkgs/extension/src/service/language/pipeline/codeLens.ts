@@ -1,11 +1,13 @@
 import * as vscode from 'vscode'
 
+import { AbsolutePath } from '@mse/pipeline-manager'
 import { t } from '@mse/utils'
 
-import { interfaceService, taskIndexService } from '../..'
+import { interfaceService } from '../..'
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { debounce } from '../../utils/debounce'
+import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineCodeLensProvider
@@ -42,38 +44,39 @@ export class PipelineCodeLensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
-    if (this.shouldFilter(document)) {
+    const intBundle = await this.flush()
+    if (!intBundle) {
       return null
     }
 
-    await taskIndexService.flushDirty()
-
-    const layer = taskIndexService.getLayer(document.uri)
-
-    if (!layer) {
-      return []
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
+    if (!layerInfo) {
+      return null
     }
+    const [layer, file] = layerInfo
 
     const result: vscode.CodeLens[] = []
-    for (const [taskName, taskInfos] of Object.entries(layer.index)) {
+    for (const [name, taskInfos] of Object.entries(layer.tasks)) {
       for (const taskInfo of taskInfos) {
-        if (taskInfo.uri.fsPath !== document.uri.fsPath) {
+        if (taskInfo.file !== file) {
           continue
         }
-        if (!isMaaAssistantArknights) {
+
+        if (isMaaAssistantArknights) {
           result.push(
-            new vscode.CodeLens(taskInfo.taskProp, {
-              title: t('maa.pipeline.codelens.launch'),
-              command: commands.LaunchTask,
-              arguments: [taskName]
+            new vscode.CodeLens(convertRange(document, taskInfo.prop), {
+              title: t('maa.pipeline.codelens.eval-task'),
+              command: commands.EvalTask,
+              arguments: [name]
             })
           )
         } else {
+          const range = convertRange(document, taskInfo.prop)
           result.push(
-            new vscode.CodeLens(taskInfo.taskProp, {
-              title: t('maa.pipeline.codelens.eval-task'),
-              command: commands.EvalTask,
-              arguments: [taskName]
+            new vscode.CodeLens(range, {
+              title: t('maa.pipeline.codelens.launch'),
+              command: commands.LaunchTask,
+              arguments: [name]
             })
           )
         }

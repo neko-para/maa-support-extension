@@ -53,7 +53,8 @@ function buildParser() {
         .when('%sharp', '%virt')
           .do(([, virt]) => ({
             type: '#',
-            virt: virt as AllVirts
+            virt: virt.value as AllVirts,
+            range: virt.range
           }))
 
       .for('atTaskList')
@@ -67,7 +68,8 @@ function buildParser() {
         .when('%task')
           .do(([task]) => ({
             type: 'task',
-            task
+            task: task.value,
+            range: task.range
           }))
         .when('%leftBrace', 'taskList1', '%rightBrace')
           .do(([, list]) => ({
@@ -102,7 +104,8 @@ function buildParser() {
           .do(([list, , count]) => ({
             type: '*',
             list,
-            count: parseInt(count)
+            count: parseInt(count.value),
+            range: count.range
           }))
 
       .for('taskList1')

@@ -5,8 +5,6 @@ import { BaseService, init as initContext } from './context'
 import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
-import { InterfaceIndexService } from './interfaceIndex'
-import { InterfaceLocalizationService } from './interfaceLocalization'
 import { InterfaceLanguageProvider } from './language/interface/base'
 import { InterfaceCodeLensProvider } from './language/interface/codeLens'
 import { InterfaceCompletionProvider } from './language/interface/completion'
@@ -27,7 +25,6 @@ import { NativeService } from './native'
 import { RootService } from './root'
 import { StateService } from './state'
 import { StatusBarService } from './statusBar'
-import { TaskIndexService } from './taskIndex'
 import { WebviewControlService } from './webview/control'
 
 export { context } from './context'
@@ -36,9 +33,6 @@ export let stateService: StateService
 export let nativeService: NativeService
 export let rootService: RootService
 export let interfaceService: InterfaceService
-export let taskIndexService: TaskIndexService
-export let interfaceIndexService: InterfaceIndexService
-export let interfaceLocalizationService: InterfaceLocalizationService
 export let launchService: LaunchService
 export let debugService: DebugService
 export let commandService: CommandService
@@ -57,9 +51,6 @@ export async function init(ctx: vscode.ExtensionContext) {
   nativeService = new NativeService()
   rootService = new RootService()
   interfaceService = new InterfaceService()
-  taskIndexService = new TaskIndexService()
-  interfaceIndexService = new InterfaceIndexService()
-  interfaceLocalizationService = new InterfaceLocalizationService()
   launchService = new LaunchService()
   debugService = new DebugService()
   commandService = new CommandService()
@@ -91,9 +82,6 @@ export async function init(ctx: vscode.ExtensionContext) {
   await nativeService.init()
   await rootService.init()
   await interfaceService.init()
-  await taskIndexService.init()
-  await interfaceIndexService.init()
-  await interfaceLocalizationService.init()
   await launchService.init()
   await debugService.init()
   await commandService.init()

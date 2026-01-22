@@ -139,6 +139,15 @@ export class LayerInfo {
     return [...new Set(this.getImageListNotUnique())]
   }
 
+  maaFindTaskDecl(task: TaskName) {
+    const tasks = this.getTaskList()
+    let current = task
+    while (!tasks.includes(current) && current.indexOf('@') !== -1) {
+      current = current.replace(/^[^@]+@/, '') as TaskName
+    }
+    return current
+  }
+
   getTask(task: TaskName, maaTrace = true): { layer: LayerInfo; infos: LayerTaskInfo[] }[] {
     const tasks = this.parent?.getTask(task) ?? []
     const infos = {

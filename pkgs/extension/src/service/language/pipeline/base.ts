@@ -156,10 +156,11 @@ ${doc.getText(range)}
         }
         if (typeof templates === 'string') {
           templates = [templates]
-        } else if (!templates) {
-          templates = [task + '.png']
+        } else if (!templates && isMaaAssistantArknights) {
+          const full = current ? (`${current}@${task}` as TaskName) : task
+          templates = [intBundle.topLayer!.maaFindTaskDecl(full) + '.png']
         }
-        for (const templ of templates) {
+        for (const templ of templates ?? []) {
           content.push(this.getImageHover(intBundle, layer, templ as ImageRelativePath))
         }
       }

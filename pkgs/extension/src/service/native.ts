@@ -23,7 +23,7 @@ function isValidRegistryType(key: unknown): key is keyof typeof registries {
 const defaultRegistryType = 'npm'
 
 const defaultMaaVersion = packageJson.devDependencies['@maaxyz/maa-node']
-const minimumMaaVersion = '5.3.0'
+const minimumMaaVersion = '5.5.0-beta.1'
 
 function fixMinimumVersion(ver: string) {
   if (semVerCompare(ver, minimumMaaVersion) === -1) {

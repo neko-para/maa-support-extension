@@ -4,7 +4,7 @@
     "@jimp/core": "^1.6.0",
     "@jimp/js-png": "^1.6.0",
     "@jimp/plugin-crop": "^1.6.0",
-    "@maaxyz/maa-node": "5.3.3",
+    "@maaxyz/maa-node": "5.5.0-beta.1",
     "@mse/pipeline-manager": "workspace:*",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",

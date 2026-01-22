@@ -40,7 +40,7 @@ export class PipelineHoverProvider
 
     if (decl) {
       if (decl.type === 'task.decl') {
-        const hover = await this.getTaskHover(intBundle.topLayer!, decl.task)
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, decl.task)
         return new vscode.Hover(hover)
       }
     } else if (ref) {
@@ -48,7 +48,12 @@ export class PipelineHoverProvider
         if (ref && (ref.type === 'task.maa.base_task' || ref.type === 'task.maa.expr')) {
           const taskRef = findMaaDeclRef(ref.tasks, offset - ref.location.offset)
           if (taskRef) {
-            const hover = await this.getTaskHover(intBundle.topLayer!, taskRef.taskSuffix)
+            const hover = await this.getTaskHover(
+              intBundle,
+              intBundle.topLayer!,
+              taskRef.taskSuffix,
+              ref.belong
+            )
             return new vscode.Hover(hover)
           } else {
             return null
@@ -69,13 +74,12 @@ export class PipelineHoverProvider
             return null
           }
         }
-        const hover = await this.getTaskHover(intBundle.topLayer!, ref.target)
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, ref.target)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.template') {
-        const hover = await this.getImageHover(intBundle.topLayer!, ref.target)
+        const hover = this.getImageHover(intBundle, intBundle.topLayer!, ref.target)
         return new vscode.Hover(hover)
       }
-      // TODO: show image for task prop, and for maa
     }
     /*
 

@@ -282,6 +282,10 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     return null
   }
 
+  evalTask(task: string): Partial<Record<keyof maa.Task, unknown>> | null {
+    return this.topLayer?.evalTask(task as TaskName) ?? null
+  }
+
   maaEvalTask(task: string): MaaTaskWithTraceInfo<MaaTask> | null {
     if (!this.maa) {
       return null

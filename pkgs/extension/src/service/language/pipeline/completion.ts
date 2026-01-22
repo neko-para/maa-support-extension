@@ -93,7 +93,7 @@ export class PipelineCompletionProvider
               label: task,
               kind: vscode.CompletionItemKind.Class,
               range: taskRange,
-              fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task, ref.belong)
+              fillTaskDetail: () => this.getTaskBrief(intBundle, task, ref.belong)
             }
             result.push(item)
           }
@@ -107,7 +107,7 @@ export class PipelineCompletionProvider
               label: task,
               kind: vscode.CompletionItemKind.Class,
               range: taskRange,
-              fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task, ref.belong),
+              fillTaskDetail: () => this.getTaskBrief(intBundle, task, ref.belong),
               command: {
                 command: commands.TriggerCompletion,
                 title: 'trigger next'
@@ -162,7 +162,7 @@ export class PipelineCompletionProvider
           kind: vscode.CompletionItemKind.Class,
           range,
           sortText: '1_' + task,
-          fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task)
+          fillTaskDetail: () => this.getTaskBrief(intBundle, task)
         }
         result.push(item)
       }
@@ -235,7 +235,7 @@ export class PipelineCompletionProvider
             kind: vscode.CompletionItemKind.Class,
             range,
             sortText: '1_' + task,
-            fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task)
+            fillTaskDetail: () => this.getTaskBrief(intBundle, task)
           }
           result.push(item)
         }

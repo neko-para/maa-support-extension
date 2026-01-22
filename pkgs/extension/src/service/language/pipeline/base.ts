@@ -14,6 +14,7 @@ import {
   extractTaskRef
 } from '@mse/pipeline-manager'
 import { Interface } from '@mse/types'
+import { MaaTask } from '@nekosu/maa-tasker'
 
 import { interfaceService, rootService } from '../..'
 import { isMaaAssistantArknights, pipelineSuffix } from '../../../utils/fs'
@@ -66,32 +67,59 @@ export class PipelineLanguageProvider extends BaseService {
     return (await this.flush())?.info ?? null
   }
 
-  getTaskBrief(
+  evalTask(
+    intBundle: InterfaceBundle<Partial<Interface>>,
+    task: TaskName,
+    current?: TaskName
+  ): Partial<Record<keyof maa.Task | keyof MaaTask, unknown>> | null {
+    if (isMaaAssistantArknights) {
+      const realTask = current ? `${current}@${task}` : task
+      return intBundle.maaEvalTask(realTask)?.task ?? null
+    } else {
+      return intBundle.evalTask(task)
+    }
+  }
+
+  getTaskRecoAct(
+    intBundle: InterfaceBundle<Partial<Interface>>,
+    task: TaskName,
+    current?: TaskName
+  ): [reco: string, act: string] {
+    if (isMaaAssistantArknights) {
+      const final = this.evalTask(intBundle, task, current)
+      if (!final) {
+        return ['Unknown', 'Unknown']
+      } else {
+        return [
+          (final?.algorithm as string) ?? 'MatchTemplate',
+          (final?.action as string) ?? 'DoNothing'
+        ]
+      }
+    } else {
+      const info = intBundle.topLayer?.getTaskBriefInfo(task)
+      if (!info) {
+        return ['Unknown', 'Unknown']
+      } else {
+        return [info.reco ?? 'DirectHit', info.act ?? 'DoNothing']
+      }
+    }
+  }
+
+  getTaskBrief(intBundle: InterfaceBundle<Partial<Interface>>, task: TaskName, current?: TaskName) {
+    const [reco, act] = this.getTaskRecoAct(intBundle, task, current)
+    if (isMaaAssistantArknights) {
+      return `Algo: ${reco}\n\nAct: ${act}`
+    } else {
+      return `Reco: ${reco}\n\nAct: ${act}`
+    }
+  }
+
+  async getTaskHover(
     intBundle: InterfaceBundle<Partial<Interface>>,
     layer: LayerInfo,
     task: TaskName,
     current?: TaskName
   ) {
-    if (isMaaAssistantArknights) {
-      const realTask = `${current}@${task}`
-      const final = intBundle.maaEvalTask(realTask)
-      if (!final) {
-        return 'Unknown'
-      } else {
-        // return `${realTask}\n\nAlgo: ${final.task.algorithm ?? 'TemplateMatch'}\n\nAct: ${final.task.action ?? 'JustReturn'}`
-        return `${task}
-\`\`\`json
-${JSON.stringify(final.task, null, 2)}
-\`\`\`
-`
-      }
-    } else {
-      const info = layer.getTaskBriefInfo(task)
-      return `Reco: ${info.reco ?? 'DirectHit'}\n\nAct: ${info.act ?? 'DoNothing'}`
-    }
-  }
-
-  async getTaskHover(layer: LayerInfo, task: TaskName) {
     const taskInfos = layer.getTask(task)
     const content: string[] = []
     for (const { layer, infos } of taskInfos) {
@@ -111,10 +139,39 @@ ${doc.getText(range)}
 `)
       }
     }
+    const final = this.evalTask(intBundle, task, current)
+    if (final) {
+      let showImage = false
+      if (isMaaAssistantArknights) {
+        const algo = (final?.algorithm as string) ?? 'MatchTemplate'
+        showImage = ['MatchTemplate', 'FeatureMatch'].includes(algo)
+      } else {
+        const algo = (final?.recognition as string) ?? 'DirectHit'
+        showImage = ['TemplateMatch', 'FeatureMatch'].includes(algo)
+      }
+
+      if (showImage) {
+        let templates = final.template as string | string[] | undefined
+        if (isMaaAssistantArknights) {
+        }
+        if (typeof templates === 'string') {
+          templates = [templates]
+        } else if (!templates) {
+          templates = [task + '.png']
+        }
+        for (const templ of templates) {
+          content.push(this.getImageHover(intBundle, layer, templ as ImageRelativePath))
+        }
+      }
+    }
     return content.join('\n\n')
   }
 
-  async getImageHover(layer: LayerInfo, image: ImageRelativePath) {
+  getImageHover(
+    intBundle: InterfaceBundle<Partial<Interface>>,
+    layer: LayerInfo,
+    image: ImageRelativePath
+  ) {
     const layers = layer.getImage(image)
     const content: string[] = []
     for (const [layer, full, file] of layers) {

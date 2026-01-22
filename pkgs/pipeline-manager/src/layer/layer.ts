@@ -2,6 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import type { IContentLoader } from '../content/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
+import { buildTree } from '../utils/json'
 import {
   type AbsolutePath,
   type AnchorName,
@@ -154,6 +155,26 @@ export class LayerInfo {
       }
     }
     return tasks.filter(x => x.infos.length > 0)
+  }
+
+  evalTask(task: TaskName): Record<string, unknown> {
+    const result = this.parent?.evalTask(task) ?? {}
+
+    const info = this.mutableTaskInfo(task)[0]
+    if (info) {
+      const parts = info.info.parts
+      if (parts.recoType) {
+        result['recognition'] = parts.recoType.value
+      }
+      if (parts.actType) {
+        result['action'] = parts.actType.value
+      }
+      for (const [key, obj] of [...parts.base, ...parts.reco, ...parts.act, ...parts.unknown]) {
+        result[key] = buildTree(obj)
+      }
+    }
+
+    return result
   }
 
   getImage(

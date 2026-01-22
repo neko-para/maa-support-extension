@@ -13,7 +13,7 @@ export class MaaErrorDelegateImpl extends MaaErrorDelegate {
   }
 
   cannotFindTask(task: string, prefix: string[]): void {
-    logger.error(`cannot find ${task} with parent ${prefix}`)
+    // logger.error(`cannot find ${task} with parent ${prefix}`)
   }
 
   warnCannotFindBaseTask(task: string): void {

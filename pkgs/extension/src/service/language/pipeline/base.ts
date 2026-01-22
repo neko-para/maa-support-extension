@@ -1,4 +1,5 @@
 import path from 'path'
+import { json } from 'stream/consumers'
 import * as vscode from 'vscode'
 
 import {
@@ -65,13 +66,24 @@ export class PipelineLanguageProvider extends BaseService {
     return (await this.flush())?.info ?? null
   }
 
-  getTaskBrief(intBundle: InterfaceBundle<Partial<Interface>>, layer: LayerInfo, task: TaskName) {
+  getTaskBrief(
+    intBundle: InterfaceBundle<Partial<Interface>>,
+    layer: LayerInfo,
+    task: TaskName,
+    current?: TaskName
+  ) {
     if (isMaaAssistantArknights) {
-      const final = intBundle.maaEvalTask(task)
+      const realTask = `${current}@${task}`
+      const final = intBundle.maaEvalTask(realTask)
       if (!final) {
         return 'Unknown'
       } else {
-        return `Algo: ${final.task.algorithm ?? 'TemplateMatch'}\n\nAct: ${final.task.action ?? 'JustReturn'}`
+        // return `${realTask}\n\nAlgo: ${final.task.algorithm ?? 'TemplateMatch'}\n\nAct: ${final.task.action ?? 'JustReturn'}`
+        return `${task}
+\`\`\`json
+${JSON.stringify(final.task, null, 2)}
+\`\`\`
+`
       }
     } else {
       const info = layer.getTaskBriefInfo(task)

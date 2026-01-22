@@ -96,12 +96,14 @@ export type TaskMaaBaseTaskRefInfo = {
   type: 'task.maa.base_task'
   target: TaskName
   tasks: TaskMaaTaskRef[]
+  belong: TaskName
 }
 
 export type TaskMaaExprRefInfo = {
   type: 'task.maa.expr'
   target: MaaTaskExpr
   tasks: TaskMaaTaskRef[]
+  belong: TaskName
 }
 
 type MaaTaskRefInfo = TaskMaaBaseTaskRefInfo | TaskMaaExprRefInfo

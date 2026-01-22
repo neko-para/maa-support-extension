@@ -93,7 +93,7 @@ export class PipelineCompletionProvider
               label: task,
               kind: vscode.CompletionItemKind.Class,
               range: taskRange,
-              detail: this.getTaskBrief(intBundle, layer, task)
+              fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task, ref.belong)
             }
             result.push(item)
           }
@@ -107,7 +107,7 @@ export class PipelineCompletionProvider
               label: task,
               kind: vscode.CompletionItemKind.Class,
               range: taskRange,
-              detail: this.getTaskBrief(intBundle, layer, task),
+              fillTaskDetail: () => this.getTaskBrief(intBundle, layer, task, ref.belong),
               command: {
                 command: commands.TriggerCompletion,
                 title: 'trigger next'
@@ -259,7 +259,10 @@ export class PipelineCompletionProvider
     token: vscode.CancellationToken
   ): Promise<CustomCompletionItem> {
     if (item.fillTaskDetail) {
-      item.detail = item.fillTaskDetail()
+      if (isMaaAssistantArknights) {
+        item.documentation = new vscode.MarkdownString(item.fillTaskDetail())
+        // item.detail =
+      }
     }
     return item
   }

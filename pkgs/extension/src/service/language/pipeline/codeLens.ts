@@ -63,7 +63,13 @@ export class PipelineCodeLensProvider
         }
 
         if (isMaaAssistantArknights) {
-          // TODO
+          result.push(
+            new vscode.CodeLens(convertRange(document, taskInfo.prop), {
+              title: t('maa.pipeline.codelens.eval-task'),
+              command: commands.EvalTask,
+              arguments: [name]
+            })
+          )
         } else {
           const range = convertRange(document, taskInfo.prop)
           result.push(
@@ -77,34 +83,5 @@ export class PipelineCodeLensProvider
       }
     }
     return result
-
-    /*
-
-    for (const [taskName, taskInfos] of Object.entries(layer.index)) {
-      for (const taskInfo of taskInfos) {
-        if (taskInfo.uri.fsPath !== document.uri.fsPath) {
-          continue
-        }
-        if (!isMaaAssistantArknights) {
-          result.push(
-            new vscode.CodeLens(taskInfo.taskProp, {
-              title: t('maa.pipeline.codelens.launch'),
-              command: commands.LaunchTask,
-              arguments: [taskName]
-            })
-          )
-        } else {
-          result.push(
-            new vscode.CodeLens(taskInfo.taskProp, {
-              title: t('maa.pipeline.codelens.eval-task'),
-              command: commands.EvalTask,
-              arguments: [taskName]
-            })
-          )
-        }
-      }
-    }
-    return result
-    */
   }
 }

@@ -261,7 +261,6 @@ export class PipelineCompletionProvider
     if (item.fillTaskDetail) {
       if (isMaaAssistantArknights) {
         item.documentation = new vscode.MarkdownString(item.fillTaskDetail())
-        // item.detail =
       }
     }
     return item

@@ -1,8 +1,7 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, joinImagePath } from '@mse/pipeline-manager'
+import { AbsolutePath } from '@mse/pipeline-manager'
 
-import { isMaaAssistantArknights } from '../../../utils/fs'
 import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 

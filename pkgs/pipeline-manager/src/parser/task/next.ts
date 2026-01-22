@@ -9,7 +9,8 @@ function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
     const ref: TaskNextRefInfo = {
       type: 'task.next',
       target: '' as TaskName,
-      objMode: false
+      objMode: false,
+      unknown: []
     }
     let name = node.value
     let offset = 0
@@ -28,8 +29,19 @@ function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
       }
       break
     }
+    let failOffset = 0
+    while (true) {
+      let match = /^\[([^\]]+)\]/.exec(name)
+      if (!match) {
+        break
+      }
+      const len = match[0].length
+      ref.unknown!.push([match[1], failOffset, failOffset + len])
+      failOffset = failOffset + len
+      name = name.substring(len)
+    }
     ref.target = name as TaskName
-    ref.offset = offset
+    ref.offset = offset + failOffset
     info.refs.push({
       file: ctx.file,
       location: node,

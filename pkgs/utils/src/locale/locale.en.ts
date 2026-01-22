@@ -53,6 +53,7 @@ export default {
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
   'maa.pipeline.error.unknown-anchor': 'Unknown anchor {0}',
+  'maa.pipeline.error.unknown-attr': 'Unknown attribute {0}',
   'maa.pipeline.error.duplicate-next': 'Duplicate route {0}',
   'maa.pipeline.warning.image-path-backslash':
     'Image path contains backslash, shall use forward slash instead',

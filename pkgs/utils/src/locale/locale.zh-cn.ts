@@ -53,6 +53,7 @@ export default {
   'maa.pipeline.error.unknown-task': '未知任务 {0}',
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
   'maa.pipeline.error.unknown-anchor': '未知Anchor {0}',
+  'maa.pipeline.error.unknown-attr': '未知属性 {0}',
   'maa.pipeline.error.duplicate-next': '重复路由 {0}',
   'maa.pipeline.warning.image-path-backslash': '图片路径中包含反斜杠, 应使用正斜杠',
   'maa.pipeline.warning.image-path-dot-slash': '图片路径中包含 ./ , 应移除',

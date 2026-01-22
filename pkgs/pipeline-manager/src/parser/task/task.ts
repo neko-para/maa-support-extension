@@ -53,6 +53,7 @@ export type TaskNextRefInfo = {
   offset?: number
   jumpBack?: boolean
   anchor?: boolean
+  unknown?: [attr: string, offset: number, length: number][]
 }
 
 export type TaskTargetRefInfo = {

@@ -12,7 +12,7 @@ import { t } from '@mse/utils'
 import { interfaceService, rootService } from '.'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
-import { autoConvertRange } from './language/utils'
+import { autoBuildRange, autoConvertRange } from './language/utils'
 import { debounce } from './utils/debounce'
 import { FlushHelper } from './utils/flush'
 
@@ -107,11 +107,21 @@ class DiagnosticScanner extends FlushHelper {
         const task = extractTaskRef(ref)
         if (task) {
           if (!tasks.has(task)) {
+            let range: vscode.Range
+            if (ref.type === 'task.next' && typeof ref.offset === 'number') {
+              range = await autoBuildRange(
+                ref.location.offset + ref.offset + 1,
+                ref.location.length - ref.offset - 2,
+                ref.file
+              )
+            } else {
+              range = await loc()
+            }
             result.push([
               uri,
               new vscode.Diagnostic(
-                await loc(),
-                t('maa.pipeline.error.unknown-task', ref.target),
+                range,
+                t('maa.pipeline.error.unknown-task', task),
                 vscode.DiagnosticSeverity.Error
               )
             ])
@@ -191,6 +201,18 @@ class DiagnosticScanner extends FlushHelper {
               new vscode.Diagnostic(
                 await loc(),
                 t('maa.pipeline.error.unknown-anchor', ref.target),
+                vscode.DiagnosticSeverity.Error
+              )
+            ])
+          }
+        }
+        if (ref.type === 'task.next' && ref.unknown && ref.unknown.length > 0) {
+          for (const attr of ref.unknown) {
+            result.push([
+              uri,
+              new vscode.Diagnostic(
+                await autoBuildRange(ref.location.offset + 2 + attr[1], attr[2] - 2, ref.file),
+                t('maa.pipeline.error.unknown-attr', attr[0]),
                 vscode.DiagnosticSeverity.Error
               )
             ])

@@ -169,7 +169,7 @@ export class LayerInfo {
   evalTask(task: TaskName): Record<string, unknown> {
     const result = this.parent?.evalTask(task) ?? {}
 
-    const info = this.mutableTaskInfo(task)[0]
+    const info = this.tasks[task]?.[0]
     if (info) {
       const parts = info.info.parts
       if (parts.recoType) {

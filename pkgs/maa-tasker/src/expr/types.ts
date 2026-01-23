@@ -1,3 +1,5 @@
+import { Range } from '@nekosu/simple-parser'
+
 import type { AllVirts } from '../types'
 
 export type MaaTaskExprAst = TaskList1
@@ -5,6 +7,7 @@ export type MaaTaskExprAst = TaskList1
 export type TaskVirt = {
   type: '#'
   virt: AllVirts
+  range: Range
 }
 
 export type TaskList1 =
@@ -21,6 +24,7 @@ export type TaskList2 =
       type: '*'
       list: TaskList3
       count: number
+      range: Range
     }
 
 export type TaskList3 =
@@ -38,6 +42,7 @@ export type TaskList4 =
   | {
       type: 'task'
       task: string
+      range: Range
     }
   | {
       type: 'brace'

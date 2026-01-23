@@ -52,7 +52,7 @@ export type ControlWebToHost =
     }
   | {
       command: 'selectResource'
-      index: number
+      name: string
     }
   | {
       command: 'selectController'

@@ -13,8 +13,17 @@ const selectingTask = ref(false)
 
 const allTasks = computed(() => {
   return (hostState.value.interfaceJson?.task ?? []).filter(info => {
-    if (info.resource) {
-      return info.resource.includes(hostState.value.interfaceConfigJson?.resource ?? '')
+    if (
+      info.controller &&
+      !info.controller.includes(hostState.value.interfaceConfigJson?.controller?.name ?? '')
+    ) {
+      return false
+    }
+    if (
+      info.resource &&
+      !info.resource.includes(hostState.value.interfaceConfigJson?.resource ?? '')
+    ) {
+      return false
     }
     return true
   })

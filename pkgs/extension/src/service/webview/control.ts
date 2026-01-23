@@ -1,21 +1,16 @@
 import fs from 'fs/promises'
+import { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, locale, provideWebview, t } from '@mse/utils'
 
-import {
-  interfaceIndexService,
-  interfaceService,
-  launchService,
-  nativeService,
-  rootService,
-  stateService
-} from '..'
+import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
+import { convertRange } from '../language/utils'
 import { isCtrlDev } from './dev'
 
 export class WebviewControlService extends BaseService {
@@ -84,7 +79,7 @@ export class WebviewControlService extends BaseService {
           break
         case 'selectResource':
           interfaceService.reduceConfig({
-            resource: interfaceService.interfaceJson.resource?.[data.index].name
+            resource: data.name
           })
           break
         case 'selectController':
@@ -185,40 +180,51 @@ export class WebviewControlService extends BaseService {
           }
           break
         case 'revealInterface':
-          let range: vscode.Range | undefined = undefined
+          let loc: Node | undefined = undefined
           switch (data.dest.type) {
             case 'entry': {
               const info = data.dest
-              range = interfaceIndexService.entryDecl.find(x => x.name === info.entry)?.range
+              loc = interfaceService.interfaceBundle?.info?.refs.find(
+                ref => ref.type === 'interface.task_entry' && ref.target === info.entry
+              )?.location
               break
             }
             case 'option': {
               const info = data.dest
-              range = interfaceIndexService.optionDecl.find(x => x.option === info.option)?.range
+              loc = interfaceService.interfaceBundle?.info?.decls.find(
+                decl => decl.type === 'interface.option' && decl.name === info.option
+              )?.location
               break
             }
             case 'case': {
               const info = data.dest
-              range = interfaceIndexService.caseDecl.find(
-                x => x.option === info.option && x.case === info.case
-              )?.range
+              loc = interfaceService.interfaceBundle?.info?.decls.find(
+                decl =>
+                  decl.type === 'interface.case' &&
+                  decl.name === info.case &&
+                  decl.option === info.option
+              )?.location
               break
             }
             case 'input': {
               const info = data.dest
-              range = interfaceIndexService.inputDecl.find(
-                x => x.option === info.option && x.name === info.name
-              )?.range
+              loc = interfaceService.interfaceBundle?.info?.decls.find(
+                decl =>
+                  decl.type === 'interface.input' &&
+                  decl.name === info.name &&
+                  decl.option === info.option
+              )?.location
               break
             }
           }
-          if (range) {
+          if (loc) {
             try {
               const doc = await vscode.workspace.openTextDocument(
                 rootService.activeResource!.interfaceUri
               )
               const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
               if (editor) {
+                const range = convertRange(doc, loc)
                 editor.revealRange(range)
                 editor.selection = new vscode.Selection(range.start, range.end)
               }

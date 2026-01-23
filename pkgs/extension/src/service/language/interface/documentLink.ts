@@ -1,6 +1,8 @@
+import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { interfaceIndexService, rootService } from '../..'
+import { interfaceService } from '../..'
+import { convertRange } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceDocumentLinkProvider
@@ -17,21 +19,22 @@ export class InterfaceDocumentLinkProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
-    if (document.uri.fsPath !== rootService.activeResource?.interfaceUri.fsPath) {
+    const index = await this.flushIndex()
+    if (!index) {
       return []
     }
 
-    await interfaceIndexService.flushDirty()
-
     const result: vscode.DocumentLink[] = []
 
-    for (const decl of interfaceIndexService.localeDecl) {
-      result.push(
-        new vscode.DocumentLink(
-          decl.range,
-          vscode.Uri.joinPath(rootService.activeResource.dirUri, decl.file)
+    for (const ref of index.refs) {
+      if (ref.type === 'interface.language_path' || ref.type === 'interface.resource_path') {
+        result.push(
+          new vscode.DocumentLink(
+            convertRange(document, ref.location),
+            vscode.Uri.file(path.join(interfaceService.interfaceBundle!.root, ref.target))
+          )
         )
-      )
+      }
     }
 
     return result

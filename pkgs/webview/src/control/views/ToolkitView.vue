@@ -57,7 +57,7 @@ async function jump(target: ToolkitJumpTarget) {
           </n-button>
         </template>
       </n-flex>
-      <n-text v-if="!hostState.isMAA" v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
+      <n-text v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
         {{ info }}
       </n-text>
     </n-flex>

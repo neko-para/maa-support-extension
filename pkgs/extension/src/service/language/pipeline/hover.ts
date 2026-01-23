@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 
-import { taskIndexService } from '../..'
+import { AbsolutePath, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
+
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
 
@@ -19,36 +20,67 @@ export class PipelineHoverProvider
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
-    if (this.shouldFilter(document)) {
+    const intBundle = await this.flush()
+    if (!intBundle) {
       return null
     }
 
-    await taskIndexService.flushDirty()
-
-    const [info, layer] = await taskIndexService.queryLocation(document.uri, position)
-
-    if (!info || !layer) {
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
+    if (!layerInfo) {
       return null
     }
+    const [layer, file] = layerInfo
 
-    if (info.type === 'task.ref' || info.type === 'task.prop') {
-      const result = await taskIndexService.queryTaskDoc(info.target, layer.level + 1, position)
+    const decls = layer.mergedDecls.filter(decl => decl.file === file)
+    const refs = layer.mergedRefs.filter(ref => ref.file === file)
+
+    const offset = document.offsetAt(position)
+    const decl = findDeclRef(decls, offset)
+    const ref = findDeclRef(refs, offset)
+
+    if (decl) {
+      if (decl.type === 'task.decl') {
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, decl.task)
+        return new vscode.Hover(hover)
+      }
+    } else if (ref) {
       if (isMaaAssistantArknights) {
-        const image = await taskIndexService.queryImageDoc(
-          info.target + '.png',
-          layer.level + 1,
-          true
-        )
-        if (image) {
-          result.appendMarkdown('\n\n' + image.value)
+        if (ref && (ref.type === 'task.maa.base_task' || ref.type === 'task.maa.expr')) {
+          const taskRef = findMaaDeclRef(ref.tasks, offset - ref.location.offset)
+          if (taskRef) {
+            const hover = await this.getTaskHover(
+              intBundle,
+              intBundle.topLayer!,
+              taskRef.taskSuffix,
+              ref.belong
+            )
+            return new vscode.Hover(hover)
+          } else {
+            return null
+          }
         }
       }
 
-      return new vscode.Hover(result)
-    } else if (info.type === 'image.ref') {
-      return new vscode.Hover(await taskIndexService.queryImageDoc(info.target, layer.level + 1))
+      if (
+        ref.type === 'task.next' ||
+        ref.type === 'task.target' ||
+        ref.type === 'task.roi' ||
+        ref.type === 'task.entry'
+      ) {
+        if (ref.type === 'task.next' && ref.anchor) {
+          return null
+        } else if (ref.type === 'task.roi') {
+          if (ref.prevRef) {
+            return null
+          }
+        }
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, ref.target)
+        return new vscode.Hover(hover)
+      } else if (ref.type === 'task.template') {
+        const hover = this.getImageHover(intBundle, intBundle.topLayer!, ref.target)
+        return new vscode.Hover(hover)
+      }
     }
-
     return null
   }
 }

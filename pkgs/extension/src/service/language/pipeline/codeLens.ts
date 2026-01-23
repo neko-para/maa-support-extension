@@ -53,7 +53,11 @@ export class PipelineCodeLensProvider
     if (!layerInfo) {
       return null
     }
-    const [layer, file] = layerInfo
+    const [layer, file, isDefault] = layerInfo
+
+    if (isDefault) {
+      return []
+    }
 
     const result: vscode.CodeLens[] = []
     for (const [name, taskInfos] of Object.entries(layer.tasks)) {

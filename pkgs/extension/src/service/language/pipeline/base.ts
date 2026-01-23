@@ -37,13 +37,20 @@ export class PipelineLanguageProvider extends BaseService {
         this.provider.dispose()
         this.provider = undefined
       }
-      const filters: vscode.DocumentFilter[] = interfaceService.resourcePaths.map(path => ({
-        scheme: 'file',
-        pattern: new vscode.RelativePattern(
-          vscode.Uri.joinPath(path, pipelineSuffix),
-          '**/*.{json,jsonc}'
-        )
-      }))
+      const filters: vscode.DocumentFilter[] = []
+      for (const path of interfaceService.resourcePaths) {
+        filters.push({
+          scheme: 'file',
+          pattern: new vscode.RelativePattern(
+            vscode.Uri.joinPath(path, pipelineSuffix),
+            '**/*.{json,jsonc}'
+          )
+        })
+        filters.push({
+          scheme: 'file',
+          pattern: new vscode.RelativePattern(path, 'default_pipeline.json')
+        })
+      }
       const root = rootService.activeResource
       if (root) {
         filters.push({
@@ -85,22 +92,24 @@ export class PipelineLanguageProvider extends BaseService {
     task: TaskName,
     current?: TaskName
   ): [reco: string, act: string] {
+    const final = this.evalTask(intBundle, task, current)
     if (isMaaAssistantArknights) {
-      const final = this.evalTask(intBundle, task, current)
       if (!final) {
         return ['Unknown', 'Unknown']
       } else {
         return [
-          (final?.algorithm as string) ?? 'MatchTemplate',
-          (final?.action as string) ?? 'DoNothing'
+          (final.algorithm as string) ?? 'MatchTemplate',
+          (final.action as string) ?? 'DoNothing'
         ]
       }
     } else {
-      const info = intBundle.topLayer?.getTaskBriefInfo(task)
-      if (!info) {
+      if (!final) {
         return ['Unknown', 'Unknown']
       } else {
-        return [info.reco ?? 'DirectHit', info.act ?? 'DoNothing']
+        return [
+          (final.recognition as string) ?? 'DirectHit',
+          (final.action as string) ?? 'DoNothing'
+        ]
       }
     }
   }
@@ -152,8 +161,6 @@ ${doc.getText(range)}
 
       if (showImage) {
         let templates = final.template as string | string[] | undefined
-        if (isMaaAssistantArknights) {
-        }
         if (typeof templates === 'string') {
           templates = [templates]
         } else if (!templates && isMaaAssistantArknights) {
@@ -164,6 +171,12 @@ ${doc.getText(range)}
           content.push(this.getImageHover(intBundle, layer, templ as ImageRelativePath))
         }
       }
+
+      content.push(`
+\`\`\`json
+${JSON.stringify(final, null, 2)}
+\`\`\`
+`)
     }
     return content.join('\n\n')
   }

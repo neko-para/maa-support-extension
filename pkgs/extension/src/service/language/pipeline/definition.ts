@@ -30,7 +30,7 @@ export class PipelineDefinitionProvider
     if (!layerInfo) {
       return null
     }
-    const [layer, file] = layerInfo
+    const [layer, file, isDefault] = layerInfo
     const topLayer = intBundle.topLayer!
 
     const offset = document.offsetAt(position)
@@ -70,6 +70,10 @@ export class PipelineDefinitionProvider
     }
 
     if (decl) {
+      if (isDefault && decl.type === 'task.decl') {
+        return null
+      }
+
       const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
       const refs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
       return await Promise.all([...decls, ...refs].map(autoConvertRangeLocation))

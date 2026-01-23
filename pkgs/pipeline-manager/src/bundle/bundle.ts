@@ -22,7 +22,6 @@ export class Bundle extends EventEmitter<{
   reset: []
   taskChanged: [tasks: string[]]
   imageChanged: []
-  defaultChanged: []
 }> {
   maa: boolean
   root: AbsolutePath
@@ -34,9 +33,16 @@ export class Bundle extends EventEmitter<{
   layer: LayerInfo
 
   manager: BundleManager
-  defaultPipeline: ContentJson<Record<'Default' | maa.RecognitionType | maa.ActionType, any>>
 
   imageChangedTimer?: NodeJS.Timeout
+
+  get defaultPipelineRel() {
+    return 'default_pipeline.json' as RelativePath
+  }
+
+  get defaultPipelinePath() {
+    return joinPath(this.root, this.defaultPipelineRel)
+  }
 
   constructor(loader: IContentLoader, watcher: IContentWatcher, maa: boolean, root: string) {
     super()
@@ -51,27 +57,18 @@ export class Bundle extends EventEmitter<{
     this.layer = new LayerInfo(loader, this.maa, this.root, 'resource')
 
     this.manager = new BundleManager(loader, watcher, this.root, this)
-    this.defaultPipeline = new ContentJson(
-      loader,
-      watcher,
-      joinPath(this.root, 'default_pipeline.json'),
-      () => {
-        this.emit('defaultChanged')
-      }
-    )
   }
 
   async load() {
-    await Promise.all([this.manager.load(), this.defaultPipeline.load()])
+    await this.manager.load()
   }
 
   stop() {
     this.manager.stop()
-    this.defaultPipeline.stop()
   }
 
   async flush() {
-    await Promise.all([this.manager.flush(), this.defaultPipeline.flush()])
+    await this.manager.flush()
   }
 
   filterFile(file: AbsolutePath, isdir: boolean): boolean {
@@ -87,6 +84,8 @@ export class Bundle extends EventEmitter<{
         return file.endsWith('.json')
       } else if (file.startsWith(this.imageRoot)) {
         return file.endsWith('.png')
+      } else if (file === this.defaultPipelinePath) {
+        return true
       }
     }
     return false
@@ -140,6 +139,8 @@ export class Bundle extends EventEmitter<{
   }
 
   loadFileImpl(file: RelativePath, content?: string): string[] {
+    const isDefault = file === this.defaultPipelineRel
+
     const changed: string[] = []
     changed.push(...this.deleteFileImpl(file))
     if (!content) {
@@ -155,20 +156,25 @@ export class Bundle extends EventEmitter<{
         if (key.startsWith('$')) {
           continue
         }
+        let taskName = key as TaskName
+        if (isDefault) {
+          taskName = ('$' + taskName) as TaskName
+        }
 
-        this.layer.mutableTaskInfo(key as TaskName).push({
+        this.layer.mutableTaskInfo(taskName).push({
           file: full,
           prop,
           data: obj,
           info: parseTask(obj, {
             maa: this.maa,
             file: full,
-            task: prop
+            task: prop,
+            taskName
           }),
           obj: buildTree(obj)
         })
         this.layer.markDirty()
-        changed.push(key)
+        changed.push(taskName)
       }
     }
     return changed

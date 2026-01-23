@@ -31,7 +31,7 @@ export class PipelineReferenceProvider
     if (!layerInfo) {
       return null
     }
-    const [layer, file] = layerInfo
+    const [layer, file, isDefault] = layerInfo
     const topLayer = intBundle.topLayer!
 
     const offset = document.offsetAt(position)
@@ -62,6 +62,10 @@ export class PipelineReferenceProvider
       } else {
         return null
       }
+    }
+
+    if (isDefault && decl?.type === 'task.decl') {
+      return null
     }
 
     const resultDecls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []

@@ -114,7 +114,7 @@ export class LayerInfo {
 
   getTaskListNotUnique(): TaskName[] {
     const tasks = this.parent?.getTaskList() ?? []
-    return tasks.concat(Object.keys(this.tasks) as TaskName[])
+    return tasks.concat(Object.keys(this.tasks).filter(task => !task.startsWith('$')) as TaskName[])
   }
 
   getTaskList(): TaskName[] {
@@ -172,6 +172,14 @@ export class LayerInfo {
     const info = this.tasks[task]?.[0]
     if (info) {
       const parts = info.info.parts
+
+      const reco = ('$' + (parts.recoType?.value ?? 'DirectHit')) as TaskName
+      const act = ('$' + (parts.actType?.value ?? 'DoNothing')) as TaskName
+
+      Object.assign(result, this.tasks['$Default' as TaskName]?.[0].obj ?? {})
+      Object.assign(result, this.tasks[reco]?.[0].obj ?? {})
+      Object.assign(result, this.tasks[act]?.[0].obj ?? {})
+
       if (parts.recoType) {
         result['recognition'] = parts.recoType.value
       }

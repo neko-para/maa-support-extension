@@ -32,6 +32,9 @@ export class PipelineWorkspaceSymbolProvider
       if (decl.type !== 'task.decl') {
         continue
       }
+      if (decl.task.startsWith('$')) {
+        continue
+      }
       if (decl.task.toLowerCase().indexOf(query) === -1) {
         continue
       }

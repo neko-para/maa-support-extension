@@ -68,7 +68,7 @@ export function parseMaaExpr(node: Node, info: TaskInfo, ctx: TaskParseContext) 
       type: 'task.maa.expr',
       target: node.value as MaaTaskExpr,
       tasks,
-      belong: ctx.task.value as TaskName
+      belong: ctx.taskName
     })
     try {
       const ast = parseExpr(node.value as MaaTaskExpr)

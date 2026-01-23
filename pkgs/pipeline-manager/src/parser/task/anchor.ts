@@ -11,7 +11,7 @@ function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
       location: node,
       type: 'task.anchor',
       anchor: node.value as AnchorName,
-      task: ctx.task.value as TaskName
+      task: ctx.taskName
     })
   }
 }

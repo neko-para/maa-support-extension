@@ -124,6 +124,7 @@ export type TaskParseContext = {
   maa: boolean
   file: AbsolutePath
   task: StringNode
+  taskName: TaskName
 }
 
 function parseMaaBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
@@ -255,8 +256,8 @@ export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
     file: ctx.file,
     location: ctx.task,
     type: 'task.decl',
-    task: ctx.task.value as TaskName,
-    tasks: buildTaskRef(ctx.task.value as TaskName)
+    task: ctx.taskName,
+    tasks: buildTaskRef(ctx.taskName)
   })
 
   if (ctx.maa) {

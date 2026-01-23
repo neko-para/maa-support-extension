@@ -259,9 +259,7 @@ export class PipelineCompletionProvider
     token: vscode.CancellationToken
   ): Promise<CustomCompletionItem> {
     if (item.fillTaskDetail) {
-      if (isMaaAssistantArknights) {
-        item.documentation = new vscode.MarkdownString(item.fillTaskDetail())
-      }
+      item.documentation = new vscode.MarkdownString(item.fillTaskDetail())
     }
     return item
   }

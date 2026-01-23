@@ -19,7 +19,8 @@ export function parseOverride(node: Node, info: InterfaceInfo, ctx: InterfacePar
       info: parseTask(obj, {
         maa: ctx.maa,
         file: ctx.file,
-        task: prop
+        task: prop,
+        taskName: key as TaskName
       }),
       obj: buildTree(obj)
     })

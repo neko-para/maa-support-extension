@@ -158,9 +158,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
         bundle.on('imageChanged', () => {
           this.emit('pipelineChanged')
         })
-        bundle.on('defaultChanged', () => {
-          this.emit('pipelineChanged')
-        })
       }
     })
   }
@@ -250,14 +247,19 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.emit('langChanged')
   }
 
-  locateLayer(file: AbsolutePath): [layer: LayerInfo, absolute: AbsolutePath] | null {
+  locateLayer(
+    file: AbsolutePath
+  ): [layer: LayerInfo, absolute: AbsolutePath, isDefault: boolean] | null {
     if (file === this.file) {
       const layer = this.info?.layer
-      return layer ? [layer, file] : null
+      return layer ? [layer, file, false] : null
     } else {
       for (const bundle of this.bundles) {
         if (file.startsWith(joinPath(bundle.root, this.maa ? 'tasks' : 'pipeline'))) {
-          return [bundle.layer, file]
+          return [bundle.layer, file, false]
+        }
+        if (file === bundle.defaultPipelinePath) {
+          return [bundle.layer, file, true]
         }
       }
     }

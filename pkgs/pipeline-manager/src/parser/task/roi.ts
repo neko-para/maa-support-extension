@@ -14,7 +14,7 @@ export function parseRoi(node: Node, info: TaskInfo, prev: StringNode[], ctx: Ta
         type: 'task.roi',
         target: node.value,
         prev: [...prev],
-        task: ctx.task.value as TaskName,
+        task: ctx.taskName,
         prevRef: true
       })
     } else {
@@ -24,7 +24,7 @@ export function parseRoi(node: Node, info: TaskInfo, prev: StringNode[], ctx: Ta
         type: 'task.roi',
         target: node.value as TaskName,
         prev: [...prev],
-        task: ctx.task.value as TaskName
+        task: ctx.taskName
       })
     }
   }

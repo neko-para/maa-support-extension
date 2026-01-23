@@ -12,7 +12,7 @@ export function parseMaaBaseTask(node: Node, info: TaskInfo, ctx: TaskParseConte
       type: 'task.maa.base_task',
       target: node.value as TaskName,
       tasks: buildTaskRef(node.value as TaskName),
-      belong: ctx.task.value as TaskName
+      belong: ctx.taskName
     })
   }
 }

@@ -12,7 +12,7 @@ export function parseSubName(node: Node, info: TaskInfo, parent: Node, ctx: Task
       type: 'task.sub_reco',
       name: node.value,
       reco: parent,
-      task: ctx.task.value as TaskName
+      task: ctx.taskName
     })
     return node
   } else {

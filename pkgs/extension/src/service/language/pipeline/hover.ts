@@ -29,7 +29,7 @@ export class PipelineHoverProvider
     if (!layerInfo) {
       return null
     }
-    const [layer, file] = layerInfo
+    const [layer, file, isDefault] = layerInfo
 
     const decls = layer.mergedDecls.filter(decl => decl.file === file)
     const refs = layer.mergedRefs.filter(ref => ref.file === file)
@@ -40,6 +40,10 @@ export class PipelineHoverProvider
 
     if (decl) {
       if (decl.type === 'task.decl') {
+        if (isDefault) {
+          return null
+        }
+
         const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, decl.task)
         return new vscode.Hover(hover)
       }

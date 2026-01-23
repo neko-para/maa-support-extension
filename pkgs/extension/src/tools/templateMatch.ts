@@ -31,8 +31,8 @@ export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect, th
     return null
   }
 
-  stateService.reduce({
-    uploadDir: path.dirname(targetPath[0].fsPath)
+  stateService.reduce(draft => {
+    draft.uploadDir = path.dirname(targetPath[0].fsPath)
   })
 
   const target = (await fs.readFile(targetPath[0].fsPath)).buffer

@@ -19,6 +19,7 @@
     "@types/vscode": "^1.106.1",
     "@vscode/debugadapter": "^1.68.0",
     "@vscode/debugprotocol": "^1.68.0",
+    "immer": "^10.2.0",
     "jsonc-parser": "^3.3.1",
     "pacote": "^21.0.4",
     "proper-lockfile": "^4.1.2",

@@ -1,3 +1,4 @@
+import { enablePatches } from 'immer'
 import os from 'os'
 import sms from 'source-map-support'
 import vscode from 'vscode'
@@ -10,6 +11,8 @@ import { init, nativeService, statusBarService } from './service'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()
+
+enablePatches()
 
 export async function activate(context: vscode.ExtensionContext) {
   const channel = vscode.window.createOutputChannel('Maa')

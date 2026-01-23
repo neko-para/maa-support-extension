@@ -144,10 +144,14 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         this.response(data.seq, result)
         break
       }
-      case 'requestTmplateMatch': {
+      case 'requestTemplateMatch': {
         let result = null
         try {
-          result = await performTemplateMatch(fromPngDataUrl(data.image), data.roi)
+          result = await performTemplateMatch(
+            fromPngDataUrl(data.image),
+            data.roi,
+            data.threshold ?? 0.8
+          )
         } catch (err) {
           logger.error(`tmpl match failed, error ${err}`)
         }

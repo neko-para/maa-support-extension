@@ -18,7 +18,7 @@ async function setupFakeResource() {
   return temp
 }
 
-export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect) {
+export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect, threshold: number) {
   const targetPath = await vscode.window.showOpenDialog({
     filters: {
       Images: ['png']
@@ -40,10 +40,8 @@ export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect) {
   const ctrl = await setupFixedController(image)
 
   if (!ctrl) {
-    if (!ctrl) {
-      logger.error('tmpl match ctrl create failed')
-      return null
-    }
+    logger.error('tmpl match ctrl create failed')
+    return null
   }
 
   const tempRes = await setupFakeResource()
@@ -67,14 +65,16 @@ export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect) {
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    logger.info('tmpl match action called')
+    logger.info(`tmpl match action called with threshold: ${threshold}`)
     const detail = await self.context.run_recognition('@mse/reco', image, {
       '@mse/reco': {
         recognition: 'TemplateMatch',
         template: '@mse_image',
-        roi
+        roi,
+        threshold
       } satisfies maa.Task
     })
+
     if (detail?.hit) {
       const presp = {
         ...detail

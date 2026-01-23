@@ -1,6 +1,7 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { ipc } from '../ipc'
+import { hostState } from '../state'
 import * as controlSt from './control'
 import * as imageSt from './image'
 
@@ -19,7 +20,7 @@ export const resultObject = computed(() => {
   return rawData
 })
 
-export async function perform(type: 'requestOCR' | 'requestTmplateMatch') {
+export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
   if (!imageSt.data.value) {
     return
   }
@@ -32,7 +33,8 @@ export async function perform(type: 'requestOCR' | 'requestTmplateMatch') {
   result.value = (await ipc.call({
     command: type,
     image: imageSt.data.value,
-    roi: controlSt.cropBox.value.ceiled().flat()
+    roi: controlSt.cropBox.value.ceiled().flat(),
+    threshold: hostState.value.templateMatchThreshold ?? 0.8
   })) as string | null
 
   loading.value = false

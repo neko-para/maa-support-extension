@@ -7,8 +7,9 @@ import { commands } from '../command'
 import { BaseService } from './context'
 
 export class StatusBarService extends BaseService {
-  extItem?: vscode.StatusBarItem
+  extItem: vscode.StatusBarItem
   maaItem?: vscode.StatusBarItem
+  transportItem: vscode.StatusBarItem
 
   constructor() {
     super()
@@ -18,6 +19,9 @@ export class StatusBarService extends BaseService {
     this.extItem.command = commands.RevealControlPanel
     this.extItem.text = `MaaSupport ${packageJson.version}`
     this.extItem.show()
+
+    this.transportItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left)
+    this.transportItem.show()
 
     this.defer = vscode.commands.registerCommand(commands.RevealControlPanel, () => {
       vscode.commands.executeCommand('maa.view.control-panel.focus')

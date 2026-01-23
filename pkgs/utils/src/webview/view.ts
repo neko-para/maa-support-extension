@@ -5,6 +5,7 @@ import { HostToWeb, ImplType, WebToHost } from '@mse/types'
 
 import { cspMeta } from './data'
 import forwardHtml from './forward.html'
+import { TransportStatistic } from './transport'
 
 export type WebviewOption = {
   context: vscode.ExtensionContext
@@ -22,8 +23,14 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
   webview?: vscode.Webview
   visible: boolean = false
 
+  sendSt: TransportStatistic
+  recvSt: TransportStatistic
+
   constructor(option: WebviewOption) {
     this.option = option
+
+    this.sendSt = new TransportStatistic()
+    this.recvSt = new TransportStatistic()
   }
 
   async resolveWebviewView(
@@ -50,6 +57,7 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
           return
         }
 
+        this.recvSt.add(event.length)
         this.recv(JSON.parse(event))
       })
     )
@@ -86,7 +94,9 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
   recv(data: WebToHost<ToHostImpl>) {}
 
   send(data: HostToWeb<ToWebImpl>) {
-    this.webview?.postMessage(JSON.stringify(data))
+    const msg = JSON.stringify(data)
+    this.sendSt.add(msg.length)
+    this.webview?.postMessage(msg)
   }
 
   response(seq: number | undefined, data: unknown) {

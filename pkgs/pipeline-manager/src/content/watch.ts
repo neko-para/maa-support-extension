@@ -14,11 +14,15 @@ export interface IContentWatcherController {
 }
 
 export interface IContentWatcher {
-  watch(root: string, delegate: IContentWatcherDelegate): Promise<IContentWatcherController>
+  watch(
+    root: string,
+    isFile: boolean,
+    delegate: IContentWatcherDelegate
+  ): Promise<IContentWatcherController>
 }
 
 export class FsContentWatcher implements IContentWatcher {
-  async watch(root: string, delegate: IContentWatcherDelegate) {
+  async watch(root: string, isFile: boolean, delegate: IContentWatcherDelegate) {
     const watcher = chokidar.watch(root, {
       ignored: (file, stats) => {
         if (!stats) {
@@ -70,16 +74,26 @@ export class VscodeContentWatcher extends FsContentWatcher implements IContentWa
     this.vscode = vscode
   }
 
-  async watch(root: string, delegate: IContentWatcherDelegate) {
-    const prefix = this.vscode.Uri.file(root).fsPath + path.sep
-    const disp = this.vscode.workspace.onDidChangeTextDocument(ev => {
-      const file = ev.document.uri.fsPath
-      if (file.startsWith(prefix)) {
-        delegate.fileChanged(file)
-      }
-    })
+  async watch(root: string, isFile: boolean, delegate: IContentWatcherDelegate) {
+    let disp: import('vscode').Disposable
+    if (isFile) {
+      disp = this.vscode.workspace.onDidChangeTextDocument(ev => {
+        const file = ev.document.uri.fsPath
+        if (root === file) {
+          delegate.fileChanged(file)
+        }
+      })
+    } else {
+      const prefix = this.vscode.Uri.file(root).fsPath + path.sep
+      disp = this.vscode.workspace.onDidChangeTextDocument(ev => {
+        const file = ev.document.uri.fsPath
+        if (file.startsWith(prefix)) {
+          delegate.fileChanged(file)
+        }
+      })
+    }
 
-    const watcher = await super.watch(root, delegate)
+    const watcher = await super.watch(root, isFile, delegate)
 
     return {
       stop() {

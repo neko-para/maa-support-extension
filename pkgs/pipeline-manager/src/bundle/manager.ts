@@ -50,7 +50,7 @@ export class BundleManager {
     this.changed.clear()
     this.removed.clear()
 
-    this.watcherCtrl = await this.watcher.watch(this.root, {
+    this.watcherCtrl = await this.watcher.watch(this.root, false, {
       filter: (file: string, isdir: boolean) => {
         return this.delegate.filterFile(file as AbsolutePath, isdir)
       },

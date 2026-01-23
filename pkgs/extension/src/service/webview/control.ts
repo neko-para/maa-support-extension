@@ -6,7 +6,14 @@ import * as vscode from 'vscode'
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, locale, provideWebview, t } from '@mse/utils'
 
-import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
+import {
+  interfaceService,
+  launchService,
+  nativeService,
+  rootService,
+  stateService,
+  statusBarService
+} from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { BaseService, context } from '../context'
@@ -27,6 +34,14 @@ export class WebviewControlService extends BaseService {
       index: 'control',
       webId: 'maa.view.control-panel',
       dev: isCtrlDev
+    })
+
+    this.provider.sendSt.on('change', bps => {
+      this.updateTransportStatus()
+    })
+
+    this.provider.recvSt.on('change', bps => {
+      this.updateTransportStatus()
     })
 
     this.provider.recv = async data => {
@@ -274,6 +289,13 @@ export class WebviewControlService extends BaseService {
     this.defer = interfaceService.onInterfaceConfigChanged(() => {
       this.pushState()
     })
+  }
+
+  updateTransportStatus() {
+    if (this.provider) {
+      let sum = this.provider.sendSt.sum + this.provider.recvSt.sum
+      statusBarService.transportItem.text = `${(sum / 5000).toFixed(2)} kbps`
+    }
   }
 
   get state(): ControlHostState {

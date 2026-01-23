@@ -40,7 +40,7 @@ export class ContentJson<T = any> {
     this.watcherCtrl?.stop()
     this.dirty = true
 
-    this.watcherCtrl = await this.watcher.watch(this.file, {
+    this.watcherCtrl = await this.watcher.watch(this.file, true, {
       filter: (file, isdir) => {
         return true
       },

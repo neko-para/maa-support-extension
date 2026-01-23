@@ -79,7 +79,7 @@ export class WebviewControlService extends BaseService {
           break
         case 'selectResource':
           interfaceService.reduceConfig({
-            resource: interfaceService.interfaceJson.resource?.[data.index].name
+            resource: data.name
           })
           break
         case 'selectController':

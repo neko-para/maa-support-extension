@@ -7,32 +7,34 @@ import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 
+const filteredResource = computed(() => {
+  return (hostState.value.interfaceJson?.resource ?? []).filter(info => {
+    if (info.controller) {
+      return info.controller.includes(hostState.value.interfaceConfigJson?.controller?.name ?? '')
+    }
+    return true
+  })
+})
+
 const resourceOptions = computed(() => {
-  return (hostState.value.interfaceJson?.resource ?? [])
-    .filter(info => {
-      if (info.controller) {
-        return info.controller.includes(hostState.value.interfaceConfigJson?.controller?.name ?? '')
-      }
-      return true
-    })
-    .map((info, index) => {
-      return {
-        value: index,
-        label: info.name
-      } satisfies SelectMixedOption
-    })
+  return filteredResource.value.map((info, index) => {
+    return {
+      value: index,
+      label: info.name
+    } satisfies SelectMixedOption
+  })
 })
 
 const currentResource = computed(() => {
   const curr = hostState.value.interfaceConfigJson?.resource
-  const index = hostState.value.interfaceJson?.resource?.findIndex(info => info.name === curr) ?? -1
+  const index = filteredResource.value.findIndex(info => info.name === curr) ?? -1
   return index === -1 ? null : index
 })
 
 function switchResource(index: number) {
   ipc.send({
     command: 'selectResource',
-    index
+    name: filteredResource.value[index].name
   })
 }
 </script>

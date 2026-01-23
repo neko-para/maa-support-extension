@@ -214,7 +214,7 @@ export class LaunchService extends BaseService {
 
     await controller.post_connection().wait()
 
-    if (await controller.connected) {
+    if (controller.connected) {
       this.cache = { controller }
       this.cacheKey = key
       return true
@@ -394,7 +394,7 @@ export class LaunchService extends BaseService {
     client?.register_resource_sink(resource)
     client?.register_tasker_sink(tasker)
 
-    if (!(await tasker.inited)) {
+    if (!tasker.inited) {
       tasker.destroy()
       resource.destroy()
       client?.destroy()

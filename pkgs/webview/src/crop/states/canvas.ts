@@ -86,7 +86,9 @@ export function draw(ctx: CanvasRenderingContext2D) {
               ctx.rect(...box.flat())
               ctx.stroke()
 
-              ctx.fillText(fullEntry.name ?? '', ...box.rt.add(Size.from(5, 0)).flat())
+              if (!fullEntry.name.startsWith('@mse/')) {
+                ctx.fillText(fullEntry.name, ...box.rt.add(Size.from(5, 0)).flat())
+              }
               ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
             }
           }

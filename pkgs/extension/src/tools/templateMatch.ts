@@ -62,7 +62,7 @@ export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect, th
     return null
   }
 
-  let result:  string | null = null
+  let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
     logger.info(`tmpl match action called with threshold: ${threshold}`)

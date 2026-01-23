@@ -72,6 +72,7 @@ export default {
   'maa.crop.settings.helper-axes-radius': 'Helper axes radius',
   'maa.crop.settings.helper-axes-threshold': 'Helper axes threshold',
   'maa.crop.settings.pick-color-threshold': 'Pick color threshold',
+  'maa.crop.settings.template-match-threshold': 'Template match threshold',
   'maa.crop.settings.ocr-result-color': 'OCR result color',
   'maa.crop.settings.ocr-result-font': 'OCR result font',
   'maa.crop.settings.reco-result-color': 'Reco result color',

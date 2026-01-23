@@ -9,27 +9,6 @@ export const loading = ref(false)
 export const result = ref<string | null>(null)
 export const draw = ref(false)
 export const drawType = ref<'all' | 'best' | 'filtered'>('all')
-export const threshold = ref(0.8)
-
-watch(
-  () => hostState.value.templateMatchThreshold,
-  value => {
-    if (value !== undefined) {
-      threshold.value = value
-    }
-  },
-  { immediate: true }
-)
-
-watch(threshold, value => {
-  if (value !== null && value !== undefined) {
-    ipc.send({
-      command: 'updateSettings',
-      key: 'templateMatchThreshold',
-      value
-    })
-  }
-})
 
 export const resultObject = computed(() => {
   if (!result.value) {
@@ -55,7 +34,7 @@ export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
     command: type,
     image: imageSt.data.value,
     roi: controlSt.cropBox.value.ceiled().flat(),
-    threshold: threshold.value
+    threshold: hostState.value.templateMatchThreshold ?? 0.8
   })) as string | null
 
   loading.value = false

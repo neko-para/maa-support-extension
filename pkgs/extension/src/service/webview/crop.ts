@@ -73,8 +73,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           break
         }
 
-        stateService.reduce(draft => {
-          draft.uploadDir = path.dirname(files[0].fsPath)
+        stateService.reduce({
+          uploadDir: path.dirname(files[0].fsPath)
         })
 
         this.response(data.seq, toPngDataUrl(await vscode.workspace.fs.readFile(files[0])))
@@ -183,11 +183,11 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         this.response(data.seq, await vscode.env.clipboard.readText())
         break
       case 'updateSettings':
-        stateService.reduce(draft => {
-          if (!draft.cropSettings) {
-            draft.cropSettings = {}
+        stateService.reduce({
+          cropSettings: {
+            ...stateService.state.cropSettings,
+            [data.key]: data.value
           }
-          ;(draft.cropSettings as any)[data.key] = data.value
         })
         this.pushState()
         break

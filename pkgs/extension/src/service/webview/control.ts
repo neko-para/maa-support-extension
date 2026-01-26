@@ -266,8 +266,8 @@ export class WebviewControlService extends BaseService {
           )
           break
         case 'maa.updateEvalConfig':
-          stateService.reduce(draft => {
-            draft.evalTaskConfig = data.config
+          stateService.reduce({
+            evalTaskConfig: data.config
           })
           this.pushState()
           break

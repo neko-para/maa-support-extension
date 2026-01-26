@@ -110,8 +110,8 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.response(data.seq, null)
         break
       case 'updateBreakTasks':
-        stateService.reduce(draft => {
-          draft.breakTasks = data.tasks
+        stateService.reduce({
+          breakTasks: data.tasks
         })
         this.pushState()
         break

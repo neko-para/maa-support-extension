@@ -6,7 +6,7 @@ import * as vscode from 'vscode'
 import { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel, t } from '@mse/utils'
 
-import { debugService, interfaceService, nativeService } from '.'
+import { debugService, interfaceService, serverService } from '.'
 import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -48,180 +48,14 @@ export class LaunchService extends BaseService {
     console.log('init LaunchService')
   }
 
-  buildControllerRuntime(): InterfaceRuntime['controller_param'] | null {
-    const data = interfaceService.interfaceJson
-    const config = interfaceService.interfaceConfigJson
-    if (!data || !config) {
-      return null
-    }
-
-    const ctrlInfo = data.controller?.find(x => x.name === config.controller?.name)
-
-    if (!ctrlInfo) {
-      vscode.window.showErrorMessage(
-        t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '<unknown>')
-      )
-      return null
-    }
-
-    const fixNum = (v?: string | number, dic?: Record<string, string>) => {
-      if (typeof v === 'number') {
-        return `${v}`
-      } else if (dic && typeof v === 'string' && v in dic) {
-        return dic[v]
-      } else {
-        return v
-      }
-    }
-
-    if (ctrlInfo.type === 'Adb') {
-      if (!config.adb) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      return {
-        ctype: 'adb',
-        adb_path: config.adb.adb_path,
-        address: config.adb.address,
-        screencap: config.adb.screencap ?? maa.AdbScreencapMethod.Default,
-        input: config.adb.input ?? maa.AdbInputMethod.Default,
-        config: JSON.stringify(config.adb.config),
-
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw
-      }
-    } else if (ctrlInfo.type === 'Win32') {
-      if (!config.win32) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      if (!config.win32.hwnd) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      return {
-        ctype: 'win32',
-        hwnd: config.win32.hwnd,
-        screencap:
-          fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.DXGI_DesktopDup,
-        mouse:
-          fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
-        keyboard:
-          fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ??
-          maa.Win32InputMethod.SendMessage,
-
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw
-      }
-    } else if (ctrlInfo.type === 'VscFixed') {
-      if (!config.vscFixed) {
-        vscode.window.showErrorMessage('No vscFixed for controller')
-        return null
-      }
-
-      if (!config.vscFixed.image) {
-        vscode.window.showErrorMessage('No vscFixed image for controller')
-        return null
-      }
-
-      return {
-        ctype: 'vscFixed',
-        image: config.vscFixed.image,
-
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw
-      }
-    }
-
-    return null
-  }
-
   async updateCache() {
-    const runtime = this.buildControllerRuntime()
+    const runtime = interfaceService.buildControllerRuntime()
 
     if (!runtime) {
       return false
     }
 
-    const key = JSON.stringify(runtime)
-    if (key !== this.cacheKey) {
-      this.cache = undefined
-      this.cacheKey = undefined
-    }
-
-    let controller: maa.Controller | undefined = this.cache?.controller
-
-    if (controller) {
-      return true
-    }
-
-    if (runtime.ctype === 'adb') {
-      controller = new maa.AdbController(
-        runtime.adb_path,
-        runtime.address,
-        runtime.screencap,
-        runtime.input,
-        runtime.config
-      )
-    } else if (runtime.ctype === 'win32') {
-      controller = new maa.Win32Controller(
-        runtime.hwnd,
-        runtime.screencap,
-        runtime.mouse,
-        runtime.keyboard
-      )
-    } else if (runtime.ctype === 'vscFixed') {
-      const image = (await fs.readFile(runtime.image)).buffer as ArrayBuffer
-      controller = new maa.CustomController({
-        connect() {
-          return true
-        },
-        request_uuid() {
-          return '0'
-        },
-        screencap() {
-          return image
-        }
-      })
-    } else {
-      return false
-    }
-
-    if (runtime.display_short_side) {
-      controller.screenshot_target_short_side = runtime.display_short_side
-    } else if (runtime.display_long_side) {
-      controller.screenshot_target_long_side = runtime.display_long_side
-    } else if (runtime.display_raw) {
-      controller.screenshot_use_raw_size = true
-    }
-
-    controller.add_sink((_, msg) => {
-      logger.info(`${JSON.stringify(msg)}`)
-    })
-
-    await controller.post_connection().wait()
-
-    if (controller.connected) {
-      this.cache = { controller }
-      this.cacheKey = key
-      return true
-    } else {
-      controller.destroy()
-      return false
-    }
+    return await serverService.updateCtrl(runtime)
   }
 
   async setupResource(

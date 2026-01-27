@@ -6,7 +6,7 @@ import { logger, setupLogger, t } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
-import { init, nativeService, statusBarService } from './service'
+import { init, nativeService, serverService, statusBarService } from './service'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 
 sms.install()
@@ -46,6 +46,8 @@ export async function activate(context: vscode.ExtensionContext) {
     statusBarService.showMaaStatus(null)
     return
   }
+
+  serverService.ensureServer()
 
   statusBarService.showMaaStatus(nativeService.version)
 

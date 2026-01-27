@@ -24,6 +24,7 @@ import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSy
 import { LaunchService } from './launch'
 import { NativeService } from './native'
 import { RootService } from './root'
+import { ServerService } from './server'
 import { StateService } from './state'
 import { StatusBarService } from './statusBar'
 import { WebviewControlService } from './webview/control'
@@ -32,6 +33,7 @@ export { context } from './context'
 
 export let stateService: StateService
 export let nativeService: NativeService
+export let serverService: ServerService
 export let rootService: RootService
 export let interfaceService: InterfaceService
 export let launchService: LaunchService
@@ -50,6 +52,7 @@ export async function init(ctx: vscode.ExtensionContext) {
 
   stateService = new StateService()
   nativeService = new NativeService()
+  serverService = new ServerService()
   rootService = new RootService()
   interfaceService = new InterfaceService()
   launchService = new LaunchService()
@@ -82,6 +85,7 @@ export async function init(ctx: vscode.ExtensionContext) {
 
   await stateService.init()
   await nativeService.init()
+  await serverService.init()
   await rootService.init()
   await interfaceService.init()
   await launchService.init()

@@ -51,6 +51,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   interfaceChanged: []
   activeChanged: []
   langChanged: []
+  localeChanged: []
   pathChanged: []
   bundleReloaded: []
   pipelineChanged: []
@@ -276,6 +277,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
         })
       }
     }
+
+    this.emit('localeChanged')
   }
 
   locateLayer(

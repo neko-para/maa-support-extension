@@ -60,6 +60,12 @@ export class CommandService extends BaseService {
       })
     })
 
+    this.defer = vscode.commands.registerCommand(commands.PISwitchLocale, locale => {
+      interfaceService.reduceConfig({
+        locale
+      })
+    })
+
     this.defer = vscode.commands.registerCommand(commands.OpenCrop, () => {
       new WebviewCropPanel('Maa Crop').init()
     })

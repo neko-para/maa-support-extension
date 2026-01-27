@@ -78,6 +78,8 @@ export type InterfaceConfig = {
   resource: string
   task: TaskConfig[]
   // gpu?: number
+
+  locale?: string
 }
 
 export type InterfaceRuntime = {

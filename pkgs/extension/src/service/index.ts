@@ -11,6 +11,7 @@ import { InterfaceCompletionProvider } from './language/interface/completion'
 import { InterfaceDefinitionProvider } from './language/interface/definition'
 import { InterfaceDocumentLinkProvider } from './language/interface/documentLink'
 import { InterfaceHoverProvider } from './language/interface/hover'
+import { InterfaceInlayHintsProvider } from './language/interface/inlayHint'
 import { InterfaceReferenceProvider } from './language/interface/reference'
 import { PipelineLanguageProvider } from './language/pipeline/base'
 import { PipelineCodeLensProvider } from './language/pipeline/codeLens'
@@ -73,7 +74,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new InterfaceDefinitionProvider(),
     new InterfaceDocumentLinkProvider(),
     new InterfaceHoverProvider(),
-    new InterfaceReferenceProvider()
+    new InterfaceReferenceProvider(),
+    new InterfaceInlayHintsProvider()
   ]
 
   webviewControlService = new WebviewControlService()

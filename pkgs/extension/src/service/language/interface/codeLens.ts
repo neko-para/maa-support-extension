@@ -12,7 +12,7 @@ export class InterfaceCodeLensProvider
   extends InterfaceLanguageProvider
   implements vscode.CodeLensProvider
 {
-  didChangeCodeLenses: vscode.EventEmitter<void>
+  didChangeCodeLenses = new vscode.EventEmitter<void>()
   get onDidChangeCodeLenses() {
     return this.didChangeCodeLenses.event
   }
@@ -24,7 +24,7 @@ export class InterfaceCodeLensProvider
       return vscode.languages.registerCodeLensProvider(sel, this)
     })
 
-    this.didChangeCodeLenses = new vscode.EventEmitter()
+    this.defer = this.didChangeCodeLenses
 
     this.fireChangeCodeLenses = debounce(() => {
       this.didChangeCodeLenses.fire()
@@ -47,34 +47,51 @@ export class InterfaceCodeLensProvider
       return []
     }
 
-    const decls = index.decls.filter(info => info.type === 'interface.resource')
-
     const result: vscode.CodeLens[] = []
-    for (const decl of decls) {
-      const activated = decl.name === interfaceService.interfaceConfigJson.resource
-      const disabled =
-        decl.controller &&
-        !decl.controller.includes(interfaceService.interfaceConfigJson.controller?.name ?? '')
+    for (const decl of index.decls) {
+      if (decl.type === 'interface.resource') {
+        const activated = decl.name === interfaceService.interfaceConfigJson.resource
+        const disabled =
+          decl.controller &&
+          !decl.controller.includes(interfaceService.interfaceConfigJson.controller?.name ?? '')
 
-      const range = convertRange(document, decl.location)
+        const range = convertRange(document, decl.location)
 
-      result.push(
-        activated
-          ? new vscode.CodeLens(range, {
-              title: t('maa.pipeline.codelens.resource-activated'),
-              command: ''
-            })
-          : disabled
+        result.push(
+          activated
             ? new vscode.CodeLens(range, {
-                title: t('maa.pipeline.codelens.resource-disabled'),
+                title: t('maa.pipeline.codelens.resource-activated'),
+                command: ''
+              })
+            : disabled
+              ? new vscode.CodeLens(range, {
+                  title: t('maa.pipeline.codelens.resource-disabled'),
+                  command: ''
+                })
+              : new vscode.CodeLens(range, {
+                  title: t('maa.pipeline.codelens.resource-switch'),
+                  command: commands.PISwitchResource,
+                  arguments: [decl.name]
+                })
+        )
+      } else if (decl.type === 'interface.language') {
+        const activated = decl.name === interfaceService.interfaceConfigJson.locale
+
+        const range = convertRange(document, decl.location)
+
+        result.push(
+          activated
+            ? new vscode.CodeLens(range, {
+                title: t('maa.pipeline.codelens.language-activated'),
                 command: ''
               })
             : new vscode.CodeLens(range, {
-                title: t('maa.pipeline.codelens.resource-switch'),
-                command: commands.PISwitchResource,
+                title: t('maa.pipeline.codelens.language-switch'),
+                command: commands.PISwitchLocale,
                 arguments: [decl.name]
               })
-      )
+        )
+      }
     }
 
     return result

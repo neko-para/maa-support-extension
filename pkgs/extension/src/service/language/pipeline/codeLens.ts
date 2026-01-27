@@ -14,7 +14,7 @@ export class PipelineCodeLensProvider
   extends PipelineLanguageProvider
   implements vscode.CodeLensProvider
 {
-  didChangeCodeLenses: vscode.EventEmitter<void>
+  didChangeCodeLenses = new vscode.EventEmitter<void>()
   get onDidChangeCodeLenses() {
     return this.didChangeCodeLenses.event
   }
@@ -26,7 +26,7 @@ export class PipelineCodeLensProvider
       return vscode.languages.registerCodeLensProvider(sel, this)
     })
 
-    this.didChangeCodeLenses = new vscode.EventEmitter()
+    this.defer = this.didChangeCodeLenses
 
     this.fireChangeCodeLenses = debounce(() => {
       this.didChangeCodeLenses.fire()

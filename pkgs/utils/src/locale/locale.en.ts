@@ -46,6 +46,8 @@ export default {
   'maa.pipeline.codelens.resource-switch': 'Switch',
   'maa.pipeline.codelens.resource-activated': 'Activated',
   'maa.pipeline.codelens.resource-disabled': 'Disabled',
+  'maa.pipeline.codelens.language-switch': 'Switch',
+  'maa.pipeline.codelens.language-activated': 'Activated',
 
   'maa.pipeline.error.no-interface-found': 'No interface found',
   'maa.pipeline.error.not-exists': '{0} not exists',

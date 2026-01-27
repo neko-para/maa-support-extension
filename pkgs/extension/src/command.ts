@@ -14,6 +14,7 @@ export const commands = {
   RevealControlPanel: 'maa.reveal-control-panel',
 
   PISwitchResource: 'maa.pi.switch-resource',
+  PISwitchLocale: 'maa.pi.switch-locale',
 
   NativeSelectMaa: 'maa.native.select-maa',
   NativeSelectRegistry: 'maa.native.select-registry',

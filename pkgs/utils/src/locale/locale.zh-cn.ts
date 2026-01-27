@@ -46,6 +46,8 @@ export default {
   'maa.pipeline.codelens.resource-switch': '切换',
   'maa.pipeline.codelens.resource-activated': '已激活',
   'maa.pipeline.codelens.resource-disabled': '已禁用',
+  'maa.pipeline.codelens.language-switch': '切换',
+  'maa.pipeline.codelens.language-activated': '已激活',
 
   'maa.pipeline.error.no-interface-found': '未找到interface',
   'maa.pipeline.error.not-exists': '{0} 不存在',

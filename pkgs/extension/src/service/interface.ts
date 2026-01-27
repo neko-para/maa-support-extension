@@ -57,6 +57,11 @@ export class InterfaceService extends BaseService {
     return this.pipelineChanged.event
   }
 
+  localeChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onLocaleChanged() {
+    return this.localeChanged.event
+  }
+
   constructor() {
     super()
     console.log('construct InterfaceService')
@@ -64,8 +69,10 @@ export class InterfaceService extends BaseService {
     this.interfaceConfigJson = {}
 
     this.defer = this.interfaceChanged
+    this.defer = this.interfaceConfigChanged
     this.defer = this.resourceChanged
     this.defer = this.pipelineChanged
+    this.defer = this.localeChanged
 
     this.defer = {
       dispose: () => {
@@ -122,6 +129,9 @@ export class InterfaceService extends BaseService {
     })
     this.interfaceBundle.on('pipelineChanged', () => {
       this.pipelineChanged.fire()
+    })
+    this.interfaceBundle.on('localeChanged', () => {
+      this.localeChanged.fire()
     })
     await this.interfaceBundle.load()
 

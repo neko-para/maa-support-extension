@@ -1,7 +1,13 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { InterfaceDeclInfo, InterfaceInfo, InterfaceRefInfo } from '@mse/pipeline-manager'
+import {
+  InterfaceDeclInfo,
+  InterfaceInfo,
+  InterfaceRefInfo,
+  isString,
+  parseObject
+} from '@mse/pipeline-manager'
 
 import { interfaceService, rootService } from '../..'
 import { BaseService } from '../../context'
@@ -112,6 +118,36 @@ export class InterfaceLanguageProvider extends BaseService {
         )
         return decls
       }
+    }
+    return null
+  }
+
+  async getLocaleHover(target: string) {
+    const content: string[] = []
+    for (const [idx, loc] of (interfaceService.interfaceBundle?.langs ?? []).entries()) {
+      const id = interfaceService.interfaceBundle?.langFiles[idx][0]
+      if (!loc.node || !id) {
+        continue
+      }
+      let found = false
+      for (const [key, obj, prop] of parseObject(loc.node)) {
+        if (key === target && isString(obj)) {
+          try {
+            const doc = await vscode.workspace.openTextDocument(loc.file)
+            const pos = doc.positionAt(obj.offset)
+            content.push(
+              `| [${id}](${vscode.Uri.file(loc.file)}#L${pos.line + 1}) | ${obj.value} |`
+            )
+            found = true
+          } catch {}
+        }
+      }
+      if (!found) {
+        content.push(`| ${id} | <missing> |`)
+      }
+    }
+    if (content.length > 0) {
+      return `| locale | value |\n| --- | --- |\n${content.join('\n')}`
     }
     return null
   }

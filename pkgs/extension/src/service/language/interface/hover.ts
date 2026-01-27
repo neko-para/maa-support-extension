@@ -29,28 +29,12 @@ export class InterfaceHoverProvider
     const ref = findDeclRef(index.refs, offset)
 
     if (ref?.type === 'interface.locale') {
-      const content: string[] = []
-      for (const [idx, loc] of (interfaceService.interfaceBundle?.langs ?? []).entries()) {
-        const id = interfaceService.interfaceBundle?.langFiles[idx][0]
-        if (!loc.node || !id) {
-          continue
-        }
-        for (const [key, obj, prop] of parseObject(loc.node)) {
-          if (key === ref.target && isString(obj)) {
-            try {
-              const doc = await vscode.workspace.openTextDocument(loc.file)
-              const pos = doc.positionAt(obj.offset)
-              content.push(
-                `| [${id}](${vscode.Uri.file(loc.file)}#L${pos.line + 1}) | ${obj.value} |`
-              )
-            } catch {}
-          }
-        }
+      const hover = await this.getLocaleHover(ref.target)
+      if (hover) {
+        return new vscode.Hover(hover)
+      } else {
+        return null
       }
-      if (content.length > 0) {
-        return new vscode.Hover(`| locale | value |\n| --- | --- |\n${content.join('\n')}`)
-      }
-      return null
     }
 
     return null

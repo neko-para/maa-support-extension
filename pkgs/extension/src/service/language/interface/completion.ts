@@ -2,16 +2,21 @@ import * as vscode from 'vscode'
 
 import { findDeclRef } from '@mse/pipeline-manager'
 
+import { interfaceService } from '../..'
 import { convertRangeWithDelta } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
+type CustomCompletionItem = vscode.CompletionItem & {
+  fillDetail?: () => Promise<string>
+}
+
 export class InterfaceCompletionProvider
   extends InterfaceLanguageProvider
-  implements vscode.CompletionItemProvider
+  implements vscode.CompletionItemProvider<CustomCompletionItem>
 {
   constructor() {
     super(sel => {
-      return vscode.languages.registerCompletionItemProvider(sel, this, '"')
+      return vscode.languages.registerCompletionItemProvider(sel, this, ...'"$'.split(''))
     })
   }
 
@@ -20,7 +25,7 @@ export class InterfaceCompletionProvider
     position: vscode.Position,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext
-  ): Promise<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem> | null> {
+  ): Promise<CustomCompletionItem[] | null> {
     const index = await this.flushIndex()
     if (!index) {
       return []
@@ -34,7 +39,7 @@ export class InterfaceCompletionProvider
     }
 
     if (ref.type === 'interface.option') {
-      const range = convertRangeWithDelta(document, ref.location, -1)
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
 
       const opts = index.decls
         .filter(decl => decl.type === 'interface.option')
@@ -42,14 +47,72 @@ export class InterfaceCompletionProvider
       return opts.map(name => {
         const esc = JSON.stringify(name)
         return {
-          label: esc,
+          label: name,
           kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(0, esc.length - 1),
+          insertText: esc.substring(1, esc.length - 1),
           range
+        }
+      })
+    } else if (ref.type === 'interface.controller') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.controller')
+        .map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
+    } else if (ref.type === 'interface.resource') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.resource')
+        .map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
+    } else if (ref.type === 'interface.locale') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 2)
+
+      const intBundle = interfaceService.interfaceBundle!
+      const keys = [...new Set(intBundle.langs.map(kvs => Object.keys(kvs.object ?? {})).flat())]
+
+      return keys.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Constant,
+          insertText: esc.substring(1, esc.length - 1),
+          range,
+          fillDetail: async () => {
+            return (await this.getLocaleHover(name)) ?? ''
+          }
         }
       })
     }
 
     return null
+  }
+
+  async resolveCompletionItem(
+    item: CustomCompletionItem,
+    token: vscode.CancellationToken
+  ): Promise<CustomCompletionItem> {
+    if (item.fillDetail) {
+      item.documentation = new vscode.MarkdownString(await item.fillDetail())
+    }
+    return item
   }
 }

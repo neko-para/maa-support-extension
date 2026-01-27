@@ -98,10 +98,19 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.file = joinPath(this.root, file)
 
     this.content = new ContentJson(loader, watcher, this.file, () => {
-      if (this.contentDebouncerTimer) {
-        clearTimeout(this.contentDebouncerTimer)
+      if (this.content.node) {
+        this.info = parseInterface(this.content.loader, this.content.node, {
+          maa: this.maa,
+          file: this.file
+        })
+        if (this.bundles.length > 0) {
+          this.info.layer = this.bundles[this.bundles.length - 1].layer
+        }
+      } else {
+        this.info = undefined
       }
-      this.contentDebouncerTimer = setTimeout(() => this.doContentChanged(), debounce)
+
+      this.emit('interfaceChanged')
     })
 
     this.active = ''
@@ -172,22 +181,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     if (flushBundles) {
       await Promise.all(this.bundles.map(bundle => bundle.flush()))
     }
-  }
-
-  doContentChanged() {
-    if (this.content.node) {
-      this.info = parseInterface(this.content.loader, this.content.node, {
-        maa: this.maa,
-        file: this.file
-      })
-      if (this.bundles.length > 0) {
-        this.info.layer = this.bundles[this.bundles.length - 1].layer
-      }
-    } else {
-      this.info = undefined
-    }
-
-    this.emit('interfaceChanged')
   }
 
   switchActive(active: string) {

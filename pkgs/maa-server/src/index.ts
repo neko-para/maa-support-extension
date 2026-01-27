@@ -2,8 +2,9 @@ import { initMaa } from './maa'
 import { initServer } from './server'
 
 async function main() {
-  initMaa()
+  console.log(process.argv.slice(2))
   await initServer()
+  initMaa()
 }
 
 main()

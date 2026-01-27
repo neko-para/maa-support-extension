@@ -20,3 +20,4 @@ export const setupInstReq = new rpc.RequestType<
   },
   undefined
 >('setupInst')
+export const getScreencapReq = new rpc.RequestType<null, string | null, undefined>('getScreencap')

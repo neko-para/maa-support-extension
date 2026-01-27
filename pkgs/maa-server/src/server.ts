@@ -1,9 +1,15 @@
 import * as net from 'node:net'
 import * as rpc from 'vscode-jsonrpc/node'
 
-import { initNoti, logNoti, setupInstReq, updateCtrlReq } from '@mse/maa-server-proto'
+import {
+  getScreencapReq,
+  initNoti,
+  logNoti,
+  setupInstReq,
+  updateCtrlReq
+} from '@mse/maa-server-proto'
 
-import { setupInst, updateCtrl } from './maa'
+import { getScreencap, setupInst, updateCtrl } from './maa'
 
 function makePromise<T>() {
   let res: (value: T) => void = () => {}
@@ -18,21 +24,22 @@ let conn: rpc.MessageConnection | undefined
 export async function initServer() {
   const [promise, resolve] = makePromise<boolean>()
 
-  console.log('port', process.argv[2])
-  console.log('id', process.argv[3])
-
   const socket = new net.Socket()
   socket.connect(
     {
       host: '127.0.0.1',
-      port: parseInt(process.argv[2])
+      port: parseInt(process.argv[3])
     },
     () => {
+      socket.on('data', data => {
+        console.log(data.toString())
+      })
+
       conn = rpc.createMessageConnection(socket, socket)
 
       conn.listen()
 
-      conn.sendNotification(initNoti, process.argv[3])
+      conn.sendNotification(initNoti, process.argv[4])
 
       conn.onRequest(updateCtrlReq, rt => {
         return updateCtrl(rt)
@@ -41,6 +48,12 @@ export async function initServer() {
       conn.onRequest(setupInstReq, rt => {
         return setupInst(rt)
       })
+
+      conn.onRequest(getScreencapReq, () => {
+        return getScreencap()
+      })
+
+      resolve(true)
     }
   )
   socket.on('error', () => {

@@ -2,6 +2,7 @@ node_modules
 /release/out
 /release/server
 /release/webview
+/release/*.ps1
 
 azure.token
 

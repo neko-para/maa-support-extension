@@ -8,10 +8,10 @@ import type { InterfaceRuntime } from '@mse/types'
 import { sendLog } from './server'
 
 export function initMaa() {
-  module.paths.unshift(process.env['MSE_MAA_LOCATION']!)
+  module.paths.unshift(process.argv[2])
   require('@maaxyz/maa-node')
 
-  console.log(maa.Global.version)
+  sendLog(maa.Global.version)
 }
 
 type InstanceCache = {
@@ -303,5 +303,17 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
 
   return {
     handle
+  }
+}
+
+export async function getScreencap() {
+  if (!cache) {
+    return null
+  }
+  const image = await cache.controller.post_screencap().wait().get()
+  if (image) {
+    return Buffer.from(image).toString('base64')
+  } else {
+    return null
   }
 }

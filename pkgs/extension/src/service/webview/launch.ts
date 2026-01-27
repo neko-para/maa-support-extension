@@ -7,20 +7,19 @@ import { nativeService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
-import { TaskerInstance, stopAgent } from '../launch'
 import { toPngDataUrl } from '../utils/png'
 import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
-  instance: TaskerInstance
+  instance: string
   knownTasks: string[]
   stopped: boolean = false
 
   paused: boolean = false
   pausedResolve?: () => void
 
-  constructor(instance: TaskerInstance, title: string, viewColumn?: vscode.ViewColumn) {
+  constructor(instance: string, title: string, viewColumn?: vscode.ViewColumn) {
     super({
       context,
       folder: 'webview',
@@ -34,15 +33,17 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     })
 
     this.instance = instance
-    this.knownTasks = this.instance.resource.node_list ?? []
+    // TODO: query known tasks
+    // this.knownTasks = this.instance.resource.node_list ?? []
+    this.knownTasks = []
     this.knownTasks.sort()
 
-    this.instance.tasker.add_sink(async (_, msg) => {
-      await this.pushNotify(msg)
-    })
-    this.instance.tasker.add_context_sink(async (_, msg) => {
-      await this.pushNotify(msg)
-    })
+    // this.instance.tasker.add_sink(async (_, msg) => {
+    //   await this.pushNotify(msg)
+    // })
+    // this.instance.tasker.add_context_sink(async (_, msg) => {
+    //   await this.pushNotify(msg)
+    // })
   }
 
   dispose() {
@@ -50,9 +51,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
 
     this.send = () => {}
     this.stop().then(() => {
-      this.instance.tasker.destroy()
-      this.instance.resource.destroy()
-      stopAgent(this.instance.agent)
+      // this.instance.tasker.destroy()
+      // this.instance.resource.destroy()
+      // stopAgent(this.instance.agent)
     })
   }
 
@@ -66,39 +67,39 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'requestReco': {
-        const detailInfo = this.instance.tasker.recognition_detail(
-          data.reco_id.toString() as maa.RecoId
-        )
-        if (!detailInfo) {
-          this.response(data.seq, null)
-          break
-        }
-        const info = {
-          ...detailInfo
-        } as Partial<typeof detailInfo>
-        delete info.raw
-        delete info.draws
-        this.response(data.seq, {
-          raw: toPngDataUrl(detailInfo.raw),
-          draws: detailInfo.draws.map(toPngDataUrl),
-          info
-        })
+        // const detailInfo = this.instance.tasker.recognition_detail(
+        //   data.reco_id.toString() as maa.RecoId
+        // )
+        // if (!detailInfo) {
+        //   this.response(data.seq, null)
+        //   break
+        // }
+        // const info = {
+        //   ...detailInfo
+        // } as Partial<typeof detailInfo>
+        // delete info.raw
+        // delete info.draws
+        // this.response(data.seq, {
+        //   raw: toPngDataUrl(detailInfo.raw),
+        //   draws: detailInfo.draws.map(toPngDataUrl),
+        //   info
+        // })
         break
       }
       case 'requestAct': {
-        const detailInfo = this.instance.tasker.action_detail(
-          data.action_id.toString() as maa.ActId
-        )
-        if (!detailInfo) {
-          this.response(data.seq, null)
-          break
-        }
-        this.response(data.seq, detailInfo)
+        // const detailInfo = this.instance.tasker.action_detail(
+        //   data.action_id.toString() as maa.ActId
+        // )
+        // if (!detailInfo) {
+        //   this.response(data.seq, null)
+        //   break
+        // }
+        // this.response(data.seq, detailInfo)
         break
       }
       case 'requestNode': {
-        const nodeData = this.instance.tasker.resource?.get_node_data(data.node) ?? null
-        this.response(data.seq, nodeData)
+        // const nodeData = this.instance.tasker.resource?.get_node_data(data.node) ?? null
+        // this.response(data.seq, nodeData)
         break
       }
       case 'requestPause':
@@ -153,7 +154,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     }
     this.stopped = true
     this.cont()
-    await this.instance.tasker.post_stop().wait()
+    // await this.instance.tasker.post_stop().wait()
   }
 
   finish() {

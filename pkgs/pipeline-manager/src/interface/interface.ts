@@ -17,13 +17,8 @@ import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import type { LayerInfo } from '../layer/layer'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
-import {
-  type AbsolutePath,
-  type RelativePath,
-  type TaskName,
-  joinPath,
-  relativePath
-} from '../utils/types'
+import { isString, parseObject } from '../parser/utils'
+import { type AbsolutePath, type RelativePath, type TaskName, joinPath } from '../utils/types'
 
 class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
   intBundle: InterfaceBundle<T>
@@ -74,6 +69,16 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   langFiles: [string, RelativePath][]
   langs: ContentJson<Record<string, string>>[]
+  langIndex: Record<
+    string,
+    {
+      location: Node
+      locale: string
+      localeIndex: number
+      prop: Node
+      value: string
+    }[]
+  >
 
   eval: MaaEvalDelegateImpl<T>
 
@@ -119,6 +124,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     this.langFiles = []
     this.langs = []
+    this.langIndex = {}
 
     this.eval = new MaaEvalDelegateImpl(this)
 
@@ -236,7 +242,9 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
           this.content.loader,
           this.content.watcher,
           joinPath(this.root, file),
-          () => {}
+          () => {
+            this.buildLangIndex()
+          }
         )
       })
     } else {
@@ -248,6 +256,26 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     }
 
     this.emit('langChanged')
+  }
+
+  buildLangIndex() {
+    this.langIndex = {}
+    for (const [index, [locale]] of this.langFiles.entries()) {
+      const lang = this.langs[index]
+      for (const [key, obj, prop] of parseObject(lang.node)) {
+        if (!isString(obj)) {
+          continue
+        }
+        this.langIndex[key] = this.langIndex[key] ?? []
+        this.langIndex[key].push({
+          location: obj,
+          locale,
+          localeIndex: index,
+          prop,
+          value: obj.value
+        })
+      }
+    }
   }
 
   locateLayer(

@@ -3,6 +3,7 @@ import { v4 } from 'uuid'
 import * as rpc from 'vscode-jsonrpc/node'
 
 import { initNoti } from '@mse/maa-server-proto'
+import { logger } from '@mse/utils'
 
 import { ProcessManager } from './process'
 import { makePromise } from './promise'
@@ -29,8 +30,6 @@ export class RpcManager {
     this.script = script
     this.admin = admin
     this.id = v4()
-
-    this.server = net.createServer()
   }
 
   async ensureServer() {
@@ -46,6 +45,7 @@ export class RpcManager {
       if (!this.server) {
         this.server = server
         resolve(true)
+        logger.info(`server listen at ${this.port}`)
       } else {
         server.close()
         resolve(false)
@@ -64,7 +64,7 @@ export class RpcManager {
   }
 
   async ensureConnection(args: Record<string, unknown>) {
-    if (!this.ensureServer()) {
+    if (!(await this.ensureServer())) {
       return false
     }
 
@@ -81,10 +81,12 @@ export class RpcManager {
     const [promise, resolve] = makePromise<boolean>()
 
     const setupConnection = (socket: net.Socket) => {
+      logger.info('connection established')
       const conn = rpc.createMessageConnection(socket, socket)
 
       conn.onNotification(initNoti, clientId => {
         if (!this.conn && clientId === this.id) {
+          logger.info('rpc setup')
           this.conn = conn
           resolve(true)
         } else {
@@ -96,6 +98,7 @@ export class RpcManager {
       conn.listen()
 
       socket.on('close', () => {
+        logger.info('connection lost')
         if (conn == this.conn) {
           this.proc?.kill()
           this.proc?.clean?.()

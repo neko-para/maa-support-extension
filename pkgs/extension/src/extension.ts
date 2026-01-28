@@ -47,8 +47,6 @@ export async function activate(context: vscode.ExtensionContext) {
     return
   }
 
-  serverService.ensureServer()
-
   statusBarService.showMaaStatus(nativeService.version)
 
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)

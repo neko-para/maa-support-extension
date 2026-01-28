@@ -1,14 +1,9 @@
 import * as net from 'node:net'
 import * as rpc from 'vscode-jsonrpc/node'
 
-import {
-  getScreencapReq,
-  initNoti,
-  logNoti,
-  setupInstReq,
-  updateCtrlReq
-} from '@mse/maa-server-proto'
+import { initNoti, logNoti } from '@mse/maa-server-proto'
 
+import { ipc, setupIpc } from './apis'
 import { getScreencap, setupInst, updateCtrl } from './maa'
 import { option } from './options'
 
@@ -32,27 +27,20 @@ export async function initServer() {
       port: option.port
     },
     () => {
-      socket.on('data', data => {
-        console.log(data.toString())
-      })
-
       conn = rpc.createMessageConnection(socket, socket)
 
       conn.listen()
 
       conn.sendNotification(initNoti, option.id)
 
-      conn.onRequest(updateCtrlReq, rt => {
-        return updateCtrl(rt)
-      })
+      setupIpc(conn)
 
-      conn.onRequest(setupInstReq, rt => {
-        return setupInst(rt)
-      })
-
-      conn.onRequest(getScreencapReq, () => {
-        return getScreencap()
-      })
+      ipc.updateController = updateCtrl
+      ipc.setupInstance = setupInst
+      ipc.getScreencap = getScreencap
+      ipc.refreshAdb = async () => {
+        return (await maa.AdbController.find()) ?? []
+      }
 
       resolve(true)
     }

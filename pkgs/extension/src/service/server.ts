@@ -1,4 +1,11 @@
-import { getScreencapReq, logNoti, setupInstReq, updateCtrlReq } from '@mse/maa-server-proto'
+import {
+  HostToSubApis,
+  MarkApis,
+  SubToHostApis,
+  hostToSubReq,
+  logNoti,
+  subToHostReq
+} from '@mse/maa-server-proto'
 import { InterfaceRuntime } from '@mse/types'
 import { logger } from '@mse/utils'
 
@@ -6,22 +13,24 @@ import { nativeService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
 
+type IpcType = MarkApis<SubToHostApis, HostToSubApis>
+
 export class ServerService extends BaseService {
   rpc: RpcManager
+  ipc: IpcType | null
 
   constructor() {
     super()
     console.log('construct ServerService')
 
     this.rpc = new RpcManager(context.asAbsolutePath('server/index.js'), true)
+    this.ipc = null
   }
 
   async init() {
     console.log('init ServerService')
 
-    this.rpc.ensureConnection({
-      module: nativeService.activeModulePath
-    })
+    this.setupServer()
   }
 
   async setupServer() {
@@ -34,6 +43,36 @@ export class ServerService extends BaseService {
       this.rpc.conn.onNotification(logNoti, msg => {
         logger.info(msg)
       })
+
+      const conn = this.rpc.conn
+
+      conn.onRequest(subToHostReq, (method, args) => {
+        return (this.ipc as any).$[method](...args)
+      })
+
+      const handlers: Record<string, Function> = {}
+
+      this.ipc = new Proxy(
+        {},
+        {
+          get(_, key) {
+            if (key === 'then') {
+              return undefined
+            } else if (key === '$') {
+              return handlers
+            } else {
+              return (...args: unknown[]) => {
+                return conn.sendRequest(hostToSubReq, key, args)
+              }
+            }
+          },
+          set(_, key: string, val) {
+            handlers[key] = val
+            return true
+          }
+        }
+      ) as IpcType
+
       return true
     } else {
       return false
@@ -46,7 +85,8 @@ export class ServerService extends BaseService {
         return null
       }
     }
-    return this.rpc.conn ?? null
+
+    return this.ipc ?? null
   }
 
   async updateCtrl(rt: InterfaceRuntime['controller_param']) {
@@ -55,7 +95,7 @@ export class ServerService extends BaseService {
       return false
     }
 
-    return await conn.sendRequest(updateCtrlReq, rt)
+    return await conn.updateController(rt)
   }
 
   async setupInst(rt: InterfaceRuntime) {
@@ -64,7 +104,7 @@ export class ServerService extends BaseService {
       return { error: 'server start failed' }
     }
 
-    return await conn.sendRequest(setupInstReq, rt)
+    return await conn.setupInstance(rt)
   }
 
   async getScreencap() {
@@ -73,6 +113,15 @@ export class ServerService extends BaseService {
       return null
     }
 
-    return await conn.sendRequest(getScreencapReq, null)
+    return await conn.getScreencap()
+  }
+
+  async refreshAdb() {
+    const conn = await this.ensureServer()
+    if (!conn) {
+      return []
+    }
+
+    return await conn.refreshAdb()
   }
 }

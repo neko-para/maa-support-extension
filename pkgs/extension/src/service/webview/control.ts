@@ -11,6 +11,7 @@ import {
   launchService,
   nativeService,
   rootService,
+  serverService,
   stateService,
   statusBarService
 } from '..'
@@ -108,7 +109,7 @@ export class WebviewControlService extends BaseService {
           })
           break
         case 'refreshAdb':
-          this.provider?.response(data.seq, await maa.AdbController.find())
+          this.provider?.response(data.seq, await serverService.refreshAdb())
           break
         case 'refreshDesktop':
           this.provider?.response(data.seq, await maa.Win32Controller.find())

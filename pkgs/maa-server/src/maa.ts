@@ -5,10 +5,11 @@ import { v4 } from 'uuid'
 
 import type { InterfaceRuntime } from '@mse/types'
 
+import { option } from './options'
 import { sendLog } from './server'
 
 export function initMaa() {
-  module.paths.unshift(process.argv[2])
+  module.paths.unshift(option.module)
   require('@maaxyz/maa-node')
 
   sendLog(maa.Global.version)

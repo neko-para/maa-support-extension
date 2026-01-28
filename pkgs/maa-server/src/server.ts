@@ -10,6 +10,7 @@ import {
 } from '@mse/maa-server-proto'
 
 import { getScreencap, setupInst, updateCtrl } from './maa'
+import { option } from './options'
 
 function makePromise<T>() {
   let res: (value: T) => void = () => {}
@@ -28,7 +29,7 @@ export async function initServer() {
   socket.connect(
     {
       host: '127.0.0.1',
-      port: parseInt(process.argv[3])
+      port: option.port
     },
     () => {
       socket.on('data', data => {
@@ -39,7 +40,7 @@ export async function initServer() {
 
       conn.listen()
 
-      conn.sendNotification(initNoti, process.argv[4])
+      conn.sendNotification(initNoti, option.id)
 
       conn.onRequest(updateCtrlReq, rt => {
         return updateCtrl(rt)

@@ -1,8 +1,9 @@
 import { initMaa } from './maa'
+import { initOptions } from './options'
 import { initServer } from './server'
 
 async function main() {
-  console.log(process.argv.slice(2))
+  initOptions()
   await initServer()
   initMaa()
 }

@@ -3,15 +3,17 @@ import * as vscode from 'vscode'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, locale } from '@mse/utils'
 
-import { nativeService, stateService } from '..'
+import { nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
+import { IpcType } from '../server'
 import { toPngDataUrl } from '../utils/png'
 import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
+  ipc: IpcType
   instance: string
   knownTasks: string[]
   stopped: boolean = false
@@ -19,7 +21,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
   paused: boolean = false
   pausedResolve?: () => void
 
-  constructor(instance: string, title: string, viewColumn?: vscode.ViewColumn) {
+  constructor(ipc: IpcType, instance: string, title: string, viewColumn?: vscode.ViewColumn) {
     super({
       context,
       folder: 'webview',
@@ -32,18 +34,15 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       dev: isLaunchDev
     })
 
+    this.ipc = ipc
     this.instance = instance
-    // TODO: query known tasks
-    // this.knownTasks = this.instance.resource.node_list ?? []
     this.knownTasks = []
-    this.knownTasks.sort()
 
-    // this.instance.tasker.add_sink(async (_, msg) => {
-    //   await this.pushNotify(msg)
-    // })
-    // this.instance.tasker.add_context_sink(async (_, msg) => {
-    //   await this.pushNotify(msg)
-    // })
+    this.setup()
+  }
+
+  async setup() {
+    this.knownTasks = (await this.ipc.getKnownTasks(this.instance)) ?? []
   }
 
   dispose() {
@@ -51,10 +50,10 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
 
     this.send = () => {}
     this.stop().then(() => {
-      // this.instance.tasker.destroy()
-      // this.instance.resource.destroy()
-      // stopAgent(this.instance.agent)
+      this.ipc.destroyInstance(this.instance)
     })
+
+    delete serverService.instMap[this.instance]
   }
 
   async recv(data: WebToHost<LaunchWebToHost>) {
@@ -154,7 +153,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     }
     this.stopped = true
     this.cont()
-    // await this.instance.tasker.post_stop().wait()
+    await this.ipc.postStop(this.instance)
   }
 
   finish() {

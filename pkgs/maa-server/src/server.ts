@@ -4,7 +4,15 @@ import * as rpc from 'vscode-jsonrpc/node'
 import { initNoti, logNoti } from '@mse/maa-server-proto'
 
 import { ipc, setupIpc } from './apis'
-import { getScreencap, setupInst, updateCtrl } from './maa'
+import {
+  destroyInstance,
+  getKnownTasks,
+  getScreencap,
+  postStop,
+  postTask,
+  setupInst,
+  updateCtrl
+} from './maa'
 import { option } from './options'
 
 function makePromise<T>() {
@@ -41,6 +49,13 @@ export async function initServer() {
       ipc.refreshAdb = async () => {
         return (await maa.AdbController.find()) ?? []
       }
+      ipc.refreshDesktop = async () => {
+        return (await maa.Win32Controller.find()) ?? []
+      }
+      ipc.postTask = postTask
+      ipc.postStop = postStop
+      ipc.getKnownTasks = getKnownTasks
+      ipc.destroyInstance = destroyInstance
 
       resolve(true)
     }

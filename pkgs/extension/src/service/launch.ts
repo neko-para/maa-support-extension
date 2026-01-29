@@ -39,7 +39,8 @@ export class LaunchService extends BaseService {
       return false
     }
 
-    return await serverService.updateCtrl(runtime)
+    const ipc = await serverService.ensureServer()
+    return (await ipc?.updateController(runtime)) ?? false
   }
 
   async setupInstance(runtime: InterfaceRuntime): Promise<[boolean, string]> {
@@ -47,7 +48,8 @@ export class LaunchService extends BaseService {
       return [false, t('maa.debug.init-controller-failed')]
     }
 
-    const result = await serverService.setupInst(runtime)
+    const ipc = await serverService.ensureServer()
+    const result = (await ipc?.setupInstance(runtime)) ?? { error: 'ipc error' }
     if (result.error || !result.handle) {
       return [false, result.error ?? 'no handle']
     }
@@ -65,6 +67,11 @@ export class LaunchService extends BaseService {
   }
 
   async launchRuntimeImpl(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
+    const ipc = await serverService.ensureServer()
+    if (!ipc) {
+      return
+    }
+
     const session = await debugService.startSession()
 
     const [setupSuccess, errorOrHandle] = await this.setupInstance(runtime)
@@ -84,7 +91,7 @@ export class LaunchService extends BaseService {
     session.pushMessage(t('maa.debug.init-instance-succeeded'))
     session.pushContinued()
 
-    const panel = new WebviewLaunchPanel(errorOrHandle, 'maa launch')
+    const panel = new WebviewLaunchPanel(ipc, errorOrHandle, 'maa launch')
     await panel.init()
 
     session.handlePause = async () => {
@@ -99,29 +106,15 @@ export class LaunchService extends BaseService {
       await panel.stop()
     }
 
-    const mergeParams = (data: unknown[]) => {
-      // 目前空数组override会失败，临时修复下
-      if (data.length === 0) {
-        return {}
-      }
-      return data as Record<string, unknown>[]
-    }
-    // const mergeParam = (data?: unknown) => {
-    //   for (const [task, opt] of Object.entries((data as Record<string, unknown>) ?? {})) {
-    //     param[task] = Object.assign(param[task] ?? {}, opt)
-    //   }
-    // }
-
     for (const task of tasks ?? runtime.task) {
       session.pushMessage(t('maa.debug.task-started', task.name, task.entry))
-      // const succeeded = await tasker.tasker
-      //   .post_task(task.entry, mergeParams(task.pipeline_override))
-      //   .wait().succeeded
-      // session.pushMessage(
-      //   succeeded
-      //     ? t('maa.debug.task-finished', task.name, task.entry)
-      //     : t('maa.debug.task-failed', task.name, task.entry)
-      // )
+      const succeeded =
+        (await ipc.postTask(errorOrHandle, task.entry, task.pipeline_override)) ?? false
+      session.pushMessage(
+        succeeded
+          ? t('maa.debug.task-finished', task.name, task.entry)
+          : t('maa.debug.task-failed', task.name, task.entry)
+      )
     }
     panel.finish()
 

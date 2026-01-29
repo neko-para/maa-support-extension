@@ -108,12 +108,16 @@ export class WebviewControlService extends BaseService {
               : undefined
           })
           break
-        case 'refreshAdb':
-          this.provider?.response(data.seq, await serverService.refreshAdb())
+        case 'refreshAdb': {
+          const ipc = await serverService.ensureServer()
+          this.provider?.response(data.seq, (await ipc?.refreshAdb()) ?? [])
           break
-        case 'refreshDesktop':
-          this.provider?.response(data.seq, await maa.Win32Controller.find())
+        }
+        case 'refreshDesktop': {
+          const ipc = await serverService.ensureServer()
+          this.provider?.response(data.seq, (await ipc?.refreshDesktop()) ?? [])
           break
+        }
         case 'configAdb':
           interfaceService.reduceConfig({
             adb: {

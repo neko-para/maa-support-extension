@@ -1,7 +1,7 @@
 import type { InterfaceRuntime } from '@mse/types'
 
 type MarkReturnPromise<Func> = Func extends (...args: infer Args) => infer Ret
-  ? (...args: Args) => Ret | Promise<Ret>
+  ? (...args: Args) => Promise<Awaited<Ret> | null>
   : Func
 
 export type HostToSubApis = {
@@ -13,10 +13,16 @@ export type HostToSubApis = {
   getScreencap: () => string | null
 
   refreshAdb: () => maa.AdbDevice[]
+  refreshDesktop: () => maa.DesktopDevice[]
+
+  postTask: (inst: string, task: string, pipeline_override: Record<string, unknown>[]) => boolean
+  postStop: (inst: string) => void
+  getKnownTasks: (inst: string) => string[]
+  destroyInstance: (inst: string) => void
 }
 
 export type SubToHostApis = {
-  test: () => void
+  pushNotify: (inst: string, msg: unknown) => void
 }
 
 export type MarkApisImpl<T> = {

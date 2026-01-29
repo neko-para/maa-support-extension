@@ -12,12 +12,15 @@ import { logger } from '@mse/utils'
 import { nativeService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
+import { WebviewLaunchPanel } from './webview/launch'
 
-type IpcType = MarkApis<SubToHostApis, HostToSubApis>
+export type IpcType = MarkApis<SubToHostApis, HostToSubApis>
 
 export class ServerService extends BaseService {
   rpc: RpcManager
   ipc: IpcType | null
+
+  instMap: Record<string, WebviewLaunchPanel>
 
   constructor() {
     super()
@@ -25,6 +28,8 @@ export class ServerService extends BaseService {
 
     this.rpc = new RpcManager(context.asAbsolutePath('server/index.js'), true)
     this.ipc = null
+
+    this.instMap = {}
   }
 
   async init() {
@@ -75,6 +80,10 @@ export class ServerService extends BaseService {
         }
       ) as IpcType
 
+      this.ipc.pushNotify = async (inst, msg) => {
+        await this.instMap[inst]?.pushNotify(msg as any)
+      }
+
       return true
     } else {
       return false
@@ -89,41 +98,5 @@ export class ServerService extends BaseService {
     }
 
     return this.ipc ?? null
-  }
-
-  async updateCtrl(rt: InterfaceRuntime['controller_param']) {
-    const conn = await this.ensureServer()
-    if (!conn) {
-      return false
-    }
-
-    return await conn.updateController(rt)
-  }
-
-  async setupInst(rt: InterfaceRuntime) {
-    const conn = await this.ensureServer()
-    if (!conn) {
-      return { error: 'server start failed' }
-    }
-
-    return await conn.setupInstance(rt)
-  }
-
-  async getScreencap() {
-    const conn = await this.ensureServer()
-    if (!conn) {
-      return null
-    }
-
-    return await conn.getScreencap()
-  }
-
-  async refreshAdb() {
-    const conn = await this.ensureServer()
-    if (!conn) {
-      return []
-    }
-
-    return await conn.refreshAdb()
   }
 }

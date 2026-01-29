@@ -5,6 +5,7 @@ import { v4 } from 'uuid'
 
 import type { InterfaceRuntime } from '@mse/types'
 
+import { ipc } from './apis'
 import { option } from './options'
 import { sendLog } from './server'
 
@@ -298,6 +299,13 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
   const handle = v4()
   taskerMap[handle] = taskerInst
 
+  taskerInst.tasker.add_sink(async (_, msg) => {
+    await ipc.pushNotify(handle, msg)
+  })
+  taskerInst.tasker.add_context_sink(async (_, msg) => {
+    await ipc.pushNotify(handle, msg)
+  })
+
   cache = undefined
   cacheKey = undefined
   taskerInst = undefined
@@ -317,4 +325,49 @@ export async function getScreencap() {
   } else {
     return null
   }
+}
+
+export async function postTask(
+  id: string,
+  task: string,
+  pipeline_override: Record<string, unknown>[]
+) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return false
+  }
+
+  return await inst.tasker.post_task(task, pipeline_override).wait().succeeded
+}
+
+export async function postStop(id: string) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return
+  }
+
+  await inst.tasker.post_stop().wait()
+}
+
+export async function getKnownTasks(id: string) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return []
+  }
+
+  return (inst.resource.node_list ?? []).sort()
+}
+
+export async function destroyInstance(id: string) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return
+  }
+
+  delete taskerMap[id]
+
+  inst.tasker.destroy()
+  inst.resource.destroy()
+  inst.controller.destroy()
+  // stopAgent(inst.agent)
 }

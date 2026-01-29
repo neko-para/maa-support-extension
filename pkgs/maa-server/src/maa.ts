@@ -14,6 +14,8 @@ export function initMaa() {
   require('@maaxyz/maa-node')
 
   sendLog(maa.Global.version)
+  maa.Global.debug_mode = true
+  maa.Global.log_dir = option.maaLog
 }
 
 type InstanceCache = {

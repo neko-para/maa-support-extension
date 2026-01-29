@@ -2,6 +2,7 @@ export let option: {
   id: string
   port: number
   module: string
+  maaLog: string
 }
 
 export function initOptions() {

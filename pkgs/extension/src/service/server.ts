@@ -41,7 +41,8 @@ export class ServerService extends BaseService {
   async setupServer() {
     if (
       (await this.rpc.ensureConnection({
-        module: nativeService.activeModulePath
+        module: nativeService.activeModulePath,
+        maaLog: (context.storageUri ?? context.globalStorageUri).fsPath
       })) &&
       this.rpc.conn
     ) {

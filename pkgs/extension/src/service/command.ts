@@ -4,7 +4,7 @@ import { TaskDeclInfo } from '@mse/pipeline-manager'
 import { t } from '@mse/utils'
 import { MaaTaskExpr, TaskExprProps, TaskExprPropsVirtsMap, shouldStrip } from '@nekosu/maa-tasker'
 
-import { interfaceService, launchService, rootService, stateService } from '.'
+import { interfaceService, launchService, rootService, serverService, stateService } from '.'
 import { commands } from '../command'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
@@ -66,8 +66,11 @@ export class CommandService extends BaseService {
       })
     })
 
-    this.defer = vscode.commands.registerCommand(commands.OpenCrop, () => {
-      new WebviewCropPanel('Maa Crop').init()
+    this.defer = vscode.commands.registerCommand(commands.OpenCrop, async () => {
+      const ipc = await serverService.ensureServer()
+      if (ipc) {
+        new WebviewCropPanel(ipc, 'Maa Crop').init()
+      }
     })
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async (task?: string) => {

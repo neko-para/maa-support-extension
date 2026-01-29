@@ -11,6 +11,8 @@ export type HostToSubApis = {
     error?: string
   }
   getScreencap: () => string | null
+  performOcr: (isMaa: boolean, image: string, roi: maa.Rect, resources: string[]) => string
+  performTemplateMatch: (image: string, roi: maa.Rect, threshold: number) => string
 
   refreshAdb: () => maa.AdbDevice[]
   refreshDesktop: () => maa.DesktopDevice[]

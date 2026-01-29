@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises'
 import path from 'path'
 import * as vscode from 'vscode'
 
@@ -13,16 +14,17 @@ import {
   stateService
 } from '..'
 import { Jimp } from '../../tools/jimp'
-import { performOcr } from '../../tools/ocr'
 import { performReco } from '../../tools/reco'
-import { performTemplateMatch } from '../../tools/templateMatch'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
+import { IpcType } from '../server'
 import { fromPngDataUrl, toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
 
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
-  constructor(title: string, viewColumn?: vscode.ViewColumn) {
+  ipc: IpcType
+
+  constructor(ipc: IpcType, title: string, viewColumn?: vscode.ViewColumn) {
     super({
       context,
       folder: 'webview',
@@ -34,6 +36,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       iconPath: 'images/logo.png',
       dev: isCropDev
     })
+
+    this.ipc = ipc
   }
 
   dispose() {
@@ -51,7 +55,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           break
         }
         if (await launchService.updateCache()) {
-          const image = await serverService.getScreencap()
+          const image = await this.ipc.getScreencap()
           if (!image) {
             this.response(data.seq, null)
             break
@@ -139,8 +143,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         }
         let result = null
         try {
-          result = await performOcr(
-            fromPngDataUrl(data.image),
+          result = await this.ipc.performOcr(
+            isMaaAssistantArknights,
+            data.image.replace('data:image/png;base64,', ''),
             data.roi,
             resources.map(u => u.fsPath)
           )
@@ -151,10 +156,28 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         break
       }
       case 'requestTemplateMatch': {
+        const targetPath = await vscode.window.showOpenDialog({
+          filters: {
+            Images: ['png']
+          },
+          defaultUri: stateService.state.uploadDir
+            ? vscode.Uri.file(stateService.state.uploadDir)
+            : undefined
+        })
+        if (!targetPath || targetPath.length !== 1) {
+          return null
+        }
+
+        stateService.reduce({
+          uploadDir: path.dirname(targetPath[0].fsPath)
+        })
+
+        const target = await fs.readFile(targetPath[0].fsPath)
+
         let result = null
         try {
-          result = await performTemplateMatch(
-            fromPngDataUrl(data.image),
+          result = await this.ipc.performTemplateMatch(
+            target.toString('base64'),
             data.roi,
             data.threshold ?? 0.8
           )

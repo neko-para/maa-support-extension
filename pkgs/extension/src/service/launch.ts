@@ -109,7 +109,11 @@ export class LaunchService extends BaseService {
     for (const task of tasks ?? runtime.task) {
       session.pushMessage(t('maa.debug.task-started', task.name, task.entry))
       const succeeded =
-        (await ipc.postTask(errorOrHandle, task.entry, task.pipeline_override)) ?? false
+        (await ipc.postTask(
+          errorOrHandle,
+          task.entry,
+          task.pipeline_override as Record<string, unknown>[]
+        )) ?? false
       session.pushMessage(
         succeeded
           ? t('maa.debug.task-finished', task.name, task.entry)

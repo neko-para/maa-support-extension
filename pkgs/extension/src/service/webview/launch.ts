@@ -100,7 +100,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'openCrop': {
-        const panel = new WebviewCropPanel('Maa Crop')
+        const panel = new WebviewCropPanel(this.ipc, 'Maa Crop')
         await panel.init()
         panel.send({
           command: 'setImage',

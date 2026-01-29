@@ -49,11 +49,11 @@ export class ProcessManager {
     } else {
       proc = spawn(process.argv[0], [this.script, arg], { stdio: ['ignore', 'pipe', 'pipe'] })
 
-      proc.stdout?.on('data', data => {
-        logger.info(data.toString())
+      proc.stdout?.on('data', (data: Buffer) => {
+        logger.info(data.toString().trimEnd())
       })
-      proc.stderr?.on('data', data => {
-        logger.info(data.toString())
+      proc.stderr?.on('data', (data: Buffer) => {
+        logger.info(data.toString().trimEnd())
       })
     }
 

@@ -47,6 +47,7 @@ export class ServerService extends BaseService {
       const conn = this.rpc.conn
 
       conn.onRequest(subToHostReq, (method, args) => {
+        logger.info('<-- ' + method)
         return (this.ipc as any).$[method](...args)
       })
 
@@ -55,13 +56,14 @@ export class ServerService extends BaseService {
       this.ipc = new Proxy(
         {},
         {
-          get(_, key) {
+          get(_, key: string) {
             if (key === 'then') {
               return undefined
             } else if (key === '$') {
               return handlers
             } else {
               return (...args: unknown[]) => {
+                logger.info('--> ' + key)
                 return conn.sendRequest(hostToSubReq, key, args)
               }
             }

@@ -12,6 +12,7 @@ export let ipc: MarkApis<HostToSubApis, SubToHostApis>
 
 export function setupIpc(conn: rpc.MessageConnection) {
   conn.onRequest(hostToSubReq, (method, args) => {
+    console.log('<--', method)
     return (ipc as any).$[method](...args)
   })
 
@@ -20,13 +21,14 @@ export function setupIpc(conn: rpc.MessageConnection) {
   ipc = new Proxy(
     {},
     {
-      get(_, key) {
+      get(_, key: string) {
         if (key === 'then') {
           return undefined
         } else if (key === '$') {
           return handlers
         } else {
           return (...args: unknown[]) => {
+            console.log('-->', key)
             return conn.sendRequest(subToHostReq, key, args)
           }
         }

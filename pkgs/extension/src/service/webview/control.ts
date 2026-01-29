@@ -81,6 +81,9 @@ export class WebviewControlService extends BaseService {
             case 'switch-maa-ver':
               await vscode.commands.executeCommand(commands.NativeSelectMaa)
               break
+            case 'switch-admin':
+              serverService.switchAdmin()
+              break
           }
           this.provider?.response(data.seq, null)
           break

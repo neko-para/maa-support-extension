@@ -1,7 +1,7 @@
 import * as net from 'node:net'
 import * as rpc from 'vscode-jsonrpc/node'
 
-import { initNoti, logNoti } from '@mse/maa-server-proto'
+import { initNoti, logNoti, shutdownNoti } from '@mse/maa-server-proto'
 
 import { ipc, setupIpc } from './apis'
 import {
@@ -45,6 +45,10 @@ export async function initServer() {
       conn.listen()
 
       conn.sendNotification(initNoti, option.id)
+
+      conn.onNotification(shutdownNoti, () => {
+        process.exit(0)
+      })
 
       setupIpc(conn)
 

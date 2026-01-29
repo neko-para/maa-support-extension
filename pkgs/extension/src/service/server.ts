@@ -9,7 +9,7 @@ import {
 import { InterfaceRuntime } from '@mse/types'
 import { logger } from '@mse/utils'
 
-import { nativeService } from '.'
+import { nativeService, stateService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -26,7 +26,10 @@ export class ServerService extends BaseService {
     super()
     console.log('construct ServerService')
 
-    this.rpc = new RpcManager(context.asAbsolutePath('server/index.js'), true)
+    this.rpc = new RpcManager(
+      context.asAbsolutePath('server/index.js'),
+      stateService.state.admin ?? false
+    )
     this.ipc = null
 
     this.instMap = {}
@@ -34,8 +37,27 @@ export class ServerService extends BaseService {
 
   async init() {
     console.log('init ServerService')
+  }
 
-    this.setupServer()
+  switchAdmin(admin?: boolean) {
+    if (admin === undefined) {
+      admin = !this.rpc.admin
+    }
+    if (process.platform !== 'win32') {
+      return
+    }
+    if (admin !== this.rpc.admin) {
+      for (const panel of Object.values(this.instMap)) {
+        panel.dispose()
+      }
+      this.instMap = {}
+      this.rpc.kill()
+      this.rpc.admin = admin
+
+      stateService.reduce({
+        admin
+      })
+    }
   }
 
   async setupServer() {

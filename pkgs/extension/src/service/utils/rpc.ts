@@ -2,7 +2,7 @@ import * as net from 'node:net'
 import { v4 } from 'uuid'
 import * as rpc from 'vscode-jsonrpc/node'
 
-import { initNoti } from '@mse/maa-server-proto'
+import { initNoti, shutdownNoti } from '@mse/maa-server-proto'
 import { logger } from '@mse/utils'
 
 import { ProcessManager } from './process'
@@ -30,6 +30,19 @@ export class RpcManager {
     this.script = script
     this.admin = admin
     this.id = v4()
+  }
+
+  kill() {
+    this.conn?.sendNotification(shutdownNoti)
+
+    if (this.proc) {
+      this.proc.kill()
+      this.proc.clean?.()
+      this.proc = undefined
+    }
+
+    this.server?.close()
+    this.server = undefined
   }
 
   async ensureServer() {

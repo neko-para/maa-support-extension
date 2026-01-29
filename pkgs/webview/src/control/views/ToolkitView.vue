@@ -29,6 +29,10 @@ const jumpTargets: {
   {
     label: () => t('maa.control.toolkit.switch-maa-version'),
     target: 'switch-maa-ver'
+  },
+  {
+    label: () => 'Switch Admin',
+    target: 'switch-admin'
   }
 ]
 

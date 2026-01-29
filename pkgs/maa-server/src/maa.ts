@@ -371,3 +371,52 @@ export async function destroyInstance(id: string) {
   inst.controller.destroy()
   // stopAgent(inst.agent)
 }
+
+function toPngDataUrl(buffer: Uint8Array | ArrayBuffer) {
+  if (buffer instanceof ArrayBuffer) {
+    return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
+  } else {
+    return 'data:image/png;base64,' + Buffer.from(buffer).toString('base64')
+  }
+}
+
+export async function getRecoDetail(id: string, recoId: maa.RecoId) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return null
+  }
+
+  const detail = inst.tasker.recognition_detail(recoId)
+  if (!detail) {
+    return null
+  }
+  const info = {
+    ...detail
+  } as Partial<maa.RecoDetail>
+  delete info.raw
+  delete info.draws
+
+  return {
+    info: info as maa.RecoDetailWithoutDraws,
+    raw: toPngDataUrl(detail.raw),
+    draws: detail.draws.map(toPngDataUrl)
+  }
+}
+
+export async function getActDetail(id: string, actId: maa.ActId) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return null
+  }
+
+  return inst.tasker.action_detail(actId)
+}
+
+export async function getNode(id: string, task: string) {
+  const inst = taskerMap[id]
+  if (!inst) {
+    return null
+  }
+
+  return inst.resource.get_node_data(task)
+}

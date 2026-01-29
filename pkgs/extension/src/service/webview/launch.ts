@@ -8,7 +8,6 @@ import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { IpcType } from '../server'
-import { toPngDataUrl } from '../utils/png'
 import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 
@@ -66,39 +65,24 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'requestReco': {
-        // const detailInfo = this.instance.tasker.recognition_detail(
-        //   data.reco_id.toString() as maa.RecoId
-        // )
-        // if (!detailInfo) {
-        //   this.response(data.seq, null)
-        //   break
-        // }
-        // const info = {
-        //   ...detailInfo
-        // } as Partial<typeof detailInfo>
-        // delete info.raw
-        // delete info.draws
-        // this.response(data.seq, {
-        //   raw: toPngDataUrl(detailInfo.raw),
-        //   draws: detailInfo.draws.map(toPngDataUrl),
-        //   info
-        // })
+        const detail = await this.ipc.getRecoDetail(
+          this.instance,
+          data.reco_id.toExponential.toString() as maa.RecoId
+        )
+        this.response(data.seq, detail)
         break
       }
       case 'requestAct': {
-        // const detailInfo = this.instance.tasker.action_detail(
-        //   data.action_id.toString() as maa.ActId
-        // )
-        // if (!detailInfo) {
-        //   this.response(data.seq, null)
-        //   break
-        // }
-        // this.response(data.seq, detailInfo)
+        const detail = await this.ipc.getActDetail(
+          this.instance,
+          data.action_id.toExponential.toString() as maa.ActId
+        )
+        this.response(data.seq, detail)
         break
       }
       case 'requestNode': {
-        // const nodeData = this.instance.tasker.resource?.get_node_data(data.node) ?? null
-        // this.response(data.seq, nodeData)
+        const nodeData = await this.ipc.getNode(this.instance, data.node)
+        this.response(data.seq, nodeData)
         break
       }
       case 'requestPause':

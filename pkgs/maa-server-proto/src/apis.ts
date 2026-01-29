@@ -19,6 +19,13 @@ export type HostToSubApis = {
   postStop: (inst: string) => void
   getKnownTasks: (inst: string) => string[]
   destroyInstance: (inst: string) => void
+
+  getRecoDetail: (
+    inst: string,
+    reco_id: maa.RecoId
+  ) => { info: maa.RecoDetailWithoutDraws; raw: string; draws: string[] }
+  getActDetail: (inst: string, act_id: maa.ActId) => maa.ActionDetail
+  getNode: (inst: string, task: string) => string
 }
 
 export type SubToHostApis = {

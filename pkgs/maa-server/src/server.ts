@@ -6,7 +6,10 @@ import { initNoti, logNoti } from '@mse/maa-server-proto'
 import { ipc, setupIpc } from './apis'
 import {
   destroyInstance,
+  getActDetail,
   getKnownTasks,
+  getNode,
+  getRecoDetail,
   getScreencap,
   postStop,
   postTask,
@@ -56,6 +59,10 @@ export async function initServer() {
       ipc.postStop = postStop
       ipc.getKnownTasks = getKnownTasks
       ipc.destroyInstance = destroyInstance
+
+      ipc.getRecoDetail = getRecoDetail
+      ipc.getActDetail = getActDetail
+      ipc.getNode = getNode
 
       resolve(true)
     }

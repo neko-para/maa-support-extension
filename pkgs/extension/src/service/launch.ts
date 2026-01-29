@@ -92,6 +92,7 @@ export class LaunchService extends BaseService {
     session.pushContinued()
 
     const panel = new WebviewLaunchPanel(ipc, errorOrHandle, 'maa launch')
+    serverService.instMap[errorOrHandle] = panel
     await panel.init()
 
     session.handlePause = async () => {

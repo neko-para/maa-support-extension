@@ -346,14 +346,12 @@ export class NativeService extends BaseService {
       return false
     }
 
-    if (false) {
-      module.paths.unshift(this.activeModulePath)
+    module.paths.unshift(this.activeModulePath)
 
-      try {
-        require('@maaxyz/maa-node')
-      } catch {
-        return false
-      }
+    try {
+      require('@maaxyz/maa-node')
+    } catch {
+      return false
     }
 
     this.cleanUnused()

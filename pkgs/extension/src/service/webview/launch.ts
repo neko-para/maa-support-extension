@@ -67,7 +67,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       case 'requestReco': {
         const detail = await this.ipc.getRecoDetail(
           this.instance,
-          data.reco_id.toExponential.toString() as maa.RecoId
+          data.reco_id.toString() as maa.RecoId
         )
         this.response(data.seq, detail)
         break
@@ -75,7 +75,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       case 'requestAct': {
         const detail = await this.ipc.getActDetail(
           this.instance,
-          data.action_id.toExponential.toString() as maa.ActId
+          data.action_id.toString() as maa.ActId
         )
         this.response(data.seq, detail)
         break

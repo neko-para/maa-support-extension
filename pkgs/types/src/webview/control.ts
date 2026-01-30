@@ -7,6 +7,8 @@ export type EvalTaskConfig = {
 }
 
 export type ControlHostState = HostStateBase & {
+  admin?: boolean
+
   interface?: string[]
   activeInterface?: string
   refreshingInterface?: boolean

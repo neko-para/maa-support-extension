@@ -11,6 +11,7 @@ export default {
   'maa.control.toolkit.open-ext-log': '打开插件日志',
   'maa.control.toolkit.open-crop-tool': '打开截图工具',
   'maa.control.toolkit.switch-maa-version': '切换Maa版本',
+  'maa.control.toolkit.toggle-admin-mode': '切换管理员模式',
   'maa.control.interface.interface': '配置',
   'maa.control.interface.select-interface': '选择配置',
   'maa.control.resource.resource': '资源',

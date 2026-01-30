@@ -83,6 +83,7 @@ export class WebviewControlService extends BaseService {
               break
             case 'switch-admin':
               serverService.switchAdmin()
+              this.pushState()
               break
           }
           this.provider?.response(data.seq, null)
@@ -311,6 +312,8 @@ export class WebviewControlService extends BaseService {
       isMAA: isMaaAssistantArknights,
       fwStatus: nativeService.currentVersionInfo,
       locale,
+
+      admin: process.platform === 'win32' ? serverService.rpc.admin : undefined,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),
       activeInterface: rootService.activeResource?.interfaceRelative,

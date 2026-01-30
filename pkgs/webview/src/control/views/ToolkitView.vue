@@ -29,10 +29,6 @@ const jumpTargets: {
   {
     label: () => t('maa.control.toolkit.switch-maa-version'),
     target: 'switch-maa-ver'
-  },
-  {
-    label: () => 'Switch Admin',
-    target: 'switch-admin'
   }
 ]
 
@@ -60,6 +56,17 @@ async function jump(target: ToolkitJumpTarget) {
             {{ info.label() }}
           </n-button>
         </template>
+        <n-button
+          v-if="hostState.admin !== undefined"
+          :disabled="!!loading"
+          :loading="loading === 'switch-admin'"
+          @click="jump('switch-admin')"
+          size="small"
+          :type="hostState.admin ? 'warning' : 'default'"
+          :ghost="hostState.admin"
+        >
+          {{ t('maa.control.toolkit.toggle-admin-mode') }}
+        </n-button>
       </n-flex>
       <n-text v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
         {{ info }}

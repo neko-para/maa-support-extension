@@ -52,6 +52,7 @@ export class ServerService extends BaseService {
         panel.dispose()
       }
       this.instMap = {}
+      agentService.stopAll()
       this.rpc.kill()
       this.rpc.admin = admin
 
@@ -77,7 +78,12 @@ export class ServerService extends BaseService {
 
       conn.onRequest(subToHostReq, (method, args) => {
         logger.info('<-- ' + method)
-        return (this.ipc as any).$[method](...args)
+        try {
+          return (this.ipc as any).$[method](...args)
+        } catch (err) {
+          logger.error(`handle ${method} failed: ${err}`)
+          return null
+        }
       })
 
       const handlers: Record<string, Function> = {}

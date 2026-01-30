@@ -109,6 +109,7 @@ export class AgentService extends BaseService {
     if (!info) {
       return
     }
+    delete this.agents[id]
 
     switch (info.type) {
       case 'task':
@@ -118,5 +119,9 @@ export class AgentService extends BaseService {
         await vscode.debug.stopDebugging(info.session)
         break
     }
+  }
+
+  async stopAll() {
+    await Promise.all(Object.keys(this.agents).map(id => this.stopAgent(id)))
   }
 }

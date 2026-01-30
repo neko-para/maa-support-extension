@@ -13,7 +13,12 @@ export let ipc: MarkApis<HostToSubApis, SubToHostApis>
 export function setupIpc(conn: rpc.MessageConnection) {
   conn.onRequest(hostToSubReq, (method, args) => {
     console.log('<--', method)
-    return (ipc as any).$[method](...args)
+    try {
+      return (ipc as any).$[method](...args)
+    } catch (err) {
+      console.error(`handle ${method} failed: ${err}`)
+      return null
+    }
   })
 
   const handlers: Record<string, Function> = {}

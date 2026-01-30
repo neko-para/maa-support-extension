@@ -5,20 +5,12 @@ import * as vscode from 'vscode'
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, locale, logger, t } from '@mse/utils'
 
-import {
-  interfaceService,
-  launchService,
-  nativeService,
-  rootService,
-  serverService,
-  stateService
-} from '..'
+import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
-import { performReco } from '../../tools/reco'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import { IpcType } from '../server'
-import { fromPngDataUrl, toPngDataUrl } from '../utils/png'
+import { toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
 
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
@@ -195,8 +187,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         }
         let result = null
         try {
-          result = await performReco(
-            fromPngDataUrl(data.image),
+          result = await this.ipc.performReco(
+            data.image.replace('data:image/png;base64,', ''),
             resources.map(u => u.fsPath)
           )
         } catch (err) {

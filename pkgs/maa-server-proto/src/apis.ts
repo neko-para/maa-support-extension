@@ -13,6 +13,7 @@ export type HostToSubApis = {
   getScreencap: () => string | null
   performOcr: (isMaa: boolean, image: string, roi: maa.Rect, resources: string[]) => string
   performTemplateMatch: (image: string, roi: maa.Rect, threshold: number) => string
+  performReco: (image: string, resources: string[]) => string
 
   refreshAdb: () => maa.AdbDevice[]
   refreshDesktop: () => maa.DesktopDevice[]
@@ -36,6 +37,8 @@ export type SubToHostApis = {
   startTask: (exec: string, args: string[], cwd: string, env: Record<string, string>) => string
   startDebugSession: (name: string, identifier: string) => string | null
   stopAgent: (id: string) => void
+
+  quickPick: (items: string[]) => string | null
 }
 
 export type MarkApisImpl<T> = {

@@ -1,16 +1,19 @@
-import * as vscode from 'vscode'
-
-import { logger } from '@mse/utils'
-
-import { setupFixedController } from './utils'
+import { ipc } from '../apis'
+import { sendLog } from '../server'
+import { convertImage, setupFixedController } from './utils'
 
 let prevTask: string | undefined = undefined
 
-export async function performReco(image: ArrayBuffer, resources: string[]): Promise<string | null> {
+export async function performReco(
+  imageBase64: string,
+  resources: string[]
+): Promise<string | null> {
+  const image = convertImage(imageBase64)
+
   const ctrl = await setupFixedController(image)
 
   if (!ctrl) {
-    logger.error('quick reco ctrl create failed')
+    sendLog('quick reco ctrl create failed')
     return null
   }
 
@@ -19,13 +22,13 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
     await res.post_bundle(resource).wait()
   }
   if (!res.loaded) {
-    logger.error('quick reco res create failed')
+    sendLog('quick reco res create failed')
     return null
   }
 
   const tasks = res.node_list
   if (!tasks) {
-    logger.error('quick reco res no task')
+    sendLog('quick reco res no task')
     return null
   }
 
@@ -37,7 +40,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
       tasks.unshift(prevTask)
     }
   }
-  const task = await vscode.window.showQuickPick(tasks)
+  const task = await ipc.quickPick(tasks)
   if (!task) {
     return null
   }
@@ -48,14 +51,14 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
   tasker.controller = ctrl
   tasker.resource = res
   if (!tasker.inited) {
-    logger.error('quick reco tasker create failed')
+    sendLog('quick reco tasker create failed')
     return null
   }
 
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    logger.info('quick reco action called')
+    sendLog('quick reco action called')
     const detail = await self.context.run_recognition(task, image)
     if (detail?.hit) {
       const presp = {
@@ -77,7 +80,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
     })
     .wait()
 
-  logger.info('quick reco destroy')
+  sendLog('quick reco destroy')
 
   tasker.destroy()
   res.destroy()

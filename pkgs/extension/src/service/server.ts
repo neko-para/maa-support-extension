@@ -1,3 +1,5 @@
+import * as vscode from 'vscode'
+
 import {
   HostToSubApis,
   MarkApis,
@@ -113,6 +115,9 @@ export class ServerService extends BaseService {
       }
       this.ipc.stopAgent = async id => {
         return await agentService.stopAgent(id)
+      }
+      this.ipc.quickPick = async items => {
+        return (await vscode.window.showQuickPick(items)) ?? null
       }
 
       return true

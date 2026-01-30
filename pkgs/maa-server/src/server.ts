@@ -18,6 +18,7 @@ import {
 } from './maa'
 import { option } from './options'
 import { performOcr } from './tools/ocr'
+import { performReco } from './tools/reco'
 import { performTemplateMatch } from './tools/templateMatch'
 
 function makePromise<T>() {
@@ -57,6 +58,7 @@ export async function initServer() {
       ipc.getScreencap = getScreencap
       ipc.performOcr = performOcr
       ipc.performTemplateMatch = performTemplateMatch
+      ipc.performReco = performReco
 
       ipc.refreshAdb = async () => {
         return (await maa.AdbController.find()) ?? []

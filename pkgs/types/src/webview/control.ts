@@ -27,7 +27,12 @@ export type NativeSelectOption = {
   title: string
   subtitle?: string
 }
-export type ToolkitJumpTarget = 'maa-log' | 'ext-log' | 'crop-tool' | 'switch-maa-ver'
+export type ToolkitJumpTarget =
+  | 'maa-log'
+  | 'ext-log'
+  | 'crop-tool'
+  | 'switch-maa-ver'
+  | 'switch-admin'
 
 export type ControlWebToHost =
   | {

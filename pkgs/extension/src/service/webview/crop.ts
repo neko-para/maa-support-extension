@@ -1,3 +1,4 @@
+import * as fs from 'fs/promises'
 import path from 'path'
 import * as vscode from 'vscode'
 
@@ -6,16 +7,16 @@ import { WebviewPanelProvider, locale, logger, t } from '@mse/utils'
 
 import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
-import { performOcr } from '../../tools/ocr'
-import { performReco } from '../../tools/reco'
-import { performTemplateMatch } from '../../tools/templateMatch'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
-import { fromPngDataUrl, toPngDataUrl } from '../utils/png'
+import { IpcType } from '../server'
+import { toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
 
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
-  constructor(title: string, viewColumn?: vscode.ViewColumn) {
+  ipc: IpcType
+
+  constructor(ipc: IpcType, title: string, viewColumn?: vscode.ViewColumn) {
     super({
       context,
       folder: 'webview',
@@ -27,6 +28,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       iconPath: 'images/logo.png',
       dev: isCropDev
     })
+
+    this.ipc = ipc
   }
 
   dispose() {
@@ -43,14 +46,13 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           this.response(data.seq, null)
           break
         }
-        if ((await launchService.updateCache()) && launchService.cache) {
-          await launchService.cache.controller.post_screencap().wait()
-          const image = launchService.cache.controller.cached_image
+        if (await launchService.updateCache()) {
+          const image = await this.ipc.getScreencap()
           if (!image) {
             this.response(data.seq, null)
             break
           }
-          this.response(data.seq, toPngDataUrl(image))
+          this.response(data.seq, 'data:image/png;base64,' + image)
         } else {
           this.response(data.seq, null)
         }
@@ -133,8 +135,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         }
         let result = null
         try {
-          result = await performOcr(
-            fromPngDataUrl(data.image),
+          result = await this.ipc.performOcr(
+            isMaaAssistantArknights,
+            data.image.replace('data:image/png;base64,', ''),
             data.roi,
             resources.map(u => u.fsPath)
           )
@@ -145,10 +148,28 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         break
       }
       case 'requestTemplateMatch': {
+        const targetPath = await vscode.window.showOpenDialog({
+          filters: {
+            Images: ['png']
+          },
+          defaultUri: stateService.state.uploadDir
+            ? vscode.Uri.file(stateService.state.uploadDir)
+            : undefined
+        })
+        if (!targetPath || targetPath.length !== 1) {
+          return null
+        }
+
+        stateService.reduce({
+          uploadDir: path.dirname(targetPath[0].fsPath)
+        })
+
+        const target = await fs.readFile(targetPath[0].fsPath)
+
         let result = null
         try {
-          result = await performTemplateMatch(
-            fromPngDataUrl(data.image),
+          result = await this.ipc.performTemplateMatch(
+            target.toString('base64'),
             data.roi,
             data.threshold ?? 0.8
           )
@@ -166,8 +187,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         }
         let result = null
         try {
-          result = await performReco(
-            fromPngDataUrl(data.image),
+          result = await this.ipc.performReco(
+            data.image.replace('data:image/png;base64,', ''),
             resources.map(u => u.fsPath)
           )
         } catch (err) {

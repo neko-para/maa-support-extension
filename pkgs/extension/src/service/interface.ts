@@ -14,7 +14,7 @@ import {
 } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
-import { diagnosticService, launchService, rootService } from '.'
+import { diagnosticService, rootService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
 import { currentWorkspace, isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
@@ -239,6 +239,107 @@ export class InterfaceService extends BaseService {
     return true
   }
 
+  buildControllerRuntime(): InterfaceRuntime['controller_param'] | null {
+    const data = this.interfaceJson
+    const config = this.interfaceConfigJson
+    if (!data || !config) {
+      return null
+    }
+
+    const ctrlInfo = data.controller?.find(x => x.name === config.controller?.name)
+
+    if (!ctrlInfo) {
+      vscode.window.showErrorMessage(
+        t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '<unknown>')
+      )
+      return null
+    }
+
+    const fixNum = (v?: string | number, dic?: Record<string, string>) => {
+      if (typeof v === 'number') {
+        return `${v}`
+      } else if (dic && typeof v === 'string' && v in dic) {
+        return dic[v]
+      } else {
+        return v
+      }
+    }
+
+    if (ctrlInfo.type === 'Adb') {
+      if (!config.adb) {
+        vscode.window.showErrorMessage(
+          t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '<unknown>')
+        )
+        return null
+      }
+
+      return {
+        ctype: 'adb',
+        adb_path: config.adb.adb_path,
+        address: config.adb.address,
+        screencap: config.adb.screencap ?? maa.AdbScreencapMethod.Default,
+        input: config.adb.input ?? maa.AdbInputMethod.Default,
+        config: JSON.stringify(config.adb.config),
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw
+      }
+    } else if (ctrlInfo.type === 'Win32') {
+      if (!config.win32) {
+        vscode.window.showErrorMessage(
+          t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '<unknown>')
+        )
+        return null
+      }
+
+      if (!config.win32.hwnd) {
+        vscode.window.showErrorMessage(
+          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
+        )
+        return null
+      }
+
+      return {
+        ctype: 'win32',
+        hwnd: config.win32.hwnd,
+        screencap:
+          fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
+          maa.Win32ScreencapMethod.DXGI_DesktopDup,
+        mouse:
+          fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
+        keyboard:
+          fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ??
+          maa.Win32InputMethod.SendMessage,
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw
+      }
+    } else if (ctrlInfo.type === 'VscFixed') {
+      if (!config.vscFixed) {
+        vscode.window.showErrorMessage('No vscFixed for controller')
+        return null
+      }
+
+      if (!config.vscFixed.image) {
+        vscode.window.showErrorMessage('No vscFixed image for controller')
+        return null
+      }
+
+      return {
+        ctype: 'vscFixed',
+        image: config.vscFixed.image,
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw
+      }
+    }
+
+    return null
+  }
+
   buildRuntime(skipTask = false) {
     if (!rootService.activeResource) {
       return '无interface'
@@ -259,7 +360,7 @@ export class InterfaceService extends BaseService {
 
     result.root = projectDir
 
-    const ctrlRt = launchService.buildControllerRuntime()
+    const ctrlRt = this.buildControllerRuntime()
     if (!ctrlRt) {
       return '构建controller失败'
     }

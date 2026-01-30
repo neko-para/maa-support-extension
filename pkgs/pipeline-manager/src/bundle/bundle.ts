@@ -187,7 +187,11 @@ export class Bundle extends EventEmitter<{
     for (const [task, infos] of Object.entries(this.layer.tasks)) {
       const newInfos = infos.filter(info => info.file !== joinPath(this.root, file))
       if (infos.length !== newInfos.length) {
-        infos.splice(0, infos.length, ...newInfos)
+        if (newInfos.length === 0) {
+          delete this.layer.tasks[task as TaskName]
+        } else {
+          infos.splice(0, infos.length, ...newInfos)
+        }
         changed.push(task)
       }
     }

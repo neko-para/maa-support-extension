@@ -3,24 +3,24 @@ import * as vscode from 'vscode'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, locale } from '@mse/utils'
 
-import { nativeService, stateService } from '..'
+import { nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
-import { TaskerInstance, stopAgent } from '../launch'
-import { toPngDataUrl } from '../utils/png'
+import { IpcType } from '../server'
 import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
-  instance: TaskerInstance
+  ipc: IpcType
+  instance: string
   knownTasks: string[]
   stopped: boolean = false
 
   paused: boolean = false
   pausedResolve?: () => void
 
-  constructor(instance: TaskerInstance, title: string, viewColumn?: vscode.ViewColumn) {
+  constructor(ipc: IpcType, instance: string, title: string, viewColumn?: vscode.ViewColumn) {
     super({
       context,
       folder: 'webview',
@@ -33,16 +33,15 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       dev: isLaunchDev
     })
 
+    this.ipc = ipc
     this.instance = instance
-    this.knownTasks = this.instance.resource.node_list ?? []
-    this.knownTasks.sort()
+    this.knownTasks = []
 
-    this.instance.tasker.add_sink(async (_, msg) => {
-      await this.pushNotify(msg)
-    })
-    this.instance.tasker.add_context_sink(async (_, msg) => {
-      await this.pushNotify(msg)
-    })
+    this.setup()
+  }
+
+  async setup() {
+    this.knownTasks = (await this.ipc.getKnownTasks(this.instance)) ?? []
   }
 
   dispose() {
@@ -50,10 +49,10 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
 
     this.send = () => {}
     this.stop().then(() => {
-      this.instance.tasker.destroy()
-      this.instance.resource.destroy()
-      stopAgent(this.instance.agent)
+      this.ipc.destroyInstance(this.instance)
     })
+
+    delete serverService.instMap[this.instance]
   }
 
   async recv(data: WebToHost<LaunchWebToHost>) {
@@ -66,38 +65,23 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'requestReco': {
-        const detailInfo = this.instance.tasker.recognition_detail(
+        const detail = await this.ipc.getRecoDetail(
+          this.instance,
           data.reco_id.toString() as maa.RecoId
         )
-        if (!detailInfo) {
-          this.response(data.seq, null)
-          break
-        }
-        const info = {
-          ...detailInfo
-        } as Partial<typeof detailInfo>
-        delete info.raw
-        delete info.draws
-        this.response(data.seq, {
-          raw: toPngDataUrl(detailInfo.raw),
-          draws: detailInfo.draws.map(toPngDataUrl),
-          info
-        })
+        this.response(data.seq, detail)
         break
       }
       case 'requestAct': {
-        const detailInfo = this.instance.tasker.action_detail(
+        const detail = await this.ipc.getActDetail(
+          this.instance,
           data.action_id.toString() as maa.ActId
         )
-        if (!detailInfo) {
-          this.response(data.seq, null)
-          break
-        }
-        this.response(data.seq, detailInfo)
+        this.response(data.seq, detail)
         break
       }
       case 'requestNode': {
-        const nodeData = this.instance.tasker.resource?.get_node_data(data.node) ?? null
+        const nodeData = await this.ipc.getNode(this.instance, data.node)
         this.response(data.seq, nodeData)
         break
       }
@@ -116,7 +100,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'openCrop': {
-        const panel = new WebviewCropPanel('Maa Crop')
+        const panel = new WebviewCropPanel(this.ipc, 'Maa Crop')
         await panel.init()
         panel.send({
           command: 'setImage',
@@ -153,7 +137,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     }
     this.stopped = true
     this.cont()
-    await this.instance.tasker.post_stop().wait()
+    await this.ipc.postStop(this.instance)
   }
 
   finish() {

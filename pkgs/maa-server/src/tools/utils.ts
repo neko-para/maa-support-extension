@@ -1,3 +1,8 @@
+export function convertImage(base64: string) {
+  const buf = Buffer.from(base64, 'base64')
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+}
+
 export async function setupFixedController(image: ArrayBuffer) {
   const ctrl = new maa.CustomController({
     connect() {

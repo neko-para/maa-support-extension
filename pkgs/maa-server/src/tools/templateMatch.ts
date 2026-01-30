@@ -1,12 +1,9 @@
 import * as fs from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
-import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
-
-import { stateService } from '../service'
-import { setupFixedController } from './utils'
+import { logger } from '../server'
+import { convertImage, setupFixedController } from './utils'
 
 async function setupFakeResource() {
   const temp = path.join(os.tmpdir(), 'maavsc-matches')
@@ -18,24 +15,8 @@ async function setupFakeResource() {
   return temp
 }
 
-export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect, threshold: number) {
-  const targetPath = await vscode.window.showOpenDialog({
-    filters: {
-      Images: ['png']
-    },
-    defaultUri: stateService.state.uploadDir
-      ? vscode.Uri.file(stateService.state.uploadDir)
-      : undefined
-  })
-  if (!targetPath || targetPath.length !== 1) {
-    return null
-  }
-
-  stateService.reduce({
-    uploadDir: path.dirname(targetPath[0].fsPath)
-  })
-
-  const target = (await fs.readFile(targetPath[0].fsPath)).buffer
+export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, threshold: number) {
+  const image = convertImage(imageBase64)
 
   const ctrl = await setupFixedController(image)
 
@@ -48,7 +29,7 @@ export async function performTemplateMatch(image: ArrayBuffer, roi: maa.Rect, th
 
   const res = new maa.Resource()
   await res.post_bundle(tempRes).wait()
-  res.override_image('@mse_image', target)
+  res.override_image('@mse_image', image)
 
   const tasker = new maa.Tasker()
   tasker.controller = ctrl

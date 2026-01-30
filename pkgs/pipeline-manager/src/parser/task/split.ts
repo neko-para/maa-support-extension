@@ -55,9 +55,7 @@ export function splitNode(node: Node, maa: boolean) {
         const type = obj.children?.find(
           node => node.children?.[0].value === 'type' && isString(node.children?.[1])
         )
-        const param = obj.children?.find(
-          node => node.children?.[0].value === 'param' && node.children?.[1]?.type === 'object'
-        )
+        const param = obj.children?.find(node => node.children?.[0].value === 'param')
         if (type) {
           result.recoType = type.children![1] as StringNode
         }

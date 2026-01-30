@@ -1,0 +1,87 @@
+import { ChildProcess, spawn } from 'child_process'
+import * as fs from 'node:fs/promises'
+import * as os from 'node:os'
+import * as path from 'node:path'
+
+import { logger } from '@mse/utils'
+
+import { makePromise } from './promise'
+
+export class ProcessManager {
+  script: string
+  admin: boolean
+  ps1ScriptPath?: string
+
+  proc?: ChildProcess
+
+  clean?: () => void
+
+  constructor(script: string, admin: boolean) {
+    this.script = script
+    this.admin = admin && process.platform === 'win32'
+  }
+
+  async setupPs1(arg: string) {
+    const tempFolder = await fs.mkdtemp(path.join(os.tmpdir(), 'mse-ps1-'))
+    this.ps1ScriptPath = path.join(tempFolder, 'uac.ps1')
+    await fs.writeFile(
+      this.ps1ScriptPath,
+      `Start-Process -FilePath cmd -ArgumentList "/C","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
+    )
+    this.clean = () => {
+      fs.rm(tempFolder, { recursive: true })
+    }
+  }
+
+  async ensure(arg: string) {
+    if (this.proc) {
+      return true
+    }
+
+    let proc: ChildProcess
+
+    if (this.admin) {
+      await this.setupPs1(arg)
+      if (!this.ps1ScriptPath) {
+        return false
+      }
+      proc = spawn('powershell.exe', [this.ps1ScriptPath])
+    } else {
+      proc = spawn(process.argv[0], [this.script, arg], { stdio: ['ignore', 'pipe', 'pipe'] })
+
+      proc.stdout?.on('data', (data: Buffer) => {
+        logger.info(data.toString().trimEnd())
+      })
+      proc.stderr?.on('data', (data: Buffer) => {
+        logger.info(data.toString().trimEnd())
+      })
+    }
+
+    const [promise, resolve] = makePromise<boolean>()
+
+    proc.on('spawn', () => {
+      if (!this.proc) {
+        this.proc = proc
+        resolve(true)
+      } else {
+        proc.kill()
+        resolve(false)
+      }
+    })
+    proc.on('error', () => {
+      resolve(false)
+    })
+    proc.on('close', () => {
+      if (proc === this.proc) {
+        this.proc = undefined
+      }
+    })
+
+    return promise
+  }
+
+  kill() {
+    this.proc?.kill()
+    this.proc = undefined
+  }
+}

@@ -11,6 +11,7 @@ import {
   launchService,
   nativeService,
   rootService,
+  serverService,
   stateService,
   statusBarService
 } from '..'
@@ -80,6 +81,9 @@ export class WebviewControlService extends BaseService {
             case 'switch-maa-ver':
               await vscode.commands.executeCommand(commands.NativeSelectMaa)
               break
+            case 'switch-admin':
+              serverService.switchAdmin()
+              break
           }
           this.provider?.response(data.seq, null)
           break
@@ -107,12 +111,16 @@ export class WebviewControlService extends BaseService {
               : undefined
           })
           break
-        case 'refreshAdb':
-          this.provider?.response(data.seq, await maa.AdbController.find())
+        case 'refreshAdb': {
+          const ipc = await serverService.ensureServer()
+          this.provider?.response(data.seq, (await ipc?.refreshAdb()) ?? [])
           break
-        case 'refreshDesktop':
-          this.provider?.response(data.seq, await maa.Win32Controller.find())
+        }
+        case 'refreshDesktop': {
+          const ipc = await serverService.ensureServer()
+          this.provider?.response(data.seq, (await ipc?.refreshDesktop()) ?? [])
           break
+        }
         case 'configAdb':
           interfaceService.reduceConfig({
             adb: {

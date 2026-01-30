@@ -17,6 +17,17 @@ esContext({
   ctx.watch()
 })
 
+esContext({
+  entryPoints: ['pkgs/maa-server/src/index.ts'],
+  bundle: true,
+  outdir: 'release/server',
+  external: ['@maaxyz/maa-node'],
+  platform: 'node',
+  sourcemap: true
+}).then(ctx => {
+  ctx.watch()
+})
+
 viteWatch({
   root: path.join(import.meta.dirname, '../pkgs/webview'),
   mode: 'development'

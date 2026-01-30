@@ -333,6 +333,10 @@ export class NativeService extends BaseService {
     return true
   }
 
+  get activeModulePath() {
+    return vscode.Uri.joinPath(this.versionFolder(this.version), 'node_modules').fsPath
+  }
+
   async load() {
     if (globalThis.maa) {
       return true
@@ -342,9 +346,7 @@ export class NativeService extends BaseService {
       return false
     }
 
-    module.paths.unshift(
-      vscode.Uri.joinPath(this.versionFolder(this.version), 'node_modules').fsPath
-    )
+    module.paths.unshift(this.activeModulePath)
 
     try {
       require('@maaxyz/maa-node')

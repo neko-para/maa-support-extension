@@ -3,6 +3,8 @@ import { CropHostState, EvalTaskConfig } from '@mse/types'
 import { BaseService, context } from './context'
 
 export type State = {
+  admin?: boolean
+
   activeInterface?: string
 
   uploadDir?: string

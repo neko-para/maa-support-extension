@@ -1,12 +1,15 @@
-import * as vscode from 'vscode'
-
-import { logger } from '@mse/utils'
-
-import { setupFixedController } from './utils'
+import { ipc } from '../apis'
+import { logger } from '../server'
+import { convertImage, setupFixedController } from './utils'
 
 let prevTask: string | undefined = undefined
 
-export async function performReco(image: ArrayBuffer, resources: string[]): Promise<string | null> {
+export async function performReco(
+  imageBase64: string,
+  resources: string[]
+): Promise<string | null> {
+  const image = convertImage(imageBase64)
+
   const ctrl = await setupFixedController(image)
 
   if (!ctrl) {
@@ -37,7 +40,7 @@ export async function performReco(image: ArrayBuffer, resources: string[]): Prom
       tasks.unshift(prevTask)
     }
   }
-  const task = await vscode.window.showQuickPick(tasks)
+  const task = await ipc.quickPick(tasks)
   if (!task) {
     return null
   }

@@ -4,10 +4,9 @@ import * as fs from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
 
-import { logger } from '@mse/utils'
-
-import { isMaaAssistantArknights } from '../utils/fs'
-import { setupFixedController } from './utils'
+import { logger } from '../server'
+// import { isMaaAssistantArknights } from '../utils/fs'
+import { convertImage, setupFixedController } from './utils'
 
 async function setupFakeResource(resources: string[]) {
   const temp = path.join(os.tmpdir(), 'maavsc-models')
@@ -35,14 +34,14 @@ async function setupFakeResource(resources: string[]) {
       const targetOcrPath = path.join(target, 'model', 'ocr')
       await fs.mkdir(targetOcrPath, { recursive: true })
       if (existsSync(detPath)) {
-        logger.debug('copy det')
+        logger.info('copy det')
         await fs.copyFile(
           path.join(detPath, 'inference.onnx'),
           path.join(targetOcrPath, 'det.onnx')
         )
       }
       if (existsSync(recPath)) {
-        logger.debug('copy rec')
+        logger.info('copy rec')
         await fs.copyFile(
           path.join(recPath, 'inference.onnx'),
           path.join(targetOcrPath, 'rec.onnx')
@@ -56,11 +55,12 @@ async function setupFakeResource(resources: string[]) {
 }
 
 export async function performOcr(
-  image: ArrayBuffer,
+  isMaa: boolean,
+  imageBase64: string,
   roi: maa.Rect,
   resources: string[]
 ): Promise<string | null> {
-  if (isMaaAssistantArknights) {
+  if (isMaa) {
     try {
       resources = await setupFakeResource(resources)
     } catch (e) {
@@ -68,6 +68,8 @@ export async function performOcr(
       return null
     }
   }
+
+  const image = convertImage(imageBase64)
 
   const ctrl = await setupFixedController(image)
 
@@ -132,9 +134,3 @@ export async function performOcr(
 
   return result
 }
-
-// performOcr(
-//   readFileSync('image.png').buffer,
-//   [0, 0, 100, 100],
-//   'E:\\Projects\\MAA\\MAA1999\\assets\\resource\\base'
-// ).then(result => console.log(JSON.parse(result ?? '{}')))

@@ -27,7 +27,7 @@ type TaskerInstance = {
   resource: maa.Resource
   controller: maa.Controller
   client?: maa.Client
-  // agent?: vscode.TaskExecution | vscode.DebugSession
+  agent?: string
 }
 
 let cache: InstanceCache | undefined
@@ -105,13 +105,9 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
   }
 }
 
-async function setupResource(runtime: InterfaceRuntime): Promise<
-  [
-    maa.Resource | null,
-    maa.Client | undefined
-    // vscode.TaskExecution | vscode.DebugSession | undefined
-  ]
-> {
+async function setupResource(
+  runtime: InterfaceRuntime
+): Promise<[maa.Resource | null, maa.Client | undefined, string | undefined]> {
   const resource = new maa.Resource()
 
   resource.add_sink((_, msg) => {
@@ -123,8 +119,8 @@ async function setupResource(runtime: InterfaceRuntime): Promise<
   }
 
   let client: maa.Client | undefined = undefined
-  // let agent: vscode.TaskExecution | vscode.DebugSession | undefined = undefined
-  /*
+  let agent: string | undefined = undefined
+
   if (runtime.agent) {
     client = new maa.Client(runtime.agent.identifier)
     const identifier = client.identifier ?? 'vsc-no-identifier'
@@ -132,81 +128,30 @@ async function setupResource(runtime: InterfaceRuntime): Promise<
     sendLog(`AgentClient listening ${identifier}`)
 
     if (runtime.agent.debug_session) {
-      const launchJsonPath = path.join(currentWorkspace()!.fsPath, '.vscode', 'launch.json')
-      if (!existsSync(launchJsonPath)) {
-        logger.error('Cannot find launch.json')
+      const handle = await ipc.startDebugSession(runtime.agent.debug_session, identifier)
+      if (!handle) {
         resource.destroy()
         return [null, undefined, undefined]
       }
-      const launchJson = JSON.parse(await fs.readFile(launchJsonPath, 'utf8')) as {
-        configurations: vscode.DebugConfiguration[]
-      }
-      const config = launchJson.configurations.find(
-        cfg => cfg.name === runtime.agent?.debug_session
-      )
-      if (!config) {
-        logger.error(`Cannot find debug session ${runtime.agent.debug_session}`)
-        resource.destroy()
-        return [null, undefined, undefined]
-      }
-      let replaced = false
-      for (const key of Object.keys(config)) {
-        const val = config[key]
-        if (Array.isArray(val)) {
-          config[key] = val.map(v => {
-            if (typeof v === 'string' && v === '{AGENT_ID}') {
-              sendLog(`Replace {AGENT_ID} in ${key}`)
-              replaced = true
-              return identifier
-            } else {
-              return v
-            }
-          })
-        }
-      }
-      if (!replaced) {
-        logger.warn('No {AGENT_ID} found in config')
-      }
-
-      const disp = vscode.debug.onDidStartDebugSession(session => {
-        agent = session
-      })
-      const succ = await vscode.debug.startDebugging(vscode.workspace.workspaceFolders![0], config)
-      disp.dispose()
-      if (!(succ && agent)) {
-        logger.error('Create debug session failed')
-        resource.destroy()
-        return [null, undefined, undefined]
-      }
+      agent = handle
     } else if (runtime.agent.child_exec) {
-      const task = new vscode.Task(
+      const handle = await ipc.startTask(
+        runtime.agent.child_exec,
+        (runtime.agent.child_args ?? []).concat([identifier]),
+        runtime.root,
         {
-          type: 'shell'
-        },
-        vscode.TaskScope.Workspace,
-        'maa-agent-server',
-        'maa',
-        new vscode.ShellExecution(
-          runtime.agent.child_exec,
-          (runtime.agent.child_args ?? []).concat([identifier]),
-          {
-            cwd: runtime.root,
-            env: {
-              VSCODE_MAAFW_AGENT: '1',
-              VSCODE_MAAFW_AGENT_ROOT: runtime.root,
-              VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
-            }
-          }
-        )
+          VSCODE_MAAFW_AGENT: '1',
+          VSCODE_MAAFW_AGENT_ROOT: runtime.root,
+          VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
+        }
       )
-      agent = await vscode.tasks.executeTask(task)
+      if (!handle) {
+        resource.destroy()
+        return [null, undefined, undefined]
+      }
+      agent = handle
     }
 
-    const timeout =
-      (vscode.workspace.getConfiguration('maa').get('agentTimeout') as number | undefined) ?? 30000
-    if (timeout >= 0) {
-      client.timeout = timeout.toString()
-    }
     client.bind_resource(resource)
     sendLog(`AgentClient start connecting ${identifier}`)
     if (
@@ -222,16 +167,14 @@ async function setupResource(runtime: InterfaceRuntime): Promise<
         }))
     ) {
       resource.destroy()
-      agent?.terminate()
+      if (agent) {
+        ipc.stopAgent(agent)
+      }
       return [null, undefined, undefined]
     }
-    if (timeout >= 0) {
-      client.timeout = Number.MAX_SAFE_INTEGER.toString()
-    }
   }
-*/
-  // return [resource, client, agent]
-  return [resource, client]
+
+  return [resource, client, agent]
 }
 
 export async function setupInst(runtime: InterfaceRuntime): Promise<{
@@ -256,7 +199,7 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
     }
   }
 
-  const [resource, client] = await setupResource(runtime)
+  const [resource, client, agent] = await setupResource(runtime)
   if (!resource) {
     return {
       error: 'maa.debug.init-resource-failed'
@@ -284,7 +227,9 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
     tasker.destroy()
     resource.destroy()
     client?.destroy()
-    // stopAgent(agent)
+    if (agent) {
+      ipc.stopAgent(agent)
+    }
     return {
       error: 'maa.debug.init-instance-failed'
     }
@@ -294,8 +239,8 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
     tasker,
     controller,
     resource,
-    client
-    // agent
+    client,
+    agent
   }
 
   const handle = v4()
@@ -371,7 +316,9 @@ export async function destroyInstance(id: string) {
   inst.tasker.destroy()
   inst.resource.destroy()
   inst.controller.destroy()
-  // stopAgent(inst.agent)
+  if (inst.agent) {
+    ipc.stopAgent(inst.agent)
+  }
 }
 
 function toPngDataUrl(buffer: Uint8Array | ArrayBuffer) {

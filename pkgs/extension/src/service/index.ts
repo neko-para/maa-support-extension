@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 
+import { AgentService } from './agent'
 import { CommandService } from './command'
-import { BaseService, init as initContext } from './context'
+import { init as initContext } from './context'
 import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
@@ -41,6 +42,7 @@ export let debugService: DebugService
 export let commandService: CommandService
 export let diagnosticService: DiagnosticService
 export let statusBarService: StatusBarService
+export let agentService: AgentService
 
 export let pipelineLanguageServices: PipelineLanguageProvider[]
 export let interfaceLanguageServices: InterfaceLanguageProvider[]
@@ -60,6 +62,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   commandService = new CommandService()
   diagnosticService = new DiagnosticService()
   statusBarService = new StatusBarService()
+  agentService = new AgentService()
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),
@@ -93,6 +96,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await commandService.init()
   await diagnosticService.init()
   await statusBarService.init()
+  await agentService.init()
 
   for (const service of pipelineLanguageServices) {
     await service.init()

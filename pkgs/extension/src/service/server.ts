@@ -6,10 +6,9 @@ import {
   logNoti,
   subToHostReq
 } from '@mse/maa-server-proto'
-import { InterfaceRuntime } from '@mse/types'
 import { logger } from '@mse/utils'
 
-import { nativeService, stateService } from '.'
+import { agentService, nativeService, stateService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -105,6 +104,15 @@ export class ServerService extends BaseService {
 
       this.ipc.pushNotify = async (inst, msg) => {
         await this.instMap[inst]?.pushNotify(msg as any)
+      }
+      this.ipc.startTask = async (exec, args, cwd, env) => {
+        return await agentService.startTask(exec, args, cwd, env)
+      }
+      this.ipc.startDebugSession = async (name, identifier) => {
+        return await agentService.startDebugSession(name, identifier)
+      }
+      this.ipc.stopAgent = async id => {
+        return await agentService.stopAgent(id)
       }
 
       return true

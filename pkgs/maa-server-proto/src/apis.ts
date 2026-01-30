@@ -32,6 +32,10 @@ export type HostToSubApis = {
 
 export type SubToHostApis = {
   pushNotify: (inst: string, msg: unknown) => void
+
+  startTask: (exec: string, args: string[], cwd: string, env: Record<string, string>) => string
+  startDebugSession: (name: string, identifier: string) => string | null
+  stopAgent: (id: string) => void
 }
 
 export type MarkApisImpl<T> = {

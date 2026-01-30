@@ -1,5 +1,6 @@
 import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
+import { parse } from 'jsonc-parser'
 import path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
@@ -57,7 +58,7 @@ export class AgentService extends BaseService {
       logger.error('Cannot find launch.json')
       return null
     }
-    const launchJson = JSON.parse(await fs.readFile(launchJsonPath, 'utf8')) as {
+    const launchJson = parse(await fs.readFile(launchJsonPath, 'utf8')) as {
       configurations: vscode.DebugConfiguration[]
     }
     const config = launchJson.configurations.find(cfg => cfg.name === name)

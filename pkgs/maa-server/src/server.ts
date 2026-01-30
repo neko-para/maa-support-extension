@@ -85,6 +85,14 @@ export async function initServer() {
   return promise
 }
 
-export function sendLog(msg: string) {
-  conn?.sendNotification(logNoti, msg)
+export const logger = {
+  info(msg: string) {
+    conn?.sendNotification('info', msg)
+  },
+  warn(msg: string) {
+    conn?.sendNotification('warn', msg)
+  },
+  error(msg: string) {
+    conn?.sendNotification('error', msg)
+  }
 }

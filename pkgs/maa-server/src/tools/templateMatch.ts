@@ -2,12 +2,12 @@ import * as fs from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
 
-import { sendLog } from '../server'
+import { logger } from '../server'
 import { convertImage, setupFixedController } from './utils'
 
 async function setupFakeResource() {
   const temp = path.join(os.tmpdir(), 'maavsc-matches')
-  sendLog(`create fake resource under ${temp}`)
+  logger.info(`create fake resource under ${temp}`)
 
   await fs.mkdir(path.join(temp, 'pipeline'), { recursive: true })
   await fs.writeFile(path.join(temp, 'pipeline', '1.json'), '{}')
@@ -21,7 +21,7 @@ export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, t
   const ctrl = await setupFixedController(image)
 
   if (!ctrl) {
-    sendLog('tmpl match ctrl create failed')
+    logger.error('tmpl match ctrl create failed')
     return null
   }
 
@@ -36,7 +36,7 @@ export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, t
   tasker.resource = res
 
   if (!tasker.inited) {
-    sendLog('tmpl match tasker create failed')
+    logger.error('tmpl match tasker create failed')
     tasker.destroy()
     res.destroy()
     ctrl.destroy()
@@ -46,7 +46,7 @@ export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, t
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    sendLog(`tmpl match action called with threshold: ${threshold}`)
+    logger.info(`tmpl match action called with threshold: ${threshold}`)
     const detail = await self.context.run_recognition('@mse/reco', image, {
       '@mse/reco': {
         recognition: 'TemplateMatch',
@@ -76,7 +76,7 @@ export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, t
     })
     .wait()
 
-  sendLog('tmpl match destroy')
+  logger.info('tmpl match destroy')
 
   tasker.destroy()
   res.destroy()

@@ -1,5 +1,5 @@
 import { ipc } from '../apis'
-import { sendLog } from '../server'
+import { logger } from '../server'
 import { convertImage, setupFixedController } from './utils'
 
 let prevTask: string | undefined = undefined
@@ -13,7 +13,7 @@ export async function performReco(
   const ctrl = await setupFixedController(image)
 
   if (!ctrl) {
-    sendLog('quick reco ctrl create failed')
+    logger.error('quick reco ctrl create failed')
     return null
   }
 
@@ -22,13 +22,13 @@ export async function performReco(
     await res.post_bundle(resource).wait()
   }
   if (!res.loaded) {
-    sendLog('quick reco res create failed')
+    logger.error('quick reco res create failed')
     return null
   }
 
   const tasks = res.node_list
   if (!tasks) {
-    sendLog('quick reco res no task')
+    logger.error('quick reco res no task')
     return null
   }
 
@@ -51,14 +51,14 @@ export async function performReco(
   tasker.controller = ctrl
   tasker.resource = res
   if (!tasker.inited) {
-    sendLog('quick reco tasker create failed')
+    logger.error('quick reco tasker create failed')
     return null
   }
 
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    sendLog('quick reco action called')
+    logger.info('quick reco action called')
     const detail = await self.context.run_recognition(task, image)
     if (detail?.hit) {
       const presp = {
@@ -80,7 +80,7 @@ export async function performReco(
     })
     .wait()
 
-  sendLog('quick reco destroy')
+  logger.info('quick reco destroy')
 
   tasker.destroy()
   res.destroy()

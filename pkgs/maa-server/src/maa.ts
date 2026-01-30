@@ -7,13 +7,13 @@ import type { InterfaceRuntime } from '@mse/types'
 
 import { ipc } from './apis'
 import { option } from './options'
-import { sendLog } from './server'
+import { logger } from './server'
 
 export function initMaa() {
   module.paths.unshift(option.module)
   require('@maaxyz/maa-node')
 
-  sendLog(maa.Global.version)
+  logger.info(maa.Global.version)
   maa.Global.debug_mode = true
   maa.Global.log_dir = option.maaLog
 }
@@ -90,7 +90,7 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
   }
 
   controller.add_sink((_, msg) => {
-    sendLog(`${JSON.stringify(msg)}`)
+    logger.info(`${JSON.stringify(msg)}`)
   })
 
   await controller.post_connection().wait()
@@ -111,7 +111,7 @@ async function setupResource(
   const resource = new maa.Resource()
 
   resource.add_sink((_, msg) => {
-    sendLog(`${JSON.stringify(msg)}`)
+    logger.info(`${JSON.stringify(msg)}`)
   })
 
   for (const path of runtime.resource_path) {
@@ -125,7 +125,7 @@ async function setupResource(
     client = new maa.Client(runtime.agent.identifier)
     const identifier = client.identifier ?? 'vsc-no-identifier'
 
-    sendLog(`AgentClient listening ${identifier}`)
+    logger.info(`AgentClient listening ${identifier}`)
 
     if (runtime.agent.debug_session) {
       const handle = await ipc.startDebugSession(runtime.agent.debug_session, identifier)
@@ -153,7 +153,7 @@ async function setupResource(
     }
 
     client.bind_resource(resource)
-    sendLog(`AgentClient start connecting ${identifier}`)
+    logger.info(`AgentClient start connecting ${identifier}`)
     if (
       !(await client
         .connect()
@@ -162,7 +162,7 @@ async function setupResource(
           () => false
         )
         .then(res => {
-          sendLog(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
+          logger.info(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
           return res
         }))
     ) {
@@ -209,11 +209,11 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
   const tasker = new maa.Tasker()
 
   tasker.add_sink((_, msg) => {
-    sendLog(`${JSON.stringify(msg)}`)
+    logger.info(`${JSON.stringify(msg)}`)
   })
 
   tasker.add_context_sink((_, msg) => {
-    sendLog(`${JSON.stringify(msg)}`)
+    logger.info(`${JSON.stringify(msg)}`)
   })
 
   tasker.controller = controller

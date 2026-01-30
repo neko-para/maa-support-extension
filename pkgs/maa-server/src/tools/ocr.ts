@@ -4,13 +4,13 @@ import * as fs from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
 
-import { sendLog } from '../server'
+import { logger } from '../server'
 // import { isMaaAssistantArknights } from '../utils/fs'
 import { convertImage, setupFixedController } from './utils'
 
 async function setupFakeResource(resources: string[]) {
   const temp = path.join(os.tmpdir(), 'maavsc-models')
-  sendLog(`create fake resource under ${temp}`)
+  logger.info(`create fake resource under ${temp}`)
 
   const realPaths: string[] = []
   for (const res of resources) {
@@ -21,11 +21,11 @@ async function setupFakeResource(resources: string[]) {
     realPaths.push(target)
 
     if (existsSync(target)) {
-      sendLog(`${target} exists, skip copy`)
+      logger.info(`${target} exists, skip copy`)
       continue
     }
 
-    sendLog(`copy model from ${res} to ${target}`)
+    logger.info(`copy model from ${res} to ${target}`)
 
     const ppocrPath = path.join(res, 'PaddleOCR')
     const detPath = path.join(ppocrPath, 'det')
@@ -34,14 +34,14 @@ async function setupFakeResource(resources: string[]) {
       const targetOcrPath = path.join(target, 'model', 'ocr')
       await fs.mkdir(targetOcrPath, { recursive: true })
       if (existsSync(detPath)) {
-        sendLog('copy det')
+        logger.info('copy det')
         await fs.copyFile(
           path.join(detPath, 'inference.onnx'),
           path.join(targetOcrPath, 'det.onnx')
         )
       }
       if (existsSync(recPath)) {
-        sendLog('copy rec')
+        logger.info('copy rec')
         await fs.copyFile(
           path.join(recPath, 'inference.onnx'),
           path.join(targetOcrPath, 'rec.onnx')
@@ -64,7 +64,7 @@ export async function performOcr(
     try {
       resources = await setupFakeResource(resources)
     } catch (e) {
-      sendLog(`setup fake resource failed ${e}`)
+      logger.error(`setup fake resource failed ${e}`)
       return null
     }
   }
@@ -74,7 +74,7 @@ export async function performOcr(
   const ctrl = await setupFixedController(image)
 
   if (!ctrl) {
-    sendLog('ocr ctrl create failed')
+    logger.error('ocr ctrl create failed')
     return null
   }
 
@@ -83,7 +83,7 @@ export async function performOcr(
     await res.post_bundle(resource).wait()
   }
   if (!res.loaded) {
-    sendLog('ocr res create failed')
+    logger.error('ocr res create failed')
     return null
   }
 
@@ -91,21 +91,21 @@ export async function performOcr(
   tasker.controller = ctrl
   tasker.resource = res
   if (!tasker.inited) {
-    sendLog('ocr tasker create failed')
+    logger.error('ocr tasker create failed')
     return null
   }
 
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    sendLog('ocr action called')
+    logger.info('ocr action called')
     const resp = await self.context.run_recognition('@mse/ocr', image, {
       '@mse/ocr': {
         recognition: 'OCR',
         roi
       }
     })
-    sendLog(`ocr reco done, resp ${JSON.stringify(resp)}`)
+    logger.info(`ocr reco done, resp ${JSON.stringify(resp)}`)
     if (resp) {
       const presp = {
         ...resp
@@ -126,7 +126,7 @@ export async function performOcr(
     })
     .wait()
 
-  sendLog('ocr destroy')
+  logger.info('ocr destroy')
 
   tasker.destroy()
   res.destroy()

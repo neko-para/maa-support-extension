@@ -69,8 +69,8 @@ export class ServerService extends BaseService {
       })) &&
       this.rpc.conn
     ) {
-      this.rpc.conn.onNotification(logNoti, msg => {
-        logger.info(msg)
+      this.rpc.conn.onNotification(logNoti, (cate, msg) => {
+        logger[cate](msg)
       })
 
       const conn = this.rpc.conn

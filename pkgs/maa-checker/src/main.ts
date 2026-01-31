@@ -29,7 +29,7 @@ async function main() {
     console.log(`Usage: npx ${pkg.name} <interface path> [--raw]`)
     process.exit(1)
   }
-  const interfacePath = process.argv[2]
+  const interfacePath = path.resolve(process.argv[2])
   const rawMode = process.argv[3] === '--raw'
   const bundle = new InterfaceBundle(
     new FsContentLoader(),

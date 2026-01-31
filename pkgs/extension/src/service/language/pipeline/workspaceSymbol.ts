@@ -19,7 +19,7 @@ export class PipelineWorkspaceSymbolProvider
     token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation[]> {
     const intBundle = await this.flush()
-    if (!intBundle || !intBundle.info?.layer) {
+    if (!intBundle) {
       return []
     }
 

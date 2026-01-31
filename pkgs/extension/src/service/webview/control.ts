@@ -208,21 +208,21 @@ export class WebviewControlService extends BaseService {
           switch (data.dest.type) {
             case 'entry': {
               const info = data.dest
-              loc = interfaceService.interfaceBundle?.info?.refs.find(
+              loc = interfaceService.interfaceBundle?.info.refs.find(
                 ref => ref.type === 'interface.task_entry' && ref.target === info.entry
               )?.location
               break
             }
             case 'option': {
               const info = data.dest
-              loc = interfaceService.interfaceBundle?.info?.decls.find(
+              loc = interfaceService.interfaceBundle?.info.decls.find(
                 decl => decl.type === 'interface.option' && decl.name === info.option
               )?.location
               break
             }
             case 'case': {
               const info = data.dest
-              loc = interfaceService.interfaceBundle?.info?.decls.find(
+              loc = interfaceService.interfaceBundle?.info.decls.find(
                 decl =>
                   decl.type === 'interface.case' &&
                   decl.name === info.case &&
@@ -232,7 +232,7 @@ export class WebviewControlService extends BaseService {
             }
             case 'input': {
               const info = data.dest
-              loc = interfaceService.interfaceBundle?.info?.decls.find(
+              loc = interfaceService.interfaceBundle?.info.decls.find(
                 decl =>
                   decl.type === 'interface.input' &&
                   decl.name === info.name &&

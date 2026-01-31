@@ -29,7 +29,7 @@ export class PipelineDocumentLinkProvider
       return []
     }
     const [layer, file] = layerInfo
-    const topLayer = intBundle.topLayer!
+    const topLayer = intBundle.topLayer
 
     const refs = layer.mergedRefs.filter(ref => ref.file === file)
 

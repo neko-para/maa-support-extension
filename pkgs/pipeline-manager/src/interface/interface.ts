@@ -15,7 +15,7 @@ import { Bundle } from '../bundle/bundle'
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
-import type { LayerInfo } from '../layer/layer'
+import { LayerInfo } from '../layer/layer'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
 import { isString, parseObject } from '../parser/utils'
 import { type AbsolutePath, type RelativePath, type TaskName, joinPath } from '../utils/types'
@@ -62,7 +62,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   content: ContentJson<T>
 
-  info?: InterfaceInfo
+  info: InterfaceInfo
 
   active: string
   paths: RelativePath[]
@@ -94,8 +94,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     watcher: IContentWatcher,
     maa: boolean,
     root: string,
-    file = 'interface.json',
-    debounce = 500
+    file = 'interface.json'
   ) {
     super()
 
@@ -109,15 +108,25 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
           maa: this.maa,
           file: this.file
         })
-        if (this.bundles.length > 0) {
-          this.info.layer.parent = this.bundles[this.bundles.length - 1].layer
-        }
       } else {
-        this.info = undefined
+        this.info = {
+          decls: [],
+          refs: [],
+          layer: new LayerInfo(loader, this.maa, this.root, 'interface')
+        }
+      }
+      if (this.bundles.length > 0) {
+        this.info.layer.parent = this.bundles[this.bundles.length - 1].layer
       }
 
       this.emit('interfaceChanged')
     })
+
+    this.info = {
+      decls: [],
+      refs: [],
+      layer: new LayerInfo(loader, this.maa, this.root, 'interface')
+    }
 
     this.active = ''
     this.paths = []
@@ -148,9 +157,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
         bundle.layer.parent = prev
         prev = bundle.layer
       }
-      if (this.info) {
-        this.info.layer.parent = prev
-      }
+      this.info.layer.parent = prev
 
       await Promise.all(this.bundles.map(bundle => bundle.load()))
 
@@ -197,14 +204,11 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   }
 
   allResourceNames() {
-    return (
-      this.info?.decls.filter(decl => decl.type === 'interface.resource').map(info => info.name) ??
-      []
-    )
+    return this.info.decls.filter(decl => decl.type === 'interface.resource').map(info => info.name)
   }
 
   updatePaths() {
-    const resInfo = this.info?.decls
+    const resInfo = this.info.decls
       .filter(decl => decl.type === 'interface.resource')
       .find(info => info.name === this.active)
     if (resInfo) {
@@ -235,7 +239,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   }
 
   updateLangs() {
-    const langInfos = this.info?.decls.filter(decl => decl.type === 'interface.language')
+    const langInfos = this.info.decls.filter(decl => decl.type === 'interface.language')
     if (langInfos) {
       const newFiles = langInfos.map(info => [info.name, info.path] as [string, RelativePath])
       if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
@@ -292,8 +296,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     file: AbsolutePath
   ): [layer: LayerInfo, absolute: AbsolutePath, isDefault: boolean] | null {
     if (file === this.file) {
-      const layer = this.info?.layer
-      return layer ? [layer, file, false] : null
+      return [this.info.layer, file, false]
     } else {
       for (const bundle of this.bundles) {
         if (file.startsWith(joinPath(bundle.root, this.maa ? 'tasks' : 'pipeline'))) {
@@ -309,24 +312,16 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   get allLayers() {
     const layers = this.bundles.map(bundle => bundle.layer)
-    if (this.info?.layer) {
-      layers.push(this.info.layer)
-    }
+    layers.push(this.info.layer)
     return layers
   }
 
   get topLayer() {
-    if (this.info?.layer) {
-      return this.info.layer
-    }
-    if (this.bundles.length > 0) {
-      return this.bundles[this.bundles.length - 1].layer
-    }
-    return null
+    return this.info.layer
   }
 
-  evalTask(task: string): Partial<Record<keyof maa.Task, unknown>> | null {
-    return this.topLayer?.evalTask(task as TaskName) ?? null
+  evalTask(task: string): Partial<Record<keyof maa.Task, unknown>> {
+    return this.topLayer.evalTask(task as TaskName)
   }
 
   maaEvalTask(task: string): MaaTaskWithTraceInfo<MaaTask> | null {

@@ -44,7 +44,7 @@ export class PipelineHoverProvider
           return null
         }
 
-        const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, decl.task)
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer, decl.task)
         return new vscode.Hover(hover)
       }
     } else if (ref) {
@@ -54,7 +54,7 @@ export class PipelineHoverProvider
           if (taskRef) {
             const hover = await this.getTaskHover(
               intBundle,
-              intBundle.topLayer!,
+              intBundle.topLayer,
               taskRef.taskSuffix,
               ref.belong
             )
@@ -78,10 +78,10 @@ export class PipelineHoverProvider
             return null
           }
         }
-        const hover = await this.getTaskHover(intBundle, intBundle.topLayer!, ref.target)
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer, ref.target)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.template') {
-        const hover = this.getImageHover(intBundle, intBundle.topLayer!, ref.target)
+        const hover = this.getImageHover(intBundle, intBundle.topLayer, ref.target)
         return new vscode.Hover(hover)
       }
     }

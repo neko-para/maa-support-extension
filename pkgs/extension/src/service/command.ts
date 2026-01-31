@@ -29,7 +29,7 @@ export class CommandService extends BaseService {
     this.defer = vscode.commands.registerCommand(commands.LaunchTask, async (task?: string) => {
       if (!task) {
         await interfaceService.interfaceBundle?.flush()
-        const taskList = interfaceService.interfaceBundle?.topLayer?.getTaskList() ?? []
+        const taskList = interfaceService.interfaceBundle?.topLayer.getTaskList() ?? []
         const taskRes = await vscode.window.showQuickPick(taskList, {
           title: t('maa.pi.title.select-task')
         })

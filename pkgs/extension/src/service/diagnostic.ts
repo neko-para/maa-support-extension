@@ -75,7 +75,7 @@ class DiagnosticScanner extends FlushHelper {
 
   async doFlushImpl() {
     const intBundle = interfaceService.interfaceBundle
-    if (!intBundle?.info?.layer) {
+    if (!intBundle) {
       return
     }
     await intBundle.flush(true)

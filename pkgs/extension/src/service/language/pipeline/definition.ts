@@ -31,7 +31,7 @@ export class PipelineDefinitionProvider
       return null
     }
     const [layer, file, isDefault] = layerInfo
-    const topLayer = intBundle.topLayer!
+    const topLayer = intBundle.topLayer
 
     const offset = document.offsetAt(position)
     const decls = layer.mergedDecls.filter(decl => decl.file === file)

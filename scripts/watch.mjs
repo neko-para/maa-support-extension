@@ -28,6 +28,18 @@ esContext({
   ctx.watch()
 })
 
+esContext({
+  entryPoints: ['pkgs/maa-checker/src/main.ts'],
+  bundle: true,
+  outdir: 'pkgs/maa-checker/dist',
+  external: ['@maaxyz/maa-node'],
+  platform: 'node',
+  sourcemap: true,
+  mainFields: ['module', 'main']
+}).then(ctx => {
+  ctx.watch()
+})
+
 viteBuild({
   root: path.join(import.meta.dirname, '../pkgs/webview'),
   build: {

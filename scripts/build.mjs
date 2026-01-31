@@ -24,6 +24,16 @@ esBuild({
   sourcemap: true
 })
 
+esBuild({
+  entryPoints: ['pkgs/maa-checker/src/main.ts'],
+  bundle: true,
+  outdir: 'pkgs/maa-checker/dist',
+  external: ['@maaxyz/maa-node'],
+  platform: 'node',
+  sourcemap: true,
+  mainFields: ['module', 'main']
+})
+
 viteBuild({
   root: path.join(import.meta.dirname, '../pkgs/webview')
 })

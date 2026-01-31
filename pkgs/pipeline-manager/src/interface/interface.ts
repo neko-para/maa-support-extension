@@ -196,6 +196,13 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.emit('activeChanged')
   }
 
+  allResourceNames() {
+    return (
+      this.info?.decls.filter(decl => decl.type === 'interface.resource').map(info => info.name) ??
+      []
+    )
+  }
+
   updatePaths() {
     const resInfo = this.info?.decls
       .filter(decl => decl.type === 'interface.resource')

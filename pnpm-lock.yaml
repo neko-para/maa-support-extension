@@ -125,6 +125,33 @@ importers:
         specifier: ^8.2.1
         version: 8.2.1
 
+  pkgs/maa-checker:
+    devDependencies:
+      '@maaxyz/maa-node':
+        specifier: 5.5.0
+        version: 5.5.0
+      '@mse/pipeline-manager':
+        specifier: workspace:*
+        version: link:../pipeline-manager
+      '@mse/types':
+        specifier: workspace:*
+        version: link:../types
+      '@tsconfig/node20':
+        specifier: ^20.1.8
+        version: 20.1.8
+      '@types/node':
+        specifier: ^25.0.10
+        version: 25.0.10
+      '@types/source-map-support':
+        specifier: ^0.5.10
+        version: 0.5.10
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   pkgs/maa-server:
     devDependencies:
       '@maaxyz/maa-node':

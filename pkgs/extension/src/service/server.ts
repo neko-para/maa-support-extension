@@ -10,7 +10,7 @@ import {
 } from '@mse/maa-server-proto'
 import { logger } from '@mse/utils'
 
-import { agentService, nativeService, stateService } from '.'
+import { agentService, nativeService, serverService, stateService, statusBarService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -34,6 +34,10 @@ export class ServerService extends BaseService {
     this.ipc = null
 
     this.instMap = {}
+
+    this.rpc.on('connectionLost', () => {
+      statusBarService.showServerStatus('close')
+    })
   }
 
   async init() {
@@ -59,10 +63,12 @@ export class ServerService extends BaseService {
       stateService.reduce({
         admin
       })
+      statusBarService.showServerStatus('close')
     }
   }
 
   async setupServer() {
+    statusBarService.showServerStatus('loading~spin')
     if (
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
@@ -126,8 +132,10 @@ export class ServerService extends BaseService {
         return (await vscode.window.showQuickPick(items)) ?? null
       }
 
+      statusBarService.showServerStatus('check')
       return true
     } else {
+      statusBarService.showServerStatus('close')
       return false
     }
   }

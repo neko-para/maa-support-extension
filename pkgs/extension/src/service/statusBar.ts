@@ -21,7 +21,7 @@ export class StatusBarService extends BaseService {
     this.extItem.show()
 
     this.transportItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left)
-    this.transportItem.show()
+    // this.transportItem.show()
 
     this.defer = vscode.commands.registerCommand(commands.RevealControlPanel, () => {
       vscode.commands.executeCommand('maa.view.control-panel.focus')
@@ -39,5 +39,9 @@ export class StatusBarService extends BaseService {
     }
     this.maaItem.text = `MaaFramework ${version ?? t('maa.status.not-loaded')}`
     this.maaItem.show()
+  }
+
+  showServerStatus(status: 'check' | 'close' | 'loading~spin') {
+    this.extItem.text = `MaaSupport ${packageJson.version} \$(${status})`
   }
 }

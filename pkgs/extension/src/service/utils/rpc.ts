@@ -1,3 +1,4 @@
+import EventEmitter from 'node:events'
 import * as net from 'node:net'
 import { v4 } from 'uuid'
 import * as rpc from 'vscode-jsonrpc/node'
@@ -12,7 +13,9 @@ function encodeParam(data: unknown) {
   return Buffer.from(JSON.stringify(data)).toString('base64')
 }
 
-export class RpcManager {
+export class RpcManager extends EventEmitter<{
+  connectionLost: []
+}> {
   script: string
   admin: boolean
   id: string
@@ -27,6 +30,8 @@ export class RpcManager {
   }
 
   constructor(script: string, admin: boolean) {
+    super()
+
     this.script = script
     this.admin = admin
     this.id = v4()
@@ -117,6 +122,7 @@ export class RpcManager {
           this.proc?.clean?.()
           this.proc = undefined
           this.conn = undefined
+          this.emit('connectionLost')
         }
       })
     }

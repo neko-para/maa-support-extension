@@ -81,7 +81,7 @@ export class Bundle extends EventEmitter<{
       )
     } else {
       if (file.startsWith(this.pipelineRoot)) {
-        return file.endsWith('.json')
+        return file.endsWith('.json') || file.endsWith('.jsonc')
       } else if (file.startsWith(this.imageRoot)) {
         return file.endsWith('.png')
       } else if (file === this.defaultPipelinePath) {
@@ -92,7 +92,7 @@ export class Bundle extends EventEmitter<{
   }
 
   needContent(file: AbsolutePath): boolean {
-    return file.endsWith('.json')
+    return file.endsWith('.json') || file.endsWith('.jsonc')
   }
 
   async reset(): Promise<void> {
@@ -105,7 +105,7 @@ export class Bundle extends EventEmitter<{
     if (!this.filterFile(full, false)) {
       return
     }
-    if (file.endsWith('.json')) {
+    if (file.endsWith('.json') || file.endsWith('.jsonc')) {
       const changed = this.loadFileImpl(file, content)
       if (changed.length > 0) {
         this.emit('taskChanged', [...new Set(changed)])
@@ -125,7 +125,7 @@ export class Bundle extends EventEmitter<{
     if (!this.filterFile(full, false)) {
       return
     }
-    if (file.endsWith('.json')) {
+    if (file.endsWith('.json') || file.endsWith('.jsonc')) {
       const changed = this.deleteFileImpl(file)
       if (changed.length > 0) {
         this.emit('taskChanged', [...new Set(changed)])

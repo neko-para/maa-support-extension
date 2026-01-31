@@ -129,7 +129,7 @@ async function main() {
 
     hasError = hasError || diags.filter(diag => diag.level === 'error').length > 0
   }
-  process.exit(hasError ? 0 : 1)
+  process.exit(hasError ? 1 : 0)
 }
 
 main()

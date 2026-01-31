@@ -32,7 +32,7 @@ export class PipelineLanguageProvider extends BaseService {
       }
     }
 
-    this.defer = interfaceService.onResourceChanged(() => {
+    const updateProvider = () => {
       if (this.provider) {
         this.provider.dispose()
         this.provider = undefined
@@ -56,9 +56,18 @@ export class PipelineLanguageProvider extends BaseService {
         filters.push({
           pattern: new vscode.RelativePattern(root.dirUri, path.basename(root.interfaceUri.fsPath))
         })
+        for (const imp of interfaceService.interfaceBundle?.importFiles ?? []) {
+          filters.push({
+            scheme: 'file',
+            pattern: new vscode.RelativePattern(root.dirUri, imp)
+          })
+        }
       }
       this.provider = setup(filters)
-    })
+    }
+
+    this.defer = interfaceService.onResourceChanged(updateProvider)
+    this.defer = interfaceService.onInterfaceImportChanged(updateProvider)
   }
 
   shouldFilter(doc: vscode.TextDocument) {

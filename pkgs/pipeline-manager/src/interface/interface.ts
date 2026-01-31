@@ -18,7 +18,13 @@ import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
 import { isString, parseObject } from '../parser/utils'
-import { type AbsolutePath, type RelativePath, type TaskName, joinPath } from '../utils/types'
+import {
+  type AbsolutePath,
+  type RelativePath,
+  type TaskName,
+  joinPath,
+  relativePath
+} from '../utils/types'
 
 class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
   intBundle: InterfaceBundle<T>
@@ -336,7 +342,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   locateLayer(
     file: AbsolutePath
   ): [layer: LayerInfo, absolute: AbsolutePath, isDefault: boolean] | null {
-    if (file === this.file) {
+    const rel = relativePath(this.root, file).replaceAll(path.sep, '/') as RelativePath
+    if (file === this.file || this.importFiles.includes(rel)) {
       return [this.info.layer, file, false]
     } else {
       for (const bundle of this.bundles) {

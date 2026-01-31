@@ -26,8 +26,12 @@ export class InterfaceDocumentLinkProvider
 
     const result: vscode.DocumentLink[] = []
 
-    for (const ref of index.refs) {
-      if (ref.type === 'interface.language_path' || ref.type === 'interface.resource_path') {
+    for (const ref of index.refs.filter(ref => ref.file === document.uri.fsPath)) {
+      if (
+        ref.type === 'interface.language_path' ||
+        ref.type === 'interface.resource_path' ||
+        ref.type === 'interface.import_path'
+      ) {
         result.push(
           new vscode.DocumentLink(
             convertRange(document, ref.location),

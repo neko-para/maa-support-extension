@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 import { findDeclRef } from '@mse/pipeline-manager'
 
-import { convertRangeLocation } from '../utils'
+import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceReferenceProvider
@@ -27,11 +27,17 @@ export class InterfaceReferenceProvider
     }
 
     const offset = document.offsetAt(position)
-    const decl = findDeclRef(index.decls, offset)
-    const ref = findDeclRef(index.refs, offset)
+    const decl = findDeclRef(
+      index.decls.filter(decl => decl.file === document.uri.fsPath),
+      offset
+    )
+    const ref = findDeclRef(
+      index.refs.filter(ref => ref.file === document.uri.fsPath),
+      offset
+    )
 
     const decls = this.makeDecls(index, decl, ref) ?? []
     const refs = this.makeRefs(index, decl, ref) ?? []
-    return [...decls, ...refs].map(dr => convertRangeLocation(document, dr.location))
+    return await Promise.all([...decls, ...refs].map(dr => autoConvertRangeLocation(dr)))
   }
 }

@@ -54,6 +54,9 @@ export class InterfaceInlayHintsProvider
     const beginOffset = document.offsetAt(range.start)
     const endOffset = document.offsetAt(range.end)
     const refs = index.refs.filter(ref => {
+      if (ref.file !== document.uri.fsPath) {
+        return false
+      }
       if (ref.type !== 'interface.locale') {
         return false
       }

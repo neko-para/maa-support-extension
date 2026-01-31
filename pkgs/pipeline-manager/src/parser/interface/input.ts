@@ -1,13 +1,13 @@
 import type { Node } from 'jsonc-parser'
 
 import { isString, parseArray, parseObject } from '../utils'
-import type { IntInputDeclInfo, InterfaceInfo } from './interface'
+import type { IntInputDeclInfo, InterfaceInfo, InterfaceParseContext } from './interface'
 
 function isPipelineType(type: string): type is 'string' | 'int' | 'bool' {
   return ['string', 'int', 'bool'].includes(type)
 }
 
-function parseInput(node: Node, info: InterfaceInfo, option: string) {
+function parseInput(node: Node, info: InterfaceInfo, option: string, ctx: InterfaceParseContext) {
   let loc: Node | null = null
   const decl: IntInputDeclInfo = {
     type: 'interface.input',
@@ -31,6 +31,7 @@ function parseInput(node: Node, info: InterfaceInfo, option: string) {
   }
   if (loc) {
     info.decls.push({
+      file: ctx.file,
       location: loc,
       ...decl
     })
@@ -40,10 +41,15 @@ function parseInput(node: Node, info: InterfaceInfo, option: string) {
   }
 }
 
-export function parseInputs(node: Node, info: InterfaceInfo, option: string) {
+export function parseInputs(
+  node: Node,
+  info: InterfaceInfo,
+  option: string,
+  ctx: InterfaceParseContext
+) {
   const names: string[] = []
   for (const obj of parseArray(node)) {
-    const name = parseInput(obj, info, option)
+    const name = parseInput(obj, info, option, ctx)
     if (name) {
       names.push(name)
     }

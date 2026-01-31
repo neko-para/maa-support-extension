@@ -71,6 +71,23 @@ export class LayerInfo {
     return this.tasks[name]
   }
 
+  removeFile(file: AbsolutePath) {
+    const changed: string[] = []
+    for (const [task, infos] of Object.entries(this.tasks)) {
+      const newInfos = infos.filter(info => info.file !== file)
+      if (infos.length !== newInfos.length) {
+        if (newInfos.length === 0) {
+          delete this.tasks[task as TaskName]
+        } else {
+          infos.splice(0, infos.length, ...newInfos)
+        }
+        changed.push(task)
+      }
+    }
+    this.markDirty()
+    return changed
+  }
+
   markDirty() {
     this.dirty = true
   }

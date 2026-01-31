@@ -48,7 +48,7 @@ export class InterfaceCodeLensProvider
     }
 
     const result: vscode.CodeLens[] = []
-    for (const decl of index.decls) {
+    for (const decl of index.decls.filter(decl => decl.file === document.uri.fsPath)) {
       if (decl.type === 'interface.resource') {
         const activated = decl.name === interfaceService.interfaceConfigJson.resource
         const disabled =

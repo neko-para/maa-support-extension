@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import { findDeclRef, parseObject } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
-import { convertRangeLocation } from '../utils'
+import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceDefinitionProvider
@@ -27,13 +27,19 @@ export class InterfaceDefinitionProvider
     }
 
     const offset = document.offsetAt(position)
-    const decl = findDeclRef(index.decls, offset)
-    const ref = findDeclRef(index.refs, offset)
+    const decl = findDeclRef(
+      index.decls.filter(decl => decl.file === document.uri.fsPath),
+      offset
+    )
+    const ref = findDeclRef(
+      index.refs.filter(ref => ref.file === document.uri.fsPath),
+      offset
+    )
 
     if (decl) {
       const decls = this.makeDecls(index, decl, ref) ?? []
       const refs = this.makeRefs(index, decl, ref) ?? []
-      return [...decls, ...refs].map(dr => convertRangeLocation(document, dr.location))
+      return await Promise.all([...decls, ...refs].map(dr => autoConvertRangeLocation(dr)))
     } else if (ref) {
       if (ref.type === 'interface.locale') {
         const result: vscode.Definition = []
@@ -54,7 +60,7 @@ export class InterfaceDefinitionProvider
       }
 
       const decls = this.makeDecls(index, decl, ref) ?? []
-      return decls.map(dr => convertRangeLocation(document, dr.location))
+      return await Promise.all(decls.map(dr => autoConvertRangeLocation(dr)))
     }
 
     return null

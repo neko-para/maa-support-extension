@@ -181,22 +181,8 @@ export class Bundle extends EventEmitter<{
   }
 
   deleteFileImpl(file: RelativePath): string[] {
-    const changed: string[] = []
     delete this.files[file]
-
-    for (const [task, infos] of Object.entries(this.layer.tasks)) {
-      const newInfos = infos.filter(info => info.file !== joinPath(this.root, file))
-      if (infos.length !== newInfos.length) {
-        if (newInfos.length === 0) {
-          delete this.layer.tasks[task as TaskName]
-        } else {
-          infos.splice(0, infos.length, ...newInfos)
-        }
-        changed.push(task)
-      }
-    }
-    this.layer.markDirty()
-    return changed
+    return this.layer.removeFile(joinPath(this.root, file))
   }
 
   dispatchImageChanged() {

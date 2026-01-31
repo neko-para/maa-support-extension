@@ -24,7 +24,24 @@ export class InterfaceService extends BaseService {
   interfaceConfigJson: Partial<InterfaceConfig>
 
   get interfaceJson(): Partial<Interface> {
-    return this.interfaceBundle?.content.object ?? {}
+    if (!this.interfaceBundle?.content.object) {
+      return {}
+    }
+
+    const final = structuredClone(this.interfaceBundle.content.object)
+    final.task = final.task ?? []
+    final.option = final.option ?? {}
+    for (const imp of this.interfaceBundle.imports) {
+      if (imp.object) {
+        if (imp.object.task) {
+          final.task.push(...imp.object.task)
+        }
+        if (imp.object.option) {
+          Object.assign(final.option, imp.object.option)
+        }
+      }
+    }
+    return final
   }
 
   get resourcePaths(): vscode.Uri[] {
@@ -40,6 +57,11 @@ export class InterfaceService extends BaseService {
   interfaceChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
   get onInterfaceChanged() {
     return this.interfaceChanged.event
+  }
+
+  interfaceImportChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onInterfaceImportChanged() {
+    return this.interfaceImportChanged.event
   }
 
   interfaceConfigChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
@@ -69,6 +91,7 @@ export class InterfaceService extends BaseService {
     this.interfaceConfigJson = {}
 
     this.defer = this.interfaceChanged
+    this.defer = this.interfaceImportChanged
     this.defer = this.interfaceConfigChanged
     this.defer = this.resourceChanged
     this.defer = this.pipelineChanged
@@ -122,6 +145,12 @@ export class InterfaceService extends BaseService {
     )
     this.interfaceBundle.evalErrorDelegate = new MaaErrorDelegateImpl()
     this.interfaceBundle.on('interfaceChanged', () => {
+      this.interfaceChanged.fire()
+    })
+    this.interfaceBundle.on('importChanged', () => {
+      this.interfaceImportChanged.fire()
+    })
+    this.interfaceBundle.on('slaveInterfaceChanged', () => {
       this.interfaceChanged.fire()
     })
     this.interfaceBundle.on('bundleReloaded', () => {

@@ -6,6 +6,7 @@ import { LayerInfo } from '../../layer/layer'
 import type { AbsolutePath, RelativePath, TaskName } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
+import { parseImport } from './import'
 import { locKeys } from './keys'
 import { parseLanguage } from './language'
 import { parseOption } from './option'
@@ -56,6 +57,7 @@ export type IntInputDeclInfo = {
 }
 
 export type InterfaceDeclInfo = {
+  file: AbsolutePath
   location: Node
 } & (
   | IntLangDeclInfo
@@ -115,7 +117,13 @@ export type IntInputRefInfo = {
   offset: number
 }
 
+export type IntImportPathRefInfo = {
+  type: 'interface.import_path'
+  target: RelativePath
+}
+
 export type InterfaceRefInfo = {
+  file: AbsolutePath
   location: Node
 } & (
   | IntLangPathRefInfo
@@ -127,6 +135,7 @@ export type InterfaceRefInfo = {
   | IntOptionRefInfo
   | IntCaseRefInfo
   | IntInputRefInfo
+  | IntImportPathRefInfo
 )
 
 export type InterfaceInfo = {
@@ -138,14 +147,16 @@ export type InterfaceInfo = {
 export type InterfaceParseContext = {
   maa: boolean
   file: AbsolutePath
+  import: boolean
 }
 
-function parseController(node: Node, info: InterfaceInfo) {
+function parseController(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
         if (isString(obj)) {
           info.decls.push({
+            file: ctx.file,
             location: obj,
             type: 'interface.controller',
             name: obj.value
@@ -156,7 +167,7 @@ function parseController(node: Node, info: InterfaceInfo) {
   }
 }
 
-function parseResource(node: Node, info: InterfaceInfo) {
+function parseResource(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   let loc: Node | null = null
   const decl: IntResDeclInfo = {
     type: 'interface.resource',
@@ -172,18 +183,19 @@ function parseResource(node: Node, info: InterfaceInfo) {
         }
         break
       case 'path':
-        decl.paths = parsePath(obj, info)
+        decl.paths = parsePath(obj, info, ctx)
         break
       case 'controller':
-        decl.controller = parseCtrlRef(obj, info)
+        decl.controller = parseCtrlRef(obj, info, ctx)
         break
       case 'option':
-        parseOptionRef(obj, info)
+        parseOptionRef(obj, info, ctx)
         break
     }
   }
   if (loc) {
     info.decls.push({
+      file: ctx.file,
       location: loc,
       ...decl
     })
@@ -196,6 +208,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContex
       case 'name':
         if (isString(obj)) {
           info.decls.push({
+            file: ctx.file,
             location: obj,
             type: 'interface.task',
             name: obj.value as TaskName
@@ -205,6 +218,7 @@ function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContex
       case 'entry':
         if (isString(obj)) {
           info.refs.push({
+            file: ctx.file,
             location: obj,
             type: 'interface.task_entry',
             target: obj.value as TaskName
@@ -218,60 +232,59 @@ function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContex
         }
         break
       case 'resource':
-        parseResRef(obj, info)
+        parseResRef(obj, info, ctx)
         break
       case 'controller':
-        parseCtrlRef(obj, info)
+        parseCtrlRef(obj, info, ctx)
         break
       case 'pipeline_override':
         parseOverride(obj, info, ctx)
         break
       case 'option':
-        parseOptionRef(obj, info)
+        parseOptionRef(obj, info, ctx)
         break
     }
   }
 }
 
-function parseLocalization(node: Node, info: InterfaceInfo) {
+function parseLocalization(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   if (node.type === 'object') {
     for (const [key, obj] of parseObject(node)) {
       if (locKeys.includes(key) && isString(obj) && obj.value.startsWith('$')) {
         info.refs.push({
+          file: ctx.file,
           location: obj,
           type: 'interface.locale',
           target: obj.value.substring(1)
         })
       } else {
-        parseLocalization(obj, info)
+        parseLocalization(obj, info, ctx)
       }
     }
   } else if (node.type === 'array') {
     for (const obj of parseArray(node)) {
-      parseLocalization(obj, info)
+      parseLocalization(obj, info, ctx)
     }
   }
 }
 
-export function parseInterface(loader: IContentLoader, node: Node, ctx: InterfaceParseContext) {
-  const info: InterfaceInfo = {
-    decls: [],
-    refs: [],
-    layer: new LayerInfo(loader, ctx.maa, path.dirname(ctx.file) as AbsolutePath, 'interface')
-  }
+export function parseInterface(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj] of parseObject(node)) {
+    if (ctx.import && !['option', 'task'].includes(key)) {
+      continue
+    }
     switch (key) {
       case 'languages':
-        parseLanguage(obj, info)
+        parseLanguage(obj, info, ctx)
         break
       case 'controller':
         for (const sub of parseArray(obj)) {
-          parseController(sub, info)
+          parseController(sub, info, ctx)
         }
         break
       case 'resource':
         for (const sub of parseArray(obj)) {
-          parseResource(sub, info)
+          parseResource(sub, info, ctx)
         }
         break
       case 'task':
@@ -282,10 +295,13 @@ export function parseInterface(loader: IContentLoader, node: Node, ctx: Interfac
       case 'option':
         parseOption(obj, info, ctx)
         break
+      case 'import':
+        for (const sub of parseArray(obj)) {
+          parseImport(sub, info, ctx)
+        }
+        break
     }
   }
 
-  parseLocalization(node, info)
-
-  return info
+  parseLocalization(node, info, ctx)
 }

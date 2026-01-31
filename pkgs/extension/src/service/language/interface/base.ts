@@ -9,7 +9,7 @@ import { BaseService } from '../../context'
 export class InterfaceLanguageProvider extends BaseService {
   provider?: vscode.Disposable
 
-  constructor(setup: (selector: vscode.DocumentFilter) => vscode.Disposable) {
+  constructor(setup: (selector: vscode.DocumentFilter[]) => vscode.Disposable) {
     super()
 
     this.defer = {
@@ -18,19 +18,30 @@ export class InterfaceLanguageProvider extends BaseService {
       }
     }
 
-    this.defer = rootService.onActiveResourceChanged(() => {
+    const updateProvider = () => {
       if (this.provider) {
         this.provider.dispose()
         this.provider = undefined
       }
+      const filters: vscode.DocumentFilter[] = []
       const root = rootService.activeResource
       if (root) {
-        this.provider = setup({
+        filters.push({
           scheme: 'file',
           pattern: new vscode.RelativePattern(root.dirUri, path.basename(root.interfaceUri.fsPath))
         })
+        for (const imp of interfaceService.interfaceBundle?.importFiles ?? []) {
+          filters.push({
+            scheme: 'file',
+            pattern: new vscode.RelativePattern(root.dirUri, imp)
+          })
+        }
       }
-    })
+      this.provider = setup(filters)
+    }
+
+    this.defer = rootService.onActiveResourceChanged(updateProvider)
+    this.defer = interfaceService.onInterfaceImportChanged(updateProvider)
   }
 
   async flush() {

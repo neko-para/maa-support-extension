@@ -1,12 +1,13 @@
 import type { Node } from 'jsonc-parser'
 
 import { isString, parseArray } from '../utils'
-import type { InterfaceInfo } from './interface'
+import type { InterfaceInfo, InterfaceParseContext } from './interface'
 
-export function parseResRef(node: Node, info: InterfaceInfo) {
+export function parseResRef(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const obj of parseArray(node)) {
     if (isString(obj)) {
       info.refs.push({
+        file: ctx.file,
         location: obj,
         type: 'interface.resource',
         target: obj.value

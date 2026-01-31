@@ -49,6 +49,8 @@ class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
 
 export class InterfaceBundle<T extends any> extends EventEmitter<{
   interfaceChanged: []
+  importChanged: []
+  slaveInterfaceChanged: []
   activeChanged: []
   langChanged: []
   localeChanged: []
@@ -63,6 +65,9 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   content: ContentJson<T>
 
   info: InterfaceInfo
+
+  importFiles: RelativePath[]
+  imports: ContentJson<T>[]
 
   active: string
   paths: RelativePath[]
@@ -103,20 +108,14 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.file = joinPath(this.root, file)
 
     this.content = new ContentJson(loader, watcher, this.file, () => {
+      this.removeFile(this.file)
+
       if (this.content.node) {
-        this.info = parseInterface(this.content.loader, this.content.node, {
+        parseInterface(this.content.node, this.info, {
           maa: this.maa,
-          file: this.file
+          file: this.file,
+          import: false
         })
-      } else {
-        this.info = {
-          decls: [],
-          refs: [],
-          layer: new LayerInfo(loader, this.maa, this.root, 'interface')
-        }
-      }
-      if (this.bundles.length > 0) {
-        this.info.layer.parent = this.bundles[this.bundles.length - 1].layer
       }
 
       this.emit('interfaceChanged')
@@ -136,11 +135,15 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.langs = []
     this.langIndex = {}
 
+    this.importFiles = []
+    this.imports = []
+
     this.eval = new MaaEvalDelegateImpl(this)
 
     this.on('interfaceChanged', () => {
       this.updatePaths()
       this.updateLangs()
+      this.updateImports()
     })
 
     this.on('activeChanged', () => {
@@ -149,6 +152,10 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     this.on('langChanged', async () => {
       await Promise.all(this.langs.map(content => content.load()))
+    })
+
+    this.on('importChanged', async () => {
+      await Promise.all(this.imports.map(content => content.load()))
     })
 
     this.on('pathChanged', async () => {
@@ -192,6 +199,9 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   async flush(flushBundles = false) {
     await this.content.flush()
+    for (const imp of this.imports) {
+      await imp.flush()
+    }
     if (flushBundles) {
       await Promise.all(this.bundles.map(bundle => bundle.flush()))
     }
@@ -240,32 +250,25 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   updateLangs() {
     const langInfos = this.info.decls.filter(decl => decl.type === 'interface.language')
-    if (langInfos) {
-      const newFiles = langInfos.map(info => [info.name, info.path] as [string, RelativePath])
-      if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
-        return // paths not changed
-      }
-      for (const content of this.langs) {
-        content.stop()
-      }
-      this.langFiles = newFiles
-      this.langs = newFiles.map(([locale, file]) => {
-        return new ContentJson(
-          this.content.loader,
-          this.content.watcher,
-          joinPath(this.root, file),
-          () => {
-            this.buildLangIndex()
-          }
-        )
-      })
-    } else {
-      for (const content of this.langs) {
-        content.stop()
-      }
-      this.langFiles = []
-      this.langs = []
+
+    const newFiles = langInfos.map(info => [info.name, info.path] as [string, RelativePath])
+    if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
+      return // paths not changed
     }
+    for (const content of this.langs) {
+      content.stop()
+    }
+    this.langFiles = newFiles
+    this.langs = newFiles.map(([locale, file]) => {
+      return new ContentJson(
+        this.content.loader,
+        this.content.watcher,
+        joinPath(this.root, file),
+        () => {
+          this.buildLangIndex()
+        }
+      )
+    })
 
     this.emit('langChanged')
   }
@@ -290,6 +293,44 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     }
 
     this.emit('localeChanged')
+  }
+
+  removeFile(file: AbsolutePath) {
+    this.info.decls = this.info.decls.filter(decl => decl.file !== file)
+    this.info.refs = this.info.refs.filter(ref => ref.file !== file)
+    this.info.layer.removeFile(file)
+  }
+
+  updateImports() {
+    const importInfos = this.info.refs.filter(ref => ref.type === 'interface.import_path')
+
+    const newFiles = importInfos.map(info => info.target)
+    if (JSON.stringify(this.importFiles) === JSON.stringify(newFiles)) {
+      return // paths not changed
+    }
+    this.info.decls = this.info.decls.filter(decl => decl.file === this.file)
+    this.info.refs = this.info.refs.filter(ref => ref.file === this.file)
+    for (const content of this.imports) {
+      content.stop()
+      this.info.layer.removeFile(content.file)
+    }
+    this.importFiles = newFiles
+    this.imports = newFiles.map(file => {
+      const full = joinPath(this.root, file)
+      return new ContentJson(this.content.loader, this.content.watcher, full, node => {
+        this.removeFile(full)
+        if (node) {
+          parseInterface(node, this.info, {
+            maa: this.maa,
+            file: full,
+            import: true
+          })
+        }
+        this.emit('slaveInterfaceChanged')
+      })
+    })
+
+    this.emit('importChanged')
   }
 
   locateLayer(

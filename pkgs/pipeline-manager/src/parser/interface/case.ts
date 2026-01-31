@@ -11,6 +11,7 @@ function parseCase(node: Node, info: InterfaceInfo, option: string, ctx: Interfa
       case 'name':
         if (isString(obj)) {
           info.decls.push({
+            file: ctx.file,
             location: obj,
             type: 'interface.case',
             name: obj.value,
@@ -19,7 +20,7 @@ function parseCase(node: Node, info: InterfaceInfo, option: string, ctx: Interfa
         }
         break
       case 'option':
-        parseOptionRef(obj, info)
+        parseOptionRef(obj, info, ctx)
         break
       case 'pipeline_override':
         parseOverride(obj, info, ctx)

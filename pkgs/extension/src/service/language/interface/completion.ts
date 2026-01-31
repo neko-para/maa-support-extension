@@ -32,7 +32,10 @@ export class InterfaceCompletionProvider
     }
 
     const offset = document.offsetAt(position)
-    const ref = findDeclRef(index.refs, offset)
+    const ref = findDeclRef(
+      index.refs.filter(ref => ref.file === document.uri.fsPath),
+      offset
+    )
 
     if (!ref) {
       return null

@@ -50,7 +50,68 @@ export type Diagnostic = {
       type: 'unknown-attr'
       attr: string
     }
+  | {
+      type: 'int-conflict-option'
+      option: string
+      previous: {
+        file: AbsolutePath
+        offset: number
+        length: number
+      }
+    }
+  | {
+      type: 'int-unknown-option'
+      option: string
+    }
+  | {
+      type: 'int-unknown-entry-task'
+      task: string
+    }
+  | {
+      type: 'int-override-unknown-task'
+      task: string
+    }
 )
+
+function checkInterface<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
+  const result: Diagnostic[] = []
+
+  const optDecls = bundle.info.decls.filter(decl => decl.type === 'interface.option')
+  const options = new Map<string, (typeof optDecls)[number]>()
+  for (const decl of optDecls) {
+    if (options.has(decl.name)) {
+      const prev = options.get(decl.name)!
+      result.push({
+        level: 'error',
+        file: decl.file,
+        offset: decl.location.offset,
+        length: decl.location.length,
+        type: 'int-conflict-option',
+        option: decl.name,
+        previous: {
+          file: prev.file,
+          offset: prev.location.offset,
+          length: prev.location.length
+        }
+      })
+    } else {
+      options.set(decl.name, decl)
+    }
+  }
+  for (const ref of bundle.info.refs.filter(ref => ref.type === 'interface.option')) {
+    if (!options.has(ref.target)) {
+      result.push({
+        level: 'error',
+        file: ref.file,
+        offset: ref.location.offset,
+        length: ref.location.length,
+        type: 'int-unknown-option',
+        option: ref.target
+      })
+    }
+  }
+  return result
+}
 
 export function performDiagnostic<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
   const result: Diagnostic[] = []
@@ -215,7 +276,43 @@ export function performDiagnostic<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
         }
       }
     }
+
+    if (layer.type === 'interface') {
+      const realTasks = new Set(layer.parent?.getTaskListNotUnique() ?? [])
+
+      for (const ref of refs) {
+        if (ref.type === 'task.entry') {
+          if (!realTasks.has(ref.target)) {
+            result.push({
+              level: 'error',
+              file: ref.file,
+              offset: ref.location.offset,
+              length: ref.location.length,
+              type: 'int-unknown-entry-task',
+              task: ref.target
+            })
+          }
+        }
+      }
+
+      for (const decl of layer.mergedDecls) {
+        if (decl.type === 'task.decl') {
+          if (!realTasks.has(decl.task)) {
+            result.push({
+              level: 'error',
+              file: decl.file,
+              offset: decl.location.offset,
+              length: decl.location.length,
+              type: 'int-override-unknown-task',
+              task: decl.task
+            })
+          }
+        }
+      }
+    }
   }
+
+  result.push(...checkInterface(bundle))
 
   return result
 }

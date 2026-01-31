@@ -69,6 +69,18 @@ class DiagnosticScanner extends FlushHelper {
         return t('maa.pipeline.error.unknown-anchor', diag.anchor)
       case 'unknown-attr':
         return t('maa.pipeline.error.unknown-attr', diag.attr)
+      case 'int-conflict-option':
+        return t(
+          'maa.pipeline.error.conflict-option',
+          diag.option,
+          rootService.relativeToRoot(diag.previous.file)
+        )
+      case 'int-unknown-option':
+        return t('maa.pipeline.error.unknown-option', diag.option)
+      case 'int-unknown-entry-task':
+        return t('maa.pipeline.error.unknown-entry-task', diag.task)
+      case 'int-override-unknown-task':
+        return t('maa.pipeline.error.override-unknown-task', diag.task)
     }
     return `unknown diagnostic: ${JSON.stringify(diag)}`
   }

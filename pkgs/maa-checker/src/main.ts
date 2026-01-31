@@ -37,6 +37,7 @@ async function main() {
     path.basename(interfacePath)
   )
   await bundle.load()
+  await bundle.flush(false) // 刷下 imports
 
   const resourceNames = bundle.allResourceNames()
   if (resourceNames.length === 0) {
@@ -106,6 +107,21 @@ async function main() {
           break
         case 'unknown-attr':
           brief = `Unknown attribute \`${diag.attr}\``
+          break
+        case 'int-conflict-option': {
+          const prelative = path.relative(bundle.root, diag.previous.file)
+          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+          brief = `Conflict option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
+          break
+        }
+        case 'int-unknown-option':
+          brief = `Unknown option \`${diag.option}\``
+          break
+        case 'int-unknown-entry-task':
+          brief = `Unknown entry task \`${diag.task}\``
+          break
+        case 'int-override-unknown-task':
+          brief = `Overriding Unknown task \`${diag.task}\``
           break
       }
       console.log(`  ${level} ${relative}:${line}:${col} ${brief}`)

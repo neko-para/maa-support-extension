@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
 import {
+  type Diagnostic,
   FsContentLoader,
   FsContentWatcher,
   InterfaceBundle,
@@ -25,10 +26,11 @@ function calucateLocation(content: string, offset: number): [line: number, col: 
 
 async function main() {
   if (process.argv.length < 3) {
-    console.log(`Usage: npx ${pkg.name} <interface path>`)
+    console.log(`Usage: npx ${pkg.name} <interface path> [--raw]`)
     process.exit(1)
   }
   const interfacePath = process.argv[2]
+  const rawMode = process.argv[3] === '--raw'
   const bundle = new InterfaceBundle(
     new FsContentLoader(),
     new FsContentWatcher(),
@@ -45,10 +47,12 @@ async function main() {
     process.exit(1)
   }
 
-  let hasError = false
+  const outputs: Diagnostic[] = []
 
   for (const resourceName of resourceNames) {
-    console.log(`Checking ${resourceName}`)
+    if (!rawMode) {
+      console.log(`Checking ${resourceName}`)
+    }
 
     bundle.switchActive(resourceName)
 
@@ -57,6 +61,11 @@ async function main() {
     })
 
     const diags = performDiagnostic(bundle)
+    outputs.push(...diags)
+
+    if (rawMode) {
+      continue
+    }
 
     const files: Record<string, string> = {}
 
@@ -126,10 +135,15 @@ async function main() {
       }
       console.log(`  ${level} ${relative}:${line}:${col} ${brief}`)
     }
-
-    hasError = hasError || diags.filter(diag => diag.level === 'error').length > 0
   }
-  process.exit(hasError ? 1 : 0)
+
+  if (rawMode) {
+    console.log(JSON.stringify(outputs))
+    process.exit(0)
+  } else {
+    const hasError = outputs.filter(diag => diag.level === 'error').length > 0
+    process.exit(hasError ? 1 : 0)
+  }
 }
 
 main()

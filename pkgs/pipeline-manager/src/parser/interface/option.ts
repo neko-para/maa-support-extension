@@ -4,7 +4,7 @@ import type { AbsolutePath } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCases } from './case'
 import { parseInputs } from './input'
-import type { InterfaceInfo, InterfaceParseContext } from './interface'
+import type { IntOptionType, InterfaceInfo, InterfaceParseContext } from './interface'
 import { parseOverride } from './override'
 
 function parseInputRef(
@@ -45,11 +45,19 @@ function parseOptionSec(
   info: InterfaceInfo,
   option: string,
   ctx: InterfaceParseContext
-) {
+): IntOptionType | undefined {
+  let type: IntOptionType | undefined = undefined
   let inputNames: string[] = []
   let overrideNode: Node | null = null
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
+      case 'type':
+        if (isString(obj)) {
+          if (['select', 'switch', 'input'].includes(obj.value)) {
+            type = obj.value as IntOptionType
+          }
+        }
+        break
       case 'cases':
         parseCases(obj, info, option, ctx)
         break
@@ -80,17 +88,18 @@ function parseOptionSec(
     parseInputRef(overrideNode, info, option, names, ctx)
     parseOverride(overrideNode, info, ctx)
   }
+  return type
 }
 
 export function parseOption(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj, prop] of parseObject(node)) {
+    const type = parseOptionSec(obj, info, key, ctx)
     info.decls.push({
       file: ctx.file,
       location: prop,
       type: 'interface.option',
-      name: key
+      name: key,
+      optionType: type
     })
-
-    parseOptionSec(obj, info, key, ctx)
   }
 }

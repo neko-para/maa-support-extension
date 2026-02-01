@@ -117,6 +117,24 @@ async function main() {
         case 'unknown-attr':
           brief = `Unknown attribute \`${diag.attr}\``
           break
+        case 'int-conflict-controller': {
+          const prelative = path.relative(bundle.root, diag.previous.file)
+          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+          brief = `Conflict controller \`${diag.ctrl}\`, previous defined in ${prelative}:${pline}:${pcol}`
+          break
+        }
+        case 'int-unknown-controller':
+          brief = `Unknown controlle \`${diag.ctrl}\``
+          break
+        case 'int-conflict-resource': {
+          const prelative = path.relative(bundle.root, diag.previous.file)
+          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+          brief = `Conflict resource \`${diag.res}\`, previous defined in ${prelative}:${pline}:${pcol}`
+          break
+        }
+        case 'int-unknown-resource':
+          brief = `Unknown resource \`${diag.res}\``
+          break
         case 'int-conflict-option': {
           const prelative = path.relative(bundle.root, diag.previous.file)
           const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
@@ -125,6 +143,30 @@ async function main() {
         }
         case 'int-unknown-option':
           brief = `Unknown option \`${diag.option}\``
+          break
+        case 'int-conflict-case': {
+          const prelative = path.relative(bundle.root, diag.previous.file)
+          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+          brief = `Conflict case \`${diag.case}\` for option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
+          break
+        }
+        case 'int-unknown-case':
+          brief = `Unknown case \`${diag.case}\` for option \`${diag.option}\``
+          break
+        case 'int-switch-name-invalid':
+          brief = `Switch name invalid`
+          break
+        case 'int-switch-missing':
+          if (diag.missingYes && diag.missingNo) {
+            brief = `Switch option missing \`Yes\` and \`No\``
+          } else if (diag.missingYes) {
+            brief = `Switch option missing \`Yes\``
+          } else {
+            brief = `Switch option missing \`No\``
+          }
+          break
+        case 'int-switch-should-fixed':
+          brief = `Switch name should use \`Yes\` or \`No\``
           break
         case 'int-unknown-entry-task':
           brief = `Unknown entry task \`${diag.task}\``

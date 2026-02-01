@@ -38,9 +38,12 @@ export type IntTaskDeclInfo = {
   name: TaskName
 }
 
+export type IntOptionType = 'select' | 'switch' | 'input'
+
 export type IntOptionDeclInfo = {
   type: 'interface.option'
   name: string
+  optionType?: IntOptionType
 }
 
 export type IntCaseDeclInfo = {

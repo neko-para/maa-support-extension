@@ -69,6 +69,22 @@ class DiagnosticScanner extends FlushHelper {
         return t('maa.pipeline.error.unknown-anchor', diag.anchor)
       case 'unknown-attr':
         return t('maa.pipeline.error.unknown-attr', diag.attr)
+      case 'int-conflict-controller':
+        return t(
+          'maa.pipeline.error.conflict-controller',
+          diag.ctrl,
+          rootService.relativeToRoot(diag.previous.file)
+        )
+      case 'int-unknown-controller':
+        return t('maa.pipeline.error.unknown-controller', diag.ctrl)
+      case 'int-conflict-resource':
+        return t(
+          'maa.pipeline.error.conflict-resource',
+          diag.res,
+          rootService.relativeToRoot(diag.previous.file)
+        )
+      case 'int-unknown-resource':
+        return t('maa.pipeline.error.unknown-resource', diag.res)
       case 'int-conflict-option':
         return t(
           'maa.pipeline.error.conflict-option',
@@ -77,6 +93,27 @@ class DiagnosticScanner extends FlushHelper {
         )
       case 'int-unknown-option':
         return t('maa.pipeline.error.unknown-option', diag.option)
+      case 'int-conflict-case':
+        return t(
+          'maa.pipeline.error.conflict-case',
+          diag.case,
+          diag.option,
+          rootService.relativeToRoot(diag.previous.file)
+        )
+      case 'int-unknown-case':
+        return t('maa.pipeline.error.unknown-case', diag.case, diag.option)
+      case 'int-switch-name-invalid':
+        return t('maa.pipeline.error.switch-name-invalid')
+      case 'int-switch-missing':
+        if (diag.missingYes && diag.missingNo) {
+          return t('maa.pipeline.error.switch-missing-all')
+        } else if (diag.missingYes) {
+          return t('maa.pipeline.error.switch-missing-yes')
+        } else {
+          return t('maa.pipeline.error.switch-missing-no')
+        }
+      case 'int-switch-should-fixed':
+        return t('maa.pipeline.warning.switch-name-should-fixed')
       case 'int-unknown-entry-task':
         return t('maa.pipeline.error.unknown-entry-task', diag.task)
       case 'int-override-unknown-task':

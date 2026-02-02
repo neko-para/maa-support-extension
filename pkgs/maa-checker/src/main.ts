@@ -101,7 +101,11 @@ Options:
 
   for (const resourceName of resourceNames) {
     if (!rawMode) {
-      console.log(`Checking ${resourceName}`)
+      if (githubMode) {
+        core.startGroup(resourceName)
+      } else {
+        console.log(`Checking ${resourceName}`)
+      }
     }
 
     bundle.switchActive(resourceName)
@@ -234,6 +238,10 @@ Options:
       } else {
         console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
       }
+    }
+
+    if (githubMode) {
+      core.endGroup()
     }
   }
 

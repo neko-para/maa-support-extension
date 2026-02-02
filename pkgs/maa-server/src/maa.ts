@@ -105,7 +105,8 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
 }
 
 async function setupResource(
-  runtime: InterfaceRuntime
+  runtime: InterfaceRuntime,
+  timeout: number
 ): Promise<[maa.Resource | null, maa.Client | undefined, string | undefined]> {
   const resource = new maa.Resource()
 
@@ -151,6 +152,9 @@ async function setupResource(
       agent = handle
     }
 
+    if (timeout >= 0) {
+      client.timeout = timeout.toString()
+    }
     client.bind_resource(resource)
     logger.info(`AgentClient start connecting ${identifier}`)
     if (
@@ -171,12 +175,18 @@ async function setupResource(
       }
       return [null, undefined, undefined]
     }
+    if (timeout >= 0) {
+      client.timeout = Number.MAX_SAFE_INTEGER.toString()
+    }
   }
 
   return [resource, client, agent]
 }
 
-export async function setupInst(runtime: InterfaceRuntime): Promise<{
+export async function setupInst(
+  runtime: InterfaceRuntime,
+  timeout: number
+): Promise<{
   handle?: string
   error?: string
 }> {
@@ -198,7 +208,7 @@ export async function setupInst(runtime: InterfaceRuntime): Promise<{
     }
   }
 
-  const [resource, client, agent] = await setupResource(runtime)
+  const [resource, client, agent] = await setupResource(runtime, timeout)
   if (!resource) {
     return {
       error: 'maa.debug.init-resource-failed'

@@ -6,7 +6,10 @@ type MarkReturnPromise<Func> = Func extends (...args: infer Args) => infer Ret
 
 export type HostToSubApis = {
   updateController: (runtime: InterfaceRuntime['controller_param']) => boolean
-  setupInstance: (runtime: InterfaceRuntime) => {
+  setupInstance: (
+    runtime: InterfaceRuntime,
+    timeout: number
+  ) => {
     handle?: string
     error?: string
   }

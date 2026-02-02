@@ -48,8 +48,11 @@ export class LaunchService extends BaseService {
       return [false, t('maa.debug.init-controller-failed')]
     }
 
+    const timeout =
+      (vscode.workspace.getConfiguration('maa').get('agentTimeout') as number | undefined) ?? 30000
+
     const ipc = await serverService.ensureServer()
-    const result = (await ipc?.setupInstance(runtime)) ?? { error: 'ipc error' }
+    const result = (await ipc?.setupInstance(runtime, timeout)) ?? { error: 'ipc error' }
     if (result.error || !result.handle) {
       return [false, result.error ?? 'no handle']
     }

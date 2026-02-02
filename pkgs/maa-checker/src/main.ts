@@ -24,13 +24,62 @@ function calucateLocation(content: string, offset: number): [line: number, col: 
   return [line + 1, offset - last]
 }
 
+const allTypes = [
+  'conflict-task',
+  'duplicate-next',
+  'unknown-task',
+  'dynamic-image',
+  'image-path-back-slash',
+  'image-path-dot-slash',
+  'image-path-missing-png',
+  'unknown-image',
+  'unknown-anchor',
+  'unknown-attr',
+  'int-conflict-controller',
+  'int-unknown-controller',
+  'int-conflict-resource',
+  'int-unknown-resource',
+  'int-conflict-option',
+  'int-unknown-option',
+  'int-conflict-case',
+  'int-unknown-case',
+  'int-switch-name-invalid',
+  'int-switch-missing',
+  'int-switch-should-fixed',
+  'int-unknown-entry-task',
+  'int-override-unknown-task'
+]
+
 async function main() {
   if (process.argv.length < 3) {
-    console.log(`Usage: npx ${pkg.name} <interface path> [--raw]`)
+    console.log(`Usage: npx ${pkg.name} <interface path> [options...]
+
+Options:
+  --raw             Output diagnostic json only
+  --github=<repo>   Output github actions compatible warning & error messages, with repository folder <repo>.
+  --ignore=<type>   Ignore <type>
+                        Known types: ${allTypes.join(', ')}
+`)
     process.exit(1)
   }
   const interfacePath = path.resolve(process.argv[2])
-  const rawMode = process.argv[3] === '--raw'
+  let rawMode = false
+  let githubMode = false
+  let repoFolder = process.cwd()
+  const ignoreTypes: string[] = []
+
+  rawMode = process.argv[3] === '--raw'
+  for (const opt of process.argv.slice(3)) {
+    if (opt === '--raw') {
+      rawMode = true
+    } else if (opt.startsWith('--github=')) {
+      githubMode = true
+      repoFolder = path.resolve(opt.slice('--github='.length))
+    } else if (opt.startsWith('--ignore=')) {
+      ignoreTypes.push(opt.slice('--ignore='.length))
+    }
+  }
+
   const bundle = new InterfaceBundle(
     new FsContentLoader(),
     new FsContentWatcher(),
@@ -60,7 +109,7 @@ async function main() {
       bundle.once('bundleReloaded', resolve)
     })
 
-    const diags = performDiagnostic(bundle)
+    const diags = performDiagnostic(bundle).filter(diag => !ignoreTypes.includes(diag.type))
     outputs.push(...diags)
 
     if (rawMode) {
@@ -175,7 +224,13 @@ async function main() {
           brief = `Overriding Unknown task \`${diag.task}\``
           break
       }
-      console.log(`  ${level} ${relative}:${line}:${col} ${brief}`)
+      if (githubMode) {
+        console.log(
+          `::${level} file=${path.relative(repoFolder, diag.file)},line=${line},endLine=${line},col=${col},endColumn=${col + diag.length}::${brief}`
+        )
+      } else {
+        console.log(`  ${level} ${relative}:${line}:${col} ${brief}`)
+      }
     }
   }
 

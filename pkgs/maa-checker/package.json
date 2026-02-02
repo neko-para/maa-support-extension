@@ -9,6 +9,7 @@
     "url": "git+https://github.com/neko-para/maa-support-extension.git"
   },
   "devDependencies": {
+    "@actions/core": "^3.0.0",
     "@maaxyz/maa-node": "5.5.0",
     "@mse/pipeline-manager": "workspace:*",
     "@mse/types": "workspace:*",

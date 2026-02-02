@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
@@ -224,9 +225,12 @@ Options:
           break
       }
       if (githubMode) {
-        console.log(
-          `::${diag.level} file=${path.relative(repoFolder, diag.file)},line=${line},col=${col},endColumn=${col + diag.length}::${brief}`
-        )
+        core[diag.level](brief, {
+          file: path.relative(repoFolder, diag.file),
+          startLine: line,
+          startColumn: col,
+          endColumn: col + diag.length
+        })
       } else {
         console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
       }

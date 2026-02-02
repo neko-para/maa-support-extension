@@ -113,21 +113,21 @@ export class BundleManager {
       }
     }
 
-    const resolves = this.flushResolve
-    this.flushResolve = []
-
     this.duringFlush = false
-
-    process.nextTick(() => {
-      for (const func of resolves) {
-        func()
-      }
-    })
 
     if (this.needFlush) {
       setTimeout(() => {
         this.flush()
       }, 100)
+    } else {
+      const resolves = this.flushResolve
+      this.flushResolve = []
+
+      process.nextTick(() => {
+        for (const func of resolves) {
+          func()
+        }
+      })
     }
   }
 

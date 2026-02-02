@@ -129,7 +129,6 @@ Options:
 
     for (const diag of diags) {
       const [line, col] = await locate(diag.file, diag.offset)
-      const level = `[${diag.level}]`
       const relative = path.relative(bundle.root, diag.file)
       let brief: string = diag.type
       switch (diag.type) {
@@ -226,10 +225,10 @@ Options:
       }
       if (githubMode) {
         console.log(
-          `::${level} file=${path.relative(repoFolder, diag.file)},line=${line},endLine=${line},col=${col},endColumn=${col + diag.length}::${brief}`
+          `::${diag.level} file=${path.relative(repoFolder, diag.file)},line=${line},col=${col},endColumn=${col + diag.length}::${brief}`
         )
       } else {
-        console.log(`  ${level} ${relative}:${line}:${col} ${brief}`)
+        console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
       }
     }
   }

@@ -12,11 +12,10 @@ import { makeBrief } from '../utils'
 const selectingTask = ref(false)
 
 const allTasks = computed(() => {
+  const currCtrl = hostState.value.interfaceConfigJson?.controller?.name ?? ''
+
   return (hostState.value.interfaceJson?.task ?? []).filter(info => {
-    if (
-      info.controller &&
-      !info.controller.includes(hostState.value.interfaceConfigJson?.controller?.name ?? '')
-    ) {
+    if (info.controller && currCtrl !== '$fixed' && !info.controller.includes(currCtrl)) {
       return false
     }
     if (

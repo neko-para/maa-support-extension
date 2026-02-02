@@ -30,13 +30,7 @@ export type Win32Controller = ControllerBase & {
   }
 }
 
-export type VscFixedController = ControllerBase & {
-  type: 'VscFixed'
-  adb?: never
-  win32?: never
-}
-
-export type Controller = AdbController | Win32Controller | VscFixedController
+export type Controller = AdbController | Win32Controller
 
 export type Resource = EntryBase & {
   name: string

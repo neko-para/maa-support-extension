@@ -3,7 +3,7 @@ import type { InterfaceV2 } from './pi_v2'
 export type InterfaceV1 = {
   controller: {
     name: string
-    type: 'Adb' | 'Win32' | 'VscFixed'
+    type: 'Adb' | 'Win32'
     adb?: {
       screencap?: maa.ScreencapOrInputMethods
       input?: maa.ScreencapOrInputMethods
@@ -60,6 +60,7 @@ export type TaskConfig = {
 
 export type InterfaceConfig = {
   controller: {
+    // `$fixed`
     name: string
   }
   adb?: {

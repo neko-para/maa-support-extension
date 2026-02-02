@@ -275,6 +275,24 @@ export class InterfaceService extends BaseService {
       return null
     }
 
+    if (config.controller?.name === '$fixed') {
+      if (!config.vscFixed) {
+        vscode.window.showErrorMessage('No vscFixed for controller')
+        return null
+      }
+
+      if (!config.vscFixed.image) {
+        vscode.window.showErrorMessage('No vscFixed image for controller')
+        return null
+      }
+
+      return {
+        ctype: 'vscFixed',
+        image: config.vscFixed.image,
+        display_raw: true
+      }
+    }
+
     const ctrlInfo = data.controller?.find(x => x.name === config.controller?.name)
 
     if (!ctrlInfo) {
@@ -340,25 +358,6 @@ export class InterfaceService extends BaseService {
         keyboard:
           fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ??
           maa.Win32InputMethod.SendMessage,
-
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw
-      }
-    } else if (ctrlInfo.type === 'VscFixed') {
-      if (!config.vscFixed) {
-        vscode.window.showErrorMessage('No vscFixed for controller')
-        return null
-      }
-
-      if (!config.vscFixed.image) {
-        vscode.window.showErrorMessage('No vscFixed image for controller')
-        return null
-      }
-
-      return {
-        ctype: 'vscFixed',
-        image: config.vscFixed.image,
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,

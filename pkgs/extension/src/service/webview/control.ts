@@ -103,7 +103,10 @@ export class WebviewControlService extends BaseService {
           })
           break
         case 'selectController':
-          const name = interfaceService.interfaceJson.controller?.[data.index].name
+          const name =
+            data.index === -1
+              ? '$fixed'
+              : interfaceService.interfaceJson.controller?.[data.index].name
           interfaceService.reduceConfig({
             controller: name
               ? {

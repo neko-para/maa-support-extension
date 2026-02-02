@@ -8,9 +8,13 @@ import { ipc } from '../ipc'
 import { hostState } from '../state'
 
 const filteredResource = computed(() => {
+  const curr = hostState.value.interfaceConfigJson?.controller?.name ?? ''
   return (hostState.value.interfaceJson?.resource ?? []).filter(info => {
+    if (curr === '$fixed') {
+      return true
+    }
     if (info.controller) {
-      return info.controller.includes(hostState.value.interfaceConfigJson?.controller?.name ?? '')
+      return info.controller.includes(curr)
     }
     return true
   })

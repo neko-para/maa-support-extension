@@ -11,16 +11,24 @@ import { hostState } from '../state'
 import { makeBrief } from '../utils'
 
 const controllerOptions = computed(() => {
-  return (hostState.value.interfaceJson?.controller ?? []).map((info, index) => {
-    return {
-      value: index,
-      label: info.name
-    } satisfies SelectMixedOption
-  })
+  return (hostState.value.interfaceJson?.controller ?? [])
+    .map((info, index) => {
+      return {
+        value: index,
+        label: info.name
+      } satisfies SelectMixedOption
+    })
+    .concat({
+      value: -1,
+      label: 'Fixed Image'
+    })
 })
 
 const currentController = computed(() => {
   const curr = hostState.value.interfaceConfigJson?.controller?.name
+  if (curr === '$fixed') {
+    return -1
+  }
   const index =
     hostState.value.interfaceJson?.controller?.findIndex(info => info.name === curr) ?? -1
   return index === -1 ? null : index
@@ -29,6 +37,15 @@ const currentController = computed(() => {
 const currentControllerMeta = computed(() => {
   if (currentController.value === null) {
     return null
+  }
+  if (currentController.value === -1) {
+    return {
+      type: 'Fixed'
+    } as {
+      type: 'Fixed'
+      adb?: never
+      win32?: never
+    }
   }
   return hostState.value.interfaceJson?.controller?.[currentController.value] ?? null
 })
@@ -268,7 +285,7 @@ function uploadImage() {
       </n-flex>
     </n-card>
   </template>
-  <template v-if="currentType === 'VscFixed'">
+  <template v-if="currentType === 'Fixed'">
     <n-card title="VscFixed" size="small">
       <template #header-extra>
         <n-button @click="uploadImage" size="small">

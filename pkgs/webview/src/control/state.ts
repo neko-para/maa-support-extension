@@ -8,6 +8,10 @@ export const controllerConfigured = computed(() => {
   if (!hostState.value.interfaceJson || !hostState.value.interfaceConfigJson) {
     return false
   }
+  const ctrlName = hostState.value.interfaceConfigJson?.controller?.name
+  if (ctrlName === '$fixed') {
+    return !!hostState.value.interfaceConfigJson.vscFixed?.image
+  }
   const controller = hostState.value.interfaceJson.controller?.find(
     info => info.name === hostState.value.interfaceConfigJson?.controller?.name
   )
@@ -28,10 +32,6 @@ export const controllerConfigured = computed(() => {
       return false
     }
     if (!win32.hwnd) {
-      return false
-    }
-  } else if (controller.type === 'VscFixed') {
-    if (!hostState.value.interfaceConfigJson.vscFixed?.image) {
       return false
     }
   } else {

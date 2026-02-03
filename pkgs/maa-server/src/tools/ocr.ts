@@ -57,7 +57,10 @@ async function setupFakeResource(resources: string[]) {
 export async function performOcr(
   isMaa: boolean,
   imageBase64: string,
-  roi: maa.Rect,
+  opts: {
+    roi: maa.Rect
+    only_rec: boolean
+  },
   resources: string[]
 ): Promise<string | null> {
   if (isMaa) {
@@ -98,11 +101,11 @@ export async function performOcr(
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    logger.info('ocr action called')
+    logger.info(`ocr action called with options: ${JSON.stringify(opts)}`)
     const resp = await self.context.run_recognition('@mse/ocr', image, {
       '@mse/ocr': {
         recognition: 'OCR',
-        roi
+        ...opts
       }
     })
     logger.info(`ocr reco done, resp ${JSON.stringify(resp)}`)

@@ -10,6 +10,10 @@ export const result = ref<string | null>(null)
 export const draw = ref(false)
 export const drawType = ref<'all' | 'best' | 'filtered'>('all')
 
+export const onlyRec = ref(false)
+export const greenMask = ref(false)
+export const method = ref<10001 | 3 | 5>(5)
+
 export const resultObject = computed(() => {
   if (!result.value) {
     return null
@@ -34,7 +38,10 @@ export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
     command: type,
     image: imageSt.data.value,
     roi: controlSt.cropBox.value.ceiled().flat(),
-    threshold: hostState.value.templateMatchThreshold ?? 0.8
+    only_rec: onlyRec.value,
+    method: method.value,
+    threshold: hostState.value.templateMatchThreshold ?? 0.8,
+    green_mask: greenMask.value
   })) as string | null
 
   loading.value = false

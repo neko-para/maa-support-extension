@@ -112,9 +112,32 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
 
       <template v-if="matchSt.result">
         <n-flex vertical>
-          <n-flex>
+          <n-flex align="center">
             <n-switch v-model:value="matchSt.draw.value"> </n-switch>
             <n-text> {{ t('maa.crop.tools.draw') }} </n-text>
+
+            <div style="flex: 1"></div>
+
+            <n-switch v-model:value="matchSt.onlyRec.value"> </n-switch>
+            <n-text> only_rec </n-text>
+
+            <n-switch v-model:value="matchSt.greenMask.value"> </n-switch>
+            <n-text> green_mask </n-text>
+
+            <div>
+              <n-select
+                :options="
+                  [10001, 3, 5].map(v => ({
+                    label: `${v}`,
+                    value: v
+                  }))
+                "
+                v-model:value="matchSt.method.value"
+                size="small"
+                style="width: 90px"
+              ></n-select>
+            </div>
+            <n-text> method </n-text>
           </n-flex>
           <n-text> {{ t('maa.crop.tools.draw-mode') }} </n-text>
           <n-select

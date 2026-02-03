@@ -15,7 +15,15 @@ async function setupFakeResource() {
   return temp
 }
 
-export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, threshold: number) {
+export async function performTemplateMatch(
+  imageBase64: string,
+  opts: {
+    roi: maa.Rect
+    method: 10001 | 3 | 5
+    threshold: number
+    green_mask: boolean
+  }
+) {
   const image = convertImage(imageBase64)
 
   const ctrl = await setupFixedController(image)
@@ -46,14 +54,13 @@ export async function performTemplateMatch(imageBase64: string, roi: maa.Rect, t
   let result: string | null = null
 
   res.register_custom_action('@mse/action', async self => {
-    logger.info(`tmpl match action called with threshold: ${threshold}`)
+    logger.info(`tmpl match action called with options: ${JSON.stringify(opts)}`)
     const detail = await self.context.run_recognition('@mse/reco', image, {
       '@mse/reco': {
         recognition: 'TemplateMatch',
         template: '@mse_image',
-        roi,
-        threshold
-      } satisfies maa.Task
+        ...opts
+      } // satisfies maa.Task 暂时先不加这个, method对不上
     })
 
     if (detail?.hit) {

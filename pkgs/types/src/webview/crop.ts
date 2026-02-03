@@ -52,13 +52,16 @@ export type CropWebToHost =
       command: 'requestOCR'
       image: string
       roi: maa.Rect
+      only_rec: boolean
     }
   | {
       // return string | null
       command: 'requestTemplateMatch'
       image: string
       roi: maa.Rect
-      threshold?: number
+      method: 10001 | 3 | 5
+      threshold: number
+      green_mask: boolean
     }
   | {
       // return string | null

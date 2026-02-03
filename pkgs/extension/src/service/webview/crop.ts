@@ -138,7 +138,10 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           result = await this.ipc.performOcr(
             isMaaAssistantArknights,
             data.image.replace('data:image/png;base64,', ''),
-            data.roi,
+            {
+              roi: data.roi,
+              only_rec: data.only_rec
+            },
             resources.map(u => u.fsPath)
           )
         } catch (err) {
@@ -168,11 +171,12 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
 
         let result = null
         try {
-          result = await this.ipc.performTemplateMatch(
-            target.toString('base64'),
-            data.roi,
-            data.threshold ?? 0.8
-          )
+          result = await this.ipc.performTemplateMatch(target.toString('base64'), {
+            roi: data.roi,
+            method: data.method,
+            threshold: data.threshold,
+            green_mask: data.green_mask
+          })
         } catch (err) {
           logger.error(`tmpl match failed, error ${err}`)
         }

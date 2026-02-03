@@ -82,6 +82,11 @@ export type IntLocaleRefInfo = {
   target: string
 }
 
+export type IntCanLocaleRefInfo = {
+  type: 'interface.can_locale'
+  text: string
+}
+
 export type IntResPathRefInfo = {
   type: 'interface.resource_path'
   target: RelativePath
@@ -131,6 +136,7 @@ export type InterfaceRefInfo = {
 } & (
   | IntLangPathRefInfo
   | IntLocaleRefInfo
+  | IntCanLocaleRefInfo
   | IntResPathRefInfo
   | IntCtrlRefInfo
   | IntResRefInfo
@@ -253,13 +259,24 @@ function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContex
 function parseLocalization(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   if (node.type === 'object') {
     for (const [key, obj] of parseObject(node)) {
-      if (locKeys.includes(key) && isString(obj) && obj.value.startsWith('$')) {
-        info.refs.push({
-          file: ctx.file,
-          location: obj,
-          type: 'interface.locale',
-          target: obj.value.substring(1)
-        })
+      if (locKeys.includes(key) && isString(obj)) {
+        if (obj.value.startsWith('$')) {
+          info.refs.push({
+            file: ctx.file,
+            location: obj,
+            type: 'interface.locale',
+            target: obj.value.substring(1)
+          })
+        } else {
+          if (obj.value.length > 0) {
+            info.refs.push({
+              file: ctx.file,
+              location: obj,
+              type: 'interface.can_locale',
+              text: obj.value
+            })
+          }
+        }
       } else {
         parseLocalization(obj, info, ctx)
       }

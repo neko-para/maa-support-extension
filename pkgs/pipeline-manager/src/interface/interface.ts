@@ -16,7 +16,11 @@ import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
-import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
+import {
+  type InterfaceInfo,
+  type InterfaceRefInfo,
+  parseInterface
+} from '../parser/interface/interface'
 import { isString, parseObject } from '../parser/utils'
 import {
   type AbsolutePath,
@@ -299,6 +303,62 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     }
 
     this.emit('localeChanged')
+  }
+
+  sortLocaleRef() {
+    const refs = this.info.refs.filter(ref => ref.type === 'interface.locale')
+    const allImports = this.importFiles.map(rel => {
+      return path.resolve(joinPath(this.root, rel)) as AbsolutePath
+    })
+    allImports.unshift(this.file)
+    refs.sort((a, b) => {
+      if (a.file !== b.file) {
+        if (a.file === this.file) {
+          return -1
+        } else if (b.file === this.file) {
+          return 1
+        } else {
+          const idxA = allImports.indexOf(a.file)
+          const idxB = allImports.indexOf(b.file)
+          return idxA - idxB
+        }
+      } else {
+        return a.location.offset - b.location.offset
+      }
+    })
+    const exists = new Set<string>()
+    const final: (typeof refs)[number][] = []
+    for (const ref of refs) {
+      if (!exists.has(ref.target)) {
+        final.push(ref)
+        exists.add(ref.target)
+      }
+    }
+    return final
+  }
+
+  findEmplaceLocation(
+    refs: (InterfaceRefInfo & { type: 'interface.locale' })[],
+    file: AbsolutePath,
+    offset: number
+  ) {
+    const allImports = this.importFiles.map(rel => {
+      return path.resolve(joinPath(this.root, rel)) as AbsolutePath
+    })
+    allImports.unshift(this.file)
+    const idx = allImports.indexOf(file)
+    if (idx === -1) {
+      return refs.length
+    }
+    const result = refs.findIndex(ref => {
+      if (ref.file === file) {
+        return ref.location.offset > offset
+      } else {
+        const idxR = allImports.indexOf(ref.file)
+        return idx < idxR
+      }
+    })
+    return result === -1 ? refs.length : result
   }
 
   removeFile(file: AbsolutePath) {

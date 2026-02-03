@@ -21,5 +21,6 @@ export const commands = {
 
   DebugQueryLocation: 'maa.debug.query-location',
 
-  TriggerCompletion: 'maa.private.trigger-completion'
+  TriggerCompletion: 'maa.private.trigger-completion',
+  LocaleExtract: 'maa.private.locale-extract'
 }

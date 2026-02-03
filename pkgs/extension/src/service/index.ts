@@ -7,6 +7,7 @@ import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
 import { InterfaceLanguageProvider } from './language/interface/base'
+import { InterfaceCodeActionsProvider } from './language/interface/codeActions'
 import { InterfaceCodeLensProvider } from './language/interface/codeLens'
 import { InterfaceCompletionProvider } from './language/interface/completion'
 import { InterfaceDefinitionProvider } from './language/interface/definition'
@@ -81,7 +82,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new InterfaceDocumentLinkProvider(),
     new InterfaceHoverProvider(),
     new InterfaceReferenceProvider(),
-    new InterfaceInlayHintsProvider()
+    new InterfaceInlayHintsProvider(),
+    new InterfaceCodeActionsProvider()
   ]
 
   webviewControlService = new WebviewControlService()

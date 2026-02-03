@@ -87,7 +87,7 @@ onUnmounted(() => {
           {{ hostState.paused ? t('maa.launch.continue') : t('maa.launch.pause') }}
         </n-button>
         <n-button :disabled="hostState.stopped" @click="followLast = !followLast">
-          {{ t('maa.launch.follow') }}
+          {{ followLast ? t('maa.launch.following') : t('maa.launch.follow') }}
         </n-button>
         <n-button :disabled="hostState.stopped" @click="requestStop">
           {{ t('maa.launch.stop') }}

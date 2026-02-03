@@ -88,6 +88,7 @@ export default {
   'maa.launch.continue': '继续',
   'maa.launch.pause': '暂停',
   'maa.launch.follow': '跟随',
+  'maa.launch.following': '跟随中',
   'maa.launch.stop': '停止',
   'maa.launch.add-breakpoint': '添加断点',
   'maa.launch.show': '显示',

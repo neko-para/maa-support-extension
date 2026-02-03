@@ -88,6 +88,7 @@ export default {
   'maa.launch.continue': 'Continue',
   'maa.launch.pause': 'Pause',
   'maa.launch.follow': 'Follow',
+  'maa.launch.following': 'Following',
   'maa.launch.stop': 'Stop',
   'maa.launch.add-breakpoint': 'Add Breakpoint',
   'maa.launch.show': 'Show',

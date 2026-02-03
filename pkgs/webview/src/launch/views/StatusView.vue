@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NDynamicTags, NFlex, NScrollbar, NTab, NTabs, NText } from 'naive-ui'
-import { computed, ref, shallowRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 
 import { t } from '../../utils/locale'
 import InputTask from '../components/InputTask.vue'
@@ -8,7 +8,7 @@ import NodeScopeItem from '../components/NodeScopeItem.vue'
 import TaskScopeItem from '../components/TaskScopeItem.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
-import { type LaunchGraph, launchGraph } from '../states/launch'
+import { type LaunchGraph, afterLaunchGraph, launchGraph } from '../states/launch'
 
 function requestStop() {
   ipc.send({
@@ -53,6 +53,21 @@ const activeTask = computed<number>({
     selectTask.value = v
     followLast.value = false
   }
+})
+
+const scrollEl = ref<InstanceType<typeof NScrollbar> | null>(null)
+onMounted(() => {
+  afterLaunchGraph.value = () => {
+    if (followLast.value) {
+      scrollEl.value?.scrollTo({
+        top: Number.MAX_SAFE_INTEGER,
+        behavior: 'smooth'
+      })
+    }
+  }
+})
+onUnmounted(() => {
+  afterLaunchGraph.value = () => {}
 })
 </script>
 
@@ -103,7 +118,7 @@ const activeTask = computed<number>({
       </n-tab>
     </n-tabs>
 
-    <n-scrollbar v-if="activeTask < launchGraph.childs.length">
+    <n-scrollbar v-if="activeTask < launchGraph.childs.length" ref="scrollEl">
       <task-scope-item :item="launchGraph.childs[activeTask]"></task-scope-item>
     </n-scrollbar>
   </n-card>

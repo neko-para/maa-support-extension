@@ -1,5 +1,5 @@
 import { produce } from 'immer'
-import { shallowRef } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 type GeneralStatus = 'running' | 'success' | 'failed'
 
@@ -329,3 +329,5 @@ export const launchGraph = shallowRef<LaunchGraph>({
   depth: 0,
   childs: []
 })
+
+export const afterLaunchGraph = ref<() => void>(() => {})

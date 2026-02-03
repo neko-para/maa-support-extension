@@ -5,7 +5,7 @@ import { vscodeLocale } from '../utils/locale'
 import App from './App.vue'
 import { ipc } from './ipc'
 import { hostState } from './state'
-import { launchGraph, reduceLaunchGraph } from './states/launch'
+import { afterLaunchGraph, launchGraph, reduceLaunchGraph } from './states/launch'
 
 createApp(App).mount('#app')
 
@@ -17,6 +17,7 @@ ipc.recv.value = data => {
       break
     case 'notifyStatus':
       launchGraph.value = reduceLaunchGraph(launchGraph.value, data.msg)
+      setTimeout(afterLaunchGraph.value, 10)
       break
   }
 }

@@ -53,7 +53,7 @@ export class RootService extends BaseService {
     }
 
     stateService.reduce({
-      activeInterface: this.activeResource?.dirRelative
+      activeInterface: this.activeResource?.interfaceRelative
     })
     this.activeResourceChanged.fire()
     this.refreshing = false
@@ -67,7 +67,7 @@ export class RootService extends BaseService {
       this.activeResource = this.resourceRoots[index]
     }
     stateService.reduce({
-      activeInterface: this.activeResource?.dirRelative
+      activeInterface: this.activeResource?.interfaceRelative
     })
     this.activeResourceChanged.fire()
   }

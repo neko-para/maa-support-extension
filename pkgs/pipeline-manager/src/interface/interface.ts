@@ -226,6 +226,13 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.emit('activeChanged')
   }
 
+  allControllerNames(onlyWithAttaches = false) {
+    return this.info.decls
+      .filter(decl => decl.type === 'interface.controller')
+      .filter(onlyWithAttaches ? decl => decl.attachs.length > 0 : () => true)
+      .map(info => info.name)
+  }
+
   allResourceNames() {
     return this.info.decls.filter(decl => decl.type === 'interface.resource').map(info => info.name)
   }

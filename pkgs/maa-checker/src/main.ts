@@ -97,151 +97,156 @@ Options:
     process.exit(1)
   }
 
+  const controllerNames = bundle.allControllerNames(true)
+
   const outputs: Diagnostic[] = []
 
-  for (const resourceName of resourceNames) {
-    if (!rawMode) {
-      if (githubMode) {
-        core.startGroup(resourceName)
-      } else {
-        console.log(`Checking ${resourceName}`)
+  for (const controllerName of ['', ...controllerNames]) {
+    for (const resourceName of resourceNames) {
+      const groupName = controllerName ? `${controllerName}:${resourceName}` : resourceName
+      if (!rawMode) {
+        if (githubMode) {
+          core.startGroup(groupName)
+        } else {
+          console.log(`Checking ${groupName}`)
+        }
       }
-    }
 
-    bundle.switchActive('', resourceName) // TODO: 这玩意咋办
+      bundle.switchActive(controllerName, resourceName)
 
-    await new Promise<void>(resolve => {
-      bundle.once('bundleReloaded', resolve)
-    })
+      await new Promise<void>(resolve => {
+        bundle.once('bundleReloaded', resolve)
+      })
 
-    const diags = performDiagnostic(bundle).filter(diag => !ignoreTypes.includes(diag.type))
-    outputs.push(...diags)
+      const diags = performDiagnostic(bundle).filter(diag => !ignoreTypes.includes(diag.type))
+      outputs.push(...diags)
 
-    if (rawMode) {
-      continue
-    }
-
-    const files: Record<string, string> = {}
-
-    const locate = async (file: string, offset: number) => {
-      let content = files[file]
-      if (!content) {
-        content = await fs.readFile(file, 'utf8')
-        files[file] = content
+      if (rawMode) {
+        continue
       }
-      return calucateLocation(content, offset)
-    }
 
-    for (const diag of diags) {
-      const [line, col] = await locate(diag.file, diag.offset)
-      const relative = path.relative(bundle.root, diag.file)
-      let brief: string = diag.type
-      switch (diag.type) {
-        case 'conflict-task': {
-          const prelative = path.relative(bundle.root, diag.previous.file)
-          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-          brief = `Conflict task \`${diag.task}\`, previous defined in ${prelative}:${pline}:${pcol}`
-          break
+      const files: Record<string, string> = {}
+
+      const locate = async (file: string, offset: number) => {
+        let content = files[file]
+        if (!content) {
+          content = await fs.readFile(file, 'utf8')
+          files[file] = content
         }
-        case 'duplicate-next':
-          brief = `Duplicate route \`${diag.task}\``
-          break
-        case 'unknown-task':
-          brief = `Unknown task \`${diag.task}\``
-          break
-        case 'dynamic-image':
-          brief = `Dynamic image path detected`
-          break
-        case 'image-path-back-slash':
-          brief = `Image path contains backslash`
-          break
-        case 'image-path-dot-slash':
-          brief = `Image path contains ./`
-          break
-        case 'image-path-missing-png':
-          brief = `Image path missing .png`
-          break
-        case 'unknown-image':
-          brief = `Unknown image \`${diag.image}\``
-          break
-        case 'unknown-anchor':
-          brief = `Unknown anchor \`${diag.anchor}\``
-          break
-        case 'unknown-attr':
-          brief = `Unknown attribute \`${diag.attr}\``
-          break
-        case 'int-conflict-controller': {
-          const prelative = path.relative(bundle.root, diag.previous.file)
-          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-          brief = `Conflict controller \`${diag.ctrl}\`, previous defined in ${prelative}:${pline}:${pcol}`
-          break
-        }
-        case 'int-unknown-controller':
-          brief = `Unknown controlle \`${diag.ctrl}\``
-          break
-        case 'int-conflict-resource': {
-          const prelative = path.relative(bundle.root, diag.previous.file)
-          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-          brief = `Conflict resource \`${diag.res}\`, previous defined in ${prelative}:${pline}:${pcol}`
-          break
-        }
-        case 'int-unknown-resource':
-          brief = `Unknown resource \`${diag.res}\``
-          break
-        case 'int-conflict-option': {
-          const prelative = path.relative(bundle.root, diag.previous.file)
-          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-          brief = `Conflict option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
-          break
-        }
-        case 'int-unknown-option':
-          brief = `Unknown option \`${diag.option}\``
-          break
-        case 'int-conflict-case': {
-          const prelative = path.relative(bundle.root, diag.previous.file)
-          const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-          brief = `Conflict case \`${diag.case}\` for option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
-          break
-        }
-        case 'int-unknown-case':
-          brief = `Unknown case \`${diag.case}\` for option \`${diag.option}\``
-          break
-        case 'int-switch-name-invalid':
-          brief = `Switch name invalid`
-          break
-        case 'int-switch-missing':
-          if (diag.missingYes && diag.missingNo) {
-            brief = `Switch option missing \`Yes\` and \`No\``
-          } else if (diag.missingYes) {
-            brief = `Switch option missing \`Yes\``
-          } else {
-            brief = `Switch option missing \`No\``
+        return calucateLocation(content, offset)
+      }
+
+      for (const diag of diags) {
+        const [line, col] = await locate(diag.file, diag.offset)
+        const relative = path.relative(bundle.root, diag.file)
+        let brief: string = diag.type
+        switch (diag.type) {
+          case 'conflict-task': {
+            const prelative = path.relative(bundle.root, diag.previous.file)
+            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+            brief = `Conflict task \`${diag.task}\`, previous defined in ${prelative}:${pline}:${pcol}`
+            break
           }
-          break
-        case 'int-switch-should-fixed':
-          brief = `Switch name should use \`Yes\` or \`No\``
-          break
-        case 'int-unknown-entry-task':
-          brief = `Unknown entry task \`${diag.task}\``
-          break
-        case 'int-override-unknown-task':
-          brief = `Overriding Unknown task \`${diag.task}\``
-          break
+          case 'duplicate-next':
+            brief = `Duplicate route \`${diag.task}\``
+            break
+          case 'unknown-task':
+            brief = `Unknown task \`${diag.task}\``
+            break
+          case 'dynamic-image':
+            brief = `Dynamic image path detected`
+            break
+          case 'image-path-back-slash':
+            brief = `Image path contains backslash`
+            break
+          case 'image-path-dot-slash':
+            brief = `Image path contains ./`
+            break
+          case 'image-path-missing-png':
+            brief = `Image path missing .png`
+            break
+          case 'unknown-image':
+            brief = `Unknown image \`${diag.image}\``
+            break
+          case 'unknown-anchor':
+            brief = `Unknown anchor \`${diag.anchor}\``
+            break
+          case 'unknown-attr':
+            brief = `Unknown attribute \`${diag.attr}\``
+            break
+          case 'int-conflict-controller': {
+            const prelative = path.relative(bundle.root, diag.previous.file)
+            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+            brief = `Conflict controller \`${diag.ctrl}\`, previous defined in ${prelative}:${pline}:${pcol}`
+            break
+          }
+          case 'int-unknown-controller':
+            brief = `Unknown controlle \`${diag.ctrl}\``
+            break
+          case 'int-conflict-resource': {
+            const prelative = path.relative(bundle.root, diag.previous.file)
+            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+            brief = `Conflict resource \`${diag.res}\`, previous defined in ${prelative}:${pline}:${pcol}`
+            break
+          }
+          case 'int-unknown-resource':
+            brief = `Unknown resource \`${diag.res}\``
+            break
+          case 'int-conflict-option': {
+            const prelative = path.relative(bundle.root, diag.previous.file)
+            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+            brief = `Conflict option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
+            break
+          }
+          case 'int-unknown-option':
+            brief = `Unknown option \`${diag.option}\``
+            break
+          case 'int-conflict-case': {
+            const prelative = path.relative(bundle.root, diag.previous.file)
+            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
+            brief = `Conflict case \`${diag.case}\` for option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
+            break
+          }
+          case 'int-unknown-case':
+            brief = `Unknown case \`${diag.case}\` for option \`${diag.option}\``
+            break
+          case 'int-switch-name-invalid':
+            brief = `Switch name invalid`
+            break
+          case 'int-switch-missing':
+            if (diag.missingYes && diag.missingNo) {
+              brief = `Switch option missing \`Yes\` and \`No\``
+            } else if (diag.missingYes) {
+              brief = `Switch option missing \`Yes\``
+            } else {
+              brief = `Switch option missing \`No\``
+            }
+            break
+          case 'int-switch-should-fixed':
+            brief = `Switch name should use \`Yes\` or \`No\``
+            break
+          case 'int-unknown-entry-task':
+            brief = `Unknown entry task \`${diag.task}\``
+            break
+          case 'int-override-unknown-task':
+            brief = `Overriding Unknown task \`${diag.task}\``
+            break
+        }
+        if (githubMode) {
+          core[diag.level](brief, {
+            file: path.relative(repoFolder, diag.file),
+            startLine: line,
+            startColumn: col,
+            endColumn: col + diag.length
+          })
+        } else {
+          console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
+        }
       }
-      if (githubMode) {
-        core[diag.level](brief, {
-          file: path.relative(repoFolder, diag.file),
-          startLine: line,
-          startColumn: col,
-          endColumn: col + diag.length
-        })
-      } else {
-        console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
-      }
-    }
 
-    if (githubMode) {
-      core.endGroup()
+      if (githubMode) {
+        core.endGroup()
+      }
     }
   }
 

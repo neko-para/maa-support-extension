@@ -1,3 +1,4 @@
+import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import { v4 } from 'uuid'
@@ -447,7 +448,7 @@ export class InterfaceService extends BaseService {
     return null
   }
 
-  buildRuntime(skipTask = false) {
+  async buildRuntime(skipTask = false) {
     if (!rootService.activeResource) {
       return '无interface'
     }
@@ -636,11 +637,26 @@ export class InterfaceService extends BaseService {
     }
 
     if (data.agent) {
+      let debug_session: string | undefined = undefined
+
+      const cfgPath = vscode.Uri.joinPath(currentWorkspace()!, '.vscode', 'mse_config.json').fsPath
+      if (existsSync(cfgPath)) {
+        const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {
+          'agent.debug': Record<string, string>
+        }
+        if (cfg['agent.debug']) {
+          if (data.agent.child_exec && data.agent.child_exec in cfg['agent.debug']) {
+            debug_session = cfg['agent.debug'][data.agent.child_exec]
+          }
+        }
+      }
+
       result.agent = {
         child_exec: data.agent.child_exec ? replaceVar(data.agent.child_exec) : undefined,
         child_args: data.agent.child_args?.map(replaceVar),
         identifier: data.agent.identifier,
-        debug_session: data.agent.debug_session
+
+        debug_session
       }
     }
 

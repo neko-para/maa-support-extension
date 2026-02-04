@@ -266,7 +266,7 @@ export class WebviewControlService extends BaseService {
           }
           break
         case 'launch':
-          const runtime = interfaceService.buildRuntime()
+          const runtime = await interfaceService.buildRuntime()
           if (typeof runtime === 'string') {
             vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
             break

@@ -138,7 +138,6 @@ export type InterfaceV2 = EntryBase & {
     child_exec?: string
     child_args?: string[]
     identifier?: string
-    debug_session?: string
   }
 
   controller?: Controller[]

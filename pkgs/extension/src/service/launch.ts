@@ -77,7 +77,16 @@ export class LaunchService extends BaseService {
 
     const session = await debugService.startSession()
 
+    let abort = false
+    session.handleTerminate = async () => {
+      abort = true
+    }
+
     const [setupSuccess, errorOrHandle] = await this.setupInstance(runtime)
+
+    if (abort) {
+      return
+    }
 
     if (!setupSuccess) {
       session.pushMessage(errorOrHandle)

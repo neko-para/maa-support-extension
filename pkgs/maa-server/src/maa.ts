@@ -19,6 +19,7 @@ export function initMaa() {
 
 type InstanceCache = {
   controller: maa.Controller
+  attaches: string[]
 }
 
 type TaskerInstance = {
@@ -99,7 +100,10 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
   await controller.post_connection().wait()
 
   if (controller.connected) {
-    cache = { controller }
+    cache = {
+      controller,
+      attaches: runtime.attach_resource_path ?? []
+    }
     cacheKey = key
     return true
   } else {
@@ -110,6 +114,7 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
 
 async function setupResource(
   runtime: InterfaceRuntime,
+  attaches: string[],
   timeout: number
 ): Promise<[maa.Resource | null, maa.Client | undefined, string | undefined]> {
   const resource = new maa.Resource()
@@ -119,6 +124,9 @@ async function setupResource(
   })
 
   for (const path of runtime.resource_path) {
+    await resource.post_bundle(path).wait()
+  }
+  for (const path of attaches) {
     await resource.post_bundle(path).wait()
   }
 
@@ -162,16 +170,20 @@ async function setupResource(
     client.bind_resource(resource)
     logger.info(`AgentClient start connecting ${identifier}`)
     if (
-      !(await client
-        .connect()
-        .then(
-          () => true,
-          () => false
-        )
-        .then(res => {
-          logger.info(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
-          return res
-        }))
+      !(
+        (await client
+          .connect()
+          .then(
+            () => true,
+            () => false
+          )
+          .then(res => {
+            logger.info(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
+            return res
+          })) ||
+        !client.connected ||
+        !client.alive
+      )
     ) {
       resource.destroy()
       if (agent) {
@@ -206,13 +218,13 @@ export async function setupInst(
 
   const controller = cache?.controller
 
-  if (!controller) {
+  if (!cache || !controller) {
     return {
       error: 'maa.debug.init-controller-failed'
     }
   }
 
-  const [resource, client, agent] = await setupResource(runtime, timeout)
+  const [resource, client, agent] = await setupResource(runtime, cache.attaches, timeout)
   if (!resource) {
     return {
       error: 'maa.debug.init-resource-failed'

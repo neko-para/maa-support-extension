@@ -83,7 +83,9 @@ export class ServerService extends BaseService {
       const conn = this.rpc.conn
 
       conn.onRequest(subToHostReq, (method, args) => {
-        logger.info('<-- ' + method)
+        if (method !== 'pushNotify') {
+          logger.info('<-- ' + method)
+        }
         try {
           return (this.ipc as any).$[method](...args)
         } catch (err) {
@@ -104,7 +106,9 @@ export class ServerService extends BaseService {
               return handlers
             } else {
               return (...args: unknown[]) => {
-                logger.info('--> ' + key)
+                if (key !== 'pushNotify') {
+                  logger.info('--> ' + key)
+                }
                 return conn.sendRequest(hostToSubReq, key, args)
               }
             }

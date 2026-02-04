@@ -12,7 +12,9 @@ export let ipc: MarkApis<HostToSubApis, SubToHostApis>
 
 export function setupIpc(conn: rpc.MessageConnection) {
   conn.onRequest(hostToSubReq, (method, args) => {
-    console.log('<--', method)
+    if (method !== 'pushNotify') {
+      console.log('<--', method)
+    }
     try {
       return (ipc as any).$[method](...args)
     } catch (err) {
@@ -33,7 +35,9 @@ export function setupIpc(conn: rpc.MessageConnection) {
           return handlers
         } else {
           return (...args: unknown[]) => {
-            console.log('-->', key)
+            if (key !== 'pushNotify') {
+              console.log('-->', key)
+            }
             return conn.sendRequest(subToHostReq, key, args)
           }
         }

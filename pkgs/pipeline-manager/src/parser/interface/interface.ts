@@ -24,6 +24,7 @@ export type IntLangDeclInfo = {
 export type IntCtrlDeclInfo = {
   type: 'interface.controller'
   name: string
+  attachs: RelativePath[]
 }
 
 export type IntResDeclInfo = {
@@ -160,19 +161,31 @@ export type InterfaceParseContext = {
 }
 
 function parseController(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
+  let loc: Node | null = null
+  const decl: IntCtrlDeclInfo = {
+    type: 'interface.controller',
+    name: '',
+    attachs: []
+  }
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
         if (isString(obj)) {
-          info.decls.push({
-            file: ctx.file,
-            location: obj,
-            type: 'interface.controller',
-            name: obj.value
-          })
+          loc = obj
+          decl.name = obj.value
         }
         break
+      case 'attach_resource_path':
+        decl.attachs = parsePath(obj, info, ctx)
+        break
     }
+  }
+  if (loc) {
+    info.decls.push({
+      file: ctx.file,
+      location: loc,
+      ...decl
+    })
   }
 }
 

@@ -108,7 +108,7 @@ Options:
       }
     }
 
-    bundle.switchActive(resourceName)
+    bundle.switchActive('', resourceName) // TODO: 这玩意咋办
 
     await new Promise<void>(resolve => {
       bundle.once('bundleReloaded', resolve)

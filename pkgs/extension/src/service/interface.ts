@@ -239,7 +239,10 @@ export class InterfaceService extends BaseService {
   }
 
   updateResource() {
-    this.interfaceBundle?.switchActive(this.interfaceConfigJson?.resource ?? '')
+    this.interfaceBundle?.switchActive(
+      this.interfaceConfigJson?.controller?.name ?? '',
+      this.interfaceConfigJson?.resource ?? ''
+    )
   }
 
   suggestResource() {

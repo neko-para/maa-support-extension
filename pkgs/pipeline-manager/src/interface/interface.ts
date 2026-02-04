@@ -79,7 +79,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   importFiles: RelativePath[]
   imports: ContentJson<T>[]
 
-  active: string
+  activeController: string
+  activeResource: string
   paths: RelativePath[]
   bundles: Bundle[]
 
@@ -137,7 +138,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       layer: new LayerInfo(loader, this.maa, this.root, 'interface')
     }
 
-    this.active = ''
+    this.activeController = ''
+    this.activeResource = ''
     this.paths = []
     this.bundles = []
 
@@ -217,8 +219,9 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     }
   }
 
-  switchActive(active: string) {
-    this.active = active
+  switchActive(controller: string, resource: string) {
+    this.activeController = controller
+    this.activeResource = resource
 
     this.emit('activeChanged')
   }
@@ -228,17 +231,30 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   }
 
   updatePaths() {
+    const ctrlInfo = this.info.decls
+      .filter(decl => decl.type === 'interface.controller')
+      .find(info => info.name === this.activeController)
     const resInfo = this.info.decls
       .filter(decl => decl.type === 'interface.resource')
-      .find(info => info.name === this.active)
+      .find(info => info.name === this.activeResource)
+
+    const finalPaths: RelativePath[] = []
     if (resInfo) {
-      if (JSON.stringify(this.paths) === JSON.stringify(resInfo.paths)) {
+      finalPaths.push(...resInfo.paths)
+    }
+    if (ctrlInfo) {
+      finalPaths.push(...ctrlInfo.attachs)
+    }
+    // 这里没去重, 主要是去重的定义不清晰; 之后看有说法再改
+
+    if (finalPaths.length > 0) {
+      if (JSON.stringify(this.paths) === JSON.stringify(finalPaths)) {
         return // paths not changed
       }
       for (const content of this.langs) {
         content.stop()
       }
-      this.paths = resInfo.paths
+      this.paths = finalPaths
       this.bundles = this.paths.map(dir => {
         return new Bundle(
           this.content.loader,

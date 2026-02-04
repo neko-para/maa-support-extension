@@ -272,6 +272,14 @@ export class InterfaceService extends BaseService {
   }
 
   buildControllerRuntime(): InterfaceRuntime['controller_param'] | null {
+    if (!rootService.activeResource) {
+      return null
+    }
+    const projectDir = vscode.Uri.joinPath(
+      currentWorkspace()!,
+      rootService.activeResource.dirRelative
+    ).fsPath
+
     const data = this.interfaceJson
     const config = this.interfaceConfigJson
     if (!data || !config) {
@@ -315,6 +323,10 @@ export class InterfaceService extends BaseService {
       }
     }
 
+    const attach_resource_path = ctrlInfo.attach_resource_path?.map(resPath =>
+      path.resolve(projectDir, resPath)
+    )
+
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
         vscode.window.showErrorMessage(
@@ -334,7 +346,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
-        attach_resource_path: ctrlInfo.attach_resource_path
+        attach_resource_path
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -366,7 +378,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
-        attach_resource_path: ctrlInfo.attach_resource_path
+        attach_resource_path
       }
     } else if (ctrlInfo.type === 'PlayCover') {
       if (!config.playcover) {
@@ -397,7 +409,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
-        attach_resource_path: ctrlInfo.attach_resource_path
+        attach_resource_path
       }
     } else if (ctrlInfo.type === 'Gamepad') {
       if (!config.gamepad) {
@@ -428,7 +440,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
-        attach_resource_path: ctrlInfo.attach_resource_path
+        attach_resource_path
       }
     }
 

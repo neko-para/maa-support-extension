@@ -62,6 +62,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   importChanged: []
   slaveInterfaceChanged: []
   activeChanged: []
+  switchActiveFinished: []
   langChanged: []
   localeChanged: []
   pathChanged: []
@@ -181,6 +182,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
       await Promise.all(this.bundles.map(bundle => bundle.load()))
 
       this.emit('bundleReloaded')
+      this.emit('switchActiveFinished')
     })
 
     this.on('bundleReloaded', () => {
@@ -223,7 +225,13 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.activeController = controller
     this.activeResource = resource
 
+    const pro = new Promise<void>(resolve => {
+      this.once('switchActiveFinished', resolve)
+    })
+
     this.emit('activeChanged')
+
+    return pro
   }
 
   allControllerNames(onlyWithAttaches = false) {
@@ -256,6 +264,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     if (finalPaths.length > 0) {
       if (JSON.stringify(this.paths) === JSON.stringify(finalPaths)) {
+        this.emit('switchActiveFinished')
         return // paths not changed
       }
       for (const content of this.langs) {

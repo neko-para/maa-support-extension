@@ -112,11 +112,7 @@ Options:
         }
       }
 
-      bundle.switchActive(controllerName, resourceName)
-
-      await new Promise<void>(resolve => {
-        bundle.once('bundleReloaded', resolve)
-      })
+      await bundle.switchActive(controllerName, resourceName)
 
       const diags = performDiagnostic(bundle).filter(diag => !ignoreTypes.includes(diag.type))
       outputs.push(...diags)

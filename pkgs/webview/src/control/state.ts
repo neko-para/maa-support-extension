@@ -34,6 +34,22 @@ export const controllerConfigured = computed(() => {
     if (!win32.hwnd) {
       return false
     }
+  } else if (controller.type === 'PlayCover') {
+    const playcover = hostState.value.interfaceConfigJson.playcover
+    if (!playcover) {
+      return false
+    }
+    if (!playcover.address) {
+      return false
+    }
+  } else if (controller.type === 'Gamepad') {
+    const gamepad = hostState.value.interfaceConfigJson.gamepad
+    if (!gamepad) {
+      return false
+    }
+    if (!gamepad.hwnd) {
+      return false
+    }
   } else {
     return false
   }

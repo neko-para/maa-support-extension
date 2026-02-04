@@ -22,7 +22,13 @@ export default {
   'maa.pi.error.cannot-find-adb-for-controller': 'Cannot find adb config for controller {0}',
   'maa.pi.error.cannot-find-win32-for-controller': 'Cannot find win32 config for controller {0}',
   'maa.pi.error.cannot-find-hwnd-for-controller':
-    'Cannot find hwnd in win32 config for controller {0}, please reconfigure the controller',
+    'Cannot find hwnd in win32/gamepad config for controller {0}, please reconfigure the controller',
+  'maa.pi.error.cannot-find-playcover-for-controller':
+    'Cannot find playcover config for controller {0}',
+  'maa.pi.error.cannot-find-address-for-controller':
+    'Cannot find address in playcover config for controller {0}, please reconfigure the controller',
+  'maa.pi.error.cannot-find-gamepad-for-controller':
+    'Cannot find gamepad config for controller {0}',
   'maa.pi.error.cannot-find-resource': 'Cannot find resource {0}',
   'maa.pi.error.cannot-find-task': 'Cannot find task {0}',
   'maa.pi.error.cannot-find-option': 'Cannot find option {0}',

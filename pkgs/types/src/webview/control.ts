@@ -83,7 +83,12 @@ export type ControlWebToHost =
     }
   | {
       command: 'configDesktop'
+      type: 'win32' | 'gamepad'
       handle: maa.DesktopHandle
+    }
+  | {
+      command: 'configPlayCover'
+      address: string
     }
   | {
       command: 'uploadImage'

@@ -10,12 +10,16 @@ export type ControllerBase = EntryBase & {
   display_short_side?: number
   display_long_side?: number
   display_raw?: boolean
+  permission_required?: boolean
+  attach_resource_path?: string[]
 }
 
 export type AdbController = ControllerBase & {
   type: 'Adb'
   adb?: {}
   win32?: never
+  playconver?: never
+  gamepad?: never
 }
 
 export type Win32Controller = ControllerBase & {
@@ -28,9 +32,34 @@ export type Win32Controller = ControllerBase & {
     mouse?: keyof typeof maa.Win32InputMethod
     keyboard?: keyof typeof maa.Win32InputMethod
   }
+  playconver?: never
+  gamepad?: never
 }
 
-export type Controller = AdbController | Win32Controller
+export type PlayCoverController = ControllerBase & {
+  type: 'PlayCover'
+  adb?: never
+  win32?: never
+  playcover?: {
+    uuid?: string
+  }
+  gamepad?: never
+}
+
+export type GamepadController = ControllerBase & {
+  type: 'Gamepad'
+  adb?: never
+  win32?: never
+  playcover?: never
+  gamepad?: {
+    class_regex?: string
+    window_regex?: string
+    screencap?: keyof typeof maa.Win32InputMethod
+    gamepad_type?: keyof typeof maa.GamepadType
+  }
+}
+
+export type Controller = AdbController | Win32Controller | PlayCoverController | GamepadController
 
 export type Resource = EntryBase & {
   name: string

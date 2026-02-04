@@ -1,51 +1,5 @@
 import type { InterfaceV2 } from './pi_v2'
 
-export type InterfaceV1 = {
-  controller: {
-    name: string
-    type: 'Adb' | 'Win32'
-    adb?: {
-      screencap?: maa.ScreencapOrInputMethods
-      input?: maa.ScreencapOrInputMethods
-      config?: unknown
-    }
-    win32?: {
-      class_regex?: string
-      window_regex?: string
-      screencap?: maa.ScreencapOrInputMethods
-      input?: maa.ScreencapOrInputMethods
-    }
-  }[]
-  resource: {
-    name: string
-    path: string | string[]
-  }[]
-  task: {
-    name: string
-    entry: string
-    pipeline_override?: unknown
-    option?: string[]
-  }[]
-  option?: Record<
-    string,
-    {
-      cases: {
-        name: string
-        pipeline_override?: unknown
-      }[]
-      default_case?: string
-    }
-  >
-  version?: string
-  message?: string
-  agent?: {
-    child_exec?: string
-    child_args?: string[]
-    identifier?: string
-  }
-  interface_version?: never
-}
-
 export type TaskConfig = {
   name: string
   option?: {
@@ -71,6 +25,12 @@ export type InterfaceConfig = {
     config: unknown
   }
   win32?: {
+    hwnd?: maa.DesktopHandle | null
+  }
+  playcover?: {
+    address: string
+  }
+  gamepad?: {
     hwnd?: maa.DesktopHandle | null
   }
   vscFixed?: {
@@ -102,6 +62,17 @@ export type InterfaceRuntime = {
         keyboard: maa.ScreencapOrInputMethods
       }
     | {
+        ctype: 'playcover'
+        address: string
+        uuid: string
+      }
+    | {
+        ctype: 'gamepad'
+        hwnd: maa.DesktopHandle
+        screencap: maa.ScreencapOrInputMethods
+        gamepad: maa.Uint64
+      }
+    | {
         ctype: 'vscFixed'
         image: string
       }
@@ -109,6 +80,7 @@ export type InterfaceRuntime = {
     display_short_side?: number
     display_long_side?: number
     display_raw?: boolean
+    attach_resource_path?: string[]
   }
   resource_path: string[]
   task: {

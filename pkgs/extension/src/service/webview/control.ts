@@ -138,8 +138,15 @@ export class WebviewControlService extends BaseService {
           break
         case 'configDesktop':
           interfaceService.reduceConfig({
-            win32: {
+            [data.type]: {
               hwnd: data.handle
+            }
+          })
+          break
+        case 'configPlayCover':
+          interfaceService.reduceConfig({
+            playcover: {
+              address: data.address
             }
           })
           break

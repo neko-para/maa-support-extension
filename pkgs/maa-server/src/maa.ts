@@ -63,6 +63,10 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
       runtime.mouse,
       runtime.keyboard
     )
+  } else if (runtime.ctype === 'playcover') {
+    controller = new maa.PlayCoverController(runtime.address, runtime.uuid)
+  } else if (runtime.ctype === 'gamepad') {
+    controller = new maa.GamepadController(runtime.hwnd, runtime.screencap, runtime.gamepad)
   } else if (runtime.ctype === 'vscFixed') {
     const image = (await fs.readFile(runtime.image)).buffer as ArrayBuffer
     controller = new maa.CustomController({

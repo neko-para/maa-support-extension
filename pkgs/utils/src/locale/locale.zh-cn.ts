@@ -22,7 +22,11 @@ export default {
   'maa.pi.error.cannot-find-adb-for-controller': '无法找到控制器 {0} 的 Adb 配置',
   'maa.pi.error.cannot-find-win32-for-controller': '无法找到控制器 {0} 的 Win32 配置',
   'maa.pi.error.cannot-find-hwnd-for-controller':
-    '无法找到控制器 {0} 的 Win32 配置的 hwnd, 请重新配置控制器',
+    '无法找到控制器 {0} 的 Win32/Gamepad 配置的 hwnd, 请重新配置控制器',
+  'maa.pi.error.cannot-find-playcover-for-controller': '无法找到控制器 {0} 的 PlayCover 配置',
+  'maa.pi.error.cannot-find-address-for-controller':
+    '无法找到控制器 {0} 的 PlayCover 配置的 address, 请重新配置控制器',
+  'maa.pi.error.cannot-find-gamepad-for-controller': '无法找到控制器 {0} 的 Gamepad 配置',
   'maa.pi.error.cannot-find-resource': '无法找到资源 {0}',
   'maa.pi.error.cannot-find-task': '无法找到任务 {0}',
   'maa.pi.error.cannot-find-option': '无法找到选项组 {0}',

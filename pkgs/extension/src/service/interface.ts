@@ -330,7 +330,8 @@ export class InterfaceService extends BaseService {
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw
+        display_raw: ctrlInfo.display_raw,
+        attach_resource_path: ctrlInfo.attach_resource_path
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -361,7 +362,70 @@ export class InterfaceService extends BaseService {
 
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw
+        display_raw: ctrlInfo.display_raw,
+        attach_resource_path: ctrlInfo.attach_resource_path
+      }
+    } else if (ctrlInfo.type === 'PlayCover') {
+      if (!config.playcover) {
+        vscode.window.showErrorMessage(
+          t(
+            'maa.pi.error.cannot-find-playcover-for-controller',
+            config.controller?.name ?? '<unknown>'
+          )
+        )
+        return null
+      }
+
+      if (!config.playcover?.address) {
+        vscode.window.showErrorMessage(
+          t(
+            'maa.pi.error.cannot-find-address-for-controller',
+            config.controller?.name ?? '<unknown>'
+          )
+        )
+        return null
+      }
+
+      return {
+        ctype: 'playcover',
+        address: config.playcover.address,
+        uuid: 'maa.playcover',
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw,
+        attach_resource_path: ctrlInfo.attach_resource_path
+      }
+    } else if (ctrlInfo.type === 'Gamepad') {
+      if (!config.gamepad) {
+        vscode.window.showErrorMessage(
+          t(
+            'maa.pi.error.cannot-find-gamepad-for-controller',
+            config.controller?.name ?? '<unknown>'
+          )
+        )
+        return null
+      }
+
+      if (!config.gamepad.hwnd) {
+        vscode.window.showErrorMessage(
+          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
+        )
+        return null
+      }
+
+      return {
+        ctype: 'gamepad',
+        hwnd: config.gamepad.hwnd,
+        screencap:
+          fixNum(ctrlInfo.gamepad?.screencap, maa.Win32ScreencapMethod) ??
+          maa.Win32ScreencapMethod.DXGI_DesktopDup,
+        gamepad: fixNum(ctrlInfo.gamepad?.gamepad_type, maa.GamepadType) ?? maa.GamepadType.Xbox360,
+
+        display_short_side: ctrlInfo.display_short_side,
+        display_long_side: ctrlInfo.display_long_side,
+        display_raw: ctrlInfo.display_raw,
+        attach_resource_path: ctrlInfo.attach_resource_path
       }
     }
 

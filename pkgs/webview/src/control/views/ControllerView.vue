@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDropdown, NFlex, NPopselect, NSelect } from 'naive-ui'
+import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect } from 'naive-ui'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
@@ -115,9 +115,14 @@ async function nativeSelectAdb() {
 }
 
 const desktopDevices = ref<maa.DesktopDevice[]>([])
-const currDevice = computed(() => {
+const currDeviceWin32 = computed(() => {
   return desktopDevices.value.find(
     info => info[0] === hostState.value.interfaceConfigJson?.win32?.hwnd
+  )
+})
+const currDeviceGamepad = computed(() => {
+  return desktopDevices.value.find(
+    info => info[0] === hostState.value.interfaceConfigJson?.gamepad?.hwnd
   )
 })
 
@@ -162,15 +167,16 @@ async function refreshDesktop() {
   refreshingDesktop.value = false
 }
 
-function configDesktop(index: number) {
+function configDesktop(type: 'win32' | 'gamepad', index: number) {
   const opt = desktopDevices.value[index]
   ipc.send({
     command: 'configDesktop',
+    type,
     handle: opt[0]
   })
 }
 
-async function nativeSelectDesktop() {
+async function nativeSelectDesktop(type: 'win32' | 'gamepad') {
   selectingDesktop.value = true
   const choice = (await ipc.call({
     command: 'showSelect',
@@ -183,9 +189,16 @@ async function nativeSelectDesktop() {
     })
   })) as number | null
   if (typeof choice === 'number') {
-    configDesktop(choice)
+    configDesktop(type, choice)
   }
   selectingDesktop.value = false
+}
+
+function configPlayCover(address: string) {
+  ipc.send({
+    command: 'configPlayCover',
+    address
+  })
 }
 
 function uploadImage() {
@@ -261,7 +274,7 @@ function uploadImage() {
             :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
             trigger="hover"
             :options="desktopOptions"
-            @update:value="configDesktop"
+            @update:value="v => configDesktop('win32', v)"
             size="small"
             scrollable
           >
@@ -269,7 +282,7 @@ function uploadImage() {
               :loading="selectingDesktop"
               :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
               size="small"
-              @click="nativeSelectDesktop"
+              @click="nativeSelectDesktop('win32')"
             >
               {{ t('maa.control.controller.window-list') }}
             </n-button>
@@ -278,9 +291,61 @@ function uploadImage() {
       </template>
       <n-flex v-if="hostState.interfaceConfigJson?.win32" vertical>
         <span> {{ hostState.interfaceConfigJson.win32.hwnd }} </span>
-        <template v-if="currDevice">
-          <span> {{ currDevice[1] }} </span>
-          <span> {{ currDevice[2] }} </span>
+        <template v-if="currDeviceWin32">
+          <span> {{ currDeviceWin32[1] }} </span>
+          <span> {{ currDeviceWin32[2] }} </span>
+        </template>
+      </n-flex>
+    </n-card>
+  </template>
+  <template v-if="currentType === 'PlayCover'">
+    <n-card title="PlayCover" size="small">
+      <n-flex vertical>
+        <n-input
+          :value="hostState.interfaceConfigJson?.playcover?.address"
+          @update:value="configPlayCover"
+          placeholder="address"
+          size="small"
+        ></n-input>
+      </n-flex>
+    </n-card>
+  </template>
+  <template v-if="currentType === 'Gamepad'">
+    <n-card title="Gamepad" size="small">
+      <template #header-extra>
+        <n-flex>
+          <n-button
+            :loading="refreshingDesktop"
+            :disabled="refreshingDesktop || selectingDesktop"
+            @click="refreshDesktop"
+            size="small"
+          >
+            {{ t('maa.control.scan') }}
+          </n-button>
+          <n-popselect
+            :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+            trigger="hover"
+            :options="desktopOptions"
+            @update:value="v => configDesktop('gamepad', v)"
+            size="small"
+            scrollable
+          >
+            <n-button
+              :loading="selectingDesktop"
+              :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+              size="small"
+              @click="nativeSelectDesktop('gamepad')"
+            >
+              {{ t('maa.control.controller.window-list') }}
+            </n-button>
+          </n-popselect>
+        </n-flex>
+      </template>
+      <n-flex v-if="hostState.interfaceConfigJson?.gamepad" vertical>
+        <span> {{ hostState.interfaceConfigJson.gamepad.hwnd }} </span>
+        <template v-if="currDeviceGamepad">
+          <span> {{ currDeviceGamepad[1] }} </span>
+          <span> {{ currDeviceGamepad[2] }} </span>
         </template>
       </n-flex>
     </n-card>

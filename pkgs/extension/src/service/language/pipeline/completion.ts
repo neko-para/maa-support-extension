@@ -27,7 +27,7 @@ export class PipelineCompletionProvider
 {
   constructor() {
     super(sel => {
-      const trigger = isMaaAssistantArknights ? '"@#+^(' : '"[]'
+      const trigger = isMaaAssistantArknights ? '"@#+^(' : '"[]$'
       return vscode.languages.registerCompletionItemProvider(sel, this, ...trigger.split(''))
     })
   }
@@ -147,6 +147,25 @@ export class PipelineCompletionProvider
       }
 
       return result
+    }
+
+    if (ref.type === 'task.locale') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 2)
+
+      const keys = intBundle.langBundle.allKeys()
+
+      return keys.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Constant,
+          insertText: esc.substring(1, esc.length - 1),
+          range,
+          fillDetail: async () => {
+            return (await this.getLocaleHover(name)) ?? ''
+          }
+        }
+      })
     }
 
     if (

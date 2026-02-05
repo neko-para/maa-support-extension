@@ -7,13 +7,12 @@ import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
 import { InterfaceLanguageProvider } from './language/interface/base'
-import { InterfaceCodeActionsProvider } from './language/interface/codeActions'
+// import { InterfaceCodeActionsProvider } from './language/interface/codeActions'
 import { InterfaceCodeLensProvider } from './language/interface/codeLens'
 import { InterfaceCompletionProvider } from './language/interface/completion'
 import { InterfaceDefinitionProvider } from './language/interface/definition'
 import { InterfaceDocumentLinkProvider } from './language/interface/documentLink'
 import { InterfaceHoverProvider } from './language/interface/hover'
-import { InterfaceInlayHintsProvider } from './language/interface/inlayHint'
 import { InterfaceReferenceProvider } from './language/interface/reference'
 import { PipelineLanguageProvider } from './language/pipeline/base'
 import { PipelineCodeLensProvider } from './language/pipeline/codeLens'
@@ -21,6 +20,7 @@ import { PipelineCompletionProvider } from './language/pipeline/completion'
 import { PipelineDefinitionProvider } from './language/pipeline/definition'
 import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
 import { PipelineHoverProvider } from './language/pipeline/hover'
+import { PipelineInlayHintsProvider } from './language/pipeline/inlayHint'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSymbol'
 import { LaunchService } from './launch'
@@ -72,7 +72,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new PipelineDocumentLinkProvider(),
     new PipelineHoverProvider(),
     new PipelineReferenceProvider(),
-    new PipelineWorkspaceSymbolProvider()
+    new PipelineWorkspaceSymbolProvider(),
+    new PipelineInlayHintsProvider()
   ]
 
   interfaceLanguageServices = [
@@ -81,9 +82,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new InterfaceDefinitionProvider(),
     new InterfaceDocumentLinkProvider(),
     new InterfaceHoverProvider(),
-    new InterfaceReferenceProvider(),
-    new InterfaceInlayHintsProvider(),
-    new InterfaceCodeActionsProvider()
+    new InterfaceReferenceProvider()
+    // new InterfaceCodeActionsProvider()
   ]
 
   webviewControlService = new WebviewControlService()

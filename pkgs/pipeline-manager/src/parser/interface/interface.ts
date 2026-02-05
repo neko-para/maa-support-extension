@@ -1,7 +1,5 @@
 import type { Node } from 'jsonc-parser'
-import * as path from 'path'
 
-import type { IContentLoader } from '../../content/loader'
 import { LayerInfo } from '../../layer/layer'
 import type { AbsolutePath, RelativePath, TaskName } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
@@ -78,11 +76,7 @@ export type IntLangPathRefInfo = {
   target: string
 }
 
-export type IntLocaleRefInfo = {
-  type: 'interface.locale'
-  target: string
-}
-
+// TODO: 也移到task那边去
 export type IntCanLocaleRefInfo = {
   type: 'interface.can_locale'
   text: string
@@ -136,7 +130,6 @@ export type InterfaceRefInfo = {
   location: Node
 } & (
   | IntLangPathRefInfo
-  | IntLocaleRefInfo
   | IntCanLocaleRefInfo
   | IntResPathRefInfo
   | IntCtrlRefInfo
@@ -274,14 +267,21 @@ function parseLocalization(node: Node, info: InterfaceInfo, ctx: InterfaceParseC
     for (const [key, obj] of parseObject(node)) {
       if (locKeys.includes(key) && isString(obj)) {
         if (obj.value.startsWith('$')) {
-          info.refs.push({
+          info.layer.extraRefs.push({
             file: ctx.file,
             location: obj,
-            type: 'interface.locale',
+            type: 'task.locale',
             target: obj.value.substring(1)
           })
         } else {
           if (obj.value.length > 0) {
+            info.layer.extraRefs.push({
+              file: ctx.file,
+              location: obj,
+              type: 'task.can_locale',
+              target: obj.value
+            })
+            // TODO: 之后移除
             info.refs.push({
               file: ctx.file,
               location: obj,

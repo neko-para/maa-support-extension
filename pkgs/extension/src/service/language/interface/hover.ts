@@ -24,20 +24,11 @@ export class InterfaceHoverProvider
       return null
     }
 
-    const offset = document.offsetAt(position)
-    const ref = findDeclRef(
-      index.refs.filter(ref => ref.file === document.uri.fsPath),
-      offset
-    )
-
-    if (ref?.type === 'interface.locale') {
-      const hover = await this.getLocaleHover(ref.target)
-      if (hover) {
-        return new vscode.Hover(hover)
-      } else {
-        return null
-      }
-    }
+    // const offset = document.offsetAt(position)
+    // const ref = findDeclRef(
+    //   index.refs.filter(ref => ref.file === document.uri.fsPath),
+    //   offset
+    // )
 
     return null
   }

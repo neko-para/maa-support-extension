@@ -1,3 +1,4 @@
+/*
 import path from 'path'
 import * as vscode from 'vscode'
 
@@ -207,3 +208,4 @@ export class InterfaceCodeActionsProvider
     return [action]
   }
 }
+*/

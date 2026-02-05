@@ -1,11 +1,13 @@
 import * as vscode from 'vscode'
 
+import { AbsolutePath } from '@mse/pipeline-manager'
+
 import { interfaceService } from '../..'
 import { debounce } from '../../utils/debounce'
-import { InterfaceLanguageProvider } from './base'
+import { PipelineLanguageProvider } from './base'
 
-export class InterfaceInlayHintsProvider
-  extends InterfaceLanguageProvider
+export class PipelineInlayHintsProvider
+  extends PipelineLanguageProvider
   implements vscode.InlayHintsProvider
 {
   didChangeInlayHints = new vscode.EventEmitter<void>()
@@ -47,19 +49,19 @@ export class InterfaceInlayHintsProvider
       return []
     }
 
-    if (intBundle.langBundle.langs.length === 0) {
+    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
+    if (!layerInfo) {
       return []
     }
-
-    const index = intBundle.info
+    const [layer] = layerInfo
 
     const beginOffset = document.offsetAt(range.start)
     const endOffset = document.offsetAt(range.end)
-    const refs = index.refs.filter(ref => {
+    const refs = layer.mergedRefs.filter(ref => {
       if (ref.file !== document.uri.fsPath) {
         return false
       }
-      if (ref.type !== 'interface.locale') {
+      if (ref.type !== 'task.locale') {
         return false
       }
       return (
@@ -72,7 +74,7 @@ export class InterfaceInlayHintsProvider
 
     return refs
       .map(ref => {
-        if (ref.type !== 'interface.locale') {
+        if (ref.type !== 'task.locale') {
           return null
         }
 

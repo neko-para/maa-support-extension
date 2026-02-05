@@ -16,7 +16,7 @@ export class InterfaceCompletionProvider
 {
   constructor() {
     super(sel => {
-      return vscode.languages.registerCompletionItemProvider(sel, this, ...'"$'.split(''))
+      return vscode.languages.registerCompletionItemProvider(sel, this, ...'"'.split(''))
     })
   }
 
@@ -84,23 +84,6 @@ export class InterfaceCompletionProvider
           kind: vscode.CompletionItemKind.Reference,
           insertText: esc.substring(1, esc.length - 1),
           range
-        }
-      })
-    } else if (ref.type === 'interface.locale') {
-      const range = convertRangeWithDelta(document, ref.location, -1, 2)
-
-      const keys = interfaceService.interfaceBundle!.langBundle.allKeys()
-
-      return keys.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Constant,
-          insertText: esc.substring(1, esc.length - 1),
-          range,
-          fillDetail: async () => {
-            return (await this.getLocaleHover(name)) ?? ''
-          }
         }
       })
     }

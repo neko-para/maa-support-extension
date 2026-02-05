@@ -84,6 +84,7 @@ export class LayerInfo {
         changed.push(task)
       }
     }
+    this.extraRefs = this.extraRefs.filter(ref => ref.file !== file)
     this.markDirty()
     return changed
   }

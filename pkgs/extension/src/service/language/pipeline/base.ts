@@ -11,7 +11,8 @@ import {
   TaskDeclInfo,
   TaskName,
   TaskRefInfo,
-  extractTaskRef
+  extractTaskRef,
+  joinPath
 } from '@mse/pipeline-manager'
 import { Interface } from '@mse/types'
 import { MaaTask } from '@nekosu/maa-tasker'
@@ -203,6 +204,39 @@ ${JSON.stringify(final, null, 2)}
 ![](${vscode.Uri.file(full).toString()})`)
     }
     return content.join('\n\n')
+  }
+
+  async getLocaleHover(target: string) {
+    const intBundle = interfaceService.interfaceBundle
+    if (!intBundle) {
+      return null
+    }
+
+    if (intBundle.langBundle.langs.length === 0) {
+      return null
+    }
+
+    const result = intBundle.langBundle.queryKey(target)
+
+    const content: string[] = []
+    for (const [index, entry] of result.entries()) {
+      const lang = intBundle.langBundle.langs[index]
+      if (entry) {
+        const full = joinPath(intBundle.root, lang.file)
+        const doc = await vscode.workspace.openTextDocument(full)
+        const pos = doc.positionAt(entry.keyNode.offset)
+        content.push(
+          `| [${lang.name}](${vscode.Uri.file(full)}#L${pos.line + 1}) | ${entry.value} |`
+        )
+      } else {
+        content.push(`| ${lang.name} | <missing> |`)
+      }
+    }
+
+    if (content.length > 0) {
+      return `| locale | value |\n| --- | --- |\n${content.join('\n')}`
+    }
+    return null
   }
 
   makeDecls(

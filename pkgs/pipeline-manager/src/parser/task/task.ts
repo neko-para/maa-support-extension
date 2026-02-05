@@ -5,6 +5,7 @@ import type { MaaTaskExpr } from '@nekosu/maa-tasker'
 import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
 import { type PropPair, type StringNode, parseArray, parseObject } from '../utils'
 import { parseAnchor } from './anchor'
+import { parseFocus } from './focus'
 import { parseFreeze } from './freeze'
 import { parseMaaBaseTask } from './maa/baseTask'
 import { parseMaaExprList } from './maa/expr'
@@ -86,12 +87,24 @@ export type TaskEntryRefInfo = {
   target: TaskName
 }
 
+export type TaskLocaleRefInfo = {
+  type: 'task.locale'
+  target: string
+}
+
+export type TaskCanLocaleRefInfo = {
+  type: 'task.can_locale'
+  target: string
+}
+
 type MaaFwTaskRefInfo =
   | TaskNextRefInfo
   | TaskTargetRefInfo
   | TaskRoiRefInfo
   | TaskTemplateRefInfo
   | TaskEntryRefInfo
+  | TaskLocaleRefInfo
+  | TaskCanLocaleRefInfo
 
 export type TaskMaaBaseTaskRefInfo = {
   type: 'task.maa.base_task'
@@ -159,6 +172,9 @@ function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
       case 'post_wait_freezes':
       case 'repeat_wait_freezes':
         parseFreeze(obj, info, ctx)
+        break
+      case 'focus':
+        parseFocus(obj, info, ctx)
         break
     }
   }

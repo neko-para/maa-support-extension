@@ -65,6 +65,15 @@ export class PipelineHoverProvider
         }
       }
 
+      if (ref.type === 'task.locale') {
+        const hover = await this.getLocaleHover(ref.target)
+        if (hover) {
+          return new vscode.Hover(hover)
+        } else {
+          return null
+        }
+      }
+
       if (
         ref.type === 'task.next' ||
         ref.type === 'task.target' ||

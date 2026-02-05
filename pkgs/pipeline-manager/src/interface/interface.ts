@@ -64,7 +64,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   slaveInterfaceChanged: []
   activeChanged: []
   switchActiveFinished: []
-  langChanged: []
   localeChanged: []
   pathChanged: []
   bundleReloaded: []
@@ -87,19 +86,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   bundles: Bundle[]
 
   langBundle: LanguageBundle
-
-  langFiles: [string, RelativePath][]
-  langs: ContentJson<Record<string, string>>[]
-  langIndex: Record<
-    string,
-    {
-      location: Node
-      locale: string
-      localeIndex: number
-      prop: Node
-      value: string
-    }[]
-  >
 
   eval: MaaEvalDelegateImpl<T>
 
@@ -147,10 +133,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     this.langBundle = new LanguageBundle(loader, watcher, this.root)
 
-    this.langFiles = []
-    this.langs = []
-    this.langIndex = {}
-
     this.importFiles = []
     this.imports = []
 
@@ -164,10 +146,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
     this.on('activeChanged', () => {
       this.updatePaths()
-    })
-
-    this.on('langChanged', async () => {
-      await Promise.all(this.langs.map(content => content.load()))
     })
 
     this.on('importChanged', async () => {
@@ -275,7 +253,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
         this.emit('switchActiveFinished')
         return // paths not changed
       }
-      for (const content of this.langs) {
+      for (const content of this.imports) {
         content.stop()
       }
       this.paths = finalPaths
@@ -305,104 +283,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.langBundle.update(newFiles).then(() => {
       this.emit('localeChanged')
     })
-
-    if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
-      return // paths not changed
-    }
-    for (const content of this.langs) {
-      content.stop()
-    }
-    this.langFiles = newFiles
-    this.langs = newFiles.map(([locale, file]) => {
-      return new ContentJson(
-        this.content.loader,
-        this.content.watcher,
-        joinPath(this.root, file),
-        () => {
-          this.buildLangIndex()
-        }
-      )
-    })
-
-    this.emit('langChanged')
-  }
-
-  buildLangIndex() {
-    this.langIndex = {}
-    for (const [index, [locale]] of this.langFiles.entries()) {
-      const lang = this.langs[index]
-      for (const [key, obj, prop] of parseObject(lang.node)) {
-        if (!isString(obj)) {
-          continue
-        }
-        this.langIndex[key] = this.langIndex[key] ?? []
-        this.langIndex[key].push({
-          location: obj,
-          locale,
-          localeIndex: index,
-          prop,
-          value: obj.value
-        })
-      }
-    }
-
-    this.emit('localeChanged')
-  }
-
-  sortLocaleRef() {
-    const refs = this.info.refs.filter(ref => ref.type === 'interface.locale')
-    const allImports = this.importFiles.map(rel => {
-      return path.resolve(joinPath(this.root, rel)) as AbsolutePath
-    })
-    allImports.unshift(this.file)
-    refs.sort((a, b) => {
-      if (a.file !== b.file) {
-        if (a.file === this.file) {
-          return -1
-        } else if (b.file === this.file) {
-          return 1
-        } else {
-          const idxA = allImports.indexOf(a.file)
-          const idxB = allImports.indexOf(b.file)
-          return idxA - idxB
-        }
-      } else {
-        return a.location.offset - b.location.offset
-      }
-    })
-    const exists = new Set<string>()
-    const final: (typeof refs)[number][] = []
-    for (const ref of refs) {
-      if (!exists.has(ref.target)) {
-        final.push(ref)
-        exists.add(ref.target)
-      }
-    }
-    return final
-  }
-
-  findEmplaceLocation(
-    refs: (InterfaceRefInfo & { type: 'interface.locale' })[],
-    file: AbsolutePath,
-    offset: number
-  ) {
-    const allImports = this.importFiles.map(rel => {
-      return path.resolve(joinPath(this.root, rel)) as AbsolutePath
-    })
-    allImports.unshift(this.file)
-    const idx = allImports.indexOf(file)
-    if (idx === -1) {
-      return refs.length
-    }
-    const result = refs.findIndex(ref => {
-      if (ref.file === file) {
-        return ref.location.offset > offset
-      } else {
-        const idxR = allImports.indexOf(ref.file)
-        return idx < idxR
-      }
-    })
-    return result === -1 ? refs.length : result
   }
 
   removeFile(file: AbsolutePath) {

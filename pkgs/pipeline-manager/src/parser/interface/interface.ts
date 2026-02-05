@@ -76,12 +76,6 @@ export type IntLangPathRefInfo = {
   target: string
 }
 
-// TODO: 也移到task那边去
-export type IntCanLocaleRefInfo = {
-  type: 'interface.can_locale'
-  text: string
-}
-
 export type IntResPathRefInfo = {
   type: 'interface.resource_path'
   target: RelativePath
@@ -130,7 +124,6 @@ export type InterfaceRefInfo = {
   location: Node
 } & (
   | IntLangPathRefInfo
-  | IntCanLocaleRefInfo
   | IntResPathRefInfo
   | IntCtrlRefInfo
   | IntResRefInfo
@@ -280,13 +273,6 @@ function parseLocalization(node: Node, info: InterfaceInfo, ctx: InterfaceParseC
               location: obj,
               type: 'task.can_locale',
               target: obj.value
-            })
-            // TODO: 之后移除
-            info.refs.push({
-              file: ctx.file,
-              location: obj,
-              type: 'interface.can_locale',
-              text: obj.value
             })
           }
         }

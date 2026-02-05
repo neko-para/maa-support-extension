@@ -7,7 +7,6 @@ import { DebugService } from './debug'
 import { DiagnosticService } from './diagnostic'
 import { InterfaceService } from './interface'
 import { InterfaceLanguageProvider } from './language/interface/base'
-// import { InterfaceCodeActionsProvider } from './language/interface/codeActions'
 import { InterfaceCodeLensProvider } from './language/interface/codeLens'
 import { InterfaceCompletionProvider } from './language/interface/completion'
 import { InterfaceDefinitionProvider } from './language/interface/definition'
@@ -15,6 +14,7 @@ import { InterfaceDocumentLinkProvider } from './language/interface/documentLink
 import { InterfaceHoverProvider } from './language/interface/hover'
 import { InterfaceReferenceProvider } from './language/interface/reference'
 import { PipelineLanguageProvider } from './language/pipeline/base'
+import { PipelineCodeActionsProvider } from './language/pipeline/codeActions'
 import { PipelineCodeLensProvider } from './language/pipeline/codeLens'
 import { PipelineCompletionProvider } from './language/pipeline/completion'
 import { PipelineDefinitionProvider } from './language/pipeline/definition'
@@ -73,7 +73,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new PipelineHoverProvider(),
     new PipelineReferenceProvider(),
     new PipelineWorkspaceSymbolProvider(),
-    new PipelineInlayHintsProvider()
+    new PipelineInlayHintsProvider(),
+    new PipelineCodeActionsProvider()
   ]
 
   interfaceLanguageServices = [
@@ -83,7 +84,6 @@ export async function init(ctx: vscode.ExtensionContext) {
     new InterfaceDocumentLinkProvider(),
     new InterfaceHoverProvider(),
     new InterfaceReferenceProvider()
-    // new InterfaceCodeActionsProvider()
   ]
 
   webviewControlService = new WebviewControlService()

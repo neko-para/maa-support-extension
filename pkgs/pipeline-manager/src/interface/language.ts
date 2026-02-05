@@ -20,6 +20,19 @@ export type LanguageInfo = {
   entries: LanguageLocaleEntry[]
 }
 
+export type LanguageEditAction =
+  | {
+      type: 'replace'
+      file: AbsolutePath
+      content: string
+    }
+  | {
+      type: 'insert'
+      file: AbsolutePath
+      content: string
+      offset: number
+    }
+
 export class LanguageBundle extends EventEmitter<{
   localeChanged: []
 }> {
@@ -99,6 +112,82 @@ export class LanguageBundle extends EventEmitter<{
       result.push(info ?? null)
     }
 
+    return result
+  }
+
+  addPair(key: string, value: string, indent = '    '): LanguageEditAction[] {
+    const keys = this.allKeys()
+    if (keys.includes(key)) {
+      return []
+    }
+    const row = JSON.stringify(key) + ': ' + JSON.stringify(value)
+    const result: LanguageEditAction[] = []
+    if (keys.length === 0) {
+      return this.langs.map(lang => {
+        return {
+          type: 'replace',
+          file: joinPath(this.root, lang.file),
+          content: `{
+${indent}${row},
+}
+`
+        }
+      })
+    } else {
+      let insertIndex = keys.findIndex(val => val.localeCompare(key) > 0)
+      if (insertIndex === -1) {
+        insertIndex = keys.length
+      }
+
+      const upper = keys.slice(0, insertIndex)
+      const lower = keys.slice(insertIndex)
+
+      for (const lang of this.langs) {
+        let found = false
+        for (const upKey of upper.toReversed()) {
+          const anchor = lang.entries.find(entry => entry.key === upKey)
+          if (!anchor) {
+            continue
+          }
+          result.push({
+            type: 'insert',
+            file: joinPath(this.root, lang.file),
+            content: `,\n${indent}${row}`,
+            offset: anchor.valueNode.offset + anchor.valueNode.length
+          })
+          found = true
+          break
+        }
+        if (found) {
+          continue
+        }
+        for (const loKey of lower) {
+          const anchor = lang.entries.find(entry => entry.key === loKey)
+          if (!anchor) {
+            continue
+          }
+          result.push({
+            type: 'insert',
+            file: joinPath(this.root, lang.file),
+            content: `${row},\n${indent}`,
+            offset: anchor.keyNode.offset
+          })
+          found = true
+          break
+        }
+        if (found) {
+          continue
+        }
+        result.push({
+          type: 'replace',
+          file: joinPath(this.root, lang.file),
+          content: `{
+${indent}${row},
+}
+`
+        })
+      }
+    }
     return result
   }
 }

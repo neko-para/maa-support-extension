@@ -1,9 +1,15 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, TaskMaaTaskRef, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
+import {
+  AbsolutePath,
+  TaskMaaTaskRef,
+  findDeclRef,
+  findMaaDeclRef,
+  joinPath
+} from '@mse/pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
-import { autoConvertRangeLocation } from '../utils'
+import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDefinitionProvider
@@ -78,6 +84,21 @@ export class PipelineDefinitionProvider
       const refs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
       return await Promise.all([...decls, ...refs].map(autoConvertRangeLocation))
     } else if (ref) {
+      if (ref.type === 'task.locale') {
+        const result: vscode.Definition = []
+        const langBundle = intBundle.langBundle
+        for (const [index, entry] of langBundle.queryKey(ref.target).entries()) {
+          if (!entry) {
+            continue
+          }
+
+          const lang = langBundle.langs[index]
+          const doc = await vscode.workspace.openTextDocument(joinPath(langBundle.root, lang.file))
+          result.push(convertRangeLocation(doc, entry.keyNode))
+        }
+        return result
+      }
+
       const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
       return await Promise.all(decls.map(autoConvertRangeLocation))
     }

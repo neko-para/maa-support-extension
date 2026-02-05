@@ -40,24 +40,6 @@ export class InterfaceDefinitionProvider
       const decls = this.makeDecls(index, decl, ref) ?? []
       const refs = this.makeRefs(index, decl, ref) ?? []
       return await Promise.all([...decls, ...refs].map(dr => autoConvertRangeLocation(dr)))
-    } else if (ref) {
-      if (ref.type === 'interface.locale') {
-        const result: vscode.Definition = []
-        const langBundle = interfaceService.interfaceBundle!.langBundle
-        for (const [index, entry] of langBundle.queryKey(ref.target).entries()) {
-          if (!entry) {
-            continue
-          }
-
-          const lang = langBundle.langs[index]
-          const doc = await vscode.workspace.openTextDocument(joinPath(langBundle.root, lang.file))
-          result.push(convertRangeLocation(doc, entry.keyNode))
-        }
-        return result
-      }
-
-      const decls = this.makeDecls(index, decl, ref) ?? []
-      return await Promise.all(decls.map(dr => autoConvertRangeLocation(dr)))
     }
 
     return null

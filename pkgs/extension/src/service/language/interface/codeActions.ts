@@ -72,7 +72,7 @@ export class InterfaceCodeActionsProvider
         insertPolicy.push(...prevRefs.map(ref => ['after', ref] as InsertPolicy))
         insertPolicy.push(...afterRefs.map(ref => ['before', ref] as InsertPolicy))
 
-        const knownKeys = Object.keys(intBundle.langIndex)
+        const knownKeys = intBundle.langBundle.allKeys()
 
         const localeKey = await vscode.window.showInputBox({
           title: '输入国际化Key',

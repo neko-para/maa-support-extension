@@ -133,24 +133,24 @@ export class InterfaceLanguageProvider extends BaseService {
       return null
     }
 
-    const allInfos = intBundle.langIndex[target]
-    if (!allInfos) {
+    if (intBundle.langBundle.langs.length === 0) {
       return null
     }
 
+    const result = intBundle.langBundle.queryKey(target)
+
     const content: string[] = []
-    for (const [locale, file] of intBundle.langFiles) {
-      const infos = allInfos.filter(info => info.locale === locale)
-      const full = joinPath(intBundle.root, file)
-      for (const info of infos) {
-        try {
-          const doc = await vscode.workspace.openTextDocument(full)
-          const pos = doc.positionAt(info.location.offset)
-          content.push(`| [${locale}](${vscode.Uri.file(full)}#L${pos.line + 1}) | ${info.value} |`)
-        } catch {}
-      }
-      if (!infos.length) {
-        content.push(`| ${locale} | <missing> |`)
+    for (const [index, entry] of result.entries()) {
+      const lang = intBundle.langBundle.langs[index]
+      if (entry) {
+        const full = joinPath(intBundle.root, lang.file)
+        const doc = await vscode.workspace.openTextDocument(full)
+        const pos = doc.positionAt(entry.keyNode.offset)
+        content.push(
+          `| [${lang.name}](${vscode.Uri.file(full)}#L${pos.line + 1}) | ${entry.value} |`
+        )
+      } else {
+        content.push(`| ${lang.name} | <missing> |`)
       }
     }
 

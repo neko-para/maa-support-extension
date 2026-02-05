@@ -42,14 +42,16 @@ export class InterfaceInlayHintsProvider
     range: vscode.Range,
     token: vscode.CancellationToken
   ): Promise<vscode.InlayHint[]> {
-    const index = await this.flushIndex()
-    if (!index) {
+    const intBundle = await this.flush()
+    if (!intBundle) {
       return []
     }
 
-    if (interfaceService.interfaceBundle!.langs.length === 0) {
+    if (intBundle.langBundle.langs.length === 0) {
       return []
     }
+
+    const index = intBundle.info
 
     const beginOffset = document.offsetAt(range.start)
     const endOffset = document.offsetAt(range.end)
@@ -66,21 +68,22 @@ export class InterfaceInlayHintsProvider
     })
 
     const preferredLocale = interfaceService.interfaceConfigJson.locale
-    const langIndex = interfaceService.interfaceBundle!.langIndex ?? {}
+    const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
 
     return refs
       .map(ref => {
         if (ref.type !== 'interface.locale') {
           return null
         }
-        const infos = langIndex[ref.target] ?? []
-        const info = infos.find(info => info.locale === preferredLocale) ?? infos[0]
-        if (!info) {
+
+        const result = intBundle.langBundle.queryKey(ref.target)[preferredIndex]
+        if (!result) {
           return null
         }
+
         const hint: vscode.InlayHint = {
           position: document.positionAt(ref.location.offset + ref.location.length),
-          label: info.value
+          label: result.value
         }
         return hint
       })

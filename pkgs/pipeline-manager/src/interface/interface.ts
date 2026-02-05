@@ -29,6 +29,7 @@ import {
   joinPath,
   relativePath
 } from '../utils/types'
+import { LanguageBundle } from './language'
 
 class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
   intBundle: InterfaceBundle<T>
@@ -85,6 +86,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   paths: RelativePath[]
   bundles: Bundle[]
 
+  langBundle: LanguageBundle
+
   langFiles: [string, RelativePath][]
   langs: ContentJson<Record<string, string>>[]
   langIndex: Record<
@@ -99,8 +102,6 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
   >
 
   eval: MaaEvalDelegateImpl<T>
-
-  contentDebouncerTimer?: NodeJS.Timeout
 
   set evalErrorDelegate(delegate: MaaErrorDelegate) {
     this.eval.error = delegate
@@ -143,6 +144,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     this.activeResource = ''
     this.paths = []
     this.bundles = []
+
+    this.langBundle = new LanguageBundle(loader, watcher, this.root)
 
     this.langFiles = []
     this.langs = []
@@ -198,6 +201,10 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
         })
       }
     })
+
+    this.langBundle.on('localeChanged', () => {
+      this.emit('localeChanged')
+    })
   }
 
   async load() {
@@ -216,6 +223,7 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     for (const imp of this.imports) {
       await imp.flush()
     }
+    await this.langBundle.flush()
     if (flushBundles) {
       await Promise.all(this.bundles.map(bundle => bundle.flush()))
     }
@@ -292,8 +300,12 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
 
   updateLangs() {
     const langInfos = this.info.decls.filter(decl => decl.type === 'interface.language')
-
     const newFiles = langInfos.map(info => [info.name, info.path] as [string, RelativePath])
+
+    this.langBundle.update(newFiles).then(() => {
+      this.emit('localeChanged')
+    })
+
     if (JSON.stringify(this.langFiles) === JSON.stringify(newFiles)) {
       return // paths not changed
     }

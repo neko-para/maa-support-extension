@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { findDeclRef, parseObject } from '@mse/pipeline-manager'
+import { findDeclRef, joinPath, parseObject } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
 import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
@@ -43,18 +43,15 @@ export class InterfaceDefinitionProvider
     } else if (ref) {
       if (ref.type === 'interface.locale') {
         const result: vscode.Definition = []
-        for (const loc of interfaceService.interfaceBundle?.langs ?? []) {
-          if (!loc.node) {
+        const langBundle = interfaceService.interfaceBundle!.langBundle
+        for (const [index, entry] of langBundle.queryKey(ref.target).entries()) {
+          if (!entry) {
             continue
           }
-          for (const [key, obj, prop] of parseObject(loc.node)) {
-            if (key === ref.target) {
-              try {
-                const doc = await vscode.workspace.openTextDocument(loc.file)
-                result.push(convertRangeLocation(doc, prop))
-              } catch {}
-            }
-          }
+
+          const lang = langBundle.langs[index]
+          const doc = await vscode.workspace.openTextDocument(joinPath(langBundle.root, lang.file))
+          result.push(convertRangeLocation(doc, entry.keyNode))
         }
         return result
       }

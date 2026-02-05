@@ -89,8 +89,7 @@ export class InterfaceCompletionProvider
     } else if (ref.type === 'interface.locale') {
       const range = convertRangeWithDelta(document, ref.location, -1, 2)
 
-      const intBundle = interfaceService.interfaceBundle!
-      const keys = [...new Set(intBundle.langs.map(kvs => Object.keys(kvs.object ?? {})).flat())]
+      const keys = interfaceService.interfaceBundle!.langBundle.allKeys()
 
       return keys.map(name => {
         const esc = JSON.stringify(name)

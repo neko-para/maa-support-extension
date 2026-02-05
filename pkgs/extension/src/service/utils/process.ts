@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
+import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 
@@ -24,9 +25,10 @@ export class ProcessManager {
   async setupPs1(arg: string) {
     const tempFolder = await fs.mkdtemp(path.join(os.tmpdir(), 'mse-ps1-'))
     this.ps1ScriptPath = path.join(tempFolder, 'uac.ps1')
+    const keepAlive = vscode.workspace.getConfiguration('maa').get('win32ProcKeep') as boolean
     await fs.writeFile(
       this.ps1ScriptPath,
-      `Start-Process -FilePath cmd -ArgumentList "/C","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
+      `Start-Process -FilePath cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
     )
     this.clean = () => {
       fs.rm(tempFolder, { recursive: true })

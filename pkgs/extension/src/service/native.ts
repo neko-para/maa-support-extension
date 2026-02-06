@@ -1,25 +1,14 @@
-import { existsSync } from 'fs'
-import * as fs from 'fs/promises'
-import pacote from 'pacote'
-import { lock } from 'proper-lockfile'
 import semVerCompare from 'semver/functions/compare'
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
+import { MaaVersionManager, NpmRegistryType } from '@mse/maa-version-manager'
 
 import { serverService } from '.'
 import packageJson from '../../package.json'
 import { commands } from '../command'
 import { BaseService, context } from './context'
-
-const registries = {
-  npm: 'https://registry.npmjs.org',
-  cnpm: 'https://registry.npmmirror.com'
-}
-
-function isValidRegistryType(key: unknown): key is keyof typeof registries {
-  return typeof key === 'string' && ['npm', 'cnpm'].includes(key)
-}
+import { makePromise } from './utils/promise'
 
 const defaultRegistryType = 'npm'
 
@@ -40,9 +29,7 @@ export class NativeService extends BaseService {
 
   prepared: boolean
 
-  rootUri: vscode.Uri
-  downloadUri: vscode.Uri
-  installUri: vscode.Uri
+  manager: MaaVersionManager
 
   versionChanged = new vscode.EventEmitter<void>()
   get onVersionChanged() {
@@ -53,57 +40,52 @@ export class NativeService extends BaseService {
     super()
     console.log('construct NativeService')
 
-    this.registry = registries[this.registryType ?? defaultRegistryType]
+    this.registry = MaaVersionManager.registries[this.registryType ?? defaultRegistryType]
     this.version = this.explicitVersion ?? defaultMaaVersion
 
     this.prepared = false
 
-    this.rootUri = vscode.Uri.joinPath(context.globalStorageUri, 'native')
-    this.downloadUri = vscode.Uri.joinPath(this.rootUri, 'download')
-    this.installUri = vscode.Uri.joinPath(this.rootUri, 'install')
-
-    const cacheDir = vscode.Uri.joinPath(this.rootUri, 'cache')
-    if (existsSync(cacheDir.fsPath)) {
-      fs.rm(cacheDir.fsPath, { recursive: true })
-    }
+    this.manager = new MaaVersionManager(
+      vscode.Uri.joinPath(context.globalStorageUri, 'native').fsPath
+    )
   }
 
   async init() {
     console.log('init NativeService')
 
-    await fs.mkdir(this.installUri.fsPath, { recursive: true })
-    await fs.mkdir(this.downloadUri.fsPath, { recursive: true })
+    await this.manager.init()
 
     this.defer = vscode.commands.registerCommand(commands.NativeSelectRegistry, async () => {
       let previous = this.registryType
 
-      const options: (vscode.QuickPickItem & { value: keyof typeof registries | null })[] =
-        Object.keys(registries)
-          .filter(isValidRegistryType)
-          .map(type => {
-            const descTags: string[] = []
-            if (this.registry === registries[type]) {
-              descTags.push(t('maa.native.in-use'))
-            }
-            if (type === previous) {
-              descTags.push('$(check)')
-            } else if (!previous && type == defaultRegistryType) {
-              descTags.push('$(check)')
-            }
-            return {
-              label: type,
-              description: descTags.join(' '),
-              detail: registries[type],
-              value: type
-            }
-          })
+      const options: (vscode.QuickPickItem & { value: NpmRegistryType | null })[] = Object.keys(
+        MaaVersionManager.registries
+      )
+        .filter(MaaVersionManager.isValidRegistryType)
+        .map(type => {
+          const descTags: string[] = []
+          if (this.registry === MaaVersionManager.registries[type]) {
+            descTags.push(t('maa.native.in-use'))
+          }
+          if (type === previous) {
+            descTags.push('$(check)')
+          } else if (!previous && type == defaultRegistryType) {
+            descTags.push('$(check)')
+          }
+          return {
+            label: type,
+            description: descTags.join(' '),
+            detail: MaaVersionManager.registries[type],
+            value: type
+          }
+        })
 
       const result = await vscode.window.showQuickPick(options, {
         title: t('maa.native.switch-mirror')
       })
       if (result) {
         this.registryType = result.value
-        this.registry = registries[this.registryType ?? defaultRegistryType]
+        this.registry = MaaVersionManager.registries[this.registryType ?? defaultRegistryType]
       }
     })
 
@@ -120,8 +102,8 @@ export class NativeService extends BaseService {
           progress.report({
             increment: 0
           })
-          allLocal = await this.fetchAllLocalVersions()
-          allRemote = (await this.fetchAllVersions()).map(x => x[0])
+          allLocal = await this.manager.fetchAllLocalVersions()
+          allRemote = (await this.manager.fetchAllVersions(minimumMaaVersion)).map(x => x[0])
           allRemote.sort((a, b) => -semVerCompare(a, b))
         }
       )
@@ -170,11 +152,11 @@ export class NativeService extends BaseService {
 
   get registryType() {
     const value = context.globalState.get('NativeService:registry')
-    return isValidRegistryType(value) ? value : null
+    return MaaVersionManager.isValidRegistryType(value) ? value : null
   }
 
-  set registryType(value: keyof typeof registries | null) {
-    if (value && isValidRegistryType(value)) {
+  set registryType(value: NpmRegistryType | null) {
+    if (value && MaaVersionManager.isValidRegistryType(value)) {
       context.globalState.update('NativeService:registry', value)
     } else {
       context.globalState.update('NativeService:registry', undefined)
@@ -198,160 +180,62 @@ export class NativeService extends BaseService {
     }
   }
 
-  lock() {
-    return lock(this.rootUri.fsPath).then(
-      release => release,
-      () => null
-    )
-  }
-
-  versionFolder(version: string) {
-    return vscode.Uri.joinPath(this.installUri, version)
-  }
-
-  async fetchAllLocalVersions() {
-    let release = await this.lock()
-    if (!release) {
-      return []
-    }
-
-    const localVersions = (await fs.readdir(this.installUri.fsPath, { withFileTypes: true }))
-      .filter(info => info.isDirectory())
-      .map(info => info.name)
-    await release()
-    return localVersions
-  }
-
-  async fetchAllVersions() {
-    let release = await this.lock()
-    if (!release) {
-      return []
-    }
-
-    try {
-      const result = await pacote.packument('@maaxyz/maa-node', {
-        registry: this.registry
-      })
-      await release()
-      return Object.entries(result.versions).filter(([ver]) => {
-        return semVerCompare(ver, minimumMaaVersion) !== -1
-      })
-    } catch {
-      await release()
-      return []
-    }
-  }
-
-  async fetchLatest() {
-    let release = await this.lock()
-    if (!release) {
-      return null
-    }
-
-    try {
-      const result = await pacote.manifest('@maaxyz/maa-node@latest', {
-        registry: this.registry
-      })
-      await release()
-      return result
-    } catch {
-      await release()
-      return null
-    }
-  }
-
-  async update() {
-    const info = await this.fetchLatest()
-    if (!info) {
-      return false
-    }
-    return await this.prepare(info.version)
-  }
-
   async prepare(version: string) {
-    const versionFolder = this.versionFolder(version)
+    let progressInst: vscode.Progress<{
+      message?: string
+      increment?: number
+    }> | null = null
+    let progressFinish: () => void = () => {}
+    return await this.manager.prepare(version, progress => {
+      switch (progress) {
+        case 'prepare-folder':
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification
+            },
+            async progress => {
+              progressInst = progress
 
-    const release = await this.lock()
-    if (!release) {
-      return false
-    }
+              progressInst.report({
+                message: t('maa.native.download.preparing-folder')
+              })
 
-    if (existsSync(versionFolder.fsPath)) {
-      await fs.writeFile(
-        vscode.Uri.joinPath(versionFolder, 'timestamp').fsPath,
-        Date.now().toString()
-      )
-      await release()
-      return true
-    }
-
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification
-      },
-      async progress => {
-        progress.report({
-          message: t('maa.native.download.preparing-folder')
-        })
-        const loaderTemp = await fs.mkdtemp(vscode.Uri.joinPath(this.downloadUri, 'loader-').fsPath)
-        const binaryTemp = await fs.mkdtemp(vscode.Uri.joinPath(this.downloadUri, 'binary-').fsPath)
-        progress.report({
-          message: t('maa.native.download.downloading-scripts', version),
-          increment: 10
-        })
-        await pacote.extract(`@maaxyz/maa-node@${version}`, loaderTemp, {
-          registry: this.registry
-        })
-        progress.report({
-          message: t('maa.native.download.downloading-binary', version),
-          increment: 40
-        })
-        await pacote.extract(
-          `@maaxyz/maa-node-${process.platform}-${process.arch}@${version}`,
-          binaryTemp,
-          {
-            registry: this.registry
-          }
-        )
-        progress.report({
-          message: t('maa.native.download.moving-folder'),
-          increment: 40
-        })
-
-        await fs.mkdir(vscode.Uri.joinPath(versionFolder, 'node_modules', '@maaxyz').fsPath, {
-          recursive: true
-        })
-        await fs.writeFile(
-          vscode.Uri.joinPath(versionFolder, 'timestamp').fsPath,
-          Date.now().toString()
-        )
-
-        await fs.rename(
-          loaderTemp,
-          vscode.Uri.joinPath(versionFolder, 'node_modules', '@maaxyz', 'maa-node').fsPath
-        )
-        await fs.rename(
-          binaryTemp,
-          vscode.Uri.joinPath(
-            versionFolder,
-            'node_modules',
-            '@maaxyz',
-            `maa-node-${process.platform}-${process.arch}`
-          ).fsPath
-        )
-
-        progress.report({
-          increment: 10
-        })
+              const [promise, resolve] = makePromise<void>()
+              progressFinish = resolve
+              await promise
+            }
+          )
+          break
+        case 'download-scripts':
+          progressInst?.report({
+            message: t('maa.native.download.downloading-scripts', version),
+            increment: 10
+          })
+          break
+        case 'download-binary':
+          progressInst?.report({
+            message: t('maa.native.download.downloading-binary', version),
+            increment: 40
+          })
+          break
+        case 'move-folders':
+          progressInst?.report({
+            message: t('maa.native.download.moving-folder'),
+            increment: 40
+          })
+          break
+        case 'finish':
+          progressInst?.report({
+            increment: 10
+          })
+          progressFinish()
+          break
       }
-    )
-
-    release()
-    return true
+    })
   }
 
   get activeModulePath() {
-    return vscode.Uri.joinPath(this.versionFolder(this.version), 'node_modules').fsPath
+    return this.manager.moduleFolder(this.version)
   }
 
   async load() {
@@ -372,32 +256,7 @@ export class NativeService extends BaseService {
   }
 
   async cleanUnused() {
-    let release = await this.lock()
-    if (!release) {
-      return
-    }
-
-    for (const info of await fs.readdir(this.installUri.fsPath, { withFileTypes: true })) {
-      if (!info.isDirectory()) {
-        continue
-      }
-      if (info.name == this.version) {
-        continue
-      }
-      const versionFolder = this.versionFolder(info.name)
-      const timestampFile = vscode.Uri.joinPath(versionFolder, 'timestamp').fsPath
-      if (existsSync(timestampFile)) {
-        const content = await fs.readFile(timestampFile, 'utf8')
-        const delta = Date.now() - parseInt(content)
-
-        if (delta > 7 * 24 * 60 * 60 * 1000) {
-          await fs.rm(versionFolder.fsPath, { recursive: true })
-        }
-      } else {
-        await fs.rm(versionFolder.fsPath, { recursive: true })
-      }
-    }
-    await release()
+    await this.manager.cleanUnused([this.version])
   }
 
   get currentVersionInfo(): string[] {

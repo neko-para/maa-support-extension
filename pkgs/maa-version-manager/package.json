@@ -1,0 +1,14 @@
+{
+  "name": "@mse/maa-version-manager",
+  "main": "src/index.ts",
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.8",
+    "@types/pacote": "^11.1.8",
+    "@types/proper-lockfile": "^4.1.4",
+    "@types/semver": "^7.7.1",
+    "pacote": "^21.0.4",
+    "proper-lockfile": "^4.1.2",
+    "semver": "^7.7.3",
+    "typescript": "^5.9.3"
+  }
+}

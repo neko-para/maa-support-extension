@@ -61,6 +61,9 @@ importers:
       '@mse/maa-server-proto':
         specifier: workspace:*
         version: link:../maa-server-proto
+      '@mse/maa-version-manager':
+        specifier: workspace:*
+        version: link:../maa-version-manager
       '@mse/pipeline-manager':
         specifier: workspace:*
         version: link:../pipeline-manager
@@ -82,12 +85,6 @@ importers:
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
-      '@types/pacote':
-        specifier: ^11.1.8
-        version: 11.1.8
-      '@types/proper-lockfile':
-        specifier: ^4.1.4
-        version: 4.1.4
       '@types/semver':
         specifier: ^7.7.1
         version: 7.7.1
@@ -106,12 +103,6 @@ importers:
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
-      pacote:
-        specifier: ^21.0.4
-        version: 21.0.4
-      proper-lockfile:
-        specifier: ^4.1.2
-        version: 4.1.2
       semver:
         specifier: ^7.7.3
         version: 7.7.3
@@ -238,6 +229,33 @@ importers:
       '@types/node':
         specifier: ^24.10.1
         version: 24.10.1
+
+  pkgs/maa-version-manager:
+    devDependencies:
+      '@tsconfig/node20':
+        specifier: ^20.1.8
+        version: 20.1.8
+      '@types/pacote':
+        specifier: ^11.1.8
+        version: 11.1.8
+      '@types/proper-lockfile':
+        specifier: ^4.1.4
+        version: 4.1.4
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
+      pacote:
+        specifier: ^21.0.4
+        version: 21.0.4
+      proper-lockfile:
+        specifier: ^4.1.2
+        version: 4.1.2
+      semver:
+        specifier: ^7.7.3
+        version: 7.7.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   pkgs/pipeline-manager:
     devDependencies:

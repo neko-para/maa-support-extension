@@ -53,6 +53,12 @@ export default {
   'maa.pipeline.codelens.language-switch': '切换',
   'maa.pipeline.codelens.language-activated': '已激活',
 
+  'maa.pipeline.codeaction.extract-locale': '提取国际化文案',
+  'maa.pipeline.codeaction.input-key': '输入国际化Key',
+  'maa.pipeline.codeaction.key-exists': '已存在',
+  'maa.pipeline.codeaction.switch-to-v1': '切换到 V1',
+  'maa.pipeline.codeaction.switch-to-v2': '切换到 V2',
+
   'maa.pipeline.error.no-interface-found': '未找到interface',
   'maa.pipeline.error.not-exists': '{0} 不存在',
   'maa.pipeline.error.conflict-task': '冲突任务 {0}, 上一个定义在 {1}',

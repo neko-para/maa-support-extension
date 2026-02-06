@@ -55,6 +55,12 @@ export default {
   'maa.pipeline.codelens.language-switch': 'Switch',
   'maa.pipeline.codelens.language-activated': 'Activated',
 
+  'maa.pipeline.codeaction.extract-locale': 'Extract localization text',
+  'maa.pipeline.codeaction.input-key': 'Input localization key',
+  'maa.pipeline.codeaction.key-exists': 'already exists',
+  'maa.pipeline.codeaction.switch-to-v1': 'Switch to V1',
+  'maa.pipeline.codeaction.switch-to-v2': 'Switch to V2',
+
   'maa.pipeline.error.no-interface-found': 'No interface found',
   'maa.pipeline.error.not-exists': '{0} not exists',
   'maa.pipeline.error.conflict-task': 'Conflict task {0}, previous defined in {1}',

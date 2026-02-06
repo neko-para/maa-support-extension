@@ -1,4 +1,3 @@
-import path from 'path'
 import * as vscode from 'vscode'
 
 import {
@@ -6,15 +5,12 @@ import {
   InterfaceBundle,
   InterfaceRefInfo,
   TaskRefInfo,
-  findDeclRef,
-  joinPath
+  findDeclRef
 } from '@mse/pipeline-manager'
 import { Interface } from '@mse/types'
 import { t } from '@mse/utils'
 
-import { interfaceService } from '../..'
 import { commands } from '../../../command'
-import { debounce } from '../../utils/debounce'
 import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -46,11 +42,11 @@ export class PipelineCodeActionsProvider
         const knownKeys = intBundle.langBundle.allKeys()
 
         const localeKey = await vscode.window.showInputBox({
-          title: '输入国际化Key',
+          title: t('maa.pipeline.codeaction.input-key'),
           ignoreFocusOut: true,
           validateInput: value => {
             if (knownKeys.includes(value)) {
-              return '已存在'
+              return t('maa.pipeline.codeaction.key-exists')
             }
             return undefined
           }
@@ -141,21 +137,30 @@ export class PipelineCodeActionsProvider
 
         const editToV1 = new vscode.WorkspaceEdit()
         editToV1.replace(doc.uri, replaceRange, layer.toggleMode(1, info, indent))
-        const actionToV1 = new vscode.CodeAction('切换为V1', vscode.CodeActionKind.RefactorRewrite)
+        const actionToV1 = new vscode.CodeAction(
+          t('maa.pipeline.codeaction.switch-to-v1'),
+          vscode.CodeActionKind.RefactorRewrite
+        )
         actionToV1.edit = editToV1
 
         const editToV2 = new vscode.WorkspaceEdit()
         editToV2.replace(doc.uri, replaceRange, layer.toggleMode(2, info, indent))
-        const actionToV2 = new vscode.CodeAction('切换为V2', vscode.CodeActionKind.RefactorRewrite)
+        const actionToV2 = new vscode.CodeAction(
+          t('maa.pipeline.codeaction.switch-to-v2'),
+          vscode.CodeActionKind.RefactorRewrite
+        )
         actionToV2.edit = editToV2
 
         return [actionToV1, actionToV2]
       }
     } else if (ref) {
       if (ref.type === 'task.can_locale') {
-        const action = new vscode.CodeAction('提取文案', vscode.CodeActionKind.RefactorExtract)
+        const action = new vscode.CodeAction(
+          t('maa.pipeline.codeaction.extract-locale'),
+          vscode.CodeActionKind.RefactorExtract
+        )
         action.command = {
-          title: '提取文案',
+          title: t('maa.pipeline.codeaction.extract-locale'),
           command: commands.LocaleExtract,
           arguments: [intBundle, document, ref]
         }

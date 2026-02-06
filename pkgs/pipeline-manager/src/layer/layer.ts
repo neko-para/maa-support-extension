@@ -2,6 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import type { IContentLoader } from '../content/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
+import type { StringNode } from '../parser/utils'
 import { buildTree } from '../utils/json'
 import {
   type AbsolutePath,
@@ -13,10 +14,42 @@ import {
 
 export type LayerTaskInfo = {
   file: AbsolutePath
-  prop: Node
+  prop: StringNode
   data: Node
   info: TaskInfo
   obj: unknown
+}
+
+function specialStringify(value: any, indent: string, indentCount: number): string {
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return '[]'
+    }
+    const result: string[] = ['[']
+    for (const val of value) {
+      result.push(indent.repeat(indentCount) + specialStringify(val, indent, indentCount + 1) + ',')
+    }
+    result.push(indent.repeat(indentCount - 1) + ']')
+    return result.join('\n')
+  } else if (typeof value === 'object') {
+    if (Object.keys(value).length === 0) {
+      return '{}'
+    }
+    const result: string[] = ['{']
+    for (const [key, val] of Object.entries(value)) {
+      result.push(
+        indent.repeat(indentCount) +
+          JSON.stringify(key) +
+          ': ' +
+          specialStringify(val, indent, indentCount + 1) +
+          ','
+      )
+    }
+    result.push(indent.repeat(indentCount - 1) + '}')
+    return result.join('\n')
+  } else {
+    return JSON.stringify(value)
+  }
 }
 
 export class LayerInfo {
@@ -254,5 +287,57 @@ export class LayerInfo {
     }
 
     return result
+  }
+
+  toggleMode(mode: 1 | 2, info: LayerTaskInfo, indent = '    ') {
+    const parts = info.info.parts
+    const data: any = {}
+    if (mode === 1) {
+      if (parts.recoType) {
+        data.recognition = parts.recoType.value
+      }
+      for (const [key, obj] of parts.reco) {
+        data[key] = buildTree(obj)
+      }
+      if (parts.actType) {
+        data.action = parts.actType.value
+      }
+      for (const [key, obj] of parts.act) {
+        data[key] = buildTree(obj)
+      }
+    } else if (mode === 2) {
+      if (parts.recoType || parts.reco.length > 0) {
+        data.recognition = {}
+        if (parts.recoType) {
+          data.recognition.type = parts.recoType.value
+        }
+        if (parts.reco.length > 0) {
+          data.recognition.param = {}
+          for (const [key, obj] of parts.reco) {
+            data.recognition.param[key] = buildTree(obj)
+          }
+        }
+      }
+      if (parts.actType || parts.act.length > 0) {
+        data.action = {}
+        if (parts.actType) {
+          data.action.type = parts.actType.value
+        }
+        if (parts.act.length > 0) {
+          data.action.param = {}
+          for (const [key, obj] of parts.act) {
+            data.action.param[key] = buildTree(obj)
+          }
+        }
+      }
+    }
+    for (const [key, obj] of parts.base) {
+      data[key] = buildTree(obj)
+    }
+    for (const [key, obj] of parts.unknown) {
+      data[key] = buildTree(obj)
+    }
+
+    return JSON.stringify(info.prop.value) + ': ' + specialStringify(data, indent, 2)
   }
 }

@@ -161,6 +161,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
             : undefined
         })
         if (!targetPath || targetPath.length !== 1) {
+          this.response(data.seq, null)
           return null
         }
 

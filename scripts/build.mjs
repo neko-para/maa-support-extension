@@ -28,7 +28,7 @@ esBuild({
   entryPoints: ['pkgs/maa-checker/src/main.ts'],
   bundle: true,
   outdir: 'pkgs/maa-checker/dist',
-  external: ['@maaxyz/maa-node'],
+  external: ['@maaxyz/maa-node', 'node-gyp/bin/node-gyp.js'],
   platform: 'node',
   sourcemap: true,
   mainFields: ['module', 'main']

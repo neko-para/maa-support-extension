@@ -139,6 +139,9 @@ importers:
       '@mse/locale':
         specifier: workspace:*
         version: link:../locale
+      '@mse/maa-version-manager':
+        specifier: workspace:*
+        version: link:../maa-version-manager
       '@mse/pipeline-manager':
         specifier: workspace:*
         version: link:../pipeline-manager

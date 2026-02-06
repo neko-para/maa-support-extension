@@ -149,25 +149,6 @@ export class PipelineCompletionProvider
       return result
     }
 
-    if (ref.type === 'task.locale') {
-      const range = convertRangeWithDelta(document, ref.location, -1, 2)
-
-      const keys = intBundle.langBundle.allKeys()
-
-      return keys.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Constant,
-          insertText: esc.substring(1, esc.length - 1),
-          range,
-          fillDetail: async () => {
-            return (await this.getLocaleHover(name)) ?? ''
-          }
-        }
-      })
-    }
-
     if (
       (ref.type === 'task.next' && ref.objMode && !ref.anchor) ||
       ref.type === 'task.target' ||
@@ -269,6 +250,23 @@ export class PipelineCompletionProvider
         }
         result.push(item)
       }
+    } else if (ref.type === 'task.locale') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 2)
+
+      const keys = intBundle.langBundle.allKeys()
+
+      return keys.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Constant,
+          insertText: esc.substring(1, esc.length - 1),
+          range,
+          fillDetail: async () => {
+            return (await this.getLocaleHover(name)) ?? ''
+          }
+        }
+      })
     }
     return result
   }

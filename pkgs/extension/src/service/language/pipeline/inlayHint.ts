@@ -73,11 +73,8 @@ export class PipelineInlayHintsProvider
     const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
 
     return refs
+      .filter(ref => ref.type === 'task.locale')
       .map(ref => {
-        if (ref.type !== 'task.locale') {
-          return null
-        }
-
         const result = intBundle.langBundle.queryKey(ref.target)[preferredIndex]
         if (!result) {
           return null

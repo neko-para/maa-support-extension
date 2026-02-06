@@ -26,6 +26,10 @@ npm run watch # build模式启动前端, 不可热重载, 使用Run Extension As
 
 后端工具 | backend tools
 
+### pkgs/locale
+
+国际化文案 | Localization texts
+
 ### pkgs/maa-server
 
 MaaFw 独立服务进程 | MaaFw standalone service process

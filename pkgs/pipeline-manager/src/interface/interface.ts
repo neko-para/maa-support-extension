@@ -21,6 +21,7 @@ import {
   type InterfaceRefInfo,
   parseInterface
 } from '../parser/interface/interface'
+import type { TaskDeclInfo } from '../parser/task/task'
 import { isString, parseObject } from '../parser/utils'
 import {
   type AbsolutePath,
@@ -181,6 +182,8 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     })
 
     this.langBundle.on('localeChanged', () => {
+      this.info.layer.extraDecls = this.langBundle.langs.map(lang => lang.decls).flat()
+
       this.emit('localeChanged')
     })
   }
@@ -327,7 +330,11 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     file: AbsolutePath
   ): [layer: LayerInfo, absolute: AbsolutePath, isDefault: boolean] | null {
     const rel = relativePath(this.root, file).replaceAll(path.sep, '/') as RelativePath
-    if (file === this.file || this.importFiles.includes(rel)) {
+    if (
+      file === this.file ||
+      this.importFiles.includes(rel) ||
+      this.langBundle.langs.find(lang => lang.file === rel)
+    ) {
       return [this.info.layer, file, false]
     } else {
       for (const bundle of this.bundles) {

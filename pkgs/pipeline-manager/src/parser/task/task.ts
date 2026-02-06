@@ -42,10 +42,17 @@ export type TaskSubRecoDeclInfo = {
   task: TaskName
 }
 
+export type TaskLocaleDeclInfo = {
+  type: 'task.locale'
+  key: string
+  value: string
+  valueNode: Node
+}
+
 export type TaskDeclInfo = {
   file: AbsolutePath
   location: Node
-} & (TaskPropDeclInfo | TaskAnchorDeclInfo | TaskSubRecoDeclInfo)
+} & (TaskPropDeclInfo | TaskAnchorDeclInfo | TaskSubRecoDeclInfo | TaskLocaleDeclInfo)
 
 export type TaskNextRefInfo = {
   type: 'task.next'

@@ -30,6 +30,7 @@ export class LayerInfo {
 
   tasks: Record<TaskName, LayerTaskInfo[]>
   images: Set<ImageRelativePath>
+  extraDecls: TaskDeclInfo[]
   extraRefs: TaskRefInfo[]
 
   dirty: boolean
@@ -49,6 +50,7 @@ export class LayerInfo {
 
     this.tasks = {}
     this.images = new Set()
+    this.extraDecls = []
     this.extraRefs = []
 
     this.dirty = true
@@ -59,6 +61,7 @@ export class LayerInfo {
   reset() {
     this.tasks = {}
     this.images = new Set()
+    this.extraDecls = []
     this.extraRefs = []
 
     this.dirty = true
@@ -84,6 +87,7 @@ export class LayerInfo {
         changed.push(task)
       }
     }
+    this.extraDecls = this.extraDecls.filter(decl => decl.file !== file)
     this.extraRefs = this.extraRefs.filter(ref => ref.file !== file)
     this.markDirty()
     return changed
@@ -126,6 +130,7 @@ export class LayerInfo {
         this.mergedRefsCache.push(...taskInfo.info.refs)
       }
     }
+    this.mergedDeclsCache.push(...this.extraDecls)
     this.mergedRefsCache.push(...this.extraRefs)
     this.dirty = false
   }

@@ -63,6 +63,12 @@ export class PipelineLanguageProvider extends BaseService {
             pattern: new vscode.RelativePattern(root.dirUri, imp)
           })
         }
+        for (const lang of interfaceService.interfaceBundle?.langBundle.langs ?? []) {
+          filters.push({
+            scheme: 'file',
+            pattern: new vscode.RelativePattern(root.dirUri, lang.file)
+          })
+        }
       }
       this.provider = setup(filters)
     }
@@ -254,6 +260,8 @@ ${JSON.stringify(final, null, 2)}
         return decls.filter(
           d => d.type === 'task.sub_reco' && d.name === decl.name && d.task === decl.task
         )
+      } else if (decl.type === 'task.locale') {
+        return decls.filter(d => d.type === 'task.locale' && d.key === decl.key)
       }
     } else if (ref) {
       const task = extractTaskRef(ref)
@@ -267,6 +275,8 @@ ${JSON.stringify(final, null, 2)}
         return decls.filter(
           d => d.type === 'task.sub_reco' && d.name === ref.target && d.task === ref.task
         )
+      } else if (ref.type === 'task.locale') {
+        return decls.filter(d => d.type === 'task.locale' && d.key === ref.target)
       }
     }
     return []
@@ -305,6 +315,8 @@ ${JSON.stringify(final, null, 2)}
         return refs.filter(
           r => r.type === 'task.roi' && r.target === decl.name && r.task === decl.task
         )
+      } else if (decl.type === 'task.locale') {
+        return refs.filter(ref => ref.type === 'task.locale' && ref.target === decl.key)
       }
     } else if (ref) {
       const task = extractTaskRef(ref)
@@ -316,6 +328,8 @@ ${JSON.stringify(final, null, 2)}
         return refs.filter(
           r => r.type === 'task.roi' && r.target === ref.target && r.task === ref.task
         )
+      } else if (ref.type === 'task.locale') {
+        return refs.filter(ref2 => ref2.type === 'task.locale' && ref2.target === ref.target)
       }
     }
     return []

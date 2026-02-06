@@ -46,6 +46,13 @@ export class PipelineHoverProvider
 
         const hover = await this.getTaskHover(intBundle, intBundle.topLayer, decl.task)
         return new vscode.Hover(hover)
+      } else if (decl.type === 'task.locale') {
+        const hover = await this.getLocaleHover(decl.key)
+        if (hover) {
+          return new vscode.Hover(hover)
+        } else {
+          return null
+        }
       }
     } else if (ref) {
       if (isMaaAssistantArknights) {
@@ -62,15 +69,6 @@ export class PipelineHoverProvider
           } else {
             return null
           }
-        }
-      }
-
-      if (ref.type === 'task.locale') {
-        const hover = await this.getLocaleHover(ref.target)
-        if (hover) {
-          return new vscode.Hover(hover)
-        } else {
-          return null
         }
       }
 
@@ -92,6 +90,13 @@ export class PipelineHoverProvider
       } else if (ref.type === 'task.template') {
         const hover = this.getImageHover(intBundle, intBundle.topLayer, ref.target)
         return new vscode.Hover(hover)
+      } else if (ref.type === 'task.locale') {
+        const hover = await this.getLocaleHover(ref.target)
+        if (hover) {
+          return new vscode.Hover(hover)
+        } else {
+          return null
+        }
       }
     }
     return null

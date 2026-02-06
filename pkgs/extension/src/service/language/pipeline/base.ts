@@ -232,7 +232,7 @@ ${JSON.stringify(final, null, 2)}
         const doc = await vscode.workspace.openTextDocument(full)
         const pos = doc.positionAt(entry.keyNode.offset)
         content.push(
-          `| [${lang.name}](${vscode.Uri.file(full)}#L${pos.line + 1}) | ${entry.value} |`
+          `| [${lang.name}](${vscode.Uri.file(full)}#L${pos.line + 1}) | ${entry.value.replaceAll('\n', '<br>')} |`
         )
       } else {
         content.push(`| ${lang.name} | <missing> |`)

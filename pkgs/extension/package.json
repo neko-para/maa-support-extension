@@ -5,6 +5,7 @@
     "@jimp/js-png": "^1.6.0",
     "@jimp/plugin-crop": "^1.6.0",
     "@maaxyz/maa-node": "5.5.0",
+    "@mse/locale": "workspace:*",
     "@mse/maa-server-proto": "workspace:*",
     "@mse/pipeline-manager": "workspace:*",
     "@mse/types": "workspace:*",

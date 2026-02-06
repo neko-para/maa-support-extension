@@ -1,20 +1,12 @@
 import * as vscode from 'vscode'
 
-import {
-  AnchorName,
-  Diagnostic,
-  ImageRelativePath,
-  TaskName,
-  TaskRefInfo,
-  extractTaskRef,
-  performDiagnostic
-} from '@mse/pipeline-manager'
-import { t } from '@mse/utils'
+import { t } from '@mse/locale'
+import { AbsolutePath, buildDiagnosticMessage, performDiagnostic } from '@mse/pipeline-manager'
 
 import { interfaceService, rootService } from '.'
-import { isMaaAssistantArknights } from '../utils/fs'
+import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
-import { autoBuildRange, autoConvertRange, convertRange } from './language/utils'
+import { autoBuildRange } from './language/utils'
 import { debounce } from './utils/debounce'
 import { FlushHelper } from './utils/flush'
 
@@ -43,85 +35,6 @@ class DiagnosticScanner extends FlushHelper {
     }, 5000)
   }
 
-  buildDiagMessage(diag: Diagnostic) {
-    switch (diag.type) {
-      case 'conflict-task':
-        return t(
-          'maa.pipeline.error.conflict-task',
-          diag.task,
-          rootService.relativeToRoot(diag.previous.file)
-        )
-      case 'duplicate-next':
-        return t('maa.pipeline.error.duplicate-next', diag.task)
-      case 'unknown-task':
-        return t('maa.pipeline.error.unknown-task', diag.task)
-      case 'dynamic-image':
-        return t('maa.pipeline.warning.image-path-dynamic')
-      case 'image-path-back-slash':
-        return t('maa.pipeline.warning.image-path-backslash')
-      case 'image-path-dot-slash':
-        return t('maa.pipeline.warning.image-path-dot-slash')
-      case 'image-path-missing-png':
-        return t('maa.pipeline.warning.image-path-missing-png')
-      case 'unknown-image':
-        return t('maa.pipeline.error.unknown-image', diag.image)
-      case 'unknown-anchor':
-        return t('maa.pipeline.error.unknown-anchor', diag.anchor)
-      case 'unknown-attr':
-        return t('maa.pipeline.error.unknown-attr', diag.attr)
-      case 'int-conflict-controller':
-        return t(
-          'maa.pipeline.error.conflict-controller',
-          diag.ctrl,
-          rootService.relativeToRoot(diag.previous.file)
-        )
-      case 'int-unknown-controller':
-        return t('maa.pipeline.error.unknown-controller', diag.ctrl)
-      case 'int-conflict-resource':
-        return t(
-          'maa.pipeline.error.conflict-resource',
-          diag.res,
-          rootService.relativeToRoot(diag.previous.file)
-        )
-      case 'int-unknown-resource':
-        return t('maa.pipeline.error.unknown-resource', diag.res)
-      case 'int-conflict-option':
-        return t(
-          'maa.pipeline.error.conflict-option',
-          diag.option,
-          rootService.relativeToRoot(diag.previous.file)
-        )
-      case 'int-unknown-option':
-        return t('maa.pipeline.error.unknown-option', diag.option)
-      case 'int-conflict-case':
-        return t(
-          'maa.pipeline.error.conflict-case',
-          diag.case,
-          diag.option,
-          rootService.relativeToRoot(diag.previous.file)
-        )
-      case 'int-unknown-case':
-        return t('maa.pipeline.error.unknown-case', diag.case, diag.option)
-      case 'int-switch-name-invalid':
-        return t('maa.pipeline.error.switch-name-invalid')
-      case 'int-switch-missing':
-        if (diag.missingYes && diag.missingNo) {
-          return t('maa.pipeline.error.switch-missing-all')
-        } else if (diag.missingYes) {
-          return t('maa.pipeline.error.switch-missing-yes')
-        } else {
-          return t('maa.pipeline.error.switch-missing-no')
-        }
-      case 'int-switch-should-fixed':
-        return t('maa.pipeline.warning.switch-name-should-fixed')
-      case 'int-unknown-entry-task':
-        return t('maa.pipeline.error.unknown-entry-task', diag.task)
-      case 'int-override-unknown-task':
-        return t('maa.pipeline.error.override-unknown-task', diag.task)
-    }
-    return `unknown diagnostic: ${JSON.stringify(diag)}`
-  }
-
   async doFlushImpl() {
     const intBundle = interfaceService.interfaceBundle
     if (!intBundle) {
@@ -133,13 +46,25 @@ class DiagnosticScanner extends FlushHelper {
 
     const diags = performDiagnostic(intBundle)
     for (const diag of diags) {
+      const [start, end, brief] = await buildDiagnosticMessage(
+        currentWorkspace()!.fsPath as AbsolutePath,
+        diag,
+        async (file, offset) => {
+          const doc = await vscode.workspace.openTextDocument(file)
+          const pos = doc.positionAt(offset)
+          return [pos.line, pos.character]
+        }
+      )
+
       const uri = vscode.Uri.file(diag.file)
-      const range = await autoBuildRange(diag.offset, diag.length, diag.file)
       result.push([
         uri,
         new vscode.Diagnostic(
-          range,
-          this.buildDiagMessage(diag),
+          new vscode.Range(
+            new vscode.Position(start[0], start[1]),
+            new vscode.Position(end[0], end[1])
+          ),
+          brief,
           diag.level === 'warning'
             ? vscode.DiagnosticSeverity.Warning
             : vscode.DiagnosticSeverity.Error

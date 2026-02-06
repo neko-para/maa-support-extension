@@ -1,12 +1,16 @@
 import * as core from '@actions/core'
+import { existsSync, statSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
+import { type LocaleType, setLocale } from '@mse/locale'
 import {
+  type AbsolutePath,
   type Diagnostic,
   FsContentLoader,
   FsContentWatcher,
   InterfaceBundle,
+  buildDiagnosticMessage,
   performDiagnostic
 } from '@mse/pipeline-manager'
 
@@ -60,14 +64,18 @@ Options:
   --github=<repo>   Output github actions compatible warning & error messages, with repository folder <repo>.
   --ignore=<type>   Ignore <type>
                         Known types: ${allTypes.join(', ')}
+  --locale=<lang>   Use locale <lang>
+                        Known locales: zh, en
 `)
     process.exit(1)
   }
-  const interfacePath = path.resolve(process.argv[2])
+  let interfacePath = path.resolve(process.argv[2])
   let rawMode = false
   let githubMode = false
   let repoFolder = process.cwd()
   const ignoreTypes: string[] = []
+
+  setLocale('en')
 
   rawMode = process.argv[3] === '--raw'
   for (const opt of process.argv.slice(3)) {
@@ -78,7 +86,25 @@ Options:
       repoFolder = path.resolve(opt.slice('--github='.length))
     } else if (opt.startsWith('--ignore=')) {
       ignoreTypes.push(opt.slice('--ignore='.length))
+    } else if (opt.startsWith('--locale=')) {
+      const locale = opt.slice('--locale='.length)
+      if (['zh', 'en'].includes(locale)) {
+        setLocale(locale as LocaleType)
+      }
     }
+  }
+
+  if (existsSync(interfacePath) && statSync(interfacePath).isDirectory()) {
+    interfacePath = path.join(interfacePath, 'interface.json')
+  }
+
+  if (!existsSync(interfacePath)) {
+    if (githubMode) {
+      core.error(`${interfacePath} not found`)
+    } else {
+      console.error(`${interfacePath} not found`)
+    }
+    process.exit(1)
   }
 
   const bundle = new InterfaceBundle(
@@ -133,101 +159,10 @@ Options:
       }
 
       for (const diag of diags) {
-        const [line, col] = await locate(diag.file, diag.offset)
+        const [start, end, brief] = await buildDiagnosticMessage(bundle.root, diag, locate)
+
+        const [line, col] = start
         const relative = path.relative(bundle.root, diag.file)
-        let brief: string = diag.type
-        switch (diag.type) {
-          case 'conflict-task': {
-            const prelative = path.relative(bundle.root, diag.previous.file)
-            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-            brief = `Conflict task \`${diag.task}\`, previous defined in ${prelative}:${pline}:${pcol}`
-            break
-          }
-          case 'duplicate-next':
-            brief = `Duplicate route \`${diag.task}\``
-            break
-          case 'unknown-task':
-            brief = `Unknown task \`${diag.task}\``
-            break
-          case 'dynamic-image':
-            brief = `Dynamic image path detected`
-            break
-          case 'image-path-back-slash':
-            brief = `Image path contains backslash`
-            break
-          case 'image-path-dot-slash':
-            brief = `Image path contains ./`
-            break
-          case 'image-path-missing-png':
-            brief = `Image path missing .png`
-            break
-          case 'unknown-image':
-            brief = `Unknown image \`${diag.image}\``
-            break
-          case 'unknown-anchor':
-            brief = `Unknown anchor \`${diag.anchor}\``
-            break
-          case 'unknown-attr':
-            brief = `Unknown attribute \`${diag.attr}\``
-            break
-          case 'int-conflict-controller': {
-            const prelative = path.relative(bundle.root, diag.previous.file)
-            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-            brief = `Conflict controller \`${diag.ctrl}\`, previous defined in ${prelative}:${pline}:${pcol}`
-            break
-          }
-          case 'int-unknown-controller':
-            brief = `Unknown controlle \`${diag.ctrl}\``
-            break
-          case 'int-conflict-resource': {
-            const prelative = path.relative(bundle.root, diag.previous.file)
-            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-            brief = `Conflict resource \`${diag.res}\`, previous defined in ${prelative}:${pline}:${pcol}`
-            break
-          }
-          case 'int-unknown-resource':
-            brief = `Unknown resource \`${diag.res}\``
-            break
-          case 'int-conflict-option': {
-            const prelative = path.relative(bundle.root, diag.previous.file)
-            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-            brief = `Conflict option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
-            break
-          }
-          case 'int-unknown-option':
-            brief = `Unknown option \`${diag.option}\``
-            break
-          case 'int-conflict-case': {
-            const prelative = path.relative(bundle.root, diag.previous.file)
-            const [pline, pcol] = await locate(diag.previous.file, diag.previous.offset)
-            brief = `Conflict case \`${diag.case}\` for option \`${diag.option}\`, previous defined in ${prelative}:${pline}:${pcol}`
-            break
-          }
-          case 'int-unknown-case':
-            brief = `Unknown case \`${diag.case}\` for option \`${diag.option}\``
-            break
-          case 'int-switch-name-invalid':
-            brief = `Switch name invalid`
-            break
-          case 'int-switch-missing':
-            if (diag.missingYes && diag.missingNo) {
-              brief = `Switch option missing \`Yes\` and \`No\``
-            } else if (diag.missingYes) {
-              brief = `Switch option missing \`Yes\``
-            } else {
-              brief = `Switch option missing \`No\``
-            }
-            break
-          case 'int-switch-should-fixed':
-            brief = `Switch name should use \`Yes\` or \`No\``
-            break
-          case 'int-unknown-entry-task':
-            brief = `Unknown entry task \`${diag.task}\``
-            break
-          case 'int-override-unknown-task':
-            brief = `Overriding Unknown task \`${diag.task}\``
-            break
-        }
         if (githubMode) {
           core[diag.level](brief, {
             file: path.relative(repoFolder, diag.file),

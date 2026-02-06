@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 
-import { logger, t } from '@mse/utils'
+import { t } from '@mse/locale'
+import { logger } from '@mse/utils'
 import { MaaErrorDelegate, type MaaTaskExpr } from '@nekosu/maa-tasker'
 
 export class MaaErrorDelegateImpl extends MaaErrorDelegate {

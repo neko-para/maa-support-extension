@@ -3,6 +3,7 @@
   "main": "./src/index.ts",
   "devDependencies": {
     "@maaxyz/maa-node": "5.3.3",
+    "@mse/locale": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",
     "@tsconfig/node20": "^20.1.8",
     "@types/node": "^24.10.7",

@@ -2,7 +2,8 @@ import os from 'os'
 import sms from 'source-map-support'
 import vscode from 'vscode'
 
-import { logger, setupLogger, t } from '@mse/utils'
+import { setLocale, t } from '@mse/locale'
+import { logger, setupLogger } from '@mse/utils'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
@@ -12,6 +13,8 @@ import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 sms.install()
 
 export async function activate(context: vscode.ExtensionContext) {
+  setLocale(vscode.env.language.startsWith('zh') ? 'zh' : 'en')
+
   const channel = vscode.window.createOutputChannel('Maa')
   context.subscriptions.push(channel)
 

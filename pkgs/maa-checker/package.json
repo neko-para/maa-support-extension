@@ -11,6 +11,7 @@
   "devDependencies": {
     "@actions/core": "^3.0.0",
     "@maaxyz/maa-node": "5.5.0",
+    "@mse/locale": "workspace:*",
     "@mse/pipeline-manager": "workspace:*",
     "@mse/types": "workspace:*",
     "@tsconfig/node20": "^20.1.8",

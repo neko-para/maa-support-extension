@@ -2,8 +2,9 @@ import * as fs from 'fs/promises'
 import path from 'path'
 import * as vscode from 'vscode'
 
+import { locale, t } from '@mse/locale'
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
-import { WebviewPanelProvider, locale, logger, t } from '@mse/utils'
+import { WebviewPanelProvider, logger } from '@mse/utils'
 
 import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'

@@ -1,0 +1,8 @@
+{
+  "name": "@mse/locale",
+  "main": "src/index.ts",
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.8",
+    "typescript": "^5.9.3"
+  }
+}

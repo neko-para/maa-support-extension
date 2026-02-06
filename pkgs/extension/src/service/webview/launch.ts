@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 
+import { locale } from '@mse/locale'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
-import { WebviewPanelProvider, locale } from '@mse/utils'
+import { WebviewPanelProvider } from '@mse/utils'
 
 import { nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'

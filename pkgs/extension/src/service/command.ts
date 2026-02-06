@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
+import { t } from '@mse/locale'
 import { TaskDeclInfo } from '@mse/pipeline-manager'
-import { t } from '@mse/utils'
 import { MaaTaskExpr, TaskExprProps, TaskExprPropsVirtsMap, shouldStrip } from '@nekosu/maa-tasker'
 
 import { interfaceService, launchService, rootService, serverService, stateService } from '.'

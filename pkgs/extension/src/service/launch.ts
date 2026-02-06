@@ -1,13 +1,10 @@
-import { existsSync } from 'fs'
-import * as fs from 'fs/promises'
-import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { t } from '@mse/locale'
 import { InterfaceRuntime } from '@mse/types'
-import { logger, loggerChannel, t } from '@mse/utils'
+import { logger, loggerChannel } from '@mse/utils'
 
 import { debugService, interfaceService, serverService } from '.'
-import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
 

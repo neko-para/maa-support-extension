@@ -4,6 +4,7 @@ import * as path from 'path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
+import { t } from '@mse/locale'
 import { InterfaceBundle, VscodeContentLoader, VscodeContentWatcher } from '@mse/pipeline-manager'
 import {
   InputItemType,
@@ -13,7 +14,7 @@ import {
   SelectOption,
   SwitchOption
 } from '@mse/types'
-import { logger, t } from '@mse/utils'
+import { logger } from '@mse/utils'
 
 import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'

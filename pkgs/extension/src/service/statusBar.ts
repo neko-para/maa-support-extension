@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { t } from '@mse/utils'
+import { t } from '@mse/locale'
 
 import packageJson from '../../../../release/package.json'
 import { commands } from '../command'

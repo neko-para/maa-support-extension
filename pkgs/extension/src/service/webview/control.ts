@@ -3,8 +3,9 @@ import { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
+import { locale, t } from '@mse/locale'
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
-import { WebviewProvider, locale, provideWebview, t } from '@mse/utils'
+import { WebviewProvider, provideWebview } from '@mse/utils'
 
 import {
   interfaceService,

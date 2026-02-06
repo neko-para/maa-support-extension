@@ -55,6 +55,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.5.0
         version: 5.5.0
+      '@mse/locale':
+        specifier: workspace:*
+        version: link:../locale
       '@mse/maa-server-proto':
         specifier: workspace:*
         version: link:../maa-server-proto
@@ -125,6 +128,15 @@ importers:
         specifier: ^8.2.1
         version: 8.2.1
 
+  pkgs/locale:
+    devDependencies:
+      '@tsconfig/node20':
+        specifier: ^20.1.8
+        version: 20.1.8
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   pkgs/maa-checker:
     devDependencies:
       '@actions/core':
@@ -133,6 +145,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.5.0
         version: 5.5.0
+      '@mse/locale':
+        specifier: workspace:*
+        version: link:../locale
       '@mse/pipeline-manager':
         specifier: workspace:*
         version: link:../pipeline-manager
@@ -229,6 +244,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.3.3
         version: 5.3.3
+      '@mse/locale':
+        specifier: workspace:*
+        version: link:../locale
       '@nekosu/maa-tasker':
         specifier: workspace:*
         version: link:../maa-tasker

@@ -5,7 +5,7 @@ import { lock } from 'proper-lockfile'
 import semVerCompare from 'semver/functions/compare'
 import * as vscode from 'vscode'
 
-import { t } from '@mse/utils'
+import { t } from '@mse/locale'
 
 import { serverService } from '.'
 import packageJson from '../../package.json'

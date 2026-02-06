@@ -55,6 +55,14 @@ const allTypes = [
   'int-override-unknown-task'
 ]
 
+function defaultVersion() {
+  return pkg.devDependencies['@maaxyz/maa-node']
+}
+
+function defaultCacheFolder() {
+  return path.join(os.homedir(), '.maa-checker') as AbsolutePath
+}
+
 export function printUsage() {
   console.log(`Usage: npx ${pkg.name} <interface path> [command] [options...]
 
@@ -74,8 +82,8 @@ Option for check:
                             Known types: ${allTypes.join(', ')}
 
 Option for reco:
-  --maa-version=<ver>   Use MaaFw version <ver>
-  --maa-cache=<dir>     Use MaaFw cache folder <dir>
+  --maa-version=<ver>   Use MaaFw version <ver>. Default: ${defaultVersion()}
+  --maa-cache=<dir>     Use MaaFw cache folder <dir>. Default: ${defaultCacheFolder()}
   --controller=<ctrl>   Use controller <ctrl> for attach_resource_path
   --resource=<res>      Use resource <res>
   --image=<img>         Perform reco on <img>
@@ -96,8 +104,8 @@ export async function parseOption(): Promise<ProgramOption | null> {
 
     ignoreTypes: [],
 
-    maaVersion: pkg.devDependencies['@maaxyz/maa-node'],
-    maaCache: path.join(os.homedir(), '.maa-checker') as AbsolutePath,
+    maaVersion: defaultVersion(),
+    maaCache: defaultCacheFolder(),
     controller: '',
     resource: '',
     imagesRaw: [],

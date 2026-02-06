@@ -3,7 +3,7 @@ import type { Node } from 'jsonc-parser'
 import type { MaaTaskExpr } from '@nekosu/maa-tasker'
 
 import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
-import { type PropPair, type StringNode, parseArray, parseObject } from '../utils'
+import { type PropPair, type StringNode, isString, parseArray, parseObject } from '../utils'
 import { parseAnchor } from './anchor'
 import { parseFocus } from './focus'
 import { parseFreeze } from './freeze'
@@ -209,8 +209,19 @@ function parseReco(
       case 'all_of':
       case 'any_of':
         for (const sub of parseArray(obj)) {
-          const subInfo = splitNode(sub, false)
-          parseReco(subInfo.reco, info, prev, ctx, sub)
+          if (isString(sub)) {
+            info.refs.push({
+              file: ctx.file,
+              location: sub,
+              type: 'task.roi',
+              target: sub.value as TaskName,
+              prev: [],
+              task: ctx.taskName
+            })
+          } else {
+            const subInfo = splitNode(sub, false)
+            parseReco(subInfo.reco, info, prev, ctx, sub)
+          }
         }
         break
       case 'sub_name':

@@ -54,7 +54,7 @@ export default {
   'maa.pipeline.codelens.language-activated': '已激活',
 
   'maa.pipeline.codeaction.extract-locale': '提取国际化文案',
-  'maa.pipeline.codeaction.input-key': '输入国际化Key',
+  'maa.pipeline.codeaction.input-key': '输入国际化键',
   'maa.pipeline.codeaction.key-exists': '已存在',
   'maa.pipeline.codeaction.switch-to-v1': '切换到 V1',
   'maa.pipeline.codeaction.switch-to-v2': '切换到 V2',
@@ -67,6 +67,8 @@ export default {
   'maa.pipeline.error.unknown-anchor': '未知Anchor {0}',
   'maa.pipeline.error.unknown-attr': '未知属性 {0}',
   'maa.pipeline.error.duplicate-next': '重复路由 {0}',
+  'maa.pipeline.error.unknown-locale': '未知国际化键 {0}',
+  'maa.pipeline.error.missing-locale': '国际化键 {0} 缺少语言 {1} 的翻译',
   'maa.pipeline.error.conflict-controller': '冲突控制器 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-controller': '未知控制器 {0}',
   'maa.pipeline.error.conflict-resource': '冲突资源 {0}, 上一个定义在 {1}',

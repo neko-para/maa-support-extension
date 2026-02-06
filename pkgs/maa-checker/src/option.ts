@@ -27,6 +27,8 @@ export type ProgramOption = {
   imagesRaw: string[]
   images: AbsolutePath[]
   nodes: string[]
+  printHit: boolean
+  printNotHit: boolean
 }
 
 const allTypes = [
@@ -74,10 +76,11 @@ Options:
   --raw                 Output json
   --github=<repo>       Output github actions compatible warning & error messages, with repository folder <repo>.
   --repo=<repo>         Set repository folder <repo>
-  --locale=<lang>       Use locale <lang>
-                            Known locales: zh, en
+  --help                Print usage
 
 Option for check:
+  --locale=<lang>       Use locale <lang>
+                            Known locales: zh, en
   --ignore=<type>       Ignore <type>
                             Known types: ${allTypes.join(', ')}
 
@@ -89,6 +92,8 @@ Option for reco:
   --image=<img>         Perform reco on <img>
   --image-folder=<dir>  Glob .png under <dir>, recursively
   --node=<node>         Perform reco of node <node>
+  --print-hit           Print hits images
+  --print-not-hit       Print not hits images
 `)
 }
 
@@ -110,7 +115,9 @@ export async function parseOption(): Promise<ProgramOption | null> {
     resource: '',
     imagesRaw: [],
     images: [],
-    nodes: []
+    nodes: [],
+    printHit: false,
+    printNotHit: false
   }
 
   if (process.argv.length < 3) {
@@ -131,6 +138,9 @@ export async function parseOption(): Promise<ProgramOption | null> {
       continue
     }
     switch (match[1]) {
+      case 'help':
+        printUsage()
+        return null
       case 'raw':
         option.rawMode = true
         break
@@ -198,6 +208,12 @@ export async function parseOption(): Promise<ProgramOption | null> {
         if (match[2]) {
           option.nodes.push(match[2])
         }
+        break
+      case 'print-hit':
+        option.printHit = true
+        break
+      case 'print-not-hit':
+        option.printNotHit = true
         break
     }
   }

@@ -36,6 +36,12 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   }[] = []
 
   for (const [imageIdx, imagePath] of option.images.entries()) {
+    if (!option.rawMode) {
+      console.log(
+        `checking image ${imageIdx + 1} / ${option.images.length} ${option.imagesRaw[imageIdx]}`
+      )
+    }
+
     const image = await fs.readFile(imagePath)
     const ctrl = new maa.CustomController({
       connect() {
@@ -55,7 +61,10 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     inst.controller = ctrl
 
     res.register_custom_action('@mse/action', async self => {
-      for (const node of option.nodes) {
+      for (const [nodeIdx, node] of option.nodes.entries()) {
+        if (!option.rawMode) {
+          console.log(`    checking node ${nodeIdx + 1} / ${option.nodes.length} ${node}`)
+        }
         const detail = await self.context.run_recognition(node, image.buffer)
         result.push({
           image: imageIdx,
@@ -87,13 +96,23 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   if (option.rawMode) {
     console.log(JSON.stringify(result))
   } else {
+    console.log('')
+
     for (const node of option.nodes) {
       const sub = result.filter(info => info.node === node)
+      const hits = sub.filter(info => info.hit)
       const misses = sub.filter(info => !info.hit)
-      console.log(`${node}: ${sub.length - misses.length} / ${sub.length}`)
 
-      if (misses.length > 0) {
-        console.log(`failed images:`)
+      console.log(`${node}: ${hits.length} / ${sub.length}`)
+
+      if (hits.length > 0 && option.printHit) {
+        console.log(`hit images:`)
+        for (const info of hits) {
+          console.log(`    ${option.imagesRaw[info.image]}`)
+        }
+      }
+      if (misses.length > 0 && option.printNotHit) {
+        console.log(`missed images:`)
         for (const info of misses) {
           console.log(`    ${option.imagesRaw[info.image]}`)
         }

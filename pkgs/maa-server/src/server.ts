@@ -102,12 +102,12 @@ export async function initServer() {
 
 export const logger = {
   info(msg: string) {
-    conn?.sendNotification('info', msg)
+    conn?.sendNotification(logNoti, 'info', msg)
   },
   warn(msg: string) {
-    conn?.sendNotification('warn', msg)
+    conn?.sendNotification(logNoti, 'warn', msg)
   },
   error(msg: string) {
-    conn?.sendNotification('error', msg)
+    conn?.sendNotification(logNoti, 'error', msg)
   }
 }

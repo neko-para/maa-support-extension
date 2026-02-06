@@ -6,12 +6,15 @@ import { type AbsolutePath, type InterfaceBundle, joinPath } from '@mse/pipeline
 import type { ProgramOption } from './option'
 
 export async function performReco(option: ProgramOption, bundle: InterfaceBundle<unknown>) {
+  if (!option.rawMode) {
+    console.log('preparing maafw')
+  }
   const versionManager = new MaaVersionManager(option.maaCache)
   await versionManager.init()
   if (
     !(await versionManager.prepare(option.maaVersion, msg => {
       if (!option.rawMode) {
-        console.log(msg)
+        console.log('    ' + msg)
       }
     }))
   ) {

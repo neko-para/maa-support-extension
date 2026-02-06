@@ -17,6 +17,11 @@ import { WebviewLaunchPanel } from './webview/launch'
 
 export type IpcType = MarkApis<SubToHostApis, HostToSubApis>
 
+// 简单糊一下
+declare namespace globalThis {
+  let maa: unknown | undefined
+}
+
 export class ServerService extends BaseService {
   rpc: RpcManager
   ipc: IpcType | null
@@ -26,7 +31,6 @@ export class ServerService extends BaseService {
   constructor() {
     super()
     console.log('construct ServerService')
-
     this.rpc = new RpcManager(
       context.asAbsolutePath('server/index.js'),
       stateService.state.admin ?? false
@@ -44,6 +48,16 @@ export class ServerService extends BaseService {
     console.log('init ServerService')
   }
 
+  kill() {
+    for (const panel of Object.values(this.instMap)) {
+      panel.dispose()
+    }
+    this.instMap = {}
+    agentService.stopAll()
+    this.rpc.kill()
+    globalThis.maa = undefined
+  }
+
   switchAdmin(admin?: boolean) {
     if (admin === undefined) {
       admin = !this.rpc.admin
@@ -52,12 +66,7 @@ export class ServerService extends BaseService {
       return
     }
     if (admin !== this.rpc.admin) {
-      for (const panel of Object.values(this.instMap)) {
-        panel.dispose()
-      }
-      this.instMap = {}
-      agentService.stopAll()
-      this.rpc.kill()
+      this.kill()
       this.rpc.admin = admin
 
       stateService.reduce({
@@ -70,6 +79,7 @@ export class ServerService extends BaseService {
   async setupServer() {
     statusBarService.showServerStatus('loading~spin')
     if (
+      (await nativeService.load()) &&
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
         maaLog: (context.storageUri ?? context.globalStorageUri).fsPath
@@ -152,5 +162,20 @@ export class ServerService extends BaseService {
     }
 
     return this.ipc ?? null
+  }
+
+  async fetchConstants() {
+    if (globalThis.maa) {
+      return true
+    }
+
+    const ipc = await this.ensureServer()
+    if (ipc) {
+      globalThis.maa = await ipc.fetchConstants()
+      nativeService.versionChanged.fire()
+      return true
+    } else {
+      return false
+    }
   }
 }

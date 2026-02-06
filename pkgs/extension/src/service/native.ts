@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/utils'
 
+import { serverService } from '.'
 import packageJson from '../../package.json'
 import { commands } from '../command'
 import { BaseService, context } from './context'
@@ -37,9 +38,16 @@ export class NativeService extends BaseService {
   registry: string
   version: string
 
+  prepared: boolean
+
   rootUri: vscode.Uri
   downloadUri: vscode.Uri
   installUri: vscode.Uri
+
+  versionChanged = new vscode.EventEmitter<void>()
+  get onVersionChanged() {
+    return this.versionChanged.event
+  }
 
   constructor() {
     super()
@@ -47,6 +55,8 @@ export class NativeService extends BaseService {
 
     this.registry = registries[this.registryType ?? defaultRegistryType]
     this.version = this.explicitVersion ?? defaultMaaVersion
+
+    this.prepared = false
 
     this.rootUri = vscode.Uri.joinPath(context.globalStorageUri, 'native')
     this.downloadUri = vscode.Uri.joinPath(this.rootUri, 'download')
@@ -93,6 +103,7 @@ export class NativeService extends BaseService {
       })
       if (result) {
         this.registryType = result.value
+        this.registry = registries[this.registryType ?? defaultRegistryType]
       }
     })
 
@@ -147,6 +158,12 @@ export class NativeService extends BaseService {
       })
       if (result) {
         this.explicitVersion = result.value
+        this.version = this.explicitVersion ?? defaultMaaVersion
+
+        serverService.kill()
+        this.prepared = false
+
+        this.versionChanged.fire()
       }
     })
   }
@@ -338,7 +355,7 @@ export class NativeService extends BaseService {
   }
 
   async load() {
-    if (globalThis.maa) {
+    if (this.prepared) {
       return true
     }
 
@@ -346,15 +363,10 @@ export class NativeService extends BaseService {
       return false
     }
 
-    module.paths.unshift(this.activeModulePath)
-
-    try {
-      require('@maaxyz/maa-node')
-    } catch {
-      return false
-    }
-
     this.cleanUnused()
+    this.prepared = true
+
+    this.versionChanged.fire()
 
     return true
   }

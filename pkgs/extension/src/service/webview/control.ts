@@ -308,6 +308,10 @@ export class WebviewControlService extends BaseService {
     this.defer = interfaceService.onInterfaceConfigChanged(() => {
       this.pushState()
     })
+
+    this.defer = nativeService.onVersionChanged(() => {
+      this.pushState()
+    })
   }
 
   updateTransportStatus() {

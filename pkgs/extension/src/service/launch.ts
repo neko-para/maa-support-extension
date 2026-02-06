@@ -33,7 +33,7 @@ export class LaunchService extends BaseService {
   }
 
   async updateCache() {
-    const runtime = interfaceService.buildControllerRuntime()
+    const runtime = await interfaceService.buildControllerRuntime()
 
     if (!runtime) {
       return false

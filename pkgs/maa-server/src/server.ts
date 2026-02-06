@@ -53,6 +53,21 @@ export async function initServer() {
 
       setupIpc(conn)
 
+      ipc.fetchConstants = async () => {
+        return {
+          Status: maa.Status,
+          AdbScreencapMethod: maa.AdbScreencapMethod,
+          AdbInputMethod: maa.AdbInputMethod,
+          Win32ScreencapMethod: maa.Win32ScreencapMethod,
+          Win32InputMethod: maa.Win32InputMethod,
+          GamepadType: maa.GamepadType,
+          Global: {
+            version_from_macro: maa.Global.version_from_macro,
+            version: maa.Global.version
+          }
+        }
+      }
+
       ipc.updateController = updateCtrl
       ipc.setupInstance = setupInst
       ipc.getScreencap = getScreencap

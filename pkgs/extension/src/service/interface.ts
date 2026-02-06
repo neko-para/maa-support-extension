@@ -15,7 +15,7 @@ import {
 } from '@mse/types'
 import { logger, t } from '@mse/utils'
 
-import { diagnosticService, rootService } from '.'
+import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
 import { currentWorkspace, isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
@@ -272,7 +272,11 @@ export class InterfaceService extends BaseService {
     return true
   }
 
-  buildControllerRuntime(): InterfaceRuntime['controller_param'] | null {
+  async buildControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
+    if (!(await serverService.fetchConstants())) {
+      return null
+    }
+
     if (!rootService.activeResource) {
       return null
     }
@@ -449,6 +453,10 @@ export class InterfaceService extends BaseService {
   }
 
   async buildRuntime(skipTask = false) {
+    if (!(await serverService.fetchConstants())) {
+      return '初始化失败'
+    }
+
     if (!rootService.activeResource) {
       return '无interface'
     }
@@ -468,7 +476,7 @@ export class InterfaceService extends BaseService {
 
     result.root = projectDir
 
-    const ctrlRt = this.buildControllerRuntime()
+    const ctrlRt = await this.buildControllerRuntime()
     if (!ctrlRt) {
       return '构建controller失败'
     }

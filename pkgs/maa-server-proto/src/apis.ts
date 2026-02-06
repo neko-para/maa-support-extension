@@ -5,6 +5,7 @@ type MarkReturnPromise<Func> = Func extends (...args: infer Args) => infer Ret
   : Func
 
 export type HostToSubApis = {
+  fetchConstants: () => any
   updateController: (runtime: InterfaceRuntime['controller_param']) => boolean
   setupInstance: (
     runtime: InterfaceRuntime,

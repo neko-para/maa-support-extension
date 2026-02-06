@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: pnpm i
 
-      - name: Change Version
+      - name: Change Extension Version
         shell: bash
         run: |
           is_release=${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -50,6 +50,17 @@ jobs:
           fi
           echo "Change version to ${ver}"
           npm --prefix release pkg set version=${ver}
+
+      - name: Change Checker Version
+        shell: bash
+        run: |
+          is_release=${{ startsWith(github.ref, 'refs/tags/checker-v') }}
+          if $is_release; then
+            ver=${{ github.ref_name }}
+            ver=${ver:9}
+            echo "Change version to ${ver}"
+            npm --prefix pkgs/maa-checker pkg set version=${ver}
+          fi
 
       - name: Lint check
         shell: bash
@@ -74,6 +85,12 @@ jobs:
         with:
           name: maa-support-extension
           path: 'release/vsix'
+
+      - uses: JS-DevTools/npm-publish@v4
+        if: startsWith(github.ref, 'refs/tags/checker-v')
+        with:
+            package: pkgs/maa-checker
+            access: public
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

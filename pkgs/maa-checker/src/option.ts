@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
@@ -94,6 +95,7 @@ Option for reco:
   --image=<img>         Perform reco on <img>
   --image-folder=<dir>  Glob .png under <dir>, recursively
   --node=<node>         Perform reco of node <node>
+  --node-list=<file>    Parse nodes from <file>. Seperated with spaces or newlines
   --print-hit           Print hits images
   --print-not-hit       Print not hits images
 `)
@@ -218,6 +220,16 @@ export async function parseOption(): Promise<ProgramOption | null> {
       case 'node':
         if (match[2]) {
           option.nodes.push(match[2])
+        }
+        break
+      case 'node-list':
+        if (match[2] && existsSync(match[2])) {
+          const nodeList = await fs.readFile(match[2], 'utf8')
+          const nodes = nodeList
+            .split(/[ \n]+/)
+            .map(node => node.trim())
+            .filter(node => !!node)
+          option.nodes.push(...nodes)
         }
         break
       case 'print-hit':

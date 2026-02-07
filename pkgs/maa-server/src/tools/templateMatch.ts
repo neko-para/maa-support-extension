@@ -17,6 +17,7 @@ async function setupFakeResource() {
 
 export async function performTemplateMatch(
   imageBase64: string,
+  targetImageBase64: string,
   opts: {
     roi: maa.Rect
     method: 10001 | 3 | 5
@@ -25,6 +26,7 @@ export async function performTemplateMatch(
   }
 ) {
   const image = convertImage(imageBase64)
+  const targetImage = convertImage(targetImageBase64)
 
   const ctrl = await setupFixedController(image)
 
@@ -37,7 +39,7 @@ export async function performTemplateMatch(
 
   const res = new maa.Resource()
   await res.post_bundle(tempRes).wait()
-  res.override_image('@mse_image', image)
+  res.override_image('@mse_image', targetImage)
 
   const tasker = new maa.Tasker()
   tasker.controller = ctrl

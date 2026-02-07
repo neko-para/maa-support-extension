@@ -173,12 +173,16 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
 
         let result = null
         try {
-          result = await this.ipc.performTemplateMatch(target.toString('base64'), {
-            roi: data.roi,
-            method: data.method,
-            threshold: data.threshold,
-            green_mask: data.green_mask
-          })
+          result = await this.ipc.performTemplateMatch(
+            data.image.replace('data:image/png;base64,', ''),
+            target.toString('base64'),
+            {
+              roi: data.roi,
+              method: data.method,
+              threshold: data.threshold,
+              green_mask: data.green_mask
+            }
+          )
         } catch (err) {
           logger.error(`tmpl match failed, error ${err}`)
         }

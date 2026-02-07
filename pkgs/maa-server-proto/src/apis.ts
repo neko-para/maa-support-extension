@@ -23,6 +23,7 @@ export type HostToSubApis = {
   ) => string
   performTemplateMatch: (
     image: string,
+    targetImage: string,
     opts: {
       roi: maa.Rect
       method: 10001 | 3 | 5

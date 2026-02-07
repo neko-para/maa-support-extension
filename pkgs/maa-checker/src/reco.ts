@@ -4,23 +4,7 @@ import { MaaVersionManager } from '@mse/maa-version-manager'
 import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
-
-function toArrayBuffer(buffer: Buffer): ArrayBuffer {
-  if (buffer.byteOffset === 0 && buffer.byteLength === buffer.buffer.byteLength) {
-    return buffer.buffer as ArrayBuffer
-  } else {
-    return buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    ) as ArrayBuffer
-  }
-}
-
-const emptyPng = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=',
-  'base64'
-)
-const image = toArrayBuffer(emptyPng)
+import { makeFakeController, toArrayBuffer } from './utils'
 
 type RecoJob = {
   node: string
@@ -49,27 +33,6 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
 
   await bundle.switchActive(option.controller, option.resource)
 
-  const ctrl = new maa.CustomController({
-    connect() {
-      return true
-    },
-    request_uuid() {
-      return '0'
-    },
-    screencap() {
-      return image
-    }
-  })
-  await ctrl.post_connection().wait()
-  const res = new maa.Resource()
-  for (const folder of bundle.paths) {
-    const full = joinPath(bundle.root, folder)
-    await res.post_bundle(full).wait()
-  }
-  const inst = new maa.Tasker()
-  inst.resource = res
-  inst.controller = ctrl
-
   const result: {
     image: number
     node: string
@@ -91,6 +54,13 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
 
   let jobFinished = 0
   let jobCount = jobs.length
+
+  const ctrl = await makeFakeController()
+  const res = new maa.Resource()
+  for (const folder of bundle.paths) {
+    const full = joinPath(bundle.root, folder)
+    await res.post_bundle(full).wait()
+  }
 
   res.register_custom_action('@mse/action', async self => {
     const performJob = async (job: RecoJob) => {
@@ -117,6 +87,10 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
 
     return true
   })
+
+  const inst = new maa.Tasker()
+  inst.resource = res
+  inst.controller = ctrl
 
   await inst
     .post_task('@mse/action', {

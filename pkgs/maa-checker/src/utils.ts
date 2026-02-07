@@ -1,0 +1,32 @@
+export function toArrayBuffer(buffer: Buffer): ArrayBuffer {
+  if (buffer.byteOffset === 0 && buffer.byteLength === buffer.buffer.byteLength) {
+    return buffer.buffer as ArrayBuffer
+  } else {
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    ) as ArrayBuffer
+  }
+}
+
+const emptyPng = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=',
+  'base64'
+)
+const image = toArrayBuffer(emptyPng)
+
+export async function makeFakeController() {
+  const ctrl = new maa.CustomController({
+    connect() {
+      return true
+    },
+    request_uuid() {
+      return '0'
+    },
+    screencap() {
+      return image
+    }
+  })
+  await ctrl.post_connection().wait()
+  return ctrl
+}

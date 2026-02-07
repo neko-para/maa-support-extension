@@ -35,6 +35,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
 
   const result: {
     image: number
+    imagePath: string
     node: string
     hit: boolean
   }[] = []
@@ -67,6 +68,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
       const detail = await self.context.run_recognition(job.node, job.image)
       result.push({
         image: job.imageIndex,
+        imagePath: option.imagesRaw[job.imageIndex],
         node: job.node,
         hit: !!detail?.hit
       })

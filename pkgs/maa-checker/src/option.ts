@@ -22,6 +22,7 @@ export type ProgramOption = {
   // reco
   maaVersion: string
   maaCache: AbsolutePath
+  job: number
   controller: string
   resource: string
   imagesRaw: string[]
@@ -87,6 +88,7 @@ Option for check:
 Option for reco:
   --maa-version=<ver>   Use MaaFw version <ver>. Default: ${defaultVersion()}
   --maa-cache=<dir>     Use MaaFw cache folder <dir>. Default: ${defaultCacheFolder()}
+  --job=<job>           Maximum parallel job <job>. Default: ${os.cpus().length}
   --controller=<ctrl>   Use controller <ctrl> for attach_resource_path
   --resource=<res>      Use resource <res>
   --image=<img>         Perform reco on <img>
@@ -111,6 +113,7 @@ export async function parseOption(): Promise<ProgramOption | null> {
 
     maaVersion: defaultVersion(),
     maaCache: defaultCacheFolder(),
+    job: os.cpus().length,
     controller: '',
     resource: '',
     imagesRaw: [],
@@ -175,6 +178,14 @@ export async function parseOption(): Promise<ProgramOption | null> {
       case 'maa-cache':
         if (match[2]) {
           option.maaCache = path.resolve(match[2]) as AbsolutePath
+        }
+        break
+      case 'job':
+        if (match[2]) {
+          const val = parseInt(match[2])
+          if (!isNaN(val) && val > 0) {
+            option.job = val
+          }
         }
         break
       case 'controller':

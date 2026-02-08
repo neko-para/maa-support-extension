@@ -50,6 +50,11 @@ export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     cropBox.value = new Box()
   }
+  // event.metaKey
+}
+
+export function onKeyUp(event: KeyboardEvent) {
+  // event.metaKey
 }
 
 export function onWheel(event: WheelEvent) {
@@ -235,3 +240,45 @@ export function roiExpandDisp() {
 export function copyRoiExpand() {
   writeClipboard(roiExpandText())
 }
+
+// const resizing = ref(false)
+
+/*
+async function resize() {
+  if (!image.value) {
+    return
+  }
+  resizing.value = true
+  const buffer = await (await fetch(image.value)).arrayBuffer()
+  const oldImg = await Jimp.read(Buffer.from(buffer))
+  let targetW = 0
+  let targetH = 0
+  const expectSize = [1280, 720]
+  if (oldImg.bitmap.width / oldImg.bitmap.height === 16 / 9) {
+    targetW = expectSize[0]
+    targetH = expectSize[1]
+  } else if (oldImg.bitmap.width / oldImg.bitmap.height === 9 / 16) {
+    targetW = expectSize[1]
+    targetH = expectSize[0]
+  } else {
+    console.log('size not 16:9, quit')
+    resizing.value = false
+    return
+  }
+  const mat = new cv.Mat(oldImg.bitmap.height, oldImg.bitmap.width, cv.CV_8UC4)
+  mat.data.set(oldImg.bitmap.data)
+  const dst = new cv.Mat()
+  cv.resize(mat, dst, new cv.Size(targetW, targetH), 0, 0, cv.INTER_AREA)
+  mat.delete()
+  const newImg = await Jimp.create(dst.cols, dst.rows)
+  newImg.bitmap.data = Buffer.from(dst.data as Uint8Array)
+  dst.delete()
+  const result = await newImg.getBufferAsync('image/png')
+  const resultBlob = new Blob([result.buffer])
+  const url = URL.createObjectURL(resultBlob)
+  if (!(await setImage(url))) {
+    URL.revokeObjectURL(url)
+  }
+  resizing.value = false
+}
+*/

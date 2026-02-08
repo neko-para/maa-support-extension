@@ -9,6 +9,13 @@ import type { InterfaceInfo, InterfaceParseContext } from './interface'
 export function parseOverride(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj, prop] of parseObject(node)) {
     if (key.startsWith('$')) {
+      if (key.startsWith('$__mpe')) {
+        info.layer.extraDecls.push({
+          file: ctx.file,
+          location: prop,
+          type: 'task.mpe_config'
+        })
+      }
       continue
     }
 

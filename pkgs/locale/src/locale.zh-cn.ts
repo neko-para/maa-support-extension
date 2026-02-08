@@ -69,6 +69,7 @@ export default {
   'maa.pipeline.error.duplicate-next': '重复路由 {0}',
   'maa.pipeline.error.unknown-locale': '未知国际化键 {0}',
   'maa.pipeline.error.missing-locale': '国际化键 {0} 缺少语言 {1} 的翻译',
+  'maa.pipeline.warning.mpe-config': '检测到 MPE 配置',
   'maa.pipeline.error.conflict-controller': '冲突控制器 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-controller': '未知控制器 {0}',
   'maa.pipeline.error.conflict-resource': '冲突资源 {0}, 上一个定义在 {1}',

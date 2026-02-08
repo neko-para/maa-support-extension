@@ -57,6 +57,9 @@ export type DiagnosticTask =
       locale: string
       langs: string[]
     }
+  | {
+      type: 'mpe-config'
+    }
 
 export type DiagnosticInterface =
   | {

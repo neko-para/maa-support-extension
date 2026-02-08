@@ -44,6 +44,8 @@ export async function buildDiagnosticMessage(
         return t('maa.pipeline.error.unknown-locale', diag.locale)
       case 'missing-locale':
         return t('maa.pipeline.error.missing-locale', diag.locale, diag.langs.join(', '))
+      case 'mpe-config':
+        return t('maa.pipeline.warning.mpe-config')
       case 'int-conflict-controller':
         return t('maa.pipeline.error.conflict-controller', diag.ctrl, await buildPos(diag.previous))
       case 'int-unknown-controller':

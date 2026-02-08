@@ -154,6 +154,13 @@ export class Bundle extends EventEmitter<{
     if (tree && tree.type === 'object') {
       for (const [key, obj, prop] of parseObject(tree)) {
         if (key.startsWith('$')) {
+          if (key.startsWith('$__mpe')) {
+            this.layer.extraDecls.push({
+              file: full,
+              location: prop,
+              type: 'task.mpe_config'
+            })
+          }
           continue
         }
         let taskName = key as TaskName

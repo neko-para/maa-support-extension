@@ -71,6 +71,7 @@ export default {
   'maa.pipeline.error.duplicate-next': 'Duplicate route {0}',
   'maa.pipeline.error.unknown-locale': 'Unknown locale key {0}',
   'maa.pipeline.error.missing-locale': 'Locale key {0} missing translations for {1}',
+  'maa.pipeline.warning.mpe-config': 'MPE config detected',
   'maa.pipeline.error.conflict-controller': 'Conflict controller {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-controller': 'Unknown controller {0}',
   'maa.pipeline.error.conflict-resource': 'Conflict resource {0}, previous defined in {1}',

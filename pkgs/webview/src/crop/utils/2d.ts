@@ -339,20 +339,24 @@ export class DragHandler {
   stop: Pos = new Pos()
 
   base: Pos = new Pos()
+  viewport?: Viewport
 
-  down(p: Pos, b: Pos, e: PointerEvent) {
+  down(p: Pos, b: Pos, e: PointerEvent, vp?: Viewport) {
     this.state = true
-    this.start = this.stop = p
-    this.base = b
+    const modelP = vp ? vp.fromView(p) : p
+    this.start = this.stop = modelP
+    this.base = vp ? vp.fromView(b) : b
+    this.viewport = vp
     ;(e.target as Element).setPointerCapture(e.pointerId)
   }
 
   move(p: Pos) {
-    this.stop = p
+    this.stop = this.viewport ? this.viewport.fromView(p) : p
   }
 
   up(e: PointerEvent) {
     this.state = false
+    this.viewport = undefined
     ;(e.target as Element).releasePointerCapture(e.pointerId)
   }
 

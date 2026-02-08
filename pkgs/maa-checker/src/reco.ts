@@ -4,7 +4,7 @@ import { MaaVersionManager } from '@mse/maa-version-manager'
 import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
-import { makeFakeController, toArrayBuffer } from './utils'
+import { gzCompress, makeFakeController, toArrayBuffer } from './utils'
 
 type RecoJob = {
   node: string
@@ -38,6 +38,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     imagePath: string
     node: string
     hit: boolean
+    detail: maa.RecoDetail | null
   }[] = []
 
   const jobs: RecoJob[] = []
@@ -70,7 +71,8 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
         image: job.imageIndex,
         imagePath: option.imagesRaw[job.imageIndex],
         node: job.node,
-        hit: !!detail?.hit
+        hit: !!detail?.hit,
+        detail
       })
     }
 
@@ -108,7 +110,11 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   ctrl.destroy()
 
   if (option.rawMode) {
-    console.log(JSON.stringify(result))
+    let data = JSON.stringify(result)
+    if (option.gz) {
+      data = gzCompress(data)
+    }
+    console.log(data)
   } else {
     for (const node of option.nodes) {
       const sub = result.filter(info => info.node === node)

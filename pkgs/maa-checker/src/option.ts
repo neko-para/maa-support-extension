@@ -11,6 +11,7 @@ import pkg from '../package.json'
 export type ProgramOption = {
   interfacePath: AbsolutePath
   rawMode: boolean
+  gz: boolean
   githubMode: boolean
   repoFolder: AbsolutePath
   locale: LocaleType
@@ -76,6 +77,7 @@ Command:
 
 Options:
   --raw                 Output json
+  --gz                  Output json with gz compress and base64
   --github=<repo>       Output github actions compatible warning & error messages, with repository folder <repo>.
   --repo=<repo>         Set repository folder <repo>
   --help                Print usage
@@ -105,6 +107,7 @@ export async function parseOption(): Promise<ProgramOption | null> {
   const option: ProgramOption = {
     interfacePath: path.join(process.cwd(), 'interface.json') as AbsolutePath,
     rawMode: false,
+    gz: false,
     githubMode: false,
     repoFolder: process.cwd() as AbsolutePath,
     locale: 'en',
@@ -148,6 +151,9 @@ export async function parseOption(): Promise<ProgramOption | null> {
         return null
       case 'raw':
         option.rawMode = true
+        break
+      case 'gz':
+        option.gz = true
         break
       case 'github':
         option.githubMode = true

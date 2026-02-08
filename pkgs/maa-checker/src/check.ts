@@ -10,6 +10,7 @@ import {
 } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
+import { gzCompress } from './utils'
 
 function calucateLocation(content: string, offset: number): [line: number, col: number] {
   const previous = content.slice(0, offset)
@@ -92,7 +93,11 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
   }
 
   if (option.rawMode) {
-    console.log(JSON.stringify(outputs))
+    let data = JSON.stringify(outputs)
+    if (option.gz) {
+      data = gzCompress(data)
+    }
+    console.log(data)
     return true
   } else {
     const hasError = outputs.filter(diag => diag.level === 'error').length > 0

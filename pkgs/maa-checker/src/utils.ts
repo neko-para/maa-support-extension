@@ -1,3 +1,5 @@
+import * as zlib from 'node:zlib'
+
 export function toArrayBuffer(buffer: Buffer): ArrayBuffer {
   if (buffer.byteOffset === 0 && buffer.byteLength === buffer.buffer.byteLength) {
     return buffer.buffer as ArrayBuffer
@@ -29,4 +31,10 @@ export async function makeFakeController() {
   })
   await ctrl.post_connection().wait()
   return ctrl
+}
+
+export function gzCompress(data: string) {
+  const buf = Buffer.from(data)
+  const compressed = zlib.gzipSync(buf)
+  return compressed.toString('base64')
 }

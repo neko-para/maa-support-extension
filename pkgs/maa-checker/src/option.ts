@@ -13,12 +13,13 @@ export type ProgramOption = {
   rawMode: boolean
   githubMode: boolean
   repoFolder: AbsolutePath
-  locale: LocaleType
 
   command: 'check' | 'reco'
 
   // check
+  locale: LocaleType
   ignoreTypes: string[]
+  errorTypes: string[]
 
   // reco
   maaVersion: string
@@ -44,6 +45,7 @@ const allTypes = [
   'unknown-image',
   'unknown-anchor',
   'unknown-attr',
+  'mpe-config',
   'int-conflict-controller',
   'int-unknown-controller',
   'int-conflict-resource',
@@ -85,6 +87,7 @@ Option for check:
                             Known locales: zh, en
   --ignore=<type>       Ignore <type>
                             Known types: ${allTypes.join(', ')}
+  --error=<type>        Treat <type> as error
 
 Option for reco:
   --maa-version=<ver>   Use MaaFw version <ver>. Default: ${defaultVersion()}
@@ -107,11 +110,12 @@ export async function parseOption(): Promise<ProgramOption | null> {
     rawMode: false,
     githubMode: false,
     repoFolder: process.cwd() as AbsolutePath,
-    locale: 'en',
 
     command: 'check',
 
+    locale: 'en',
     ignoreTypes: [],
+    errorTypes: [],
 
     maaVersion: defaultVersion(),
     maaCache: defaultCacheFolder(),
@@ -160,15 +164,20 @@ export async function parseOption(): Promise<ProgramOption | null> {
           option.repoFolder = path.resolve(match[2]) as AbsolutePath
         }
         break
+
       case 'locale':
         if (match[2] && ['zh', 'en'].includes(match[2])) {
           option.locale = match[2] as LocaleType
         }
         break
-
       case 'ignore':
         if (match[2] && allTypes.includes(match[2])) {
           option.ignoreTypes.push(match[2])
+        }
+        break
+      case 'error':
+        if (match[2] && allTypes.includes(match[2])) {
+          option.errorTypes.push(match[2])
         }
         break
 

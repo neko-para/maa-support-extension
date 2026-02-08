@@ -75,6 +75,12 @@ export function onPointerDown(event: PointerEvent) {
 
   pickSt.picking.value = false
 
+  if (event.button === 1) {
+    viewportDrag.value.down(mp, viewport.value.offset, event)
+    cursor.value = 'grab'
+    return
+  }
+
   if (event.ctrlKey) {
     cropBoxDrag.value.down(mp, mp, event, viewport.value)
     cursor.value = 'crosshair'

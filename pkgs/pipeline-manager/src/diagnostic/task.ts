@@ -55,6 +55,19 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
       }
     }
 
+    const decls = layer.mergedDecls
+    for (const decl of decls) {
+      if (decl.type === 'task.mpe_config') {
+        result.push({
+          level: 'warning',
+          file: decl.file,
+          offset: decl.location.offset,
+          length: decl.location.length,
+          type: 'mpe-config'
+        })
+      }
+    }
+
     const refs = layer.mergedRefs
     const tasks = new Set(layer.getTaskListNotUnique())
     const anchors = new Set(layer.getAnchorList().map(([anchor]) => anchor))

@@ -182,7 +182,11 @@ export class InterfaceBundle<T extends any> extends EventEmitter<{
     })
 
     this.langBundle.on('localeChanged', () => {
-      this.info.layer.extraDecls = this.langBundle.langs.map(lang => lang.decls).flat()
+      const restDecls = this.info.layer.extraDecls.filter(decl => decl.type !== 'task.locale')
+      this.info.layer.extraDecls = [
+        ...restDecls,
+        ...this.langBundle.langs.map(lang => lang.decls).flat()
+      ]
 
       this.emit('localeChanged')
     })

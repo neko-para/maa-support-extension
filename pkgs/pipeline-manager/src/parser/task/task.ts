@@ -49,10 +49,20 @@ export type TaskLocaleDeclInfo = {
   valueNode: Node
 }
 
+export type TaskMpeConfigDeclInfo = {
+  type: 'task.mpe_config'
+}
+
 export type TaskDeclInfo = {
   file: AbsolutePath
   location: Node
-} & (TaskPropDeclInfo | TaskAnchorDeclInfo | TaskSubRecoDeclInfo | TaskLocaleDeclInfo)
+} & (
+  | TaskPropDeclInfo
+  | TaskAnchorDeclInfo
+  | TaskSubRecoDeclInfo
+  | TaskLocaleDeclInfo
+  | TaskMpeConfigDeclInfo
+)
 
 export type TaskNextRefInfo = {
   type: 'task.next'
@@ -166,8 +176,8 @@ function parseMaaBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) 
 }
 
 function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
-  for (const [prop, obj] of props) {
-    switch (prop) {
+  for (const [key, obj, prop] of props) {
+    switch (key) {
       case 'next':
       case 'on_error':
         parseNextList(obj, info, ctx)
@@ -205,8 +215,8 @@ function parseReco(
   parent?: Node
 ) {
   let subName: StringNode | null = null
-  for (const [prop, obj] of props) {
-    switch (prop) {
+  for (const [key, obj] of props) {
+    switch (key) {
       case 'roi':
         parseRoi(obj, info, prev, ctx)
         break
@@ -244,8 +254,8 @@ function parseReco(
 }
 
 function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
-  for (const [prop, obj] of props) {
-    switch (prop) {
+  for (const [key, obj] of props) {
+    switch (key) {
       case 'target':
       case 'begin':
         parseTarget(obj, info, ctx)
@@ -253,6 +263,18 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
       case 'end':
         parseTarget(obj, info, ctx, true)
         break
+    }
+  }
+}
+
+function parseUnknown(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
+  for (const [key, obj, prop] of props) {
+    if (key.startsWith('$__mpe')) {
+      info.decls.push({
+        file: ctx.file,
+        location: prop,
+        type: 'task.mpe_config'
+      })
     }
   }
 }
@@ -301,6 +323,7 @@ export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
     parseBase(info.parts.base, info, ctx)
     parseReco(parts.reco, info, [], ctx)
     parseAct(parts.act, info, ctx)
+    parseUnknown(parts.unknown, info, ctx)
   }
 
   return info

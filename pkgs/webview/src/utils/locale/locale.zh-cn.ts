@@ -61,6 +61,8 @@ export default {
   'maa.crop.settings.background-color': '背景色',
   'maa.crop.settings.select-color': '选中色',
   'maa.crop.settings.select-opacity': '选中透明度',
+  'maa.crop.settings.select-outline-only': '仅显示轮廓',
+  'maa.crop.settings.select-outline-thickness': '轮廓粗细',
   'maa.crop.settings.scale-direction': '缩放方向',
   'maa.crop.settings.revert-scale': '反转缩放方向',
   'maa.crop.settings.default-scale': '默认缩放方向',

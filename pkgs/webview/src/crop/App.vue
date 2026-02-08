@@ -53,7 +53,7 @@ canvasSt.setup(canvasSizeEl, canvasEl)
               @contextmenu.prevent="controlSt.onContextMenu"
             ></canvas>
           </div>
-          <n-scrollbar v-if="showTab" style="max-width: 400px; min-width: 300px">
+          <n-scrollbar v-if="showTab" style="width: 40vw">
             <settings-view v-if="showTab === 'settings'"></settings-view>
             <tool-view v-else-if="showTab === 'tool'"></tool-view>
           </n-scrollbar>

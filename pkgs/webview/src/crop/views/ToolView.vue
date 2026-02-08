@@ -50,15 +50,13 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
       </template>
 
       <template v-if="pickSt.color.value">
-        <n-flex vertical>
-          <n-flex align="center">
-            <div
-              :style="`width: 28px; height: 28px; background-color: rgb(${pickSt.color.value.join(',')});`"
-            ></div>
-            <n-button size="small" @click="pickSt.copyCss()">
-              {{ pickSt.cssText() }}
-            </n-button>
-          </n-flex>
+        <n-flex>
+          <div
+            :style="`width: 28px; height: 28px; background-color: rgb(${pickSt.color.value.join(',')});`"
+          ></div>
+          <n-button size="small" @click="pickSt.copyCss()">
+            {{ pickSt.cssText() }}
+          </n-button>
           <n-button size="small" @click="pickSt.copyArray(0)">
             rgb: {{ pickSt.arrayText(0) }}
           </n-button>
@@ -83,23 +81,21 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
 
     <n-card :title="t('maa.crop.tools.quick-match')" size="small">
       <template #header-extra>
-        <n-flex vertical>
-          <n-flex>
-            <n-button
-              size="small"
-              :loading="matchSt.loading.value"
-              @click="matchSt.perform('requestOCR')"
-            >
-              {{ t('maa.crop.tools.quick-match-ocr') }}
-            </n-button>
-            <n-button
-              size="small"
-              :loading="matchSt.loading.value"
-              @click="matchSt.perform('requestTemplateMatch')"
-            >
-              {{ t('maa.crop.tools.quick-match-tmpl') }}
-            </n-button>
-          </n-flex>
+        <n-flex>
+          <n-button
+            size="small"
+            :loading="matchSt.loading.value"
+            @click="matchSt.perform('requestOCR')"
+          >
+            {{ t('maa.crop.tools.quick-match-ocr') }}
+          </n-button>
+          <n-button
+            size="small"
+            :loading="matchSt.loading.value"
+            @click="matchSt.perform('requestTemplateMatch')"
+          >
+            {{ t('maa.crop.tools.quick-match-tmpl') }}
+          </n-button>
           <n-input-number
             :value="hostState.templateMatchThreshold"
             placeholder="0.8"
@@ -109,54 +105,46 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
             :step="0.01"
             @update:value="v => update('templateMatchThreshold', v ?? undefined)"
             size="small"
-            style="width: 90px; align-self: flex-end;"
+            style="width: 90px"
           />
         </n-flex>
       </template>
 
       <template v-if="matchSt.result">
         <n-flex vertical>
-          <n-flex justify="space-between">
-            <n-flex vertical>
-              <n-flex align="center">
-                <n-switch v-model:value="matchSt.draw.value"> </n-switch>
-                <n-text> {{ t('maa.crop.tools.draw') }} </n-text>
-              </n-flex>
-              <n-flex align="center">
-                <n-switch v-model:value="matchSt.onlyRec.value"> </n-switch>
-                <n-text> only_rec </n-text>
-              </n-flex>
-              <n-flex align="center">
-                <n-switch v-model:value="matchSt.greenMask.value"> </n-switch>
-                <n-text> green_mask </n-text>
-              </n-flex>
-            </n-flex>
-            <n-flex vertical justify="space-around">
-              <n-flex align="center">
-                <n-text style="white-space: nowrap"> method </n-text>
-                <n-select
-                  :options="
-                    [10001, 3, 5].map(v => ({
-                      label: `${v}`,
-                      value: v
-                    }))
-                  "
-                  v-model:value="matchSt.method.value"
-                  size="small"
-                  style="width: 90px"
-                ></n-select>
-              </n-flex>
-              <n-flex align="center">
-                <n-text style="white-space: nowrap"> {{ t('maa.crop.tools.draw-mode') }} </n-text>
-                <n-select
-                  v-model:value="matchSt.drawType.value"
-                  :options="drawOptions"
-                  size="small"
-                  style="width: 90px"
-                ></n-select>
-              </n-flex>
-            </n-flex>
+          <n-flex align="center">
+            <n-switch v-model:value="matchSt.draw.value"> </n-switch>
+            <n-text> {{ t('maa.crop.tools.draw') }} </n-text>
+
+            <div style="flex: 1"></div>
+
+            <n-switch v-model:value="matchSt.onlyRec.value"> </n-switch>
+            <n-text> only_rec </n-text>
+
+            <n-switch v-model:value="matchSt.greenMask.value"> </n-switch>
+            <n-text> green_mask </n-text>
+
+            <div>
+              <n-select
+                :options="
+                  [10001, 3, 5].map(v => ({
+                    label: `${v}`,
+                    value: v
+                  }))
+                "
+                v-model:value="matchSt.method.value"
+                size="small"
+                style="width: 90px"
+              ></n-select>
+            </div>
+            <n-text> method </n-text>
           </n-flex>
+          <n-text> {{ t('maa.crop.tools.draw-mode') }} </n-text>
+          <n-select
+            v-model:value="matchSt.drawType.value"
+            :options="drawOptions"
+            size="small"
+          ></n-select>
           <json-code :code="matchSt.result.value ?? ''"></json-code>
         </n-flex>
       </template>

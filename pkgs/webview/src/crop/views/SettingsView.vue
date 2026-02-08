@@ -53,6 +53,24 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
       :step="0.1"
       @update:value="v => update('selectOpacity', v ?? undefined)"
     ></n-input-number>
+    <n-text> {{ t('maa.crop.settings.select-outline-only') }} </n-text>
+    <n-flex>
+      <n-switch
+        :value="hostState.selectOutlineOnly"
+        @update:value="v => update('selectOutlineOnly', v)"
+      ></n-switch>
+    </n-flex>
+    <template v-if="hostState.selectOutlineOnly">
+      <n-text> {{ t('maa.crop.settings.select-outline-thickness') }} </n-text>
+      <n-input-number
+        :value="hostState.selectOutlineThickness"
+        placeholder="2"
+        :min="1"
+        :max="20"
+        :step="1"
+        @update:value="v => update('selectOutlineThickness', v ?? undefined)"
+      ></n-input-number>
+    </template>
     <n-text> {{ t('maa.crop.settings.scale-direction') }} </n-text>
     <n-flex>
       <n-switch

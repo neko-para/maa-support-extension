@@ -61,6 +61,8 @@ export default {
   'maa.crop.settings.background-color': 'Background color',
   'maa.crop.settings.select-color': 'Selected color',
   'maa.crop.settings.select-opacity': 'Selected opacity',
+  'maa.crop.settings.select-outline-only': 'Outline only',
+  'maa.crop.settings.select-outline-thickness': 'Outline thickness',
   'maa.crop.settings.scale-direction': 'Scale direction',
   'maa.crop.settings.revert-scale': 'Revert scale direction',
   'maa.crop.settings.default-scale': 'Default scale direction',

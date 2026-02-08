@@ -10,6 +10,7 @@ import * as recoSt from './reco'
 import * as settingsSt from './settings'
 
 export const size = ref<Size>(Size.from(0, 0))
+let dashOffset = 0
 
 export function draw(ctx: CanvasRenderingContext2D) {
   ctx.reset()
@@ -101,8 +102,23 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
   ctx.save()
   ctx.globalAlpha = settingsSt.toAlpha(hostState.value.selectOpacity, 0.3)
-  ctx.fillStyle = settingsSt.colorWithDefault(hostState.value.selectFill, 'wheat')
-  ctx.fillRect(...controlSt.cropBoxInView.value.flat())
+  if (hostState.value.selectOutlineOnly) {
+    ctx.strokeStyle = settingsSt.colorWithDefault(hostState.value.selectFill, 'wheat')
+    ctx.lineWidth = hostState.value.selectOutlineThickness ?? 1
+    ctx.setLineDash([4, 4])
+    ctx.lineDashOffset = -(dashOffset = (dashOffset + 0.2) % 8)
+    const box = controlSt.cropBoxInView.value
+    const offset = (hostState.value.selectOutlineThickness ?? 1) % 2 === 1 ? 0.5 : 0
+    ctx.strokeRect(
+      Math.floor(box.origin.x) + offset,
+      Math.floor(box.origin.y) + offset,
+      Math.round(box.size.w),
+      Math.round(box.size.h)
+    )
+  } else {
+    ctx.fillStyle = settingsSt.colorWithDefault(hostState.value.selectFill, 'wheat')
+    ctx.fillRect(...controlSt.cropBoxInView.value.flat())
+  }
   ctx.restore()
 
   ctx.save()

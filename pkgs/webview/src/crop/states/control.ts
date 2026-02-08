@@ -44,26 +44,23 @@ const cropBoxMoveDrag = ref<DragHandler>(new DragHandler())
 
 const cornerDrag = ref<DragHandler>(new DragHandler())
 const cornerDragTarget = ref<CornerType | EdgeType>('lt')
+const cornerDragInitialBox = ref<Box>(new Box())
 
 export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     cropBox.value = new Box()
   }
-  // event.metaKey
-}
-
-export function onKeyUp(event: KeyboardEvent) {
-  // event.metaKey
 }
 
 export function onWheel(event: WheelEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
 
-  if (hostState.value.revertScale) {
-    viewport.value.zoom(event.deltaY < 0, mp)
-  } else {
-    viewport.value.zoom(event.deltaY > 0, mp)
+  const zoomIn = hostState.value.revertScale ? event.deltaY < 0 : event.deltaY > 0
+  viewport.value.zoom(zoomIn, mp)
+
+  if (viewportDrag.value.state) {
+    viewportDrag.value.base = viewport.value.offset.sub(viewportDrag.value.delta)
   }
 }
 
@@ -74,13 +71,14 @@ export function onPointerDown(event: PointerEvent) {
   pickSt.picking.value = false
 
   if (event.ctrlKey) {
-    cropBoxDrag.value.down(mp, mp, event)
+    cropBoxDrag.value.down(mp, mp, event, viewport.value)
     cursor.value = 'crosshair'
   } else {
     const corner = detectCorner(cropBoxInView.value, mp)
     if (corner) {
       cornerDragTarget.value = corner
-      cornerDrag.value.down(mp, cropBoxInView.value[corner], event)
+      cornerDragInitialBox.value = cropBox.value.copy()
+      cornerDrag.value.down(mp, cropBoxInView.value[corner], event, viewport.value)
       return
     }
 
@@ -89,12 +87,13 @@ export function onPointerDown(event: PointerEvent) {
       const fakePos = new Pos()
       fakePos[edgeSide[edge]] = cropBoxInView.value[edge]
       cornerDragTarget.value = edge
-      cornerDrag.value.down(mp, fakePos, event)
+      cornerDragInitialBox.value = cropBox.value.copy()
+      cornerDrag.value.down(mp, fakePos, event, viewport.value)
       return
     }
 
     if (cropBoxInView.value.contains(mp)) {
-      cropBoxMoveDrag.value.down(mp, cropBoxInView.value.origin, event)
+      cropBoxMoveDrag.value.down(mp, cropBoxInView.value.origin, event, viewport.value)
       cursor.value = 'grab'
       return
     }
@@ -113,21 +112,22 @@ export function onPointerMove(event: PointerEvent) {
     viewport.value.offset = viewportDrag.value.current
   } else if (cropBoxDrag.value.state) {
     cropBoxDrag.value.move(mp)
-    cropBoxInView.value = cropBoxDrag.value.box
+    cropBox.value = cropBoxDrag.value.box
   } else if (cornerDrag.value.state) {
     cornerDrag.value.move(mp)
-    const dlt = cornerDrag.value.current.sub(cropBoxInView.value.origin)
-    const v = cropBoxInView.value.copy()
+    const currentModel = cornerDrag.value.current
+    const v = cornerDragInitialBox.value.copy()
+    const dlt = currentModel.sub(v.origin)
     for (const ch of cornerDragTarget.value) {
       const cht = ch as EdgeType
       switch (cht) {
         case 'l': {
-          v.origin.x = cornerDrag.value.current.x
+          v.origin.x = currentModel.x
           v.size.w = v.size.w - dlt.w
           break
         }
         case 't': {
-          v.origin.y = cornerDrag.value.current.y
+          v.origin.y = currentModel.y
           v.size.h = v.size.h - dlt.h
           break
         }
@@ -141,10 +141,10 @@ export function onPointerMove(event: PointerEvent) {
         }
       }
     }
-    cropBoxInView.value = v
+    cropBox.value = v
   } else if (cropBoxMoveDrag.value.state) {
     cropBoxMoveDrag.value.move(mp)
-    cropBoxInView.value = cropBoxInView.value.copy().setOrigin(cropBoxMoveDrag.value.current)
+    cropBox.value = cropBox.value.copy().setOrigin(cropBoxMoveDrag.value.current)
   } else {
     const corner = detectCorner(cropBoxInView.value, mp)
     const edge = detectEdge(cropBoxInView.value, mp)
@@ -235,45 +235,3 @@ export function roiExpandDisp() {
 export function copyRoiExpand() {
   writeClipboard(roiExpandText())
 }
-
-// const resizing = ref(false)
-
-/*
-async function resize() {
-  if (!image.value) {
-    return
-  }
-  resizing.value = true
-  const buffer = await (await fetch(image.value)).arrayBuffer()
-  const oldImg = await Jimp.read(Buffer.from(buffer))
-  let targetW = 0
-  let targetH = 0
-  const expectSize = [1280, 720]
-  if (oldImg.bitmap.width / oldImg.bitmap.height === 16 / 9) {
-    targetW = expectSize[0]
-    targetH = expectSize[1]
-  } else if (oldImg.bitmap.width / oldImg.bitmap.height === 9 / 16) {
-    targetW = expectSize[1]
-    targetH = expectSize[0]
-  } else {
-    console.log('size not 16:9, quit')
-    resizing.value = false
-    return
-  }
-  const mat = new cv.Mat(oldImg.bitmap.height, oldImg.bitmap.width, cv.CV_8UC4)
-  mat.data.set(oldImg.bitmap.data)
-  const dst = new cv.Mat()
-  cv.resize(mat, dst, new cv.Size(targetW, targetH), 0, 0, cv.INTER_AREA)
-  mat.delete()
-  const newImg = await Jimp.create(dst.cols, dst.rows)
-  newImg.bitmap.data = Buffer.from(dst.data as Uint8Array)
-  dst.delete()
-  const result = await newImg.getBufferAsync('image/png')
-  const resultBlob = new Blob([result.buffer])
-  const url = URL.createObjectURL(resultBlob)
-  if (!(await setImage(url))) {
-    URL.revokeObjectURL(url)
-  }
-  resizing.value = false
-}
-*/

@@ -49,9 +49,17 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
 
       await bundle.switchActive(controllerName, resourceName)
 
-      const diags = performDiagnostic(bundle).filter(
-        diag => !option.ignoreTypes.includes(diag.type)
-      )
+      const diags = performDiagnostic(bundle)
+        .filter(diag => !option.ignoreTypes.includes(diag.type))
+        .map(diag => {
+          if (option.errorTypes.includes(diag.type)) {
+            const newDiag = { ...diag }
+            newDiag.level = 'error'
+            return newDiag
+          } else {
+            return diag
+          }
+        })
       outputs.push(...diags)
 
       if (option.rawMode) {

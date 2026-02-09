@@ -5,6 +5,7 @@ import * as path from 'node:path'
 
 import type { LocaleType } from '@mse/locale'
 import type { AbsolutePath } from '@mse/pipeline-manager'
+import type { DiagnosticType } from '@mse/pipeline-manager/src/diagnostic/types'
 
 import pkg from '../package.json'
 
@@ -19,8 +20,8 @@ export type ProgramOption = {
 
   // check
   locale: LocaleType
-  ignoreTypes: string[]
-  errorTypes: string[]
+  ignoreTypes: DiagnosticType[]
+  errorTypes: DiagnosticType[]
 
   // reco
   maaVersion: string
@@ -62,6 +63,10 @@ const allTypes = [
   'int-unknown-entry-task',
   'int-override-unknown-task'
 ]
+
+function isDiagType(type: string): type is DiagnosticType {
+  return allTypes.includes(type)
+}
 
 function defaultVersion() {
   return pkg.devDependencies['@maaxyz/maa-node']
@@ -180,12 +185,12 @@ export async function parseOption(): Promise<ProgramOption | null> {
         }
         break
       case 'ignore':
-        if (match[2] && allTypes.includes(match[2])) {
+        if (match[2] && isDiagType(match[2])) {
           option.ignoreTypes.push(match[2])
         }
         break
       case 'error':
-        if (match[2] && allTypes.includes(match[2])) {
+        if (match[2] && isDiagType(match[2])) {
           option.errorTypes.push(match[2])
         }
         break

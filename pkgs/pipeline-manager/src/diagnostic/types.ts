@@ -122,3 +122,10 @@ export type DiagnosticInterface =
     }
 
 export type Diagnostic = DiagnosticBase & (DiagnosticTask | DiagnosticInterface)
+
+export type DiagnosticType = Diagnostic['type']
+
+export type DiagnosticOption = {
+  ignoreTypes?: DiagnosticType[]
+  errorTypes?: DiagnosticType[]
+}

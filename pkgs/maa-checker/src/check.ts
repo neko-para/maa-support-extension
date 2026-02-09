@@ -4,6 +4,7 @@ import * as path from 'node:path'
 
 import {
   type Diagnostic,
+  type DiagnosticOption,
   InterfaceBundle,
   buildDiagnosticMessage,
   performDiagnostic
@@ -35,6 +36,10 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
   const controllerNames = bundle.allControllerNames(true)
 
   const outputs: Diagnostic[] = []
+  const diagOption: DiagnosticOption = {
+    ignoreTypes: option.ignoreTypes,
+    errorTypes: option.errorTypes
+  }
 
   for (const controllerName of ['', ...controllerNames]) {
     for (const resourceName of resourceNames) {
@@ -49,7 +54,7 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
 
       await bundle.switchActive(controllerName, resourceName)
 
-      const diags = performDiagnostic(bundle)
+      const diags = performDiagnostic(bundle, diagOption)
         .filter(diag => !option.ignoreTypes.includes(diag.type))
         .map(diag => {
           if (option.errorTypes.includes(diag.type)) {
@@ -78,7 +83,12 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
       }
 
       for (const diag of diags) {
-        const [start, end, brief] = await buildDiagnosticMessage(bundle.root, diag, locate)
+        const [start, end, brief] = await buildDiagnosticMessage(
+          bundle.root,
+          diag,
+          locate,
+          diagOption
+        )
 
         const [line, col] = start
         const relative = path.relative(bundle.root, diag.file)

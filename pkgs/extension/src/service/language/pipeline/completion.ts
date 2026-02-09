@@ -190,17 +190,21 @@ export class PipelineCompletionProvider
         result.push(item)
       }
     } else if (ref.type === 'task.next' && !ref.objMode) {
+      let triggerNext: vscode.Command | undefined = {
+        command: commands.TriggerCompletion,
+        title: 'trigger next'
+      }
       const range = convertRangeWithDelta(document, ref.location, -1, 1 + (ref.offset ?? 0))
+      if (range.start.line !== range.end.line || range.start.character !== range.end.character) {
+        triggerNext = undefined
+      }
       if (!ref.jumpBack) {
         const item: CustomCompletionItem = {
           label: '[JumpBack]',
           kind: vscode.CompletionItemKind.Property,
-          range,
+          range: new vscode.Range(range.start, range.start),
           sortText: '0_JumpBack',
-          command: {
-            command: commands.TriggerCompletion,
-            title: 'trigger next'
-          }
+          command: triggerNext
         }
         result.push(item)
       }
@@ -208,12 +212,9 @@ export class PipelineCompletionProvider
         const item: CustomCompletionItem = {
           label: '[Anchor]',
           kind: vscode.CompletionItemKind.Property,
-          range,
+          range: new vscode.Range(range.start, range.start),
           sortText: '2_Anchor',
-          command: {
-            command: commands.TriggerCompletion,
-            title: 'trigger next'
-          }
+          command: triggerNext
         }
         result.push(item)
       }

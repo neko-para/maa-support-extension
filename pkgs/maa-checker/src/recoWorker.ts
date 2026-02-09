@@ -28,8 +28,8 @@ async function performReco(job: RecoJob, paths: AbsolutePath[]) {
     for (const node of job.nodes) {
       const detail = await self.context.run_recognition(node, image)
       result.push({
-        image: job.imageIndex,
         imagePath: job.imagePath,
+        imagePathRaw: job.imagePathRaw,
         node: node,
         hit: !!detail?.hit,
         detail

@@ -8,6 +8,7 @@ import type { AbsolutePath } from '@mse/pipeline-manager'
 import type { DiagnosticType } from '@mse/pipeline-manager/src/diagnostic/types'
 
 import pkg from '../package.json'
+import type { RecoJobGroup } from './recoTypes'
 
 export type ProgramOption = {
   interfacePath: AbsolutePath
@@ -30,11 +31,10 @@ export type ProgramOption = {
   maxNodePerJob: number
   controller: string
   resource: string
-  imagesRaw: string[]
-  images: AbsolutePath[]
-  nodes: string[]
   printHit: boolean
   printNotHit: boolean
+  color: 'enable' | 'disable' | 'auto'
+  groups: RecoJobGroup[]
 }
 
 const allTypes = [
@@ -105,12 +105,16 @@ Option for reco:
   --max-node-per-job=<cnt>  Maximum count <cnt> of nodes batched in one job. Default: auto
   --controller=<ctrl>       Use controller <ctrl> for attach_resource_path
   --resource=<res>          Use resource <res>
-  --image=<img>             Perform reco on <img>
-  --image-folder=<dir>      Glob .png under <dir>, recursively
-  --node=<node>             Perform reco of node <node>
-  --node-list=<file>        Parse nodes from <file>. Seperated with spaces or newlines
   --print-hit               Print hits images
   --print-not-hit           Print not hits images
+  --color=<mode>            Set color mode <mode>. Default: auto
+                                Known modes: enable, disable, auto
+  --next-group=<name>       Start another group <name>
+  --image=<img>             Add image <img> to group
+  --image-folder=<dir>      Glob .png under <dir> recursively and add to group
+  --node=<node>             Add node <node> to group
+  --nodes=<node...>         Add nodes <nodes> to group. Seperated with comma
+  --node-list=<file>        Add nodes from <file> to group. Seperated with spaces or newlines
 `)
 }
 
@@ -134,11 +138,17 @@ export async function parseOption(): Promise<ProgramOption | null> {
     maxNodePerJob: 0,
     controller: '',
     resource: '',
-    imagesRaw: [],
-    images: [],
-    nodes: [],
     printHit: false,
-    printNotHit: false
+    printNotHit: false,
+    color: 'auto',
+    groups: [
+      {
+        name: 'default',
+        imagesRaw: [],
+        images: [],
+        nodes: []
+      }
+    ]
   }
 
   if (process.argv.length < 3) {
@@ -239,10 +249,35 @@ export async function parseOption(): Promise<ProgramOption | null> {
           option.resource = match[2]
         }
         break
+      case 'print-hit':
+        option.printHit = true
+        break
+      case 'print-not-hit':
+        option.printNotHit = true
+        break
+      case 'color':
+        if (match[2]) {
+          switch (match[2]) {
+            case 'enable':
+            case 'disable':
+            case 'auto':
+              option.color = match[2]
+              break
+          }
+        }
+        break
+      case 'next-group':
+        option.groups.unshift({
+          name: match[2] ?? `group ${option.groups.length}`,
+          imagesRaw: [],
+          images: [],
+          nodes: []
+        })
+        break
       case 'image':
         if (match[2]) {
-          option.imagesRaw.push(match[2])
-          option.images.push(path.resolve(match[2]) as AbsolutePath)
+          option.groups[0].imagesRaw.push(match[2])
+          option.groups[0].images.push(path.resolve(match[2]) as AbsolutePath)
         }
         break
       case 'image-folder':
@@ -251,14 +286,19 @@ export async function parseOption(): Promise<ProgramOption | null> {
           for await (const file of fs.glob('**/*.png', {
             cwd: folder
           })) {
-            option.imagesRaw.push(path.join(match[2], file))
-            option.images.push(path.resolve(folder, file) as AbsolutePath)
+            option.groups[0].imagesRaw.push(path.join(match[2], file))
+            option.groups[0].images.push(path.resolve(folder, file) as AbsolutePath)
           }
         }
         break
       case 'node':
         if (match[2]) {
-          option.nodes.push(match[2])
+          option.groups[0].nodes.push(match[2])
+        }
+        break
+      case 'nodes':
+        if (match[2]) {
+          option.groups[0].nodes.push(...match[2].split(','))
         }
         break
       case 'node-list':
@@ -268,16 +308,17 @@ export async function parseOption(): Promise<ProgramOption | null> {
             .split(/[ \n]+/)
             .map(node => node.trim())
             .filter(node => !!node)
-          option.nodes.push(...nodes)
+          option.groups[0].nodes.push(...nodes)
         }
         break
-      case 'print-hit':
-        option.printHit = true
-        break
-      case 'print-not-hit':
-        option.printNotHit = true
-        break
     }
+  }
+
+  option.groups.reverse()
+  option.groups = option.groups.filter(group => group.images.length > 0 && group.nodes.length > 0)
+
+  if (option.color === 'auto') {
+    option.color = process.stdout.hasColors?.() ? 'enable' : 'disable'
   }
 
   return option

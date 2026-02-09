@@ -1,12 +1,12 @@
 import * as fs from 'fs/promises'
-import path from 'path'
+import * as path from 'path'
 import * as workerpool from 'workerpool'
 
 import { MaaVersionManager } from '@mse/maa-version-manager'
 import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
-import type { RecoJob, RecoResult } from './recoTypes'
+import type { GroupRecoResult, RecoJob, RecoResult } from './recoTypes'
 import { gzCompress } from './utils'
 
 function splitChunk<T>(arr: T[], size: number) {
@@ -36,6 +36,9 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     return false
   }
 
+  await bundle.switchActive(option.controller, option.resource)
+  const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
+
   const modulePath = versionManager.moduleFolder(option.maaVersion)
   const pool = workerpool.pool(path.join(__dirname, 'recoWorker.js'), {
     maxWorkers: option.job,
@@ -48,33 +51,8 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     }
   })
 
-  await bundle.switchActive(option.controller, option.resource)
-  const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
-
-  const jobs: RecoJob[] = []
-  const result: RecoResult[] = []
-
-  let finished = 0
-  const taskCount = option.images.length * option.nodes.length
-
-  const autoMaxNodePerJob = Math.ceil(option.nodes.length / option.job)
-  const maxNodePerJob = option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
-
-  for (const [imageIndex, imagePath] of option.images.entries()) {
-    const image = (await fs.readFile(imagePath)).toString('base64')
-    const nodesChunks = splitChunk(option.nodes, maxNodePerJob)
-    for (const nodes of nodesChunks) {
-      jobs.push({
-        nodes,
-        image,
-        imageIndex,
-        imagePath
-      })
-    }
-  }
-
   const tasks: Promise<void>[] = []
-  for (const job of jobs) {
+  const scheduleJob = (job: RecoJob, result: RecoResult[]) => {
     const task = pool
       .exec<(job: RecoJob, paths: string[]) => RecoResult[]>('performReco', [job, resourcePaths])
       .then(res => res)
@@ -92,6 +70,41 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     tasks.push(task)
   }
 
+  const result: GroupRecoResult[] = []
+
+  let finished = 0
+  const taskCount = option.groups
+    .map(group => group.images.length * group.nodes.length)
+    .reduce((a, b) => a + b, 0)
+
+  const autoMaxNodePerJob = Math.ceil(
+    Math.max(...option.groups.map(group => group.nodes.length)) / option.job
+  )
+  const maxNodePerJob = option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
+
+  for (const group of option.groups) {
+    const groupResult: GroupRecoResult = {
+      group,
+      result: []
+    }
+    for (const [imageIndex, imagePath] of group.images.entries()) {
+      const image = (await fs.readFile(imagePath)).toString('base64')
+      const nodesChunks = splitChunk(group.nodes, maxNodePerJob)
+      for (const nodes of nodesChunks) {
+        scheduleJob(
+          {
+            nodes,
+            image,
+            imagePath,
+            imagePathRaw: group.imagesRaw[imageIndex]
+          },
+          groupResult.result
+        )
+      }
+    }
+    result.push(groupResult)
+  }
+
   await Promise.all(tasks)
 
   if (option.rawMode) {
@@ -101,23 +114,40 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     }
     console.log(data)
   } else {
-    for (const node of option.nodes) {
-      const sub = result.filter(info => info.node === node)
-      const hits = sub.filter(info => info.hit)
-      const misses = sub.filter(info => !info.hit)
+    const enableColor = option.color === 'enable'
+    let hitPrefix = ''
+    let missPrefix = ''
+    let resetSuffix = ''
+    if (enableColor) {
+      hitPrefix = '\x1b[32m'
+      missPrefix = '\x1b[31m'
+      resetSuffix = '\x1b[m'
+    }
 
-      console.log(`${node}: ${hits.length} / ${sub.length}`)
+    for (const groupResult of result) {
+      console.log(`Group: ${groupResult.group.name}`)
+      for (const node of new Set(groupResult.group.nodes)) {
+        const sub = groupResult.result.filter(info => info.node === node)
+        const hits = sub.filter(info => info.hit)
+        const misses = sub.filter(info => !info.hit)
 
-      if (hits.length > 0 && option.printHit) {
-        console.log(`hit images:`)
-        for (const info of hits) {
-          console.log(`    ${option.imagesRaw[info.image]}`)
+        console.log(`  ${node}: ${hits.length} / ${sub.length}`)
+
+        if (hits.length > 0 && option.printHit) {
+          if (!enableColor) {
+            console.log(`  hit images:`)
+          }
+          for (const info of hits) {
+            console.log(`    ${hitPrefix}${info.imagePathRaw}${resetSuffix}`)
+          }
         }
-      }
-      if (misses.length > 0 && option.printNotHit) {
-        console.log(`missed images:`)
-        for (const info of misses) {
-          console.log(`    ${option.imagesRaw[info.image]}`)
+        if (misses.length > 0 && option.printNotHit) {
+          if (!enableColor) {
+            console.log(`  missed images:`)
+          }
+          for (const info of misses) {
+            console.log(`    ${missPrefix}${info.imagePathRaw}${resetSuffix}`)
+          }
         }
       }
     }

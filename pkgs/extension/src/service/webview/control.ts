@@ -62,6 +62,7 @@ export class WebviewControlService extends BaseService {
               return {
                 value: opt.value,
                 label: opt.title,
+                description: opt.desc,
                 detail: opt.subtitle
               }
             })
@@ -277,6 +278,23 @@ export class WebviewControlService extends BaseService {
             break
           }
           launchService.launchRuntime(runtime)
+          break
+        case 'translate':
+          if (!data.key.startsWith('$')) {
+            this.provider?.response(data.seq, data.key)
+            break
+          }
+          const intBundle = interfaceService.interfaceBundle
+          if (!intBundle) {
+            this.provider?.response(data.seq, data.key)
+            break
+          }
+
+          const preferredLocale = interfaceService.interfaceConfigJson.locale
+          const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
+
+          const result = intBundle.langBundle.queryKey(data.key.slice(1))
+          this.provider?.response(data.seq, result?.[preferredIndex]?.value ?? data.key)
           break
         case 'maa.evalTask':
           await vscode.commands.executeCommand(commands.EvalTask, data.task)

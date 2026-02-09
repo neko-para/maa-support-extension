@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { NFlex, NInput, NText } from 'naive-ui'
 
 import type { SettingsInstance } from '../states/settings'

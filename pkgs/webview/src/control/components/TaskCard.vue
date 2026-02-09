@@ -6,6 +6,7 @@ import type { InputOption, SelectOption, SwitchOption, TaskConfig } from '@mse/t
 
 import { ipc } from '../ipc'
 import { hostState } from '../state'
+import LocaleText from './LocaleText.vue'
 import TaskInputOption from './TaskInputOption.vue'
 import TaskSelectOption from './TaskSelectOption.vue'
 import TaskSwitchOption from './TaskSwitchOption.vue'
@@ -106,12 +107,17 @@ function cast<T>(val: unknown): T {
 <template>
   <n-card size="small" closable @close="removeTask">
     <template #header>
-      <n-popover v-if="taskMeta" trigger="hover" :disabled="!taskMeta.description">
+      <n-popover
+        v-if="taskMeta"
+        trigger="hover"
+        :disabled="!taskMeta.label && !taskMeta.description"
+      >
         <template #trigger>
           <n-button size="large" @click="revealEntry" text> {{ task.name }} </n-button>
         </template>
 
-        <span> {{ taskMeta.description }} </span>
+        <locale-text :text="taskMeta.label"></locale-text>
+        <locale-text :text="taskMeta.description"></locale-text>
       </n-popover>
     </template>
     <n-flex vertical>

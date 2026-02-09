@@ -6,6 +6,7 @@ import type { SwitchOption, TaskConfig } from '@mse/types'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
+import LocaleText from './LocaleText.vue'
 import type { OptionInfo } from './types'
 import { revealOption } from './utils'
 
@@ -73,24 +74,30 @@ function clearOption() {
 
 <template>
   <n-flex>
-    <n-popover trigger="hover" :disabled="!optMeta.description">
+    <n-popover trigger="hover" :disabled="!optMeta.label && !optMeta.description">
       <template #trigger>
         <n-button @click="revealOption(opt.option)" text> {{ opt.option }} </n-button>
       </template>
 
-      <div style="max-width: 80vw" v-html="optMeta.description"></div>
+      <locale-text :text="optMeta.label"></locale-text>
+      <locale-text :text="optMeta.description"></locale-text>
     </n-popover>
 
     <n-button v-if="!!opt.intro" @click="revealOption(opt.intro)" text> @{{ opt.intro }} </n-button>
 
-    <n-popover v-if="effectiveCase" trigger="hover" :disabled="!effectiveCase.description">
+    <n-popover
+      v-if="effectiveCase"
+      trigger="hover"
+      :disabled="!effectiveCase.label && !effectiveCase.description"
+    >
       <template #trigger>
         <n-button @click="revealCase()" text>
           {{ t('maa.control.task.current-case') }}
         </n-button>
       </template>
 
-      <div style="max-width: 80vw" v-html="effectiveCase.description"></div>
+      <locale-text :text="effectiveCase.label"></locale-text>
+      <locale-text :text="effectiveCase.description"></locale-text>
     </n-popover>
   </n-flex>
   <n-flex :wrap="false" align="center">

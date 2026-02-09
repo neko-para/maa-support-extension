@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { NButton, NFlex, NInput, NPopover } from 'naive-ui'
-import { compile, computed, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import type { InputItem, InputOption, TaskConfig } from '@mse/types'
+import type { InputItem, TaskConfig } from '@mse/types'
 
 import { ipc } from '../ipc'
+import LocaleText from './LocaleText.vue'
 
 const props = defineProps<{
   taskKey: string
@@ -112,12 +113,13 @@ const status = computed<undefined | 'error'>(() => {
 
 <template>
   <n-flex>
-    <n-popover trigger="hover" :disabled="!item.description">
+    <n-popover trigger="hover" :disabled="!item.label && !item.description">
       <template #trigger>
         <n-button @click="revealInput(item.name)" text> {{ item.name }} </n-button>
       </template>
 
-      <div style="max-width: 80vw" v-html="item.description"></div>
+      <locale-text :text="item.label"></locale-text>
+      <locale-text :text="item.description"></locale-text>
     </n-popover>
   </n-flex>
   <n-flex :wrap="false">

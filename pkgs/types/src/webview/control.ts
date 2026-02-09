@@ -27,6 +27,7 @@ export type ControlHostToWeb = {
 export type NativeSelectOption = {
   value: string | number
   title: string
+  desc?: string
   subtitle?: string
 }
 export type ToolkitJumpTarget =
@@ -132,6 +133,11 @@ export type ControlWebToHost =
     }
   | {
       command: 'launch'
+    }
+  | {
+      // return string
+      command: 'translate'
+      key: string
     }
   | {
       command: 'maa.evalTask'

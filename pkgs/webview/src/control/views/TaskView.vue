@@ -3,6 +3,8 @@ import { NButton, NCard, NFlex, NPopselect } from 'naive-ui'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
+import type { NativeSelectOption } from '@mse/types'
+
 import { t } from '../../utils/locale'
 import TaskCard from '../components/TaskCard.vue'
 import { ipc } from '../ipc'
@@ -46,15 +48,33 @@ function addTask(task: string) {
 
 async function nativeSelectTask() {
   selectingTask.value = true
-  const choice = (await ipc.call({
-    command: 'showSelect',
-    options: allTasks.value.map((info, index) => {
+
+  const options = await Promise.all(
+    allTasks.value.map(async (info, index) => {
+      const label = info.label
+        ? await ipc.call({
+            command: 'translate',
+            key: info.label
+          })
+        : ''
+      const desc = info.description
+        ? await ipc.call({
+            command: 'translate',
+            key: info.description
+          })
+        : ''
       return {
         value: info.name,
         title: info.name,
-        subtitle: info.entry
-      }
+        desc: info.entry,
+        subtitle: `${label}\n${desc}`
+      } satisfies NativeSelectOption
     })
+  )
+
+  const choice = (await ipc.call({
+    command: 'showSelect',
+    options
   })) as string | null
   if (typeof choice === 'string') {
     addTask(choice)

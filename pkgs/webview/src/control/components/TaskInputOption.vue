@@ -3,8 +3,7 @@ import { NButton, NFlex, NPopover } from 'naive-ui'
 
 import type { InputOption, TaskConfig } from '@mse/types'
 
-import { t } from '../../utils/locale'
-import { ipc } from '../ipc'
+import LocaleText from './LocaleText.vue'
 import TaskInputOptionItem from './TaskInputOptionItem.vue'
 import type { OptionInfo } from './types'
 import { revealOption } from './utils'
@@ -18,12 +17,13 @@ const props = defineProps<{
 
 <template>
   <n-flex>
-    <n-popover trigger="hover" :disabled="!optMeta.description">
+    <n-popover trigger="hover" :disabled="!optMeta.label && !optMeta.description">
       <template #trigger>
         <n-button @click="revealOption(opt.option)" text> {{ opt.option }} </n-button>
       </template>
 
-      <div style="max-width: 80vw" v-html="optMeta.description"></div>
+      <locale-text :text="optMeta.label"></locale-text>
+      <locale-text :text="optMeta.description"></locale-text>
     </n-popover>
 
     <n-button v-if="!!opt.intro" @click="revealOption(opt.intro)" text> @{{ opt.intro }} </n-button>

@@ -44,6 +44,7 @@ const cropBoxMoveDrag = ref<DragHandler>(new DragHandler())
 
 const cornerDrag = ref<DragHandler>(new DragHandler())
 const cornerDragTarget = ref<CornerType | EdgeType>('lt')
+const cornerDragInitialBox = ref<Box>(new Box())
 
 export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
@@ -60,10 +61,11 @@ export function onWheel(event: WheelEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
 
-  if (hostState.value.revertScale) {
-    viewport.value.zoom(event.deltaY < 0, mp)
-  } else {
-    viewport.value.zoom(event.deltaY > 0, mp)
+  const zoomIn = hostState.value.revertScale ? event.deltaY < 0 : event.deltaY > 0
+  viewport.value.zoom(zoomIn, mp)
+
+  if (viewportDrag.value.state) {
+    viewportDrag.value.base = viewport.value.offset.sub(viewportDrag.value.delta)
   }
 }
 
@@ -73,14 +75,21 @@ export function onPointerDown(event: PointerEvent) {
 
   pickSt.picking.value = false
 
+  if (event.button === 1) {
+    viewportDrag.value.down(mp, viewport.value.offset, event)
+    cursor.value = 'grab'
+    return
+  }
+
   if (event.ctrlKey) {
-    cropBoxDrag.value.down(mp, mp, event)
+    cropBoxDrag.value.down(mp, mp, event, viewport.value)
     cursor.value = 'crosshair'
   } else {
     const corner = detectCorner(cropBoxInView.value, mp)
     if (corner) {
       cornerDragTarget.value = corner
-      cornerDrag.value.down(mp, cropBoxInView.value[corner], event)
+      cornerDragInitialBox.value = cropBox.value.copy()
+      cornerDrag.value.down(mp, cropBoxInView.value[corner], event, viewport.value)
       return
     }
 
@@ -89,12 +98,13 @@ export function onPointerDown(event: PointerEvent) {
       const fakePos = new Pos()
       fakePos[edgeSide[edge]] = cropBoxInView.value[edge]
       cornerDragTarget.value = edge
-      cornerDrag.value.down(mp, fakePos, event)
+      cornerDragInitialBox.value = cropBox.value.copy()
+      cornerDrag.value.down(mp, fakePos, event, viewport.value)
       return
     }
 
     if (cropBoxInView.value.contains(mp)) {
-      cropBoxMoveDrag.value.down(mp, cropBoxInView.value.origin, event)
+      cropBoxMoveDrag.value.down(mp, cropBoxInView.value.origin, event, viewport.value)
       cursor.value = 'grab'
       return
     }
@@ -113,21 +123,22 @@ export function onPointerMove(event: PointerEvent) {
     viewport.value.offset = viewportDrag.value.current
   } else if (cropBoxDrag.value.state) {
     cropBoxDrag.value.move(mp)
-    cropBoxInView.value = cropBoxDrag.value.box
+    cropBox.value = cropBoxDrag.value.box
   } else if (cornerDrag.value.state) {
     cornerDrag.value.move(mp)
-    const dlt = cornerDrag.value.current.sub(cropBoxInView.value.origin)
-    const v = cropBoxInView.value.copy()
+    const currentModel = cornerDrag.value.current
+    const v = cornerDragInitialBox.value.copy()
+    const dlt = currentModel.sub(v.origin)
     for (const ch of cornerDragTarget.value) {
       const cht = ch as EdgeType
       switch (cht) {
         case 'l': {
-          v.origin.x = cornerDrag.value.current.x
+          v.origin.x = currentModel.x
           v.size.w = v.size.w - dlt.w
           break
         }
         case 't': {
-          v.origin.y = cornerDrag.value.current.y
+          v.origin.y = currentModel.y
           v.size.h = v.size.h - dlt.h
           break
         }
@@ -141,10 +152,10 @@ export function onPointerMove(event: PointerEvent) {
         }
       }
     }
-    cropBoxInView.value = v
+    cropBox.value = v
   } else if (cropBoxMoveDrag.value.state) {
     cropBoxMoveDrag.value.move(mp)
-    cropBoxInView.value = cropBoxInView.value.copy().setOrigin(cropBoxMoveDrag.value.current)
+    cropBox.value = cropBox.value.copy().setOrigin(cropBoxMoveDrag.value.current)
   } else {
     const corner = detectCorner(cropBoxInView.value, mp)
     const edge = detectEdge(cropBoxInView.value, mp)

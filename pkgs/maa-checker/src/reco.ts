@@ -42,7 +42,8 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     workerType: 'process',
     forkOpts: {
       env: {
-        MAAFW_MODULE_PATH: modulePath
+        MAAFW_MODULE_PATH: modulePath,
+        MAAFW_SILENCE_STDOUT: option.rawMode ? '1' : ''
       }
     }
   })
@@ -84,7 +85,9 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
       .then(res => {
         finished += res.length
         result.push(...res)
-        process.stdout.write(`${finished} / ${taskCount}\r`)
+        if (!option.rawMode) {
+          process.stdout.write(`${finished} / ${taskCount}\r`)
+        }
       })
     tasks.push(task)
   }

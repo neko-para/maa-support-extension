@@ -9,6 +9,9 @@ async function performReco(job: RecoJob, paths: AbsolutePath[]) {
   if (!globalThis.maa) {
     module.paths.unshift(process.env.MAAFW_MODULE_PATH!)
     require('@maaxyz/maa-node')
+    if (process.env.MAAFW_SILENCE_STDOUT === '1') {
+      maa.Global.stdout_level = 'Off'
+    }
   }
 
   const image = toArrayBuffer(Buffer.from(job.image, 'base64'))

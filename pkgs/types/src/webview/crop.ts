@@ -1,6 +1,6 @@
 import type { HostStateBase } from './base'
 
-export type CropHostState = HostStateBase & {
+export type CropSettings = {
   saveAddRoiInfo?: boolean
   backgroundFill?: string
   selectFill?: string
@@ -21,6 +21,8 @@ export type CropHostState = HostStateBase & {
   recoStroke?: string
   recoFont?: string
 }
+
+export type CropHostState = HostStateBase & CropSettings
 
 export type CropHostToWeb =
   | {

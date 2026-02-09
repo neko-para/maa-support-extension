@@ -1,9 +1,9 @@
 import { computed, ref, watch } from 'vue'
 
 import { ipc } from '../ipc'
-import { hostState } from '../state'
 import * as controlSt from './control'
 import * as imageSt from './image'
+import * as settingsSt from './settings'
 
 export const loading = ref(false)
 export const result = ref<string | null>(null)
@@ -40,7 +40,7 @@ export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
     roi: controlSt.cropBox.value.ceiled().flat(),
     only_rec: onlyRec.value,
     method: method.value,
-    threshold: hostState.value.templateMatchThreshold ?? 0.8,
+    threshold: settingsSt.templateMatchThreshold.eff,
     green_mask: greenMask.value
   })) as string | null
 

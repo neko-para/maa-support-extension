@@ -1,4 +1,4 @@
-import { CropHostState, EvalTaskConfig } from '@mse/types'
+import { CropSettings, EvalTaskConfig } from '@mse/types'
 
 import { BaseService, context } from './context'
 
@@ -8,7 +8,7 @@ export type State = {
   activeInterface?: string
 
   uploadDir?: string
-  cropSettings?: CropHostState
+  cropSettings?: CropSettings
 
   breakTasks?: string[]
 

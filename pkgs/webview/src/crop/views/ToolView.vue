@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { NButton, NCard, NCode, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
-
-import type { CropHostState } from '@mse/types'
 
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
+import ColorBox from '../components/ColorBox.vue'
 import RoiEdit from '../components/RoiEdit.vue'
-import { ipc } from '../ipc'
 import { hostState } from '../state'
-import * as controlSt from '../states/control'
 import * as pickSt from '../states/pick'
 import * as matchSt from '../states/quickMatch'
 import * as recoSt from '../states/reco'
+import * as settingsSt from '../states/settings'
 
 const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }))
 
@@ -27,14 +25,6 @@ const dltRoi = computed(() => {
   }
   return undefined
 })
-
-function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) {
-  ipc.send({
-    command: 'updateSettings',
-    key,
-    value
-  })
-}
 </script>
 
 <template>
@@ -51,9 +41,7 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
 
       <template v-if="pickSt.color.value">
         <n-flex>
-          <div
-            :style="`width: 28px; height: 28px; background-color: rgb(${pickSt.color.value.join(',')});`"
-          ></div>
+          <color-box :color="`rgb(${pickSt.color.value.join(',')})`"></color-box>
           <n-button size="small" @click="pickSt.copyCss()">
             {{ pickSt.cssText() }}
           </n-button>
@@ -97,13 +85,16 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
             {{ t('maa.crop.tools.quick-match-tmpl') }}
           </n-button>
           <n-input-number
-            :value="hostState.templateMatchThreshold"
-            placeholder="0.8"
-            :default-value="0.8"
+            :value="settingsSt.templateMatchThreshold.eff"
+            @update:value="
+              v => {
+                settingsSt.templateMatchThreshold.val = v ?? undefined
+              }
+            "
             :min="0"
             :max="1"
             :step="0.01"
-            @update:value="v => update('templateMatchThreshold', v ?? undefined)"
+            placeholder=""
             size="small"
             style="width: 90px"
           />

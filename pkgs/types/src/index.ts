@@ -1,7 +1,6 @@
 export type * from './logger'
 export type * from './pi'
 export type * from './pi_v2'
-export type * from './web'
 export type * from './webview/base'
 export type * from './webview/control'
 export type * from './webview/crop'

@@ -1,7 +1,6 @@
 import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '../ipc'
-import { hostState } from '../state'
 import { Box, DragHandler, Pos, Size, Viewport } from '../utils/2d'
 import {
   type CornerType,
@@ -13,6 +12,7 @@ import {
 } from '../utils/detect'
 import * as imageSt from './image'
 import * as pickSt from './pick'
+import * as settingsSt from './settings'
 
 export const cursor = ref<string>('default')
 export const current = ref<Pos>(new Pos())
@@ -61,7 +61,7 @@ export function onWheel(event: WheelEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
 
-  const zoomIn = hostState.value.revertScale ? event.deltaY < 0 : event.deltaY > 0
+  const zoomIn = settingsSt.revertScale.eff ? event.deltaY < 0 : event.deltaY > 0
   viewport.value.zoom(zoomIn, mp)
 
   if (viewportDrag.value.state) {

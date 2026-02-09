@@ -15,7 +15,7 @@ let dashOffset = 0
 export function draw(ctx: CanvasRenderingContext2D) {
   ctx.reset()
 
-  ctx.fillStyle = settingsSt.colorWithDefault(hostState.value.backgroundFill, 'white')
+  ctx.fillStyle = settingsSt.backgroundFill.eff
   ctx.fillRect(0, 0, ...size.value.flat())
 
   if (imageSt.element.value) {
@@ -35,20 +35,19 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     for (const [st, stroke, font] of [
-      [matchSt, hostState.value.ocrStroke, hostState.value.ocrFont],
-      [recoSt, hostState.value.recoStroke, hostState.value.recoFont]
+      [matchSt, settingsSt.ocrStroke.eff, settingsSt.ocrFont.eff],
+      [recoSt, settingsSt.recoStroke.eff, settingsSt.recoFont.eff]
     ] as const) {
       if (st.draw.value && st.resultObject.value) {
         ctx.save()
 
         const info = st.resultObject.value
-        const color = settingsSt.colorWithDefault(stroke, 'green')
 
-        ctx.fillStyle = color
-        ctx.strokeStyle = color
+        ctx.fillStyle = stroke
+        ctx.strokeStyle = stroke
 
         if (info.detail) {
-          ctx.font = settingsSt.fontWithDefault(font, '24pt consolas')
+          ctx.font = font
 
           let detailEntries: {
             name: string
@@ -101,14 +100,17 @@ export function draw(ctx: CanvasRenderingContext2D) {
   }
 
   ctx.save()
-  ctx.globalAlpha = settingsSt.toAlpha(hostState.value.selectOpacity, 0.3)
-  if (hostState.value.selectOutlineOnly) {
-    ctx.strokeStyle = settingsSt.colorWithDefault(hostState.value.selectFill, 'wheat')
-    ctx.lineWidth = hostState.value.selectOutlineThickness ?? 1
+  ctx.globalAlpha = settingsSt.selectOpacity.eff
+  if (settingsSt.selectOutlineOnly.eff) {
+    ctx.strokeStyle = settingsSt.selectFill.eff
+    ctx.lineWidth = settingsSt.selectOutlineThickness.eff
     ctx.setLineDash([4, 4])
-    ctx.lineDashOffset = -(dashOffset = (dashOffset + 0.2) % 8)
+
+    dashOffset = (dashOffset + 0.2) % 8
+    ctx.lineDashOffset = -dashOffset
+
     const box = controlSt.cropBoxInView.value
-    const offset = (hostState.value.selectOutlineThickness ?? 1) % 2 === 1 ? 0.5 : 0
+    const offset = settingsSt.selectOutlineThickness.eff % 2 === 1 ? 0.5 : 0
     ctx.strokeRect(
       Math.floor(box.origin.x) + offset,
       Math.floor(box.origin.y) + offset,
@@ -116,23 +118,20 @@ export function draw(ctx: CanvasRenderingContext2D) {
       Math.round(box.size.h)
     )
   } else {
-    ctx.fillStyle = settingsSt.colorWithDefault(hostState.value.selectFill, 'wheat')
+    ctx.fillStyle = settingsSt.selectFill.eff
     ctx.fillRect(...controlSt.cropBoxInView.value.flat())
   }
   ctx.restore()
 
   ctx.save()
-  ctx.globalAlpha = settingsSt.toAlpha(hostState.value.helperAxesOpacity, 0.4)
-  const helperAxesStrokeColor = settingsSt.colorWithDefault(
-    hostState.value.helperAxesStroke,
-    'white'
-  )
-  ctx.strokeStyle = helperAxesStrokeColor
+  ctx.globalAlpha = settingsSt.helperAxesOpacity.eff
+  const helperAxesStroke = settingsSt.helperAxesStroke.eff
+  ctx.strokeStyle = helperAxesStroke
   ctx.beginPath()
-  if (1 / controlSt.viewport.value.scale >= (hostState.value.helperAxesThreshold ?? 10)) {
+  if (1 / controlSt.viewport.value.scale >= settingsSt.helperAxesThreshold.eff) {
     const pos = controlSt.viewport.value.fromView(controlSt.current.value).round()
-    const radius = Math.max(0, hostState.value.helperAxesRadius ?? 20)
-    if (hostState.value.helperAxesOverflow) {
+    const radius = Math.max(0, settingsSt.helperAxesRadius.eff)
+    if (settingsSt.helperAxesOverflow.eff) {
       for (let dx = -radius; dx <= radius; dx += 1) {
         const dposX = controlSt.viewport.value.toView(pos.add(Size.from(dx, 0))).x
         ctx.moveTo(dposX, 0)
@@ -154,7 +153,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
         scaledPos.y,
         scaledRadius
       )
-      gradient.addColorStop(0.7, helperAxesStrokeColor)
+      gradient.addColorStop(0.7, helperAxesStroke)
       gradient.addColorStop(1, 'transparent')
       ctx.strokeStyle = gradient
 
@@ -175,10 +174,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.stroke()
   ctx.restore()
 
-  ctx.strokeStyle = settingsSt.colorWithDefault(
-    hostState.value.pointerAxesStroke,
-    'rgba(255, 127, 127, 1)'
-  )
+  ctx.strokeStyle = settingsSt.pointerAxesStroke.eff
   ctx.beginPath()
   ctx.moveTo(controlSt.current.value.x, 0)
   ctx.lineTo(controlSt.current.value.x, size.value.h)

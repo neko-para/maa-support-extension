@@ -223,7 +223,7 @@ export class WebviewControlService extends BaseService {
                 location: Node
               }
             | undefined = undefined
-          switch (data.dest.type) {
+          switch (data.dest?.type) {
             case 'entry': {
               const info = data.dest
               loc = interfaceService.interfaceBundle?.info.refs.find(
@@ -269,6 +269,13 @@ export class WebviewControlService extends BaseService {
                 editor.selection = new vscode.Selection(range.start, range.end)
               }
             } catch {}
+          } else {
+            if (interfaceService.interfaceBundle?.file) {
+              const doc = await vscode.workspace.openTextDocument(
+                interfaceService.interfaceBundle?.file
+              )
+              await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
+            }
           }
           break
         case 'launch':

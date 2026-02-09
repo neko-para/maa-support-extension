@@ -1,5 +1,6 @@
 export default {
   'maa.control.scan': 'Scan',
+  'maa.control.reveal': 'Reveal',
   'maa.control.reveal-config': 'Reveal Config',
   'maa.control.upload': 'Upload',
   'maa.control.start': 'Start',

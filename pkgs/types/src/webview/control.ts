@@ -111,7 +111,7 @@ export type ControlWebToHost =
     }
   | {
       command: 'revealInterface'
-      dest:
+      dest?:
         | {
             type: 'entry'
             entry: string

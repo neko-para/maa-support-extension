@@ -1,5 +1,6 @@
 export default {
   'maa.control.scan': '扫描',
+  'maa.control.reveal': '查看',
   'maa.control.reveal-config': '查看配置',
   'maa.control.upload': '上传',
   'maa.control.start': '开始',

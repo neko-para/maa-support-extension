@@ -28,6 +28,12 @@ function refreshInterface() {
   })
 }
 
+function revealInterface() {
+  ipc.send({
+    command: 'revealInterface'
+  })
+}
+
 function revealConfig() {
   ipc.send({
     command: 'revealConfig'
@@ -39,6 +45,9 @@ function revealConfig() {
   <n-card :title="t('maa.control.interface.interface')" size="small">
     <template #header-extra>
       <n-flex>
+        <n-button :disabled="!hostState.activeInterface" @click="revealInterface" size="small">
+          {{ t('maa.control.reveal') }}
+        </n-button>
         <n-button :disabled="!hostState.activeInterface" @click="revealConfig" size="small">
           {{ t('maa.control.reveal-config') }}
         </n-button>

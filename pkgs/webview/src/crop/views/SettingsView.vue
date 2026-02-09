@@ -64,7 +64,7 @@ function update<K extends keyof CropHostState>(key: K, value: CropHostState[K]) 
       <n-text> {{ t('maa.crop.settings.select-outline-thickness') }} </n-text>
       <n-input-number
         :value="hostState.selectOutlineThickness"
-        placeholder="2"
+        placeholder="1"
         :min="1"
         :max="20"
         :step="1"

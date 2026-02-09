@@ -63,5 +63,6 @@ async function main() {
 }
 
 main().then(succ => {
+  console2.timeEnd('checker')
   process.exit(succ ? 0 : 1)
 })

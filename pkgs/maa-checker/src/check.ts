@@ -11,7 +11,7 @@ import {
 } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
-import { gzCompress } from './utils'
+import { console2, gzCompress } from './utils'
 
 function calucateLocation(content: string, offset: number): [line: number, col: number] {
   const previous = content.slice(0, offset)
@@ -53,6 +53,8 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
       }
 
       await bundle.switchActive(controllerName, resourceName)
+
+      console2.timeLog('checker', 'resource switched')
 
       const diags = performDiagnostic(bundle, diagOption)
         .filter(diag => !option.ignoreTypes.includes(diag.type))
@@ -109,6 +111,8 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
       }
     }
   }
+
+  console2.timeLog('checker', 'diagnostic finished')
 
   if (option.rawMode) {
     let data = JSON.stringify(outputs)

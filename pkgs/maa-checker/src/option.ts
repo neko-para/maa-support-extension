@@ -96,6 +96,7 @@ Option for check:
   --ignore=<type>           Ignore <type>
                                 Known types: ${allTypes.join(', ')}
   --error=<type>            Treat <type> as error
+  --load-config=<cfg>       Load config file <cfg>
 
 Option for reco:
   --maa-version=<ver>       Use MaaFw version <ver>. Default: ${defaultVersion()}
@@ -192,6 +193,13 @@ export async function parseOption(): Promise<ProgramOption | null> {
       case 'error':
         if (match[2] && isDiagType(match[2])) {
           option.errorTypes.push(match[2])
+        }
+        break
+      case 'load-config':
+        if (match[2] && existsSync(match[2])) {
+          const cfg = JSON.parse(await fs.readFile(match[2], 'utf8')) as ProgramOption
+          option.ignoreTypes = cfg.ignoreTypes ?? []
+          option.errorTypes = cfg.errorTypes ?? []
         }
         break
 

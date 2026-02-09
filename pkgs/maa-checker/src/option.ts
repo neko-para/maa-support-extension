@@ -103,12 +103,13 @@ Option for reco:
   --maa-cache=<dir>         Use MaaFw cache folder <dir>. Default: ${defaultCacheFolder()}
   --job=<job>               Maximum parallel job <job>. Default: ${os.cpus().length}
   --max-node-per-job=<cnt>  Maximum count <cnt> of nodes batched in one job. Default: auto
-  --controller=<ctrl>       Use controller <ctrl> for attach_resource_path
-  --resource=<res>          Use resource <res>
   --print-hit               Print hits images
   --print-not-hit           Print not hits images
   --color=<mode>            Set color mode <mode>. Default: auto
                                 Known modes: enable, disable, auto
+  --load-cases=<file>       Load test cases <file>
+  --controller=<ctrl>       Use controller <ctrl> for attach_resource_path
+  --resource=<res>          Use resource <res>
   --next-group=<name>       Start another group <name>
   --image=<img>             Add image <img> to group
   --image-folder=<dir>      Glob .png under <dir> recursively and add to group
@@ -239,16 +240,6 @@ export async function parseOption(): Promise<ProgramOption | null> {
           }
         }
         break
-      case 'controller':
-        if (match[2]) {
-          option.controller = match[2]
-        }
-        break
-      case 'resource':
-        if (match[2]) {
-          option.resource = match[2]
-        }
-        break
       case 'print-hit':
         option.printHit = true
         break
@@ -264,6 +255,55 @@ export async function parseOption(): Promise<ProgramOption | null> {
               option.color = match[2]
               break
           }
+        }
+        break
+      case 'load-cases':
+        if (match[2] && existsSync(match[2])) {
+          const folder = path.dirname(path.resolve(match[2]))
+          const cfg = JSON.parse(await fs.readFile(match[2], 'utf8')) as {
+            configs: {
+              controller: string
+              resource: string
+            }
+            cases: {
+              name: string
+              node: string
+              hits: (
+                | string
+                | {
+                    name: string
+                    box: maa.Rect
+                  }
+              )[]
+            }[]
+          }
+
+          option.controller = cfg.configs.controller
+          option.resource = cfg.configs.resource
+          option.groups.unshift({
+            name: path.basename(match[2]),
+            imagesRaw: [],
+            images: [],
+            nodes: []
+          })
+
+          for await (const file of fs.glob('**/*.png', {
+            cwd: folder
+          })) {
+            option.groups[0].imagesRaw.push(file)
+            option.groups[0].images.push(path.resolve(folder, file) as AbsolutePath)
+          }
+          option.groups[0].nodes = cfg.cases.map(info => info.node)
+        }
+        break
+      case 'controller':
+        if (match[2]) {
+          option.controller = match[2]
+        }
+        break
+      case 'resource':
+        if (match[2]) {
+          option.resource = match[2]
         }
         break
       case 'next-group':

@@ -7,7 +7,7 @@ import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
 import type { GroupRecoResult, RecoJob, RecoResult } from './recoTypes'
-import { gzCompress } from './utils'
+import { console2, gzCompress } from './utils'
 
 function splitChunk<T>(arr: T[], size: number) {
   const result: T[][] = []
@@ -21,6 +21,8 @@ function splitChunk<T>(arr: T[], size: number) {
 }
 
 export async function performReco(option: ProgramOption, bundle: InterfaceBundle<unknown>) {
+  console2.timeLog('checker', 'start reco')
+
   const versionManager = new MaaVersionManager(option.maaCache)
   await versionManager.init()
   if (
@@ -36,8 +38,12 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     return false
   }
 
+  console2.timeLog('checker', 'maafw prepared')
+
   await bundle.switchActive(option.controller, option.resource)
   const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
+
+  console2.timeLog('checker', 'resource switched')
 
   const modulePath = versionManager.moduleFolder(option.maaVersion)
   const pool = workerpool.pool(path.join(__dirname, 'recoWorker.js'), {
@@ -81,7 +87,10 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   const autoMaxNodePerJob = Math.ceil(
     Math.max(...option.groups.map(group => group.nodes.length)) / option.job
   )
-  const maxNodePerJob = option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
+  const maxNodePerJob = Math.max(
+    20,
+    option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
+  )
 
   for (const group of option.groups) {
     const groupResult: GroupRecoResult = {
@@ -106,7 +115,11 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     result.push(groupResult)
   }
 
+  console2.timeLog('checker', 'job scheduled')
+
   await Promise.all(tasks)
+
+  console2.timeLog('checker', 'job finished')
 
   if (option.rawMode) {
     let data = JSON.stringify(result)
@@ -154,7 +167,11 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     }
   }
 
+  console2.timeLog('checker', 'output finished')
+
   await pool.terminate()
+
+  console2.timeLog('checker', 'pool cleared')
 
   return true
 }

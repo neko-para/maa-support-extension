@@ -13,13 +13,18 @@ import {
 import { performCheck } from './check'
 import { parseOption, printUsage } from './option'
 import { performReco } from './reco'
+import { console2 } from './utils'
 
 async function main() {
+  console2.time('checker')
+
   const option = await parseOption()
   if (!option) {
     printUsage()
     return false
   }
+
+  console2.timeLog('checker', 'parse option done')
 
   setLocale(option.locale)
 
@@ -45,6 +50,8 @@ async function main() {
   )
   await bundle.load()
   await bundle.flush(false) // 刷下 imports
+
+  console2.timeLog('checker', 'bundle loaded')
 
   if (option.command === 'check') {
     return performCheck(option, bundle)

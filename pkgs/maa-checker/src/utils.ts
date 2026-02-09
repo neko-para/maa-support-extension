@@ -1,3 +1,4 @@
+import { Console } from 'node:console'
 import * as zlib from 'node:zlib'
 
 export function toArrayBuffer(buffer: Buffer): ArrayBuffer {
@@ -38,3 +39,5 @@ export function gzCompress(data: string) {
   const compressed = zlib.gzipSync(buf)
   return compressed.toString('base64')
 }
+
+export const console2 = new Console(process.stderr)

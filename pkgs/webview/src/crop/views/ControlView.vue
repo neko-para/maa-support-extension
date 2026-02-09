@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex, NTooltip } from 'naive-ui'
+import { NButton, NFlex } from 'naive-ui'
 
 import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'
@@ -16,15 +16,27 @@ import { toggleShow } from '../states/visible'
       <n-button :loading="imageSt.loading.value" @click="imageSt.upload()" size="small">
         {{ t('maa.crop.upload') }}
       </n-button>
-      <n-button :loading="imageSt.loading.value" @click="imageSt.download()" size="small">
+      <n-button
+        :loading="imageSt.loading.value"
+        :disabled="!imageSt.data.value"
+        @click="imageSt.download()"
+        size="small"
+      >
         {{ t('maa.crop.download') }}
       </n-button>
       <n-button @click="controlSt.viewport.value.reset()" size="small">
         {{ t('maa.crop.reset-viewport') }}
       </n-button>
       <n-button @click="controlSt.cropCeil()" size="small"> {{ t('maa.crop.ceil') }} </n-button>
-      <n-button @click="controlSt.cropBound()" size="small"> {{ t('maa.crop.bound') }} </n-button>
-      <n-button :loading="imageSt.resizing.value" @click="imageSt.resize()" size="small">
+      <n-button @click="controlSt.cropBound()" :disabled="!imageSt.data.value" size="small">
+        {{ t('maa.crop.bound') }}
+      </n-button>
+      <n-button
+        :loading="imageSt.resizing.value"
+        :disabled="!imageSt.data.value"
+        @click="imageSt.resize()"
+        size="small"
+      >
         {{ t('maa.crop.resize') }}
       </n-button>
 

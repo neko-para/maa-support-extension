@@ -46,7 +46,8 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     forkOpts: {
       env: {
         MAAFW_MODULE_PATH: modulePath,
-        MAAFW_SILENCE_STDOUT: option.rawMode ? '1' : ''
+        MAAFW_SILENCE_STDOUT: option.rawMode ? '1' : '',
+        MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter)
       }
     }
   })
@@ -54,7 +55,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   const tasks: Promise<void>[] = []
   const scheduleJob = (job: RecoJob, result: RecoResult[]) => {
     const task = pool
-      .exec<(job: RecoJob, paths: string[]) => RecoResult[]>('performReco', [job, resourcePaths])
+      .exec<(job: RecoJob) => RecoResult[]>('performReco', [job])
       .then(res => res)
       .catch(err => {
         console.log(err)

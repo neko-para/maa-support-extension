@@ -1,30 +1,44 @@
+import path from 'path'
 import * as workerpool from 'workerpool'
-
-import type { AbsolutePath } from '@mse/pipeline-manager'
 
 import type { RecoJob, RecoResult } from './recoTypes'
 import { makeFakeController, toArrayBuffer } from './utils'
 
-async function performReco(job: RecoJob, paths: AbsolutePath[]) {
-  if (!globalThis.maa) {
-    module.paths.unshift(process.env.MAAFW_MODULE_PATH!)
-    require('@maaxyz/maa-node')
-    if (process.env.MAAFW_SILENCE_STDOUT === '1') {
-      maa.Global.stdout_level = 'Off'
-    }
+module.paths.unshift(process.env.MAAFW_MODULE_PATH!)
+require('@maaxyz/maa-node')
+if (process.env.MAAFW_SILENCE_STDOUT === '1') {
+  maa.Global.stdout_level = 'Off'
+}
+
+let inst: maa.Tasker | undefined = undefined
+let action: maa.CustomActionCallback = () => {
+  return true
+}
+
+async function setup() {
+  const ctrl = await makeFakeController()
+  const res = new maa.Resource()
+  for (const full of process.env.MAAFW_RESOURCE_PATHS!.split(path.delimiter)) {
+    await res.post_bundle(full).wait()
+  }
+  inst = new maa.Tasker()
+  inst.resource = res
+  inst.controller = ctrl
+
+  res.register_custom_action('@mse/action', async self => {
+    return action.call(self, self)
+  })
+}
+
+async function performReco(job: RecoJob) {
+  if (!inst) {
+    await setup()
   }
 
   const image = toArrayBuffer(Buffer.from(job.image, 'base64'))
-
-  const ctrl = await makeFakeController()
-  const res = new maa.Resource()
-  for (const full of paths) {
-    await res.post_bundle(full).wait()
-  }
-
   const result: RecoResult[] = []
 
-  res.register_custom_action('@mse/action', async self => {
+  action = async self => {
     for (const node of job.nodes) {
       const detail = await self.context.run_recognition(node, image)
       result.push({
@@ -37,13 +51,9 @@ async function performReco(job: RecoJob, paths: AbsolutePath[]) {
     }
 
     return true
-  })
+  }
 
-  const inst = new maa.Tasker()
-  inst.resource = res
-  inst.controller = ctrl
-
-  await inst
+  await inst!
     .post_task('@mse/action', {
       '@mse/action': {
         action: 'Custom',
@@ -51,10 +61,6 @@ async function performReco(job: RecoJob, paths: AbsolutePath[]) {
       }
     })
     .wait()
-
-  inst.destroy()
-  res.destroy()
-  ctrl.destroy()
 
   return result
 }

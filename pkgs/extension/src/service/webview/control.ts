@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { locale, t } from '@mse/locale'
+import { AbsolutePath, InterfaceRefInfo } from '@mse/pipeline-manager'
 import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, provideWebview } from '@mse/utils'
 
@@ -215,20 +216,25 @@ export class WebviewControlService extends BaseService {
           }
           break
         case 'revealInterface':
-          let loc: Node | undefined = undefined
+          let loc:
+            | {
+                file: AbsolutePath
+                location: Node
+              }
+            | undefined = undefined
           switch (data.dest.type) {
             case 'entry': {
               const info = data.dest
               loc = interfaceService.interfaceBundle?.info.refs.find(
                 ref => ref.type === 'interface.task_entry' && ref.target === info.entry
-              )?.location
+              )
               break
             }
             case 'option': {
               const info = data.dest
               loc = interfaceService.interfaceBundle?.info.decls.find(
                 decl => decl.type === 'interface.option' && decl.name === info.option
-              )?.location
+              )
               break
             }
             case 'case': {
@@ -238,7 +244,7 @@ export class WebviewControlService extends BaseService {
                   decl.type === 'interface.case' &&
                   decl.name === info.case &&
                   decl.option === info.option
-              )?.location
+              )
               break
             }
             case 'input': {
@@ -248,18 +254,16 @@ export class WebviewControlService extends BaseService {
                   decl.type === 'interface.input' &&
                   decl.name === info.name &&
                   decl.option === info.option
-              )?.location
+              )
               break
             }
           }
           if (loc) {
             try {
-              const doc = await vscode.workspace.openTextDocument(
-                rootService.activeResource!.interfaceUri
-              )
+              const doc = await vscode.workspace.openTextDocument(loc.file)
               const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
               if (editor) {
-                const range = convertRange(doc, loc)
+                const range = convertRange(doc, loc.location)
                 editor.revealRange(range)
                 editor.selection = new vscode.Selection(range.start, range.end)
               }

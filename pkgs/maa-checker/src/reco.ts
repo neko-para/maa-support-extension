@@ -1,15 +1,23 @@
 import * as fs from 'fs/promises'
+import path from 'path'
+import * as workerpool from 'workerpool'
 
 import { MaaVersionManager } from '@mse/maa-version-manager'
 import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from './option'
-import { gzCompress, makeFakeController, toArrayBuffer } from './utils'
+import type { RecoJob, RecoResult } from './recoTypes'
+import { gzCompress } from './utils'
 
-type RecoJob = {
-  node: string
-  image: ArrayBuffer
-  imageIndex: number
+function splitChunk<T>(arr: T[], size: number) {
+  const result: T[][] = []
+  let curr = 0
+  while (curr < arr.length) {
+    const next = curr + size
+    result.push(arr.slice(curr, next))
+    curr = next
+  }
+  return result
 }
 
 export async function performReco(option: ProgramOption, bundle: InterfaceBundle<unknown>) {
@@ -28,86 +36,60 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     return false
   }
 
-  module.paths.unshift(versionManager.moduleFolder(option.maaVersion))
-  require('@maaxyz/maa-node')
-
-  await bundle.switchActive(option.controller, option.resource)
-
-  const result: {
-    image: number
-    imagePath: string
-    node: string
-    hit: boolean
-    detail: maa.RecoDetail | null
-  }[] = []
-
-  const jobs: RecoJob[] = []
-
-  for (const [imageIndex, imagePath] of option.images.entries()) {
-    const image = toArrayBuffer(await fs.readFile(imagePath))
-    for (const node of option.nodes) {
-      jobs.push({
-        node,
-        image,
-        imageIndex
-      })
-    }
-  }
-
-  let jobFinished = 0
-  let jobCount = jobs.length
-
-  const ctrl = await makeFakeController()
-  const res = new maa.Resource()
-  for (const folder of bundle.paths) {
-    const full = joinPath(bundle.root, folder)
-    await res.post_bundle(full).wait()
-  }
-
-  res.register_custom_action('@mse/action', async self => {
-    const performJob = async (job: RecoJob) => {
-      const detail = await self.context.run_recognition(job.node, job.image)
-      result.push({
-        image: job.imageIndex,
-        imagePath: option.imagesRaw[job.imageIndex],
-        node: job.node,
-        hit: !!detail?.hit,
-        detail
-      })
-    }
-
-    const thread = async () => {
-      while (jobs.length > 0) {
-        const job = jobs.shift()!
-        await performJob(job)
-        jobFinished += 1
-        if (!option.rawMode) {
-          process.stdout.write(`${jobFinished} / ${jobCount}\r`)
-        }
+  const modulePath = versionManager.moduleFolder(option.maaVersion)
+  const pool = workerpool.pool(path.join(__dirname, 'recoWorker.js'), {
+    maxWorkers: option.job,
+    workerType: 'process',
+    forkOpts: {
+      env: {
+        MAAFW_MODULE_PATH: modulePath
       }
     }
-
-    await Promise.all(Array.from({ length: option.job }, () => thread()))
-
-    return true
   })
 
-  const inst = new maa.Tasker()
-  inst.resource = res
-  inst.controller = ctrl
+  await bundle.switchActive(option.controller, option.resource)
+  const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
 
-  await inst
-    .post_task('@mse/action', {
-      '@mse/action': {
-        action: 'Custom',
-        custom_action: '@mse/action'
-      }
-    })
-    .wait()
+  const jobs: RecoJob[] = []
+  const result: RecoResult[] = []
 
-  inst.destroy()
-  res.destroy()
-  ctrl.destroy()
+  let finished = 0
+  const taskCount = option.images.length * option.nodes.length
+
+  const autoMaxNodePerJob = Math.ceil(option.nodes.length / option.job)
+  const maxNodePerJob = option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
+
+  for (const [imageIndex, imagePath] of option.images.entries()) {
+    const image = (await fs.readFile(imagePath)).toString('base64')
+    const nodesChunks = splitChunk(option.nodes, maxNodePerJob)
+    for (const nodes of nodesChunks) {
+      jobs.push({
+        nodes,
+        image,
+        imageIndex,
+        imagePath
+      })
+    }
+  }
+
+  const tasks: Promise<void>[] = []
+  for (const job of jobs) {
+    const task = pool
+      .exec<(job: RecoJob, paths: string[]) => RecoResult[]>('performReco', [job, resourcePaths])
+      .then(res => res)
+      .catch(err => {
+        console.log(err)
+        return []
+      })
+      .then(res => {
+        finished += res.length
+        result.push(...res)
+        process.stdout.write(`${finished} / ${taskCount}\r`)
+      })
+    tasks.push(task)
+  }
+
+  await Promise.all(tasks)
 
   if (option.rawMode) {
     let data = JSON.stringify(result)
@@ -135,10 +117,10 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
           console.log(`    ${option.imagesRaw[info.image]}`)
         }
       }
-
-      console.log('')
     }
   }
+
+  await pool.terminate()
 
   return true
 }

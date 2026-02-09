@@ -26,6 +26,7 @@ export type ProgramOption = {
   maaVersion: string
   maaCache: AbsolutePath
   job: number
+  maxNodePerJob: number
   controller: string
   resource: string
   imagesRaw: string[]
@@ -74,35 +75,36 @@ export function printUsage() {
   console.log(`Usage: npx ${pkg.name} <interface path> [command] [options...]
 
 Command:
-    check           Check project and output diagnostic
-    reco            Batch performing reco
+    check                   Check project and output diagnostic
+    reco                    Batch performing reco
 
 Options:
-  --raw                 Output json
-  --gz                  Output json with gz compress and base64
-  --github=<repo>       Output github actions compatible warning & error messages, with repository folder <repo>.
-  --repo=<repo>         Set repository folder <repo>
-  --help                Print usage
+  --raw                     Output json
+  --gz                      Output json with gz compress and base64
+  --github=<repo>           Output github actions compatible warning & error messages, with repository folder <repo>.
+  --repo=<repo>             Set repository folder <repo>
+  --help                    Print usage
 
 Option for check:
-  --locale=<lang>       Use locale <lang>
-                            Known locales: zh, en
-  --ignore=<type>       Ignore <type>
-                            Known types: ${allTypes.join(', ')}
-  --error=<type>        Treat <type> as error
+  --locale=<lang>           Use locale <lang>
+                                Known locales: zh, en
+  --ignore=<type>           Ignore <type>
+                                Known types: ${allTypes.join(', ')}
+  --error=<type>            Treat <type> as error
 
 Option for reco:
-  --maa-version=<ver>   Use MaaFw version <ver>. Default: ${defaultVersion()}
-  --maa-cache=<dir>     Use MaaFw cache folder <dir>. Default: ${defaultCacheFolder()}
-  --job=<job>           Maximum parallel job <job>. Default: ${os.cpus().length}
-  --controller=<ctrl>   Use controller <ctrl> for attach_resource_path
-  --resource=<res>      Use resource <res>
-  --image=<img>         Perform reco on <img>
-  --image-folder=<dir>  Glob .png under <dir>, recursively
-  --node=<node>         Perform reco of node <node>
-  --node-list=<file>    Parse nodes from <file>. Seperated with spaces or newlines
-  --print-hit           Print hits images
-  --print-not-hit       Print not hits images
+  --maa-version=<ver>       Use MaaFw version <ver>. Default: ${defaultVersion()}
+  --maa-cache=<dir>         Use MaaFw cache folder <dir>. Default: ${defaultCacheFolder()}
+  --job=<job>               Maximum parallel job <job>. Default: ${os.cpus().length}
+  --max-node-per-job=<cnt>  Maximum count <cnt> of nodes batched in one job. Default: auto
+  --controller=<ctrl>       Use controller <ctrl> for attach_resource_path
+  --resource=<res>          Use resource <res>
+  --image=<img>             Perform reco on <img>
+  --image-folder=<dir>      Glob .png under <dir>, recursively
+  --node=<node>             Perform reco of node <node>
+  --node-list=<file>        Parse nodes from <file>. Seperated with spaces or newlines
+  --print-hit               Print hits images
+  --print-not-hit           Print not hits images
 `)
 }
 
@@ -123,6 +125,7 @@ export async function parseOption(): Promise<ProgramOption | null> {
     maaVersion: defaultVersion(),
     maaCache: defaultCacheFolder(),
     job: os.cpus().length,
+    maxNodePerJob: 0,
     controller: '',
     resource: '',
     imagesRaw: [],
@@ -202,6 +205,14 @@ export async function parseOption(): Promise<ProgramOption | null> {
           const val = parseInt(match[2])
           if (!isNaN(val) && val > 0) {
             option.job = val
+          }
+        }
+        break
+      case 'max-node-per-job':
+        if (match[2]) {
+          const val = parseInt(match[2])
+          if (!isNaN(val) && val > 0) {
+            option.maxNodePerJob = val
           }
         }
         break

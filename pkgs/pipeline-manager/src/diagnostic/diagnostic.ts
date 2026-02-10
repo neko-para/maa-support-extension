@@ -18,7 +18,7 @@ export function performDiagnostic<T>(
   return result
     .filter(diag => !option.ignoreTypes?.includes(diag.type))
     .map(diag => {
-      if (option.errorTypes) {
+      if (option.errorTypes?.includes(diag.type)) {
         const newDiag = { ...diag }
         newDiag.level = 'error'
         return newDiag

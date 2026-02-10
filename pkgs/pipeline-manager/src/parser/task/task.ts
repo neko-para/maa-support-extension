@@ -49,6 +49,12 @@ export type TaskLocaleDeclInfo = {
   valueNode: Node
 }
 
+export type TaskDocDeclInfo = {
+  type: 'task.doc'
+  task: TaskName
+  doc: string
+}
+
 export type TaskMpeConfigDeclInfo = {
   type: 'task.mpe_config'
 }
@@ -61,6 +67,7 @@ export type TaskDeclInfo = {
   | TaskAnchorDeclInfo
   | TaskSubRecoDeclInfo
   | TaskLocaleDeclInfo
+  | TaskDocDeclInfo
   | TaskMpeConfigDeclInfo
 )
 
@@ -192,6 +199,18 @@ function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
         break
       case 'focus':
         parseFocus(obj, info, ctx)
+        break
+      case 'doc':
+      case 'desc':
+        if (isString(obj)) {
+          info.decls.push({
+            file: ctx.file,
+            location: obj,
+            type: 'task.doc',
+            task: ctx.taskName,
+            doc: obj.value
+          })
+        }
         break
     }
   }

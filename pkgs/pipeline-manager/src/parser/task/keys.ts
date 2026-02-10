@@ -15,7 +15,9 @@ export const nodeKeys = [
   'repeat_delay',
   'repeat_wait_freezes',
   'focus',
-  'attach'
+  'attach',
+  'doc',
+  'desc'
 ]
 
 export const recoKeys = [

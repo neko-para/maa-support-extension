@@ -61,7 +61,7 @@ export class PipelineInlayHintsProvider
       if (ref.file !== document.uri.fsPath) {
         return false
       }
-      if (ref.type !== 'task.locale') {
+      if (ref.type !== 'task.locale' && ref.type !== 'task.next') {
         return false
       }
       return (
@@ -72,7 +72,7 @@ export class PipelineInlayHintsProvider
     const preferredLocale = interfaceService.interfaceConfigJson.locale
     const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
 
-    return refs
+    const locales = refs
       .filter(ref => ref.type === 'task.locale')
       .map(ref => {
         const result = intBundle.langBundle.queryKey(ref.target)[preferredIndex]
@@ -86,6 +86,25 @@ export class PipelineInlayHintsProvider
         }
         return hint
       })
-      .filter((hint): hint is vscode.InlayHint => !!hint)
+
+    const docDecls = layer.mergedAllDecls.filter(decl => decl.type === 'task.doc')
+
+    const docs = refs
+      .filter(ref => ref.type === 'task.next')
+      .filter(ref => !ref.anchor)
+      .map(ref => {
+        let text = docDecls
+          .filter(decl => decl.task === ref.target)
+          .map(decl => decl.doc)
+          .join(' ')
+
+        const hint: vscode.InlayHint = {
+          position: document.positionAt(ref.location.offset + ref.location.length),
+          label: text
+        }
+        return hint
+      })
+
+    return [...locales, ...docs].filter((hint): hint is vscode.InlayHint => !!hint)
   }
 }

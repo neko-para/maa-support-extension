@@ -6,7 +6,14 @@ import { locale, t } from '@mse/locale'
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, logger } from '@mse/utils'
 
-import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
+import {
+  interfaceService,
+  launchService,
+  nativeService,
+  rootService,
+  serverService,
+  stateService
+} from '..'
 import { Jimp } from '../../tools/jimp'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
@@ -126,6 +133,19 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         await vscode.workspace.fs.writeFile(resultPath, finalImage)
         vscode.commands.executeCommand('revealInExplorer', resultPath)
         this.response(data.seq, null)
+        break
+      }
+      case 'resize': {
+        const result = await this.ipc.resize(
+          data.image.replace('data:image/png;base64,', ''),
+          data.width,
+          data.height
+        )
+        if (result) {
+          this.response(data.seq, 'data:image/png;base64,' + result)
+        } else {
+          this.response(data.seq, null)
+        }
         break
       }
       case 'requestOCR': {

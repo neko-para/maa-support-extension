@@ -13,7 +13,7 @@ import { makePromise } from './utils/promise'
 const defaultRegistryType = 'npm'
 
 const defaultMaaVersion = packageJson.devDependencies['@maaxyz/maa-node']
-const minimumMaaVersion = '5.5.0-beta.3'
+const minimumMaaVersion = '5.5.0'
 
 function fixMinimumVersion(ver: string) {
   if (semVerCompare(ver, minimumMaaVersion) === -1) {

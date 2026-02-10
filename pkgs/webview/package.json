@@ -3,7 +3,6 @@
   "devDependencies": {
     "@maaxyz/maa-node": "5.5.0",
     "@mse/types": "workspace:*",
-    "@techstark/opencv-js": "4.12.0-release.1",
     "@types/node": "^25.2.2",
     "@types/vscode-webview": "^1.57.5",
     "@vicons/material": "^0.13.0",
@@ -13,7 +12,6 @@
     "buffer": "^6.0.3",
     "highlight.js": "^11.11.1",
     "immer": "^11.1.4",
-    "jimp": "^1.6.0",
     "naive-ui": "^2.43.2",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",

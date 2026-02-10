@@ -8,6 +8,7 @@ import type { InterfaceRuntime } from '@mse/types'
 import { ipc } from './apis'
 import { option } from './options'
 import { logger } from './server'
+import { convertImage } from './tools/utils'
 import { makePromise } from './utils'
 
 export function initMaa() {
@@ -322,6 +323,12 @@ export async function getScreencap() {
   } else {
     return null
   }
+}
+
+export async function resize(image: string, width: number, height: number) {
+  const buffer = convertImage(image)
+  const newBuffer = maa.Global.resize_image(buffer, width, height)
+  return Buffer.from(newBuffer).toString('base64')
 }
 
 export async function postTask(

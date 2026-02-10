@@ -53,6 +53,13 @@ export type CropWebToHost =
     }
   | {
       // return string | null
+      command: 'resize'
+      image: string
+      width: number
+      height: number
+    }
+  | {
+      // return string | null
       command: 'requestOCR'
       image: string
       roi: maa.Rect

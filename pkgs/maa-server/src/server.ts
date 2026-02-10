@@ -14,6 +14,7 @@ import {
   getScreencap,
   postStop,
   postTask,
+  resize,
   setupInst,
   updateCtrl
 } from './maa'
@@ -72,6 +73,7 @@ export async function initServer() {
       ipc.updateController = updateCtrl
       ipc.setupInstance = setupInst
       ipc.getScreencap = getScreencap
+      ipc.resize = resize
       ipc.performOcr = performOcr
       ipc.performTemplateMatch = performTemplateMatch
       ipc.performReco = performReco

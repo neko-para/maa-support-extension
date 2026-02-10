@@ -1,5 +1,3 @@
-import cvModule, { type CV } from '@techstark/opencv-js'
-import { Jimp } from 'jimp'
 import { computed, ref, shallowRef } from 'vue'
 
 import { ipc } from '../ipc'
@@ -17,23 +15,6 @@ export const size = computed(() => {
   return element.value ? Size.from(element.value.width, element.value.height) : Size.from(0, 0)
 })
 export const resizing = ref(false)
-
-async function getOpenCv(): Promise<{ cv: CV }> {
-  let cv
-  if (cvModule instanceof Promise) {
-    cv = await cvModule
-  } else {
-    if (cvModule.Mat) {
-      cv = cvModule
-    } else {
-      await new Promise<void>(resolve => {
-        cvModule.onRuntimeInitialized = () => resolve()
-      })
-      cv = cvModule
-    }
-  }
-  return { cv }
-}
 
 export async function set(url: string) {
   loadingCounter.value += 1
@@ -120,43 +101,31 @@ export async function download() {
 }
 
 export async function resize() {
-  if (!data.value) {
+  if (!data.value || !size.value) {
     return
   }
+
   resizing.value = true
-  const buffer = await (await fetch(data.value)).arrayBuffer()
-  const oldImg = await Jimp.read(Buffer.from(buffer))
-  let targetW = 0
-  let targetH = 0
-  const expectSize = [1280, 720] as const
-  if (oldImg.bitmap.width / oldImg.bitmap.height === 16 / 9) {
-    targetW = expectSize[0]
-    targetH = expectSize[1]
-  } else if (oldImg.bitmap.width / oldImg.bitmap.height === 9 / 16) {
-    targetW = expectSize[1]
-    targetH = expectSize[0]
+
+  let width: number
+  let height: number
+  if (size.value.w >= size.value.h) {
+    width = 0
+    height = 720
   } else {
-    console.log('size not 16:9!')
-    if (oldImg.bitmap.width > oldImg.bitmap.height) {
-      targetW = (oldImg.bitmap.width * 720) / oldImg.bitmap.height
-      targetH = 720
-    } else {
-      targetW = 720
-      targetH = (oldImg.bitmap.height * 720) / oldImg.bitmap.width
-    }
+    width = 720
+    height = 0
   }
 
-  const { cv } = await getOpenCv()
+  const newImage = (await ipc.call({
+    command: 'resize',
+    image: data.value,
+    width,
+    height
+  })) as string | null
+  if (newImage) {
+    set(newImage)
+  }
 
-  const mat = new cv.Mat(oldImg.bitmap.height, oldImg.bitmap.width, cv.CV_8UC4)
-  mat.data.set(oldImg.bitmap.data)
-  const dst = new cv.Mat()
-  cv.resize(mat, dst, new cv.Size(targetW, targetH), 0, 0, cv.INTER_AREA)
-  mat.delete()
-  const newImg = new Jimp({ width: dst.cols, height: dst.rows })
-  newImg.bitmap.data = Buffer.from(dst.data)
-  dst.delete()
-  const result = await newImg.getBase64('image/png')
-  await set(result)
   resizing.value = false
 }

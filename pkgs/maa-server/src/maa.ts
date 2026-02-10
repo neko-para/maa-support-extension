@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { v4 } from 'uuid'
@@ -7,6 +8,7 @@ import type { InterfaceRuntime } from '@mse/types'
 import { ipc } from './apis'
 import { option } from './options'
 import { logger } from './server'
+import { makePromise } from './utils'
 
 export function initMaa() {
   module.paths.unshift(option.module)
@@ -35,6 +37,10 @@ let cacheKey: string | undefined
 let taskerInst: TaskerInstance | undefined
 
 const taskerMap: Record<string, TaskerInstance> = {}
+
+const events = new EventEmitter<{
+  agentStopped: [id: string]
+}>()
 
 export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) {
   const key = JSON.stringify(runtime)
@@ -164,32 +170,51 @@ async function setupResource(
       agent = handle
     }
 
+    const [agentStopPromise, agentStopResolve] = makePromise<void>()
+    const watcher = (id: string) => {
+      if (id !== agent) {
+        return
+      }
+      agentStopResolve()
+    }
+    events.on('agentStopped', watcher)
+
     if (timeout >= 0) {
       client.timeout = timeout.toString()
     }
     client.bind_resource(resource)
     logger.info(`AgentClient start connecting ${identifier}`)
-    if (
-      !(
-        (await client
-          .connect()
-          .then(
-            () => true,
-            () => false
-          )
-          .then(res => {
-            logger.info(`AgentClient start connect ${res ? 'succeed' : 'failed'}`)
-            return res
-          })) ||
-        !client.connected ||
-        !client.alive
-      )
-    ) {
+
+    const connectPromise = client.connect()
+
+    const succ = await Promise.race([
+      connectPromise.then(() => true),
+      agentStopPromise.then(() => false)
+    ])
+
+    logger.info(`agent start race result ${succ}`)
+    events.off('agentStopped', watcher)
+
+    if (!succ) {
+      logger.info(`AgentClient connect failed`)
+      connectPromise.then(() => {
+        resource.destroy()
+        if (agent) {
+          ipc.stopAgent(agent)
+        }
+      })
+      return [null, undefined, undefined]
+    }
+
+    if (!(client.connected && client.alive)) {
+      logger.info(`AgentClient connect failed`)
       resource.destroy()
       if (agent) {
         ipc.stopAgent(agent)
       }
       return [null, undefined, undefined]
+    } else {
+      logger.info(`AgentClient connect succeeded`)
     }
     if (timeout >= 0) {
       client.timeout = Number.MAX_SAFE_INTEGER.toString()
@@ -393,4 +418,8 @@ export async function getNode(id: string, task: string) {
   }
 
   return inst.resource.get_node_data(task)
+}
+
+export async function agentStopped(id: string) {
+  events.emit('agentStopped', id)
 }

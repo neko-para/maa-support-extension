@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 
+import { serverService } from '.'
 import { currentWorkspace } from '../utils/fs'
 import { BaseService } from './context'
 
@@ -27,14 +28,27 @@ export class AgentService extends BaseService {
     super()
 
     this.agents = {}
+
+    this.defer = vscode.tasks.onDidEndTask(event => {
+      if (event.execution.task.definition.__mse_agent_id) {
+        this.agentStopped(event.execution.task.definition.__mse_agent_id)
+      }
+    })
+    this.defer = vscode.debug.onDidTerminateDebugSession(event => {
+      if (event.configuration.__mse_agent_id) {
+        this.agentStopped(event.configuration.__mse_agent_id)
+      }
+    })
   }
 
   async init() {}
 
   async startTask(exec: string, args: string[], cwd: string, env: Record<string, string>) {
+    const id = v4()
     const task = new vscode.Task(
       {
-        type: 'shell'
+        type: 'mse-agent-task',
+        __mse_agent_id: id
       },
       vscode.TaskScope.Workspace,
       'maa-agent-server',
@@ -44,7 +58,6 @@ export class AgentService extends BaseService {
         env
       })
     )
-    const id = v4()
     this.agents[id] = {
       type: 'task',
       task: await vscode.tasks.executeTask(task)
@@ -84,6 +97,7 @@ export class AgentService extends BaseService {
     if (!replaced) {
       logger.warn('No {AGENT_ID} found in config')
     }
+    config.__mse_agent_id = identifier
 
     let session: vscode.DebugSession | undefined = undefined
     const disp = vscode.debug.onDidStartDebugSession(s => {
@@ -123,5 +137,9 @@ export class AgentService extends BaseService {
 
   async stopAll() {
     await Promise.all(Object.keys(this.agents).map(id => this.stopAgent(id)))
+  }
+
+  async agentStopped(id: string) {
+    await (await serverService.ensureServer())?.agentStopped(id)
   }
 }

@@ -47,6 +47,8 @@ export type HostToSubApis = {
   ) => { info: maa.RecoDetailWithoutDraws; raw: string; draws: string[] }
   getActDetail: (inst: string, act_id: maa.ActId) => maa.ActionDetail
   getNode: (inst: string, task: string) => string
+
+  agentStopped: (id: string) => void
 }
 
 export type SubToHostApis = {

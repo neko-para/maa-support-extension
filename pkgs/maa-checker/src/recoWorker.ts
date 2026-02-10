@@ -12,9 +12,8 @@ if (process.env.MAAFW_SILENCE_STDOUT === '1') {
 }
 
 let inst: maa.Tasker | undefined = undefined
-let action: maa.CustomActionCallback = () => {
-  return true
-}
+const taskQueue: ((ctx: maa.Context) => Promise<void>)[] = []
+let taskAddResolve: () => void = () => {}
 
 async function setup() {
   const ctrl = await makeFakeController()
@@ -27,7 +26,26 @@ async function setup() {
   inst.controller = ctrl
 
   res.register_custom_action('@mse/action', async self => {
-    return action.call(self, self)
+    while (true) {
+      while (taskQueue.length > 0) {
+        const task = taskQueue.shift()!
+        await task(self.context)
+      }
+      await new Promise<void>(resolve => {
+        taskAddResolve = resolve
+      })
+      if (taskQueue.length === 0) {
+        break
+      }
+    }
+    return true
+  })
+
+  inst!.post_task('@mse/action', {
+    '@mse/action': {
+      action: 'Custom',
+      custom_action: '@mse/action'
+    }
   })
 }
 
@@ -39,9 +57,11 @@ async function performReco(job: RecoJob) {
   const image = toArrayBuffer(await fs.readFile(job.imagePath))
   const result: RecoResult[] = []
 
-  action = async self => {
+  const { promise, resolve } = Promise.withResolvers<void>()
+
+  taskQueue.push(async context => {
     for (const node of job.nodes) {
-      const detail = await self.context.run_recognition(node, image)
+      const detail = await context.run_recognition(node, image)
       result.push({
         imagePath: job.imagePath,
         imagePathRaw: job.imagePathRaw,
@@ -50,22 +70,21 @@ async function performReco(job: RecoJob) {
         detail
       })
     }
-
-    return true
-  }
-
-  await inst!
-    .post_task('@mse/action', {
-      '@mse/action': {
-        action: 'Custom',
-        custom_action: '@mse/action'
-      }
-    })
-    .wait()
+    resolve()
+  })
+  taskAddResolve()
+  await promise
 
   return result
 }
 
-workerpool.worker({
-  performReco
-})
+workerpool.worker(
+  {
+    performReco
+  },
+  {
+    onTerminate: () => {
+      taskAddResolve()
+    }
+  }
+)

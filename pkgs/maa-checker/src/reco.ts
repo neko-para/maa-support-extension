@@ -85,11 +85,8 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     .reduce((a, b) => a + b, 0)
 
   const maxNodesCount = Math.max(...option.groups.map(group => group.nodes.length))
-  const autoMaxNodePerJob = Math.ceil(maxNodesCount / option.job)
-  const maxNodePerJob = Math.max(
-    50,
-    option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
-  )
+  const autoMaxNodePerJob = Math.max(50, Math.ceil(maxNodesCount / option.job))
+  const maxNodePerJob = option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
 
   for (const group of option.groups) {
     const groupResult: GroupRecoResult = {

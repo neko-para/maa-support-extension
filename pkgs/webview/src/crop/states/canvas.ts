@@ -31,7 +31,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     if (pickSt.picking.value) {
       const pos = controlSt.current.value.round()
       const clr = ctx.getImageData(pos.x, pos.y, 1, 1).data
-      pickSt.color.value = [clr[0], clr[1], clr[2]]
+      pickSt.color.value = [clr[0]!, clr[1]!, clr[2]!]
     }
 
     for (const [st, stroke, font] of [

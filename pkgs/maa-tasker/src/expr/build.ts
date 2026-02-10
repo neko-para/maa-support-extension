@@ -1,4 +1,4 @@
-import { MaaTaskExprAst } from './types'
+import type { MaaTaskExprAst } from './types'
 
 export function buildExprImpl(ast: MaaTaskExprAst): string {
   switch (ast.type) {

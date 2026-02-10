@@ -119,7 +119,7 @@ onUnmounted(() => {
     </n-tabs>
 
     <n-scrollbar v-if="activeTask < launchGraph.childs.length" ref="scrollEl">
-      <task-scope-item :item="launchGraph.childs[activeTask]"></task-scope-item>
+      <task-scope-item :item="launchGraph.childs[activeTask]!"></task-scope-item>
     </n-scrollbar>
   </n-card>
 </template>

@@ -20,7 +20,7 @@ const dltRoi = computed(() => {
   if (srcRoi.value && destRoi.value) {
     return Array.from(
       { length: 4 },
-      (_, idx) => destRoi.value![idx] - srcRoi.value![idx]
+      (_, idx) => destRoi.value![idx]! - srcRoi.value![idx]!
     ) as maa.Rect
   }
   return undefined

@@ -38,7 +38,7 @@ const currentResource = computed(() => {
 function switchResource(index: number) {
   ipc.send({
     command: 'selectResource',
-    name: filteredResource.value[index].name
+    name: filteredResource.value[index]!.name
   })
 }
 </script>

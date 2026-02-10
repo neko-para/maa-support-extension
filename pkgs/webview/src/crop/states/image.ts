@@ -128,7 +128,7 @@ export async function resize() {
   const oldImg = await Jimp.read(Buffer.from(buffer))
   let targetW = 0
   let targetH = 0
-  const expectSize = [1280, 720]
+  const expectSize = [1280, 720] as const
   if (oldImg.bitmap.width / oldImg.bitmap.height === 16 / 9) {
     targetW = expectSize[0]
     targetH = expectSize[1]

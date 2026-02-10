@@ -1,4 +1,4 @@
-import { Range } from '@nekosu/simple-parser'
+import type { Range } from '@nekosu/simple-parser'
 
 import type { AllVirts } from '../types'
 

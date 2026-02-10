@@ -1,7 +1,7 @@
-import { MaaTaskExprAst, parseExpr } from '../expr'
+import { type MaaTaskExprAst, parseExpr } from '../expr'
 import { shouldStrip } from '../props'
-import { MaaTask, MaaTaskExpr, PropsVirts } from '../types'
-import { MaaTaskBaseResolved, MaaTaskWithTraceInfo, MaaTraceAnchor } from './types'
+import type { MaaTask, MaaTaskExpr, PropsVirts } from '../types'
+import type { MaaTaskBaseResolved, MaaTaskWithTraceInfo, MaaTraceAnchor } from './types'
 import {
   applyParentToTask,
   isTaskNotResolved,

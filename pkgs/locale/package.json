@@ -2,7 +2,7 @@
   "name": "@mse/locale",
   "main": "src/index.ts",
   "devDependencies": {
-    "@tsconfig/node20": "^20.1.8",
+    "@tsconfig/node24": "^24.0.4",
     "typescript": "^5.9.3"
   }
 }

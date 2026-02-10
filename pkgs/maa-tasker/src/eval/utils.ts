@@ -1,6 +1,6 @@
 import { TaskBaseProps, TaskExprProps } from '../props'
-import { MaaTask, MaaTaskExpr } from '../types'
-import { MaaTaskBaseNotResolved, MaaTaskBaseResolved, MaaTaskWithTraceInfo } from './types'
+import type { MaaTask, MaaTaskExpr } from '../types'
+import type { MaaTaskBaseNotResolved, MaaTaskBaseResolved, MaaTaskWithTraceInfo } from './types'
 
 export function isTaskResolved(task: MaaTask): task is MaaTaskBaseResolved {
   return !!task.__baseTaskResolved

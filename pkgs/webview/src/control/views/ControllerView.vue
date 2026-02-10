@@ -85,7 +85,7 @@ async function refreshAdb() {
 }
 
 function configAdb(index: number) {
-  const opt = adbDevices.value[index]
+  const opt = adbDevices.value[index]!
   ipc.send({
     command: 'configAdb',
     adb: opt[1],
@@ -168,7 +168,7 @@ async function refreshDesktop() {
 }
 
 function configDesktop(type: 'win32' | 'gamepad', index: number) {
-  const opt = desktopDevices.value[index]
+  const opt = desktopDevices.value[index]!
   ipc.send({
     command: 'configDesktop',
     type,

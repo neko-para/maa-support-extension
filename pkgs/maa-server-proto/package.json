@@ -4,8 +4,8 @@
   "devDependencies": {
     "@maaxyz/maa-node": "5.5.0",
     "@mse/types": "workspace:*",
-    "@tsconfig/node20": "^20.1.8",
-    "@types/node": "^25.0.10",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^25.2.2",
     "typescript": "^5.9.3",
     "vscode-jsonrpc": "^8.2.1"
   }

@@ -21,7 +21,7 @@ const optValue = computed(() => {
 })
 
 const defaultValue = computed(() => {
-  return props.optMeta.default_case ?? props.optMeta.cases?.[0].name
+  return props.optMeta.default_case ?? props.optMeta.cases?.[0]?.name
 })
 
 const effectiveValue = computed(() => {

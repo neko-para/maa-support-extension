@@ -63,7 +63,7 @@ const allOptions = computed<OptionInfo[]>(() => {
       if (typeof optValue === 'object') {
         optValue = undefined
       }
-      const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0].name
+      const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0]?.name
       if (val) {
         const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
         if (caseMeta?.option) {
@@ -82,7 +82,7 @@ const allOptions = computed<OptionInfo[]>(() => {
       if (typeof optValue === 'object') {
         optValue = undefined
       }
-      const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0].name
+      const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0]?.name
       if (val) {
         const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
         if (caseMeta?.option) {
@@ -124,7 +124,7 @@ function cast<T>(val: unknown): T {
       <template v-for="opt in allOptions" :key="opt">
         <template v-if="hostState.interfaceJson?.option?.[opt.option]">
           <template
-            v-if="(hostState.interfaceJson.option[opt.option].type ?? 'select') === 'select'"
+            v-if="(hostState.interfaceJson.option[opt.option]?.type ?? 'select') === 'select'"
           >
             <task-select-option
               :task="task"
@@ -132,14 +132,14 @@ function cast<T>(val: unknown): T {
               :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt.option])"
             ></task-select-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt.option].type === 'input'">
+          <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'input'">
             <task-input-option
               :task="task"
               :opt="opt"
               :opt-meta="cast<InputOption>(hostState.interfaceJson.option[opt.option])"
             ></task-input-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt.option].type === 'switch'">
+          <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'switch'">
             <task-switch-option
               :task="task"
               :opt="opt"

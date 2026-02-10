@@ -76,6 +76,10 @@ function defaultCacheFolder() {
   return path.join(os.homedir(), '.maa-checker') as AbsolutePath
 }
 
+function defaultJob() {
+  return Math.ceil(os.cpus().length / 4)
+}
+
 export function printUsage() {
   console.log(`Usage: npx ${pkg.name} <interface path> [command] [options...]
 
@@ -101,7 +105,7 @@ Option for check:
 Option for reco:
   --maa-version=<ver>       Use MaaFw version <ver>. Default: ${defaultVersion()}
   --maa-cache=<dir>         Use MaaFw cache folder <dir>. Default: ${defaultCacheFolder()}
-  --job=<job>               Maximum parallel job <job>. Default: ${os.cpus().length}
+  --job=<job>               Maximum parallel job <job>. Default: ${defaultJob()}
   --max-node-per-job=<cnt>  Maximum count <cnt> of nodes batched in one job. Default: auto
   --print-hit               Print hits images
   --print-not-hit           Print not hits images
@@ -135,7 +139,7 @@ export async function parseOption(): Promise<ProgramOption | null> {
 
     maaVersion: defaultVersion(),
     maaCache: defaultCacheFolder(),
-    job: os.cpus().length,
+    job: defaultJob(),
     maxNodePerJob: 0,
     controller: '',
     resource: '',

@@ -2,7 +2,6 @@ import type { AbsolutePath } from '@mse/pipeline-manager'
 
 export type RecoJob = {
   nodes: string[]
-  image: string
   imagePath: string
   imagePathRaw: string
 }

@@ -84,11 +84,10 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     .map(group => group.images.length * group.nodes.length)
     .reduce((a, b) => a + b, 0)
 
-  const autoMaxNodePerJob = Math.ceil(
-    Math.max(...option.groups.map(group => group.nodes.length)) / option.job
-  )
+  const maxNodesCount = Math.max(...option.groups.map(group => group.nodes.length))
+  const autoMaxNodePerJob = Math.ceil(maxNodesCount / option.job)
   const maxNodePerJob = Math.max(
-    20,
+    50,
     option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
   )
 
@@ -98,13 +97,11 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
       result: []
     }
     for (const [imageIndex, imagePath] of group.images.entries()) {
-      const image = (await fs.readFile(imagePath)).toString('base64')
       const nodesChunks = splitChunk(group.nodes, maxNodePerJob)
       for (const nodes of nodesChunks) {
         scheduleJob(
           {
             nodes,
-            image,
             imagePath,
             imagePathRaw: group.imagesRaw[imageIndex]
           },

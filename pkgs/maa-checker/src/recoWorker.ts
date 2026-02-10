@@ -1,4 +1,5 @@
-import path from 'path'
+import * as fs from 'fs/promises'
+import * as path from 'path'
 import * as workerpool from 'workerpool'
 
 import type { RecoJob, RecoResult } from './recoTypes'
@@ -35,7 +36,7 @@ async function performReco(job: RecoJob) {
     await setup()
   }
 
-  const image = toArrayBuffer(Buffer.from(job.image, 'base64'))
+  const image = toArrayBuffer(await fs.readFile(job.imagePath))
   const result: RecoResult[] = []
 
   action = async self => {

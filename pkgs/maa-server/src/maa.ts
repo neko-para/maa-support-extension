@@ -199,6 +199,7 @@ async function setupResource(
     if (!succ) {
       logger.info(`AgentClient connect failed`)
       connectPromise.then(() => {
+        client?.destroy()
         resource.destroy()
         if (agent) {
           ipc.stopAgent(agent)
@@ -209,6 +210,7 @@ async function setupResource(
 
     if (!(client.connected && client.alive)) {
       logger.info(`AgentClient connect failed`)
+      client?.destroy()
       resource.destroy()
       if (agent) {
         ipc.stopAgent(agent)
@@ -233,6 +235,7 @@ export async function setupInst(
   error?: string
 }> {
   taskerInst?.tasker.destroy()
+  taskerInst?.client?.destroy()
   taskerInst?.resource.destroy()
   taskerInst = undefined
 
@@ -276,8 +279,8 @@ export async function setupInst(
 
   if (!tasker.inited) {
     tasker.destroy()
-    resource.destroy()
     client?.destroy()
+    resource.destroy()
     if (agent) {
       ipc.stopAgent(agent)
     }
@@ -371,6 +374,7 @@ export async function destroyInstance(id: string) {
   delete taskerMap[id]
 
   inst.tasker.destroy()
+  inst.client?.destroy()
   inst.resource.destroy()
   inst.controller.destroy()
   if (inst.agent) {

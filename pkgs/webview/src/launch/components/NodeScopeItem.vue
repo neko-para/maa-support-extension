@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex } from 'naive-ui'
+import { NButton, NCard, NFlex, NPopover } from 'naive-ui'
 import { ref } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -8,6 +8,7 @@ import { taskInfo } from '../states/info'
 import type { AnyNodeScope } from '../states/launch'
 import NextListScopeItem from './NextListScopeItem.vue'
 import RecoActionScopeItem from './RecoActionScopeItem.vue'
+import TaskDoc from './TaskDoc.vue'
 
 const props = defineProps<{
   item: AnyNodeScope
@@ -42,9 +43,15 @@ function gotoTask(task: string) {
   <n-card size="small">
     <template #header>
       <n-flex>
-        <n-button @click="requestNode" :loading="querying" size="small">
-          {{ item.msg.name }}
-        </n-button>
+        <n-popover trigger="hover">
+          <template #trigger>
+            <n-button @click="requestNode" :loading="querying" size="small">
+              {{ item.msg.name }}
+            </n-button>
+          </template>
+
+          <task-doc :text="item.msg.name"></task-doc>
+        </n-popover>
         <template v-if="item.type === 'pipeline_node'">
           <n-button @click="gotoTask(item.msg.name)" size="small">
             {{ t('maa.launch.reveal') }}

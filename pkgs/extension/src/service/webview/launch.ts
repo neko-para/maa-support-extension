@@ -1,10 +1,11 @@
 import * as vscode from 'vscode'
 
 import { locale } from '@mse/locale'
+import { TaskName } from '@mse/pipeline-manager'
 import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
 
-import { nativeService, serverService, stateService } from '..'
+import { interfaceService, nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
@@ -111,6 +112,12 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       }
       case 'gotoTask':
         vscode.commands.executeCommand(commands.GotoTask, data.task)
+        break
+      case 'taskDoc':
+        this.response(
+          data.seq,
+          interfaceService.interfaceBundle?.topLayer.getTaskDoc(data.task as TaskName) ?? ''
+        )
         break
     }
     if (data.builtin) {

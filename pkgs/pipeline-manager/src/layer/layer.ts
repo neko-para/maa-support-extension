@@ -289,6 +289,15 @@ export class LayerInfo {
     return result
   }
 
+  getTaskDoc(task: TaskName) {
+    const docDecls = this.mergedAllDecls.filter(decl => decl.type === 'task.doc')
+
+    return docDecls
+      .filter(decl => decl.task === task)
+      .map(decl => decl.doc)
+      .join(' ')
+  }
+
   toggleMode(mode: 1 | 2, info: LayerTaskInfo, indent = '    ') {
     const parts = info.info.parts
     const data: any = {}

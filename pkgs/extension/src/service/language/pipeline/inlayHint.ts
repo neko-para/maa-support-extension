@@ -87,6 +87,7 @@ export class PipelineInlayHintsProvider
         return hint
       })
 
+    // 这里其实可以用layer的getTaskDoc, 但是还是提前filter吧, 大概快一点
     const docDecls = layer.mergedAllDecls.filter(decl => decl.type === 'task.doc')
 
     const docs = refs

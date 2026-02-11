@@ -55,6 +55,11 @@ export type LaunchWebToHost =
       command: 'gotoTask'
       task: string
     }
+  | {
+      // return string
+      command: 'taskDoc'
+      task: string
+    }
 
 export type RecoInfo = {
   raw: string

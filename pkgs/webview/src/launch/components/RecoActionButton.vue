@@ -9,6 +9,7 @@ import type { ActionInfo, RecoInfo } from '@mse/types'
 import { ipc } from '../ipc'
 import { actInfo, recoInfo } from '../states/info'
 import type { ActionScope, RecoScope } from '../states/launch'
+import TaskDoc from './TaskDoc.vue'
 
 const props = defineProps<{
   item: RecoScope | ActionScope
@@ -48,10 +49,6 @@ async function requestAct(action_id: number) {
   })) as ActionInfo | null
   querying.value = false
 }
-
-function nodeId() {
-  return props.item.type === 'reco' ? props.item.msg.reco_id : props.item.msg.action_id
-}
 </script>
 
 <template>
@@ -81,6 +78,6 @@ function nodeId() {
       </n-button>
     </template>
 
-    {{ nodeId() }}
+    <task-doc :text="item.msg.name"></task-doc>
   </n-popover>
 </template>

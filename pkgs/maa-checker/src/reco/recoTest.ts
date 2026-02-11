@@ -40,14 +40,14 @@ export async function performRecoTestImpl(option: ProgramOption, result: GroupRe
       continue
     }
     const cfg = JSON.parse(await fs.readFile(group.group.test, 'utf8')) as RecoTestConfig
-
+    console.log(`Group ${group.group.name}`)
     for (const info of cfg.cases) {
       const img = info.image + '.png'
       const errors: string[] = []
       for (const node of group.group.nodes) {
         const res = group.result.find(res => res.imagePathRaw === img && res.node === node)
         if (!res) {
-          errors.push(`  Cannot find result node ${node}`)
+          errors.push(`Cannot find result node ${node}`)
           continue
         }
         const caseInfo = info.hits.find(hit => {
@@ -59,7 +59,7 @@ export async function performRecoTestImpl(option: ProgramOption, result: GroupRe
         })
         if (caseInfo) {
           if (!res.hit) {
-            errors.push(`  Node ${node} should hit but missed`)
+            errors.push(`Node ${node} should hit but missed`)
             continue
           }
           if (typeof caseInfo !== 'string') {
@@ -69,25 +69,25 @@ export async function performRecoTestImpl(option: ProgramOption, result: GroupRe
             }
             if (!checkRect(caseInfo.box, res.detail.box)) {
               errors.push(
-                `  Node ${node} hit but out of box. Expect ${JSON.stringify(caseInfo.box)}, hit ${JSON.stringify(res.detail.box)}`
+                `Node ${node} hit but out of box. Expect ${JSON.stringify(caseInfo.box)}, hit ${JSON.stringify(res.detail.box)}`
               )
               continue
             }
           }
         } else {
           if (res.hit) {
-            errors.push(`  Node ${node} should miss but hit`)
+            errors.push(`Node ${node} should miss but hit`)
             continue
           }
         }
       }
       if (errors.length > 0) {
-        console.log(`${missPrefix}Fail ${img}${resetSuffix}`)
+        console.log(`  ${missPrefix}Fail ${img}${resetSuffix}`)
         for (const err of errors) {
-          console.log(`  ${err}`)
+          console.log(`    ${err}`)
         }
       } else {
-        console.log(`${hitPrefix}Pass ${img}${resetSuffix}`)
+        console.log(`  ${hitPrefix}Pass ${img}${resetSuffix}`)
       }
     }
   }

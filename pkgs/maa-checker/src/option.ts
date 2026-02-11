@@ -31,8 +31,6 @@ export type ProgramOption = {
   maaCache: AbsolutePath
   job: number
   maxNodePerJob: number
-  controller: string
-  resource: string
   printHit: boolean
   printNotHit: boolean
   color: 'enable' | 'disable' | 'auto'
@@ -120,9 +118,9 @@ Option for reco:
   --color=<mode>            Set color mode <mode>. Default: auto
                                 Known modes: enable, disable, auto
   --load-cases=<file>       Load test cases <file>
+  --next-group=<name>       Start another group <name>
   --controller=<ctrl>       Use controller <ctrl> for attach_resource_path
   --resource=<res>          Use resource <res>
-  --next-group=<name>       Start another group <name>
   --image=<img>             Add image <img> to group
   --image-folder=<dir>      Glob .png under <dir> recursively and add to group
   --node=<node>             Add node <node> to group
@@ -154,14 +152,14 @@ export async function parseOption(): Promise<ProgramOption | null> {
     maaCache: defaultCacheFolder(),
     job: defaultJob(),
     maxNodePerJob: 0,
-    controller: '',
-    resource: '',
     printHit: false,
     printNotHit: false,
     color: 'auto',
     groups: [
       {
         name: 'default',
+        controller: '',
+        resource: '',
         imagesRaw: [],
         images: [],
         nodes: []
@@ -280,11 +278,11 @@ export async function parseOption(): Promise<ProgramOption | null> {
           const folder = path.dirname(path.resolve(match[2]))
           const cfg = JSON.parse(await fs.readFile(match[2], 'utf8')) as RecoTestConfig
 
-          option.controller = cfg.configs.controller
-          option.resource = cfg.configs.resource
           option.groups.unshift({
-            name: path.basename(match[2]),
+            name: cfg.configs.name ?? path.basename(match[2]),
             test: path.resolve(match[2]) as AbsolutePath,
+            controller: cfg.configs.controller,
+            resource: cfg.configs.resource,
             imagesRaw: [],
             images: [],
             nodes: []
@@ -302,23 +300,25 @@ export async function parseOption(): Promise<ProgramOption | null> {
           option.groups[0].nodes.push(...new Set(nodes))
         }
         break
-      case 'controller':
-        if (match[2]) {
-          option.controller = match[2]
-        }
-        break
-      case 'resource':
-        if (match[2]) {
-          option.resource = match[2]
-        }
-        break
       case 'next-group':
         option.groups.unshift({
           name: match[2] ?? `group ${option.groups.length}`,
+          controller: '',
+          resource: '',
           imagesRaw: [],
           images: [],
           nodes: []
         })
+        break
+      case 'controller':
+        if (match[2]) {
+          option.groups[0].controller = match[2]
+        }
+        break
+      case 'resource':
+        if (match[2]) {
+          option.groups[0].resource = match[2]
+        }
         break
       case 'image':
         if (match[2]) {

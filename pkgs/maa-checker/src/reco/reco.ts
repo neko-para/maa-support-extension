@@ -37,43 +37,8 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   ) {
     return false
   }
-
-  console2.timeLog('checker', 'maafw prepared')
-
-  await bundle.switchActive(option.controller, option.resource)
-  const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
-
-  console2.timeLog('checker', 'resource switched')
-
   const modulePath = versionManager.moduleFolder(option.maaVersion)
-  const pool = workerpool.pool(path.join(__dirname, 'reco', 'worker.js'), {
-    maxWorkers: option.job,
-    workerType: 'process',
-    forkOpts: {
-      env: {
-        MAAFW_MODULE_PATH: modulePath,
-        MAAFW_SILENCE_STDOUT: option.rawMode ? '1' : '',
-        MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter)
-      }
-    }
-  })
-
-  const tasks: Promise<void>[] = []
-  const scheduleJob = (job: RecoJob, result: RecoResult[]) => {
-    const task = pool
-      .exec<(job: RecoJob) => RecoResult[]>('performReco', [job])
-      .then(res => res)
-      .catch(err => {
-        console.log(err)
-        return []
-      })
-      .then(res => {
-        finished += res.length
-        result.push(...res)
-        process.stderr.write(`${finished} / ${taskCount}\r`)
-      })
-    tasks.push(task)
-  }
+  console2.timeLog('checker', 'maafw prepared')
 
   const result: GroupRecoResult[] = []
 
@@ -87,10 +52,44 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   const maxNodePerJob = option.maxNodePerJob === 0 ? autoMaxNodePerJob : option.maxNodePerJob
 
   for (const group of option.groups) {
+    await bundle.switchActive(group.controller, group.resource)
+    const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
+    console2.timeLog('checker', 'resource switched')
+
+    const pool = workerpool.pool(path.join(__dirname, 'reco', 'worker.js'), {
+      maxWorkers: option.job,
+      workerType: 'process',
+      forkOpts: {
+        env: {
+          MAAFW_MODULE_PATH: modulePath,
+          MAAFW_SILENCE_STDOUT: option.rawMode ? '1' : '',
+          MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter)
+        }
+      }
+    })
+
+    const tasks: Promise<void>[] = []
+    const scheduleJob = (job: RecoJob, result: RecoResult[]) => {
+      const task = pool
+        .exec<(job: RecoJob) => RecoResult[]>('performReco', [job])
+        .then(res => res)
+        .catch(err => {
+          console.log(err)
+          return []
+        })
+        .then(res => {
+          finished += res.length
+          result.push(...res)
+          process.stderr.write(`${finished} / ${taskCount}\r`)
+        })
+      tasks.push(task)
+    }
+
     const groupResult: GroupRecoResult = {
       group,
       result: []
     }
+    result.push(groupResult)
     for (const [imageIndex, imagePath] of group.images.entries()) {
       const nodesChunks = splitChunk(group.nodes, maxNodePerJob)
       for (const nodes of nodesChunks) {
@@ -104,14 +103,17 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
         )
       }
     }
-    result.push(groupResult)
+
+    console2.timeLog('checker', 'job scheduled')
+
+    await Promise.all(tasks)
+
+    console2.timeLog('checker', 'job finished')
+
+    await pool.terminate()
+
+    console2.timeLog('checker', 'pool cleared')
   }
-
-  console2.timeLog('checker', 'job scheduled')
-
-  await Promise.all(tasks)
-
-  console2.timeLog('checker', 'job finished')
 
   if (option.pipeTest) {
     await performRecoTestImpl(option, result)
@@ -154,10 +156,6 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   }
 
   console2.timeLog('checker', 'output finished')
-
-  await pool.terminate()
-
-  console2.timeLog('checker', 'pool cleared')
 
   return true
 }

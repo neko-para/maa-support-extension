@@ -9,6 +9,8 @@ export type RecoJob = {
 export type RecoJobGroup = {
   name: string
   test?: AbsolutePath
+  controller: string
+  resource: string
   imagesRaw: string[]
   images: AbsolutePath[]
   nodes: string[]
@@ -29,6 +31,7 @@ export type GroupRecoResult = {
 
 export type RecoTestConfig = {
   configs: {
+    name?: string
     controller: string
     resource: string
   }

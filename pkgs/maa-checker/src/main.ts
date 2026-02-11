@@ -12,7 +12,8 @@ import {
 
 import { performCheck } from './check'
 import { parseOption, printUsage } from './option'
-import { performReco } from './reco'
+import { performReco } from './reco/reco'
+import { performRecoTest } from './reco/recoTest'
 import { console2 } from './utils'
 
 async function main() {
@@ -27,6 +28,10 @@ async function main() {
   console2.timeLog('checker', 'parse option done')
 
   setLocale(option.locale)
+
+  if (option.command === 'reco-test') {
+    return performRecoTest(option)
+  }
 
   if (existsSync(option.interfacePath) && statSync(option.interfacePath).isDirectory()) {
     option.interfacePath = path.join(option.interfacePath, 'interface.json') as AbsolutePath

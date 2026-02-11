@@ -40,4 +40,8 @@ export function gzCompress(data: string) {
   return compressed.toString('base64')
 }
 
+export function gzDecompress(data: string): string {
+  return zlib.gunzipSync(Buffer.from(data, 'base64')).toString()
+}
+
 export const console2 = new Console(process.stderr)

@@ -8,6 +8,7 @@ export type RecoJob = {
 
 export type RecoJobGroup = {
   name: string
+  test?: AbsolutePath
   imagesRaw: string[]
   images: AbsolutePath[]
   nodes: string[]
@@ -24,4 +25,22 @@ export type RecoResult = {
 export type GroupRecoResult = {
   group: RecoJobGroup
   result: RecoResult[]
+}
+
+export type RecoTestConfig = {
+  configs: {
+    controller: string
+    resource: string
+  }
+  cases: {
+    name: string
+    image: string
+    hits: (
+      | string
+      | {
+          node: string
+          box: maa.Rect
+        }
+    )[]
+  }[]
 }

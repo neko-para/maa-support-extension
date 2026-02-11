@@ -2,8 +2,8 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import * as workerpool from 'workerpool'
 
-import type { RecoJob, RecoResult } from './recoTypes'
-import { makeFakeController, toArrayBuffer } from './utils'
+import { makeFakeController, toArrayBuffer } from '../utils'
+import type { RecoJob, RecoResult } from './types'
 
 module.paths.unshift(process.env.MAAFW_MODULE_PATH!)
 require('@maaxyz/maa-node')

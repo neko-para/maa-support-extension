@@ -9,3 +9,4 @@ azure.token
 *.vsix
 .DS_Store
 
+/checker

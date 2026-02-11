@@ -8,7 +8,9 @@ import type { AbsolutePath } from '@mse/pipeline-manager'
 import type { DiagnosticType } from '@mse/pipeline-manager/src/diagnostic/types'
 
 import pkg from '../package.json'
-import type { RecoJobGroup } from './recoTypes'
+import type { RecoJobGroup, RecoTestConfig } from './reco/types'
+
+export type ProgramCommand = 'check' | 'reco' | 'reco-test'
 
 export type ProgramOption = {
   interfacePath: AbsolutePath
@@ -17,7 +19,7 @@ export type ProgramOption = {
   githubMode: boolean
   repoFolder: AbsolutePath
 
-  command: 'check' | 'reco'
+  command: ProgramCommand
 
   // check
   locale: LocaleType
@@ -35,6 +37,10 @@ export type ProgramOption = {
   printNotHit: boolean
   color: 'enable' | 'disable' | 'auto'
   groups: RecoJobGroup[]
+}
+
+function isCommand(cmd: string): cmd is ProgramCommand {
+  return ['check', 'reco', 'reco-test'].includes(cmd)
 }
 
 const allTypes = [
@@ -86,6 +92,7 @@ export function printUsage() {
 Command:
     check                   Check project and output diagnostic
     reco                    Batch performing reco
+    rect-test               Test results from reco
 
 Options:
   --raw                     Output json
@@ -120,6 +127,10 @@ Option for reco:
   --node=<node>             Add node <node> to group
   --nodes=<node...>         Add nodes <nodes> to group. Seperated with comma
   --node-list=<file>        Add nodes from <file> to group. Seperated with spaces or newlines
+
+Option for reco-test:
+  --color=<mode>            Set color mode <mode>. Default: auto
+                                Known modes: enable, disable, auto
 `)
 }
 
@@ -163,8 +174,8 @@ export async function parseOption(): Promise<ProgramOption | null> {
   option.interfacePath = path.resolve(process.argv[2]) as AbsolutePath
 
   const args = process.argv.slice(3)
-  if (args.length > 0 && ['check', 'reco'].includes(args[0])) {
-    option.command = args.shift() as 'check' | 'reco'
+  if (args.length > 0 && isCommand(args[0])) {
+    option.command = args.shift() as ProgramCommand
   }
 
   const regex = /^--([a-z-]+)(?:=(.+))?$/
@@ -264,40 +275,28 @@ export async function parseOption(): Promise<ProgramOption | null> {
       case 'load-cases':
         if (match[2] && existsSync(match[2])) {
           const folder = path.dirname(path.resolve(match[2]))
-          const cfg = JSON.parse(await fs.readFile(match[2], 'utf8')) as {
-            configs: {
-              controller: string
-              resource: string
-            }
-            cases: {
-              name: string
-              node: string
-              hits: (
-                | string
-                | {
-                    name: string
-                    box: maa.Rect
-                  }
-              )[]
-            }[]
-          }
+          const cfg = JSON.parse(await fs.readFile(match[2], 'utf8')) as RecoTestConfig
 
           option.controller = cfg.configs.controller
           option.resource = cfg.configs.resource
           option.groups.unshift({
             name: path.basename(match[2]),
+            test: path.resolve(match[2]) as AbsolutePath,
             imagesRaw: [],
             images: [],
             nodes: []
           })
 
-          for await (const file of fs.glob('**/*.png', {
-            cwd: folder
-          })) {
+          for (const info of cfg.cases) {
+            const file = info.image + '.png'
             option.groups[0].imagesRaw.push(file)
             option.groups[0].images.push(path.resolve(folder, file) as AbsolutePath)
           }
-          option.groups[0].nodes = cfg.cases.map(info => info.node)
+
+          const nodes = cfg.cases
+            .map(info => info.hits.map(hit => (typeof hit === 'string' ? hit : hit.node)))
+            .flat()
+          option.groups[0].nodes.push(...new Set(nodes))
         }
         break
       case 'controller':

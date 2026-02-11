@@ -1,13 +1,12 @@
-import * as fs from 'fs/promises'
 import * as path from 'path'
 import * as workerpool from 'workerpool'
 
 import { MaaVersionManager } from '@mse/maa-version-manager'
 import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
-import type { ProgramOption } from './option'
-import type { GroupRecoResult, RecoJob, RecoResult } from './recoTypes'
-import { console2, gzCompress } from './utils'
+import type { ProgramOption } from '../option'
+import { console2, gzCompress } from '../utils'
+import type { GroupRecoResult, RecoJob, RecoResult } from './types'
 
 function splitChunk<T>(arr: T[], size: number) {
   const result: T[][] = []
@@ -46,7 +45,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
   console2.timeLog('checker', 'resource switched')
 
   const modulePath = versionManager.moduleFolder(option.maaVersion)
-  const pool = workerpool.pool(path.join(__dirname, 'recoWorker.js'), {
+  const pool = workerpool.pool(path.join(__dirname, 'reco', 'worker.js'), {
     maxWorkers: option.job,
     workerType: 'process',
     forkOpts: {
@@ -70,9 +69,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
       .then(res => {
         finished += res.length
         result.push(...res)
-        if (!option.rawMode) {
-          process.stdout.write(`${finished} / ${taskCount}\r`)
-        }
+        process.stderr.write(`${finished} / ${taskCount}\r`)
       })
     tasks.push(task)
   }

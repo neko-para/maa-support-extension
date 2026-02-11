@@ -37,6 +37,7 @@ export default {
   'maa.pi.error.no-win32-config-provided': 'No win32 config provided',
   'maa.pi.error.load-interface-failed': 'Failed to load interface',
   'maa.pi.error.generate-runtime-failed': 'Generate runtime failed: {0}',
+  'maa.pi.warning.require-admin': 'Controller require admin privileges',
 
   'maa.debug.init-controller-failed': 'Init controller failed',
   'maa.debug.init-resource-failed': 'Init resource failed',

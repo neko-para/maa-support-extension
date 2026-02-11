@@ -80,6 +80,7 @@ export type InterfaceRuntime = {
     display_short_side?: number
     display_long_side?: number
     display_raw?: boolean
+    permission_required?: boolean
     attach_resource_path?: string[]
   }
   resource_path: string[]

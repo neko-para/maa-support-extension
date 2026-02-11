@@ -67,6 +67,10 @@ export class LaunchService extends BaseService {
   }
 
   async launchRuntimeImpl(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
+    if (runtime.controller_param.permission_required && !serverService.rpc.admin) {
+      vscode.window.showWarningMessage(t('maa.pi.warning.require-admin'))
+    }
+
     const ipc = await serverService.ensureServer()
     if (!ipc) {
       return

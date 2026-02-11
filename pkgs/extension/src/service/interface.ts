@@ -329,6 +329,7 @@ export class InterfaceService extends BaseService {
       }
     }
 
+    const permission_required = ctrlInfo.permission_required ?? false
     const attach_resource_path = ctrlInfo.attach_resource_path?.map(resPath =>
       path.resolve(projectDir, resPath)
     )
@@ -352,6 +353,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
+        permission_required,
         attach_resource_path
       }
     } else if (ctrlInfo.type === 'Win32') {
@@ -384,6 +386,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
+        permission_required,
         attach_resource_path
       }
     } else if (ctrlInfo.type === 'PlayCover') {
@@ -415,6 +418,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
+        permission_required,
         attach_resource_path
       }
     } else if (ctrlInfo.type === 'Gamepad') {
@@ -446,6 +450,7 @@ export class InterfaceService extends BaseService {
         display_short_side: ctrlInfo.display_short_side,
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
+        permission_required,
         attach_resource_path
       }
     }

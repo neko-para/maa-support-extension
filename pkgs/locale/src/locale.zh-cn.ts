@@ -35,6 +35,7 @@ export default {
   'maa.pi.error.no-win32-config-provided': '未提供 Win32 配置',
   'maa.pi.error.load-interface-failed': '无法加载interface',
   'maa.pi.error.generate-runtime-failed': '生成配置失败: {0}',
+  'maa.pi.warning.require-admin': '控制器需要管理员权限',
 
   'maa.debug.init-controller-failed': '初始化控制器失败',
   'maa.debug.init-resource-failed': '初始化资源失败',

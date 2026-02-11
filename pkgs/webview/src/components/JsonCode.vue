@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NCode } from 'naive-ui'
+import { NCode, NScrollbar } from 'naive-ui'
 import * as babel from 'prettier/plugins/babel'
 import estree from 'prettier/plugins/estree'
 import * as prettier from 'prettier/standalone'
@@ -31,5 +31,7 @@ watch(
 </script>
 
 <template>
-  <n-code language="json" :code="formatted" word-wrap> </n-code>
+  <n-scrollbar style="max-height: 80vh; background-color: var(--vscode-textPreformat-background)">
+    <n-code language="json" :code="formatted" word-wrap> </n-code>
+  </n-scrollbar>
 </template>

@@ -37,6 +37,7 @@ export type ProgramOption = {
   printNotHit: boolean
   color: 'enable' | 'disable' | 'auto'
   groups: RecoJobGroup[]
+  pipeTest: boolean
 }
 
 function isCommand(cmd: string): cmd is ProgramCommand {
@@ -127,6 +128,7 @@ Option for reco:
   --node=<node>             Add node <node> to group
   --nodes=<node...>         Add nodes <nodes> to group. Seperated with comma
   --node-list=<file>        Add nodes from <file> to group. Seperated with spaces or newlines
+  --pipe-test               Pipe reco-test command
 
 Option for reco-test:
   --color=<mode>            Set color mode <mode>. Default: auto
@@ -164,7 +166,8 @@ export async function parseOption(): Promise<ProgramOption | null> {
         images: [],
         nodes: []
       }
-    ]
+    ],
+    pipeTest: false
   }
 
   if (process.argv.length < 3) {
@@ -353,6 +356,9 @@ export async function parseOption(): Promise<ProgramOption | null> {
             .filter(node => !!node)
           option.groups[0].nodes.push(...nodes)
         }
+        break
+      case 'pipe-test':
+        option.pipeTest = true
         break
     }
   }

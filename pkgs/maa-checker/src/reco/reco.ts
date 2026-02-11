@@ -5,7 +5,8 @@ import { MaaVersionManager } from '@mse/maa-version-manager'
 import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
 
 import type { ProgramOption } from '../option'
-import { console2, gzCompress } from '../utils'
+import { console2, getColorInfo, gzCompress } from '../utils'
+import { performRecoTestImpl } from './recoTest'
 import type { GroupRecoResult, RecoJob, RecoResult } from './types'
 
 function splitChunk<T>(arr: T[], size: number) {
@@ -112,22 +113,16 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
 
   console2.timeLog('checker', 'job finished')
 
-  if (option.rawMode) {
+  if (option.pipeTest) {
+    await performRecoTestImpl(option, result)
+  } else if (option.rawMode) {
     let data = JSON.stringify(result)
     if (option.gz) {
       data = gzCompress(data)
     }
     console.log(data)
   } else {
-    const enableColor = option.color === 'enable'
-    let hitPrefix = ''
-    let missPrefix = ''
-    let resetSuffix = ''
-    if (enableColor) {
-      hitPrefix = '\x1b[32m'
-      missPrefix = '\x1b[31m'
-      resetSuffix = '\x1b[m'
-    }
+    const { enableColor, hitPrefix, missPrefix, resetSuffix } = getColorInfo(option)
 
     for (const groupResult of result) {
       console.log(`Group: ${groupResult.group.name}`)

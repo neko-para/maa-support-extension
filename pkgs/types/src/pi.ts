@@ -43,6 +43,13 @@ export type InterfaceConfig = {
   locale?: string
 }
 
+export type InterfaceAgentRuntime = {
+  child_exec?: string
+  child_args?: string[]
+  identifier?: string
+  debug_session?: string
+}
+
 export type InterfaceRuntime = {
   root: string
   controller_param: (
@@ -90,12 +97,7 @@ export type InterfaceRuntime = {
     pipeline_override: unknown[]
   }[]
   // gpu: number
-  agent?: {
-    child_exec?: string
-    child_args?: string[]
-    identifier?: string
-    debug_session?: string
-  }
+  agent: InterfaceAgentRuntime[]
 }
 
 export type Interface = InterfaceV2

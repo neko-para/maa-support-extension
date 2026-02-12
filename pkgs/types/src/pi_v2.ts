@@ -120,6 +120,12 @@ export type SwitchOption = EntryBase & {
 
 export type Option = SelectOption | InputOption | SwitchOption
 
+export type AgentConfig = {
+  child_exec?: string
+  child_args?: string[]
+  identifier?: string
+}
+
 export type InterfaceV2 = EntryBase & {
   interface_version: 2
   languages?: Record<string, string>
@@ -134,11 +140,7 @@ export type InterfaceV2 = EntryBase & {
   license?: string
   welcome?: string
 
-  agent?: {
-    child_exec?: string
-    child_args?: string[]
-    identifier?: string
-  }
+  agent?: AgentConfig | AgentConfig[]
 
   controller?: Controller[]
   resource?: Resource[]

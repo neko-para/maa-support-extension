@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 import { t } from '@mse/locale'
 import { InterfaceBundle, VscodeContentLoader, VscodeContentWatcher } from '@mse/pipeline-manager'
 import {
+  AgentConfig,
   InputItemType,
   Interface,
   InterfaceConfig,
@@ -650,28 +651,41 @@ export class InterfaceService extends BaseService {
       }
     }
 
-    if (data.agent) {
-      let debug_session: string | undefined = undefined
+    const cfgPath = vscode.Uri.joinPath(currentWorkspace()!, '.vscode', 'mse_config.json').fsPath
+    const debugSessionMapper: Record<string, string> = {}
+    if (existsSync(cfgPath)) {
+      const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {
+        'agent.debug'?: {}
+      }
+      if (cfg['agent.debug']) {
+        Object.assign(debugSessionMapper, cfg['agent.debug'])
+      }
+    }
 
-      const cfgPath = vscode.Uri.joinPath(currentWorkspace()!, '.vscode', 'mse_config.json').fsPath
-      if (existsSync(cfgPath)) {
-        const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {
-          'agent.debug': Record<string, string>
-        }
-        if (cfg['agent.debug']) {
-          if (data.agent.child_exec && data.agent.child_exec in cfg['agent.debug']) {
-            debug_session = cfg['agent.debug'][data.agent.child_exec]
-          }
-        }
+    const agents: AgentConfig[] = []
+    if (data.agent) {
+      if (Array.isArray(data.agent)) {
+        agents.push(...data.agent)
+      } else {
+        agents.push(data.agent)
+      }
+    }
+
+    result.agent = []
+    for (const agent of agents) {
+      if (!agent.child_exec) {
+        continue
       }
 
-      result.agent = {
-        child_exec: data.agent.child_exec ? replaceVar(data.agent.child_exec) : undefined,
-        child_args: data.agent.child_args?.map(replaceVar),
-        identifier: data.agent.identifier,
+      const debug_session = debugSessionMapper[agent.child_exec]
+
+      result.agent.push({
+        child_exec: agent.child_exec ? replaceVar(agent.child_exec) : undefined,
+        child_args: agent.child_args?.map(replaceVar),
+        identifier: agent.identifier,
 
         debug_session
-      }
+      })
     }
 
     return result as InterfaceRuntime

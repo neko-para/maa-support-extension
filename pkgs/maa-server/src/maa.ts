@@ -3,7 +3,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { v4 } from 'uuid'
 
-import type { InterfaceRuntime } from '@mse/types'
+import type { InterfaceAgentRuntime, InterfaceRuntime } from '@mse/types'
 
 import { ipc } from './apis'
 import { option } from './options'
@@ -25,12 +25,16 @@ type InstanceCache = {
   attaches: string[]
 }
 
+type TaskerAgentInfo = {
+  client: maa.Client
+  agent: string
+}
+
 type TaskerInstance = {
   tasker: maa.Tasker
   resource: maa.Resource
   controller: maa.Controller
-  client?: maa.Client
-  agent?: string
+  agents: TaskerAgentInfo[]
 }
 
 let cache: InstanceCache | undefined
@@ -119,11 +123,105 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
   }
 }
 
+async function setupAgent(
+  agentConfig: InterfaceAgentRuntime,
+  runtime: InterfaceRuntime,
+  resource: maa.Resource,
+  timeout: number
+): Promise<TaskerAgentInfo | null> {
+  const client = new maa.Client(agentConfig.identifier)
+  const identifier = client.identifier ?? 'vsc-no-identifier'
+
+  logger.info(`AgentClient listening ${identifier}`)
+
+  let agent: string | undefined = undefined
+  if (agentConfig.debug_session) {
+    const handle = await ipc.startDebugSession(agentConfig.debug_session, identifier)
+    if (!handle) {
+      client.destroy()
+      return null
+    }
+    agent = handle
+  } else if (agentConfig.child_exec) {
+    const handle = await ipc.startTask(
+      agentConfig.child_exec,
+      (agentConfig.child_args ?? []).concat([identifier]),
+      runtime.root,
+      {
+        VSCODE_MAAFW_AGENT: '1',
+        VSCODE_MAAFW_AGENT_ROOT: runtime.root,
+        VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
+      }
+    )
+    if (!handle) {
+      client.destroy()
+      return null
+    }
+    agent = handle
+  } else {
+    return null
+  }
+
+  const [agentStopPromise, agentStopResolve] = makePromise<void>()
+  const watcher = (id: string) => {
+    if (id !== agent) {
+      return
+    }
+    agentStopResolve()
+  }
+  events.on('agentStopped', watcher)
+
+  if (timeout >= 0) {
+    client.timeout = timeout.toString()
+  }
+  client.bind_resource(resource)
+  logger.info(`AgentClient start connecting ${identifier}`)
+
+  const connectPromise = client.connect()
+
+  const succ = await Promise.race([
+    connectPromise.then(() => true),
+    agentStopPromise.then(() => false)
+  ])
+
+  logger.info(`agent start race result ${succ}`)
+  events.off('agentStopped', watcher)
+
+  if (!succ) {
+    logger.info(`AgentClient connect failed`)
+    connectPromise.then(() => {
+      client?.destroy()
+      if (agent) {
+        ipc.stopAgent(agent)
+      }
+    })
+    return null
+  }
+
+  if (!(client.connected && client.alive)) {
+    logger.info(`AgentClient connect failed`)
+    client?.destroy()
+    if (agent) {
+      ipc.stopAgent(agent)
+    }
+    return null
+  } else {
+    logger.info(`AgentClient connect succeeded`)
+  }
+  if (timeout >= 0) {
+    client.timeout = Number.MAX_SAFE_INTEGER.toString()
+  }
+  return {
+    agent,
+    client
+  }
+}
+
 async function setupResource(
   runtime: InterfaceRuntime,
   attaches: string[],
   timeout: number
-): Promise<[maa.Resource | null, maa.Client | undefined, string | undefined]> {
+): Promise<{ resource: maa.Resource; agents: TaskerAgentInfo[] } | null> {
   const resource = new maa.Resource()
 
   resource.add_sink((_, msg) => {
@@ -137,94 +235,24 @@ async function setupResource(
     await resource.post_bundle(path).wait()
   }
 
-  let client: maa.Client | undefined = undefined
-  let agent: string | undefined = undefined
-
-  if (runtime.agent) {
-    client = new maa.Client(runtime.agent.identifier)
-    const identifier = client.identifier ?? 'vsc-no-identifier'
-
-    logger.info(`AgentClient listening ${identifier}`)
-
-    if (runtime.agent.debug_session) {
-      const handle = await ipc.startDebugSession(runtime.agent.debug_session, identifier)
-      if (!handle) {
-        resource.destroy()
-        return [null, undefined, undefined]
+  const agents: TaskerAgentInfo[] = []
+  for (const agentConfig of runtime.agent) {
+    const info = await setupAgent(agentConfig, runtime, resource, timeout)
+    if (!info) {
+      for (const agent of agents) {
+        agent.client.destroy()
+        ipc.stopAgent(agent.agent)
       }
-      agent = handle
-    } else if (runtime.agent.child_exec) {
-      const handle = await ipc.startTask(
-        runtime.agent.child_exec,
-        (runtime.agent.child_args ?? []).concat([identifier]),
-        runtime.root,
-        {
-          VSCODE_MAAFW_AGENT: '1',
-          VSCODE_MAAFW_AGENT_ROOT: runtime.root,
-          VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
-        }
-      )
-      if (!handle) {
-        resource.destroy()
-        return [null, undefined, undefined]
-      }
-      agent = handle
-    }
-
-    const [agentStopPromise, agentStopResolve] = makePromise<void>()
-    const watcher = (id: string) => {
-      if (id !== agent) {
-        return
-      }
-      agentStopResolve()
-    }
-    events.on('agentStopped', watcher)
-
-    if (timeout >= 0) {
-      client.timeout = timeout.toString()
-    }
-    client.bind_resource(resource)
-    logger.info(`AgentClient start connecting ${identifier}`)
-
-    const connectPromise = client.connect()
-
-    const succ = await Promise.race([
-      connectPromise.then(() => true),
-      agentStopPromise.then(() => false)
-    ])
-
-    logger.info(`agent start race result ${succ}`)
-    events.off('agentStopped', watcher)
-
-    if (!succ) {
-      logger.info(`AgentClient connect failed`)
-      connectPromise.then(() => {
-        client?.destroy()
-        resource.destroy()
-        if (agent) {
-          ipc.stopAgent(agent)
-        }
-      })
-      return [null, undefined, undefined]
-    }
-
-    if (!(client.connected && client.alive)) {
-      logger.info(`AgentClient connect failed`)
-      client?.destroy()
       resource.destroy()
-      if (agent) {
-        ipc.stopAgent(agent)
-      }
-      return [null, undefined, undefined]
-    } else {
-      logger.info(`AgentClient connect succeeded`)
+      return null
     }
-    if (timeout >= 0) {
-      client.timeout = Number.MAX_SAFE_INTEGER.toString()
-    }
+    agents.push(info)
   }
 
-  return [resource, client, agent]
+  return {
+    resource,
+    agents
+  }
 }
 
 export async function setupInst(
@@ -235,7 +263,10 @@ export async function setupInst(
   error?: string
 }> {
   taskerInst?.tasker.destroy()
-  taskerInst?.client?.destroy()
+  for (const agent of taskerInst?.agents ?? []) {
+    agent.client.destroy()
+    ipc.stopAgent(agent.agent)
+  }
   taskerInst?.resource.destroy()
   taskerInst = undefined
 
@@ -253,8 +284,8 @@ export async function setupInst(
     }
   }
 
-  const [resource, client, agent] = await setupResource(runtime, cache.attaches, timeout)
-  if (!resource) {
+  const resourceInfo = await setupResource(runtime, cache.attaches, timeout)
+  if (!resourceInfo) {
     return {
       error: 'maa.debug.init-resource-failed'
     }
@@ -271,19 +302,21 @@ export async function setupInst(
   })
 
   tasker.controller = controller
-  tasker.resource = resource
+  tasker.resource = resourceInfo.resource
 
-  client?.register_controller_sink(controller)
-  client?.register_resource_sink(resource)
-  client?.register_tasker_sink(tasker)
+  for (const { client } of resourceInfo.agents) {
+    client.register_controller_sink(controller)
+    client.register_resource_sink(resourceInfo.resource)
+    client.register_tasker_sink(tasker)
+  }
 
   if (!tasker.inited) {
     tasker.destroy()
-    client?.destroy()
-    resource.destroy()
-    if (agent) {
-      ipc.stopAgent(agent)
+    for (const agent of resourceInfo.agents) {
+      agent.client.destroy()
+      ipc.stopAgent(agent.agent)
     }
+    resourceInfo.resource.destroy()
     return {
       error: 'maa.debug.init-instance-failed'
     }
@@ -292,9 +325,8 @@ export async function setupInst(
   taskerInst = {
     tasker,
     controller,
-    resource,
-    client,
-    agent
+    resource: resourceInfo.resource,
+    agents: resourceInfo.agents
   }
 
   const handle = v4()
@@ -374,12 +406,12 @@ export async function destroyInstance(id: string) {
   delete taskerMap[id]
 
   inst.tasker.destroy()
-  inst.client?.destroy()
+  for (const agent of inst.agents) {
+    agent.client.destroy()
+    ipc.stopAgent(agent.agent)
+  }
   inst.resource.destroy()
   inst.controller.destroy()
-  if (inst.agent) {
-    ipc.stopAgent(inst.agent)
-  }
 }
 
 function toPngDataUrl(buffer: Uint8Array | ArrayBuffer) {

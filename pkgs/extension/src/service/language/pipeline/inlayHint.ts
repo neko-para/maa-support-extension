@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath } from '@mse/pipeline-manager'
+import { AbsolutePath, extractTaskRef } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
 import { debounce } from '../../utils/debounce'
@@ -61,9 +61,6 @@ export class PipelineInlayHintsProvider
       if (ref.file !== document.uri.fsPath) {
         return false
       }
-      if (ref.type !== 'task.locale' && ref.type !== 'task.next') {
-        return false
-      }
       return (
         ref.location.offset >= beginOffset && ref.location.offset + ref.location.length <= endOffset
       )
@@ -87,24 +84,20 @@ export class PipelineInlayHintsProvider
         return hint
       })
 
-    // 这里其实可以用layer的getTaskDoc, 但是还是提前filter吧, 大概快一点
-    const docDecls = layer.mergedAllDecls.filter(decl => decl.type === 'task.doc')
+    const docs = refs.map(ref => {
+      const task = extractTaskRef(ref)
+      if (!task) {
+        return null
+      }
 
-    const docs = refs
-      .filter(ref => ref.type === 'task.next')
-      .filter(ref => !ref.anchor)
-      .map(ref => {
-        let text = docDecls
-          .filter(decl => decl.task === ref.target)
-          .map(decl => decl.doc)
-          .join(' ')
+      const text = layer.getTaskDoc(task)
 
-        const hint: vscode.InlayHint = {
-          position: document.positionAt(ref.location.offset + ref.location.length),
-          label: text
-        }
-        return hint
-      })
+      const hint: vscode.InlayHint = {
+        position: document.positionAt(ref.location.offset + ref.location.length),
+        label: text
+      }
+      return hint
+    })
 
     return [...locales, ...docs].filter((hint): hint is vscode.InlayHint => !!hint)
   }

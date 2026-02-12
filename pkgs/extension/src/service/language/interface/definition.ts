@@ -40,6 +40,9 @@ export class InterfaceDefinitionProvider
       const decls = this.makeDecls(index, decl, ref) ?? []
       const refs = this.makeRefs(index, decl, ref) ?? []
       return await Promise.all([...decls, ...refs].map(dr => autoConvertRangeLocation(dr)))
+    } else if (ref) {
+      const decls = this.makeDecls(index, decl, ref) ?? []
+      return await Promise.all(decls.map(dr => autoConvertRangeLocation(dr)))
     }
 
     return null

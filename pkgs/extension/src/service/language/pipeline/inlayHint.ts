@@ -91,6 +91,9 @@ export class PipelineInlayHintsProvider
       }
 
       const text = layer.getTaskDoc(task)
+      if (!text) {
+        return null
+      }
 
       const hint: vscode.InlayHint = {
         position: document.positionAt(ref.location.offset + ref.location.length),

@@ -262,11 +262,11 @@ export async function setupInst(
   handle?: string
   error?: string
 }> {
-  taskerInst?.tasker.destroy()
   for (const agent of taskerInst?.agents ?? []) {
     agent.client.destroy()
     ipc.stopAgent(agent.agent)
   }
+  taskerInst?.tasker.destroy()
   taskerInst?.resource.destroy()
   taskerInst = undefined
 
@@ -311,11 +311,11 @@ export async function setupInst(
   }
 
   if (!tasker.inited) {
-    tasker.destroy()
     for (const agent of resourceInfo.agents) {
       agent.client.destroy()
       ipc.stopAgent(agent.agent)
     }
+    tasker.destroy()
     resourceInfo.resource.destroy()
     return {
       error: 'maa.debug.init-instance-failed'
@@ -405,11 +405,11 @@ export async function destroyInstance(id: string) {
 
   delete taskerMap[id]
 
-  inst.tasker.destroy()
   for (const agent of inst.agents) {
     agent.client.destroy()
     ipc.stopAgent(agent.agent)
   }
+  inst.tasker.destroy()
   inst.resource.destroy()
   inst.controller.destroy()
 }

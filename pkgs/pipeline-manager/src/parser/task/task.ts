@@ -3,8 +3,9 @@ import type { Node } from 'jsonc-parser'
 import type { MaaTaskExpr } from '@nekosu/maa-tasker'
 
 import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
-import { type PropPair, type StringNode, isString, parseArray, parseObject } from '../utils'
+import { type PropPair, type StringNode, isNumber, isString, parseArray } from '../utils'
 import { parseAnchor } from './anchor'
+import { parseColor } from './color'
 import { parseFocus } from './focus'
 import { parseFreeze } from './freeze'
 import { parseMaaBaseTask } from './maa/baseTask'
@@ -121,6 +122,12 @@ export type TaskCanLocaleRefInfo = {
   target: string
 }
 
+export type TaskColorRefInfo = {
+  type: 'task.color'
+  method: 'rgb' | 'hsv'
+  color: number[]
+}
+
 type MaaFwTaskRefInfo =
   | TaskNextRefInfo
   | TaskTargetRefInfo
@@ -129,6 +136,7 @@ type MaaFwTaskRefInfo =
   | TaskEntryRefInfo
   | TaskLocaleRefInfo
   | TaskCanLocaleRefInfo
+  | TaskColorRefInfo
 
 export type TaskMaaBaseTaskRefInfo = {
   type: 'task.maa.base_task'
@@ -234,6 +242,7 @@ function parseReco(
   parent?: Node
 ) {
   let subName: StringNode | null = null
+  let colorMatchMethod: 'rgb' | 'hsv' | null = 'rgb'
   for (const [key, obj] of props) {
     switch (key) {
       case 'roi':
@@ -265,10 +274,34 @@ function parseReco(
           subName = parseSubName(obj, info, parent, ctx)
         }
         break
+      case 'method':
+        if (isNumber(obj)) {
+          switch (obj.value) {
+            case 4:
+              colorMatchMethod = 'rgb'
+              break
+            case 40:
+              colorMatchMethod = 'hsv'
+              break
+            default:
+              colorMatchMethod = null
+          }
+        }
+        break
     }
   }
   if (subName) {
     prev.push(subName)
+  }
+  if (colorMatchMethod) {
+    for (const [key, obj] of props) {
+      switch (key) {
+        case 'upper':
+        case 'lower':
+          parseColor(obj, info, ctx, colorMatchMethod)
+          break
+      }
+    }
   }
 }
 

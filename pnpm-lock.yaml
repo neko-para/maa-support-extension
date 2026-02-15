@@ -103,6 +103,9 @@ importers:
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
+      onecolor:
+        specifier: ^4.1.0
+        version: 4.1.0
       semver:
         specifier: ^7.7.4
         version: 7.7.4
@@ -1692,6 +1695,10 @@ packages:
 
   one-time@1.0.0:
     resolution: {integrity: sha512-5DXOiRKwuSEcQ/l0kGCF6Q3jcADFv5tSmRaJck/OqkVFcOzutB134KRSfF0xDrL39MNnqxbHBbUUcjZIhTgb2g==}
+
+  onecolor@4.1.0:
+    resolution: {integrity: sha512-kDUtnWdWlt5iWx85wrGZxMh8tB4058Bk1YyVpb+Zjl+2wLH/OvqIacbchJma0gjGXocwUTueLwMDVYKrbI+0zA==}
+    engines: {node: '>=0.4.8'}
 
   p-map@7.0.3:
     resolution: {integrity: sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==}
@@ -3392,6 +3399,8 @@ snapshots:
   one-time@1.0.0:
     dependencies:
       fn.name: 1.1.0
+
+  onecolor@4.1.0: {}
 
   p-map@7.0.3: {}
 

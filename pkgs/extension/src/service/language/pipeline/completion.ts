@@ -60,6 +60,10 @@ export class PipelineCompletionProvider
     const result: CustomCompletionItem[] = []
 
     if (isMaaAssistantArknights) {
+      if (ref.type !== 'task.maa.base_task' && ref.type !== 'task.maa.expr') {
+        return null
+      }
+
       const findTaskWordRange = () => {
         if (/[a-zA-Z0-9_-]/.test(lastChar)) {
           let dlt = 0

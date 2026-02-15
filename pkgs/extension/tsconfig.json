@@ -7,5 +7,5 @@
     "allowArbitraryExtensions": true,
     "types": ["@maaxyz/maa-node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.js"]
 }

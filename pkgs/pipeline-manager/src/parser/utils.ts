@@ -41,6 +41,12 @@ export function isString(node?: Node): node is StringNode {
   return !!node && node.type === 'string' && typeof node.value === 'string'
 }
 
+export type NumberNode = Omit<Node, 'type' | 'value'> & { type: 'number'; value: number }
+
+export function isNumber(node?: Node): node is NumberNode {
+  return !!node && node.type === 'number' && typeof node.value === 'number'
+}
+
 export type BoolNode = Omit<Node, 'type' | 'value'> & { type: 'boolean'; value: boolean }
 
 export function isBool(node?: Node): node is BoolNode {

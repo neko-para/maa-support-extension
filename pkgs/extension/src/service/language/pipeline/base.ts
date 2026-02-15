@@ -265,7 +265,7 @@ ${JSON.stringify(final, null, 2)}
       }
     } else if (ref) {
       const task = extractTaskRef(ref)
-      if (task) {
+      if (task && 'target' in ref) {
         return decls.filter(d => d.type === 'task.decl' && d.task === ref.target)
       } else if (ref.type === 'task.next' && ref.anchor) {
         return decls.filter(

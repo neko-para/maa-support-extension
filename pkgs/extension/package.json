@@ -21,6 +21,7 @@
     "@vscode/debugadapter": "^1.68.0",
     "@vscode/debugprotocol": "^1.68.0",
     "jsonc-parser": "^3.3.1",
+    "onecolor": "^4.1.0",
     "semver": "^7.7.4",
     "source-map-support": "^0.5.21",
     "typescript": "^5.9.3",

@@ -16,6 +16,7 @@ import { InterfaceReferenceProvider } from './language/interface/reference'
 import { PipelineLanguageProvider } from './language/pipeline/base'
 import { PipelineCodeActionsProvider } from './language/pipeline/codeActions'
 import { PipelineCodeLensProvider } from './language/pipeline/codeLens'
+import { PipelineDocumentColorProvider } from './language/pipeline/color'
 import { PipelineCompletionProvider } from './language/pipeline/completion'
 import { PipelineDefinitionProvider } from './language/pipeline/definition'
 import { PipelineDocumentLinkProvider } from './language/pipeline/documentLink'
@@ -74,7 +75,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     new PipelineReferenceProvider(),
     new PipelineWorkspaceSymbolProvider(),
     new PipelineInlayHintsProvider(),
-    new PipelineCodeActionsProvider()
+    new PipelineCodeActionsProvider(),
+    new PipelineDocumentColorProvider()
   ]
 
   interfaceLanguageServices = [

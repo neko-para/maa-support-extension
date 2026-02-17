@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NGrid, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'
@@ -14,14 +14,17 @@ import * as settingsSt from '../states/settings'
 
 const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }))
 
-const srcRoi = ref<maa.Rect | undefined>([0, 0, 0, 0])
-const destRoi = ref<maa.Rect | undefined>([0, 0, 0, 0])
-const dltRoi = computed(() => {
-  if (srcRoi.value && destRoi.value) {
-    return Array.from(
-      { length: 4 },
-      (_, idx) => destRoi.value![idx]! - srcRoi.value![idx]!
-    ) as maa.Rect
+const roiX = ref<maa.Rect | undefined>([0, 0, 0, 0])
+const roiY = ref<maa.Rect | undefined>([0, 0, 0, 0])
+const roiSum = computed(() => {
+  if (roiX.value && roiY.value) {
+    return Array.from({ length: 4 }, (_, idx) => roiY.value![idx]! + roiX.value![idx]!) as maa.Rect
+  }
+  return undefined
+})
+const roiDlt = computed(() => {
+  if (roiX.value && roiY.value) {
+    return Array.from({ length: 4 }, (_, idx) => roiY.value![idx]! - roiX.value![idx]!) as maa.Rect
   }
   return undefined
 })
@@ -60,11 +63,24 @@ const dltRoi = computed(() => {
     </n-card>
 
     <n-card :title="t('maa.crop.tools.roi-offset')" size="small">
-      <n-flex vertical>
-        <roi-edit v-model:value="srcRoi"></roi-edit>
-        <roi-edit v-model:value="destRoi"></roi-edit>
-        <roi-edit :value="dltRoi" readonly hide-use></roi-edit>
-      </n-flex>
+      <div
+        style="
+          display: grid;
+          grid-template-columns: max-content 1fr;
+          row-gap: 0.5rem;
+          column-gap: 0.5rem;
+          align-items: center;
+        "
+      >
+        <n-text> X </n-text>
+        <roi-edit v-model:value="roiX"></roi-edit>
+        <n-text> Y </n-text>
+        <roi-edit v-model:value="roiY"></roi-edit>
+        <n-text> X + Y </n-text>
+        <roi-edit :value="roiSum" readonly></roi-edit>
+        <n-text> Y - X </n-text>
+        <roi-edit :value="roiDlt" readonly></roi-edit>
+      </div>
     </n-card>
 
     <n-card :title="t('maa.crop.tools.quick-match')" size="small">

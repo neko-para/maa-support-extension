@@ -192,7 +192,7 @@ export function extractRect(text: string): [number, number, number, number] | nu
   text = text.trim()
   text = text.replaceAll(/^\[(.+)\]$/g, '$1')
   const nums = text
-    .split(/[ \t\n_,-]+/)
+    .split(/[ \t\n_,]+/)
     .filter(x => !!x)
     .map(x => {
       return parseInt(x)

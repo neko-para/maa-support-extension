@@ -216,7 +216,7 @@ export function checkInterface<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
         })
       }
     } else if (ref.type === 'interface.resource') {
-      if (!ctrls.has(ref.target)) {
+      if (!ress.has(ref.target)) {
         result.push({
           level: 'error',
           file: ref.file,

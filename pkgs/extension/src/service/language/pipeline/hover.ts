@@ -75,6 +75,7 @@ export class PipelineHoverProvider
       if (
         ref.type === 'task.next' ||
         ref.type === 'task.target' ||
+        ref.type === 'task.anchor' ||
         ref.type === 'task.roi' ||
         ref.type === 'task.entry'
       ) {

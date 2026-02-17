@@ -34,6 +34,7 @@ export type TaskAnchorDeclInfo = {
   type: 'task.anchor'
   anchor: AnchorName
   task: TaskName
+  belong: TaskName
 }
 
 export type TaskSubRecoDeclInfo = {
@@ -87,6 +88,11 @@ export type TaskTargetRefInfo = {
   target: TaskName
 }
 
+export type TaskAnchorRefInfo = {
+  type: 'task.anchor'
+  target: TaskName
+}
+
 export type TaskRoiRefInfo = {
   type: 'task.roi'
   prev: StringNode[]
@@ -131,6 +137,7 @@ export type TaskColorRefInfo = {
 type MaaFwTaskRefInfo =
   | TaskNextRefInfo
   | TaskTargetRefInfo
+  | TaskAnchorRefInfo
   | TaskRoiRefInfo
   | TaskTemplateRefInfo
   | TaskEntryRefInfo

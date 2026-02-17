@@ -1,9 +1,24 @@
 import type { Node } from 'jsonc-parser'
 
 export type PropPair = [prop: string, value: Node, propNode: StringNode]
+export type PropPairFlex = [prop: string, value: Node | null, propNode: StringNode]
 
 function parseProp(prop: Node): PropPair | null {
-  // TODO: 这里如果是刚新开一个prop, 会是一个string. 之后看能不能把这个信息暴露上去
+  const pair = parsePropFlex(prop)
+  if (!pair) {
+    return null
+  }
+  const [key, obj, node] = pair
+  if (!obj) {
+    return null
+  }
+  return [key, obj, node]
+}
+
+function parsePropFlex(prop: Node): PropPairFlex | null {
+  if (prop.type === 'property' && prop.children?.length === 1 && isString(prop.children[0])) {
+    return [prop.children[0].value, null, prop.children[0]]
+  }
   if (prop.type !== 'property' || !prop.children || prop.children.length !== 2) {
     return null
   }
@@ -20,6 +35,18 @@ export function* parseObject(node: Node | undefined | null) {
   }
   for (const prop of node.children ?? []) {
     const pair = parseProp(prop)
+    if (pair) {
+      yield pair
+    }
+  }
+}
+
+export function* parseObjectFlex(node: Node | undefined | null) {
+  if (!node || node.type !== 'object') {
+    return
+  }
+  for (const prop of node.children ?? []) {
+    const pair = parsePropFlex(prop)
     if (pair) {
       yield pair
     }

@@ -50,14 +50,37 @@ export class PipelineCompletionProvider
     const [layer, file] = layerInfo
 
     const offset = document.offsetAt(position)
+    const decls = layer.mergedDecls.filter(decl => decl.file === file)
     const refs = layer.mergedRefs.filter(ref => ref.file === file)
+    const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
+
+    const result: CustomCompletionItem[] = []
+
+    if (decl && decl.type === 'task.anchor') {
+      const anchorsDeclared = decls
+        .filter(decl => decl.type === 'task.anchor')
+        .filter(decl2 => decl2.belong === decl.belong)
+        .map(decl => decl.anchor)
+      const anchors = layer
+        .getAnchorList()
+        .map(([anchor]) => anchor)
+        .filter(anchor => !anchorsDeclared.includes(anchor))
+      for (const anchor of new Set(anchors)) {
+        const item: CustomCompletionItem = {
+          label: anchor,
+          kind: vscode.CompletionItemKind.Variable,
+          range: convertRangeWithDelta(document, decl.location, -1, 1),
+          sortText: anchor
+        }
+        result.push(item)
+      }
+      return result
+    }
 
     if (!ref) {
       return null
     }
-
-    const result: CustomCompletionItem[] = []
 
     if (isMaaAssistantArknights) {
       if (ref.type !== 'task.maa.base_task' && ref.type !== 'task.maa.expr') {
@@ -156,6 +179,7 @@ export class PipelineCompletionProvider
     if (
       (ref.type === 'task.next' && ref.objMode && !ref.anchor) ||
       ref.type === 'task.target' ||
+      ref.type === 'task.anchor' ||
       ref.type === 'task.roi' ||
       ref.type === 'task.entry'
     ) {

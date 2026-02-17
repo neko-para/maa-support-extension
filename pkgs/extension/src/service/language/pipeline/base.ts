@@ -145,6 +145,9 @@ export class PipelineLanguageProvider extends BaseService {
     task: TaskName,
     current?: TaskName
   ) {
+    if (task.length === 0) {
+      return ''
+    }
     const taskInfos = layer.getTask(task)
     const content: string[] = []
     for (const { layer, infos } of taskInfos) {
@@ -290,7 +293,7 @@ ${JSON.stringify(final, null, 2)}
   ): TaskRefInfo[] {
     const findTask = (task: TaskName) => {
       return refs.filter(r => {
-        if (r.type === 'task.target' || r.type === 'task.entry') {
+        if (r.type === 'task.target' || r.type === 'task.anchor' || r.type === 'task.entry') {
           return r.target === task
         } else if (r.type === 'task.next') {
           return r.target === task && !r.anchor

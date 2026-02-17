@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex, NInput, NText } from 'naive-ui'
+import { NButton, NFlex, NInput } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -38,7 +38,6 @@ watch(extracted, rect => {
 })
 
 function use() {
-  console.log(extracted.value)
   if (extracted.value) {
     controlSt.cropBox.value = Box.from(
       Pos.from(extracted.value[0], extracted.value[1]),

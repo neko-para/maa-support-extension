@@ -65,14 +65,17 @@ export async function performTemplateMatch(
       } // satisfies maa.Task 暂时先不加这个, method对不上
     })
 
-    if (detail?.hit) {
-      const presp = {
-        ...detail
-      } as Partial<typeof detail>
-      delete presp.draws
-      delete presp.raw
-      result = JSON.stringify(presp)
+    if (!detail) {
+      return true
     }
+
+    const presp = {
+      ...detail
+    } as Partial<typeof detail>
+    delete presp.draws
+    delete presp.raw
+    result = JSON.stringify(presp)
+
     return true
   })
 

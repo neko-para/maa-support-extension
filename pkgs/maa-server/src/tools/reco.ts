@@ -60,14 +60,17 @@ export async function performReco(
   res.register_custom_action('@mse/action', async self => {
     logger.info('quick reco action called')
     const detail = await self.context.run_recognition(task, image)
-    if (detail?.hit) {
-      const presp = {
-        ...detail
-      } as Partial<typeof detail>
-      delete presp.draws
-      delete presp.raw
-      result = JSON.stringify(presp)
+    if (!detail) {
+      return true
     }
+
+    const presp = {
+      ...detail
+    } as Partial<typeof detail>
+    delete presp.draws
+    delete presp.raw
+    result = JSON.stringify(presp)
+
     return true
   })
 

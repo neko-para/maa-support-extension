@@ -50,7 +50,11 @@ export class ProcessManager {
         return false
       }
       logger.info('before spawn')
-      proc = spawn('powershell.exe', [this.ps1ScriptPath], { stdio: ['ignore', 'pipe', 'pipe'] })
+      proc = spawn(
+        'powershell.exe',
+        ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', this.ps1ScriptPath],
+        { stdio: ['ignore', 'pipe', 'pipe'] }
+      )
       logger.info('after spawn')
 
       proc.stdout?.on('data', (data: Buffer) => {

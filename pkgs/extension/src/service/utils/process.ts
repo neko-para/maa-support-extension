@@ -43,11 +43,22 @@ export class ProcessManager {
     let proc: ChildProcess
 
     if (this.admin) {
+      logger.info('before setup sp1')
       await this.setupPs1(arg)
+      logger.info('after setup sp1')
       if (!this.ps1ScriptPath) {
         return false
       }
-      proc = spawn('powershell.exe', [this.ps1ScriptPath])
+      logger.info('before spawn')
+      proc = spawn('powershell.exe', [this.ps1ScriptPath], { stdio: ['ignore', 'pipe', 'pipe'] })
+      logger.info('after spawn')
+
+      proc.stdout?.on('data', (data: Buffer) => {
+        logger.info(data.toString().trimEnd())
+      })
+      proc.stderr?.on('data', (data: Buffer) => {
+        logger.info(data.toString().trimEnd())
+      })
     } else {
       proc = spawn(process.argv[0], [this.script, arg], { stdio: ['ignore', 'pipe', 'pipe'] })
 
@@ -62,6 +73,7 @@ export class ProcessManager {
     const [promise, resolve] = makePromise<boolean>()
 
     proc.on('spawn', () => {
+      logger.info('on spawn')
       if (!this.proc) {
         this.proc = proc
         resolve(true)
@@ -71,12 +83,20 @@ export class ProcessManager {
       }
     })
     proc.on('error', () => {
+      logger.info('on error')
       resolve(false)
     })
     proc.on('close', () => {
+      logger.info('on close')
       if (proc === this.proc) {
         this.proc = undefined
       }
+    })
+    proc.on('exit', () => {
+      logger.info('on exit')
+    })
+    proc.on('disconnect', () => {
+      logger.info('on disconnect')
     })
 
     return promise

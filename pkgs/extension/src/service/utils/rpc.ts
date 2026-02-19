@@ -139,12 +139,14 @@ export class RpcManager extends EventEmitter<{
         })
       ))
     ) {
+      logger.info('ensure fail')
       this.proc.kill()
       this.proc.clean?.()
       this.proc = undefined
       this.server.removeListener('connection', setupConnection)
       return false
     }
+    logger.info('ensure success')
 
     return promise
   }

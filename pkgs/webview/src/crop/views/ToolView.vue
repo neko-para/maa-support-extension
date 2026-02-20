@@ -92,10 +92,10 @@ const roiDlt = computed(() => {
         <n-text>{{ rectMoveMode ? 'rect_move' : 'ROI 2' }}</n-text>
         <roi-edit v-model:value="roiY"></roi-edit>
         <template v-if="!rectMoveMode">
-          <n-text> X + Y </n-text>
+          <n-text> 1 + 2 </n-text>
           <roi-edit :value="roiSum" readonly></roi-edit>
         </template>
-        <n-text>{{ rectMoveMode ? 'Result' : 'Y - X' }}</n-text>
+        <n-text>{{ rectMoveMode ? 'Result' : '2 - 1' }}</n-text>
         <roi-edit :value="roiDlt" readonly></roi-edit>
       </div>
     </n-card>

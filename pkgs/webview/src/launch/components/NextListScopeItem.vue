@@ -12,7 +12,11 @@ defineProps<{
 <template>
   <n-flex>
     <template v-for="(reco, idx) in item.childs" :key="`reco-${idx}`">
-      <reco-action-scope-item :item="reco" use-warning></reco-action-scope-item>
+      <reco-action-scope-item
+        :item="reco"
+        :info="item.msg.list[idx]"
+        use-warning
+      ></reco-action-scope-item>
     </template>
     <template v-for="(reco, idx) in item.msg.list.slice(item.childs.length)" :key="`wait-${idx}`">
       <n-button size="small" ghost disabled>

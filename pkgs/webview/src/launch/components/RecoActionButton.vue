@@ -2,7 +2,7 @@
 import { default as CheckOutlined } from '@vicons/material/es/CheckOutlined'
 import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
 import { NButton, NPopover } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { ActionInfo, RecoInfo } from '@mse/types'
 
@@ -13,8 +13,22 @@ import TaskDoc from './TaskDoc.vue'
 
 const props = defineProps<{
   item: RecoScope | ActionScope
+  info?: maa.TaskerContextNextListNotify['list'][number]
   useWarning?: boolean
 }>()
+
+const itemBrief = computed(() => {
+  let result = props.item.msg.name
+  if (props.info) {
+    if (props.info.anchor) {
+      result = `[Anchor] ${props.info.name} = ${result}`
+    }
+    if (props.info.jump_back) {
+      result = `[JumpBack] ${result}`
+    }
+  }
+  return result
+})
 
 const querying = ref(false)
 
@@ -74,7 +88,7 @@ async function requestAct(action_id: number) {
           <check-outlined v-else-if="item.status === 'success'"></check-outlined>
         </template>
 
-        {{ item.msg.name }}
+        {{ itemBrief }}
       </n-button>
     </template>
 

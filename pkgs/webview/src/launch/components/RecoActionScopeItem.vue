@@ -9,6 +9,7 @@ import RecoActionButton from './RecoActionButton.vue'
 
 const props = defineProps<{
   item: RecoScope | ActionScope
+  info?: maa.TaskerContextNextListNotify['list'][number]
   useWarning?: boolean
 }>()
 
@@ -20,7 +21,7 @@ const done = computed(() => {
 
 <template>
   <template v-if="item.childs.length === 0">
-    <reco-action-button :item="item" :use-warning="useWarning"></reco-action-button>
+    <reco-action-button :item="item" :info="info" :use-warning="useWarning"></reco-action-button>
   </template>
   <template v-else>
     <n-card size="small" v-if="hide === null ? !done : !hide">
@@ -37,7 +38,7 @@ const done = computed(() => {
       </n-flex>
     </n-card>
     <n-flex v-else>
-      <reco-action-button :item="item" :use-warning="useWarning"></reco-action-button>
+      <reco-action-button :item="item" :info="info" :use-warning="useWarning"></reco-action-button>
       <n-button v-if="item.childs.length > 0" size="small" @click="hide = false">
         {{ t('maa.launch.show') }}
       </n-button>

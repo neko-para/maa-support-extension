@@ -50,6 +50,7 @@ export default {
   'maa.crop.tools': '工具',
   'maa.crop.tools.pick-color': '取色',
   'maa.crop.tools.roi-offset': 'Roi偏移',
+  'maa.crop.tools.roi-offset.rect-move': 'rect_move',
   'maa.crop.tools.quick-match': '快速匹配',
   'maa.crop.tools.quick-match-ocr': 'OCR',
   'maa.crop.tools.quick-match-tmpl': '模板',

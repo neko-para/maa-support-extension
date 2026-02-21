@@ -123,6 +123,11 @@ export type TaskLocaleRefInfo = {
   target: string
 }
 
+export type TaskLocaleTextRefInfo = {
+  type: 'task.locale_text'
+  target: string
+}
+
 export type TaskCanLocaleRefInfo = {
   type: 'task.can_locale'
   target: string
@@ -142,6 +147,7 @@ type MaaFwTaskRefInfo =
   | TaskTemplateRefInfo
   | TaskEntryRefInfo
   | TaskLocaleRefInfo
+  | TaskLocaleTextRefInfo
   | TaskCanLocaleRefInfo
   | TaskColorRefInfo
 

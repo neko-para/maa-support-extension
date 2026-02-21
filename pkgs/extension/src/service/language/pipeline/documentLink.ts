@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath } from '@mse/pipeline-manager'
+import { AbsolutePath, ImageRelativePath, RelativePath, joinPath } from '@mse/pipeline-manager'
 
 import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
@@ -35,6 +35,17 @@ export class PipelineDocumentLinkProvider
 
     const result: vscode.DocumentLink[] = []
     for (const ref of refs) {
+      if (
+        (ref.type === 'task.can_locale' || ref.type === 'task.locale_text') &&
+        (ref.target.endsWith('.md') || ref.target.endsWith('.png'))
+      ) {
+        const full = joinPath(topLayer.root, ref.target as RelativePath)
+        result.push(
+          new vscode.DocumentLink(convertRange(document, ref.location), vscode.Uri.file(full))
+        )
+        continue
+      }
+
       if (ref.type !== 'task.template') {
         continue
       }

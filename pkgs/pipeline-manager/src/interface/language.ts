@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events'
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
-import type { TaskDeclInfo } from '../parser/task/task'
+import type { TaskDeclInfo, TaskRefInfo } from '../parser/task/task'
 import { type StringNode, isString, parseObject } from '../parser/utils'
 import { type AbsolutePath, type RelativePath, joinPath } from '../utils/types'
 
@@ -20,6 +20,7 @@ export type LanguageInfo = {
   content: ContentJson<Record<string, string>>
   entries: LanguageLocaleEntry[]
   decls: TaskDeclInfo[]
+  refs: TaskRefInfo[]
 }
 
 export type LanguageEditAction =
@@ -77,7 +78,8 @@ export class LanguageBundle extends EventEmitter<{
         await this.rebuildIndex(idx)
       }),
       entries: [],
-      decls: []
+      decls: [],
+      refs: []
     }))
     await Promise.all(this.langs.map(lang => lang.content.load()))
   }
@@ -87,6 +89,7 @@ export class LanguageBundle extends EventEmitter<{
     const full = joinPath(this.root, lang.file)
     lang.entries = []
     lang.decls = []
+    lang.refs = []
     for (const [key, obj, prop] of parseObject(lang.content.node)) {
       if (isString(obj)) {
         lang.entries.push({
@@ -102,6 +105,12 @@ export class LanguageBundle extends EventEmitter<{
           key: key,
           value: obj.value,
           valueNode: obj
+        })
+        lang.refs.push({
+          location: obj,
+          file: full,
+          type: 'task.locale_text',
+          target: obj.value
         })
       }
     }

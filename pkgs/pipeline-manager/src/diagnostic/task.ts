@@ -1,7 +1,12 @@
 import type { InterfaceBundle } from '../interface/interface'
 import type { TaskRefInfo } from '../parser/task/task'
 import { extractTaskRef } from '../utils/helper'
-import type { AnchorName, ImageRelativePath, TaskName } from '../utils/types'
+import {
+  type AnchorName,
+  type ImageRelativePath,
+  type TaskName,
+  normalizeImageFolder
+} from '../utils/types'
 import type { Diagnostic } from './types'
 
 export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
@@ -72,6 +77,7 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
     const tasks = new Set(layer.getTaskListNotUnique())
     const anchors = new Set(layer.getAnchorList().map(([anchor]) => anchor))
     const images = new Set(layer.getImageListNotUnique())
+    const imageFolders = layer.getImageFolders()
     for (const ref of refs) {
       const task = extractTaskRef(ref)
       if (task) {
@@ -93,15 +99,21 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
         }
       } else if (ref.type === 'task.template') {
         let imagePath = ref.target
+        let isFolder = false
         if (!bundle.maa && !imagePath.endsWith('.png')) {
-          result.push({
-            level: 'warning',
-            file: ref.file,
-            offset: ref.location.offset,
-            length: ref.location.length,
-            type: 'dynamic-image'
-          })
-          continue
+          const norm = normalizeImageFolder(imagePath)
+          if (imageFolders.has(norm)) {
+            isFolder = true
+          } else {
+            result.push({
+              level: 'warning',
+              file: ref.file,
+              offset: ref.location.offset,
+              length: ref.location.length,
+              type: 'dynamic-image'
+            })
+            continue
+          }
         }
         if (imagePath.includes('\\')) {
           result.push({
@@ -132,6 +144,9 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
             type: 'image-path-missing-png'
           })
           imagePath = (imagePath + '.png') as ImageRelativePath
+        }
+        if (isFolder) {
+          continue
         }
         if (!images.has(imagePath)) {
           let found = false

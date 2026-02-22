@@ -1,4 +1,5 @@
 import type { Node } from 'jsonc-parser'
+import path from 'node:path'
 
 import type { IContentLoader } from '../content/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
@@ -193,6 +194,22 @@ export class LayerInfo {
 
   getImageList(): ImageRelativePath[] {
     return [...new Set(this.getImageListNotUnique())]
+  }
+
+  getImageFolders(): Map<ImageRelativePath, LayerInfo[]> {
+    const result: Map<ImageRelativePath, LayerInfo[]> = this.parent?.getImageFolders() ?? new Map()
+    for (const image of this.images) {
+      const rel = path.dirname(image) as ImageRelativePath
+      if (result.has(rel)) {
+        const arr = result.get(rel)!
+        if (arr[0] !== this) {
+          arr.unshift(this)
+        }
+      } else {
+        result.set(rel, [this])
+      }
+    }
+    return result
   }
 
   maaFindTaskDecl(task: TaskName) {

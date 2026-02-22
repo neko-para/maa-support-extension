@@ -1,7 +1,14 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, ImageRelativePath, RelativePath, joinPath } from '@mse/pipeline-manager'
+import {
+  AbsolutePath,
+  RelativePath,
+  joinImagePath,
+  joinPath,
+  normalizeImageFolder
+} from '@mse/pipeline-manager'
 
+import { isMaaAssistantArknights } from '../../../utils/fs'
 import { convertRange } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -33,6 +40,8 @@ export class PipelineDocumentLinkProvider
 
     const refs = layer.mergedRefs.filter(ref => ref.file === file)
 
+    const imageFolders = topLayer.getImageFolders()
+
     const result: vscode.DocumentLink[] = []
     for (const ref of refs) {
       if (
@@ -50,6 +59,19 @@ export class PipelineDocumentLinkProvider
         continue
       }
       if (!ref.target.endsWith('.png')) {
+        if (isMaaAssistantArknights) {
+          continue
+        }
+        const norm = normalizeImageFolder(ref.target)
+        if (imageFolders.has(norm)) {
+          const layer = imageFolders.get(norm)![0]
+          result.push(
+            new vscode.DocumentLink(
+              convertRange(document, ref.location),
+              vscode.Uri.file(joinImagePath(false, layer.root, norm))
+            )
+          )
+        }
         continue
       }
 

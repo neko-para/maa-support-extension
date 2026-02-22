@@ -25,6 +25,14 @@ export function joinImagePath(
   return path.join(root, maa ? 'template' : 'image', image) as AbsolutePath
 }
 
+export function normalizeImageFolder(image: ImageRelativePath): ImageRelativePath {
+  let norm = path.normalize(image).replaceAll(path.sep, '/')
+  if (norm.endsWith('/')) {
+    norm = norm.slice(0, -1)
+  }
+  return norm as ImageRelativePath
+}
+
 export function relativePath(base: AbsolutePath, target: AbsolutePath): RelativePath {
   return path.relative(base, target) as RelativePath
 }

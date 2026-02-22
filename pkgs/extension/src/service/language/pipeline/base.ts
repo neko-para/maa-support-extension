@@ -12,7 +12,8 @@ import {
   TaskName,
   TaskRefInfo,
   extractTaskRef,
-  joinPath
+  joinPath,
+  normalizeImageFolder
 } from '@mse/pipeline-manager'
 import { Interface } from '@mse/types'
 import { MaaTask } from '@nekosu/maa-tasker'
@@ -205,12 +206,22 @@ ${JSON.stringify(final, null, 2)}
     layer: LayerInfo,
     image: ImageRelativePath
   ) {
-    const layers = layer.getImage(image)
     const content: string[] = []
-    for (const [layer, full, file] of layers) {
-      content.push(`${rootService.relativeToRoot(layer.root)} - [${file}](${vscode.Uri.file(full).toString()})
+    if (!intBundle.maa && !image.endsWith('.png')) {
+      const imageFolders = layer.getImageFolders()
+      const norm = normalizeImageFolder(image)
+      for (const subLayer of imageFolders.get(norm) ?? []) {
+        const count = [...subLayer.images.keys()].filter(img => img.startsWith(norm + '/')).length
+        content.push(`${rootService.relativeToRoot(subLayer.root)} - ${count} images
+`)
+      }
+    } else {
+      const layers = layer.getImage(image)
+      for (const [layer, full, file] of layers) {
+        content.push(`${rootService.relativeToRoot(layer.root)} - [${file}](${vscode.Uri.file(full).toString()})
 
 ![](${vscode.Uri.file(full).toString()})`)
+      }
     }
     return content.join('\n\n')
   }

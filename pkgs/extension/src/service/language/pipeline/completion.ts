@@ -270,12 +270,21 @@ export class PipelineCompletionProvider
         }
       }
     } else if (ref.type === 'task.template') {
+      for (const [imageFolder, layers] of layer.getImageFolders()) {
+        const item: CustomCompletionItem = {
+          label: imageFolder + '/',
+          kind: vscode.CompletionItemKind.Folder,
+          range: convertRangeWithDelta(document, ref.location, -1, 1),
+          sortText: '0_' + imageFolder + '/'
+        }
+        result.push(item)
+      }
       for (const image of layer.getImageList()) {
         const item: CustomCompletionItem = {
           label: image,
           kind: vscode.CompletionItemKind.File,
           range: convertRangeWithDelta(document, ref.location, -1, 1),
-          sortText: image
+          sortText: '1_' + image
         }
         result.push(item)
       }

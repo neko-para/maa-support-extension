@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
 
+import { nativeService } from '.'
 import packageJson from '../../../../release/package.json'
 import { commands } from '../command'
 import { BaseService } from './context'
@@ -25,6 +26,10 @@ export class StatusBarService extends BaseService {
 
     this.defer = vscode.commands.registerCommand(commands.RevealControlPanel, () => {
       vscode.commands.executeCommand('maa.view.control-panel.focus')
+    })
+
+    this.defer = nativeService.onVersionChanged(() => {
+      this.showMaaStatus(nativeService.version)
     })
   }
 

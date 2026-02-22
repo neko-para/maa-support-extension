@@ -13,7 +13,7 @@ export class MaaVersionManager {
     cnpm: 'https://registry.npmmirror.com'
   }
   static isValidRegistryType(key: unknown): key is NpmRegistryType {
-    return typeof key === 'string' && Object.keys(this.registries).includes(key)
+    return typeof key === 'string' && Object.keys(MaaVersionManager.registries).includes(key)
   }
 
   root: string

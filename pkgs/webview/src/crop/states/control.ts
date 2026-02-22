@@ -189,15 +189,7 @@ export function cropBound() {
 }
 
 export function extractRect(text: string): [number, number, number, number] | null {
-  text = text.trim()
-  text = text.replaceAll(/^\[(.+)\]$/g, '$1')
-  const nums = text
-    .split(/[ \t\n_,]+/)
-    .filter(x => !!x)
-    .map(x => {
-      return parseInt(x)
-    })
-    .filter(x => !isNaN(x))
+  const nums = [...text.matchAll(/-?\d+/g)].map(m => parseInt(m[0])).filter(x => !isNaN(x))
   if (nums.length !== 4) {
     return null
   }

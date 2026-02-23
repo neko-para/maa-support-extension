@@ -2,7 +2,6 @@ import * as vscode from 'vscode'
 
 import { findDeclRef } from '@mse/pipeline-manager'
 
-import { interfaceService } from '../..'
 import { convertRangeWithDelta } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
@@ -23,8 +22,8 @@ export class InterfaceCompletionProvider
   async provideCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken,
-    context: vscode.CompletionContext
+    _token: vscode.CancellationToken,
+    _context: vscode.CompletionContext
   ): Promise<CustomCompletionItem[] | null> {
     const index = await this.flushIndex()
     if (!index) {
@@ -93,7 +92,7 @@ export class InterfaceCompletionProvider
 
   async resolveCompletionItem(
     item: CustomCompletionItem,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<CustomCompletionItem> {
     if (item.fillDetail) {
       item.documentation = new vscode.MarkdownString(await item.fillDetail())

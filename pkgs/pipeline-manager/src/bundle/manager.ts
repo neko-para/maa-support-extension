@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher, IContentWatcherController } from '../content/watch'
 import { type AbsolutePath, type RelativePath, relativePath } from '../utils/types'

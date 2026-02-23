@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath } from '@mse/pipeline-manager'
+import type { AbsolutePath } from '@mse/pipeline-manager'
 
 import { hsv2rgb } from '../../utils/color'
 import { convertRange } from '../utils'
@@ -18,7 +18,7 @@ export class PipelineDocumentColorProvider
 
   async provideDocumentColors(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.ColorInformation[]> {
     const intBundle = await this.flush()
     if (!intBundle) {
@@ -53,12 +53,12 @@ export class PipelineDocumentColorProvider
   }
 
   async provideColorPresentations(
-    color: vscode.Color,
-    context: {
+    _color: vscode.Color,
+    _context: {
       readonly document: vscode.TextDocument
       readonly range: vscode.Range
     },
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.ColorPresentation[]> {
     return []
   }

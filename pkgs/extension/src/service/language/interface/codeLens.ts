@@ -40,7 +40,7 @@ export class InterfaceCodeLensProvider
 
   async provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
     const index = await this.flushIndex()
     if (!index) {

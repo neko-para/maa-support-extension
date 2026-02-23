@@ -6,6 +6,7 @@ import { makeFakeController, toArrayBuffer } from '../utils'
 import type { RecoJob, RecoResult } from './types'
 
 module.paths.unshift(process.env.MAAFW_MODULE_PATH!)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require('@maaxyz/maa-node')
 if (process.env.MAAFW_SILENCE_STDOUT === '1') {
   maa.Global.stdout_level = 'Off'

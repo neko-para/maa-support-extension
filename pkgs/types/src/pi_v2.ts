@@ -16,7 +16,7 @@ export type ControllerBase = EntryBase & {
 
 export type AdbController = ControllerBase & {
   type: 'Adb'
-  adb?: {}
+  adb?: Record<string, unknown>
   win32?: never
   playconver?: never
   gamepad?: never

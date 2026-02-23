@@ -1,12 +1,12 @@
 import fs from 'fs/promises'
-import { Node } from 'jsonc-parser'
+import type { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { locale, t } from '@mse/locale'
-import { AbsolutePath, InterfaceRefInfo } from '@mse/pipeline-manager'
-import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
-import { WebviewProvider, provideWebview } from '@mse/utils'
+import type { AbsolutePath } from '@mse/pipeline-manager'
+import type { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
+import { WebviewProvider, logger, provideWebview } from '@mse/utils'
 
 import {
   interfaceService,
@@ -39,11 +39,11 @@ export class WebviewControlService extends BaseService {
       dev: isCtrlDev
     })
 
-    this.provider.sendSt.on('change', bps => {
+    this.provider.sendSt.on('change', _bps => {
       this.updateTransportStatus()
     })
 
-    this.provider.recvSt.on('change', bps => {
+    this.provider.recvSt.on('change', _bps => {
       this.updateTransportStatus()
     })
 
@@ -105,7 +105,7 @@ export class WebviewControlService extends BaseService {
             resource: data.name
           })
           break
-        case 'selectController':
+        case 'selectController': {
           const name =
             data.index === -1
               ? '$fixed'
@@ -118,6 +118,7 @@ export class WebviewControlService extends BaseService {
               : undefined
           })
           break
+        }
         case 'refreshAdb': {
           const ipc = await serverService.ensureServer()
           this.provider?.response(data.seq, (await ipc?.refreshAdb()) ?? [])
@@ -199,7 +200,7 @@ export class WebviewControlService extends BaseService {
               ) ?? []
           })
           break
-        case 'configTask':
+        case 'configTask': {
           const tasks = interfaceService.interfaceConfigJson.task
           const task = tasks?.find(info => info.__vscKey === data.key)
           if (task) {
@@ -216,7 +217,8 @@ export class WebviewControlService extends BaseService {
             })
           }
           break
-        case 'revealInterface':
+        }
+        case 'revealInterface': {
           let loc:
             | {
                 file: AbsolutePath
@@ -268,7 +270,9 @@ export class WebviewControlService extends BaseService {
                 editor.revealRange(range)
                 editor.selection = new vscode.Selection(range.start, range.end)
               }
-            } catch {}
+            } catch (err) {
+              logger.error(`${err}`)
+            }
           } else {
             if (interfaceService.interfaceBundle?.file) {
               const doc = await vscode.workspace.openTextDocument(
@@ -278,7 +282,8 @@ export class WebviewControlService extends BaseService {
             }
           }
           break
-        case 'launch':
+        }
+        case 'launch': {
           const runtime = await interfaceService.buildRuntime()
           if (typeof runtime === 'string') {
             vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
@@ -286,7 +291,8 @@ export class WebviewControlService extends BaseService {
           }
           launchService.launchRuntime(runtime)
           break
-        case 'translate':
+        }
+        case 'translate': {
           if (!data.key.startsWith('$')) {
             this.provider?.response(data.seq, data.key)
             break
@@ -303,6 +309,7 @@ export class WebviewControlService extends BaseService {
           const result = intBundle.langBundle.queryKey(data.key.slice(1))
           this.provider?.response(data.seq, result?.[preferredIndex]?.value ?? data.key)
           break
+        }
         case 'maa.evalTask':
           await vscode.commands.executeCommand(commands.EvalTask, data.task)
           break
@@ -346,7 +353,7 @@ export class WebviewControlService extends BaseService {
 
   updateTransportStatus() {
     if (this.provider) {
-      let sum = this.provider.sendSt.sum + this.provider.recvSt.sum
+      const sum = this.provider.sendSt.sum + this.provider.recvSt.sum
       statusBarService.transportItem.text = `${(sum / 5000).toFixed(2)} kbps`
     }
   }

@@ -29,7 +29,7 @@ export async function set(url: string) {
     })
     data.value = url
     element.value = img
-  } catch (err) {
+  } catch (_err) {
     data.value = null
     element.value = null
   }

@@ -8,7 +8,6 @@ import { ipc } from './ipc'
 import { hostState } from './state'
 import * as imageSt from './states/image'
 
-// @ts-ignore
 globalThis.Buffer = Buffer
 
 createApp(App).mount('#app')

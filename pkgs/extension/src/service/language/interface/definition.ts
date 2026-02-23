@@ -1,9 +1,8 @@
 import * as vscode from 'vscode'
 
-import { findDeclRef, joinPath, parseObject } from '@mse/pipeline-manager'
+import { findDeclRef } from '@mse/pipeline-manager'
 
-import { interfaceService } from '../..'
-import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
+import { autoConvertRangeLocation } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceDefinitionProvider
@@ -19,7 +18,7 @@ export class InterfaceDefinitionProvider
   async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
     const index = await this.flushIndex()
     if (!index) {

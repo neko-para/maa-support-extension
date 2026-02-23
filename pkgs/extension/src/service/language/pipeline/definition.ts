@@ -1,15 +1,14 @@
 import * as vscode from 'vscode'
 
 import {
-  AbsolutePath,
-  TaskMaaTaskRef,
+  type AbsolutePath,
+  type TaskMaaTaskRef,
   findDeclRef,
-  findMaaDeclRef,
-  joinPath
+  findMaaDeclRef
 } from '@mse/pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
-import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
+import { autoConvertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
 export class PipelineDefinitionProvider
@@ -25,7 +24,7 @@ export class PipelineDefinitionProvider
   async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
     const intBundle = await this.flush()
     if (!intBundle) {

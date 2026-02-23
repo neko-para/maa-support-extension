@@ -1,7 +1,7 @@
 // import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import path, { resolve } from 'path'
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config

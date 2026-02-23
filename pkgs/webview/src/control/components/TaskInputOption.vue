@@ -8,7 +8,7 @@ import TaskInputOptionItem from './TaskInputOptionItem.vue'
 import type { OptionInfo } from './types'
 import { revealOption } from './utils'
 
-const props = defineProps<{
+defineProps<{
   task: TaskConfig
   opt: OptionInfo
   optMeta: InputOption

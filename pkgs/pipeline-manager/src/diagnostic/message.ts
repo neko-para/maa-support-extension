@@ -1,4 +1,4 @@
-import { locale, setLocale, t } from '@mse/locale'
+import { t } from '@mse/locale'
 
 import { type AbsolutePath, relativePath } from '../utils/types'
 import type { Diagnostic, DiagnosticOption } from './types'
@@ -9,7 +9,7 @@ export async function buildDiagnosticMessage(
   root: AbsolutePath,
   diag: Diagnostic,
   evalPos: (file: AbsolutePath, offset: number) => Promise<Position>,
-  option: DiagnosticOption
+  _option: DiagnosticOption
 ): Promise<[start: Position, end: Position, brief: string]> {
   const buildPos = async (loc: { file: AbsolutePath; offset: number }) => {
     const [line, column] = await evalPos(loc.file, loc.offset)

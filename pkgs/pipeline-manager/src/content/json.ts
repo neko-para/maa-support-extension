@@ -5,6 +5,7 @@ import type { AbsolutePath } from '../utils/types'
 import type { IContentLoader } from './loader'
 import type { IContentWatcher, IContentWatcherController } from './watch'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ContentJson<T = any> {
   loader: IContentLoader
   watcher: IContentWatcher
@@ -43,18 +44,18 @@ export class ContentJson<T = any> {
     this.dirty = true
 
     this.watcherCtrl = await this.watcher.watch(this.file, true, {
-      filter: (file, isdir) => {
+      filter: (_file, _isdir) => {
         return true
       },
-      fileAdded: file => {
+      fileAdded: _file => {
         this.dirty = true
         this.dispatchFlush()
       },
-      fileChanged: file => {
+      fileChanged: _file => {
         this.dirty = true
         this.dispatchFlush()
       },
-      fileDeleted: file => {
+      fileDeleted: _file => {
         this.dirty = true
         this.dispatchFlush()
       }
@@ -84,7 +85,7 @@ export class ContentJson<T = any> {
         this.node = undefined
       }
       if (this.node) {
-        this.object = buildTree(this.node)
+        this.object = buildTree(this.node) as T
       } else {
         this.object = undefined
       }

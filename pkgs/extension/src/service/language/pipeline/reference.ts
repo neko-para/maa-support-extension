@@ -1,6 +1,11 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, TaskMaaTaskRef, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
+import {
+  type AbsolutePath,
+  type TaskMaaTaskRef,
+  findDeclRef,
+  findMaaDeclRef
+} from '@mse/pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'
@@ -19,8 +24,8 @@ export class PipelineReferenceProvider
   async provideReferences(
     document: vscode.TextDocument,
     position: vscode.Position,
-    context: vscode.ReferenceContext,
-    token: vscode.CancellationToken
+    _context: vscode.ReferenceContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
     const intBundle = await this.flush()
     if (!intBundle) {

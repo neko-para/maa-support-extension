@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
+import { type AbsolutePath, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
@@ -18,7 +18,7 @@ export class PipelineHoverProvider
   async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
     const intBundle = await this.flush()
     if (!intBundle) {

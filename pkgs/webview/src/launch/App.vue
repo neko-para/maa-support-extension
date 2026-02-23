@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
-import { NCard, NConfigProvider, NSplit } from 'naive-ui'
+import { NConfigProvider, NSplit } from 'naive-ui'
 import { ref } from 'vue'
 
 import { useTheme } from '../utils/theme'

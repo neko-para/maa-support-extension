@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref } from 'vue'
 
 import { ipc } from '../ipc'
 import { Box, DragHandler, Pos, Size, Viewport } from '../utils/2d'
@@ -53,7 +53,7 @@ export function onKeyDown(event: KeyboardEvent) {
   // event.metaKey
 }
 
-export function onKeyUp(event: KeyboardEvent) {
+export function onKeyUp(_event: KeyboardEvent) {
   // event.metaKey
 }
 

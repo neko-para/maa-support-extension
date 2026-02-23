@@ -136,9 +136,9 @@ type WithLoopWhenContext<
 }
 
 type ExtractResultType<Return> =
-  Return extends ForContext<infer Entry, infer Tokens, infer Exprs, infer Expr>
+  Return extends ForContext<infer Entry, infer _Tokens, infer _Exprs, infer _Expr>
     ? Entry
-    : Return extends RuleContext<infer Entry, infer Tokens, infer Exprs>
+    : Return extends RuleContext<infer Entry, infer _Tokens, infer _Exprs>
       ? Entry
       : never
 
@@ -158,7 +158,7 @@ export function makeParser<
     curr: BuildToken<TokenArray<TokenDecls>>,
     getBack: (idx: number) => BuildToken<TokenArray<TokenDecls>> | null
   ) => boolean,
-  expr: Exprs,
+  _expr: Exprs,
   ignore: RegExp,
   setup: (rule: RuleContext<never, BuildToken<TokenArray<TokenDecls>>, Exprs>) => RuleResult
 ) {
@@ -166,9 +166,9 @@ export function makeParser<
     token,
     ignore,
     tokenFilter: tokenFilter as TokenFilter
-  }) as any as TypedParser<never, BuildToken<TokenArray<TokenDecls>>, Exprs>
+  }) as unknown as TypedParser<never, BuildToken<TokenArray<TokenDecls>>, Exprs>
   setup(parserImpl.rule)
-  return parserImpl as any as TypedParser<
+  return parserImpl as unknown as TypedParser<
     ExtractResultType<RuleResult>,
     BuildToken<TokenArray<TokenDecls>>,
     Exprs

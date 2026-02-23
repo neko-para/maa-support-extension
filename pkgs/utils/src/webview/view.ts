@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises'
 import * as vscode from 'vscode'
 
-import { HostToWeb, ImplType, WebToHost } from '@mse/types'
+import type { HostToWeb, ImplType, WebToHost } from '@mse/types'
 
 import { cspMeta } from './data'
 import forwardHtml from './forward.html'
@@ -35,8 +35,8 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
 
   async resolveWebviewView(
     webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
-    token: vscode.CancellationToken
+    _context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
   ) {
     this.webview = webviewView.webview
 
@@ -91,7 +91,7 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
     }
   }
 
-  recv(data: WebToHost<ToHostImpl>) {}
+  recv(_data: WebToHost<ToHostImpl>) {}
 
   send(data: HostToWeb<ToWebImpl>) {
     const msg = JSON.stringify(data)

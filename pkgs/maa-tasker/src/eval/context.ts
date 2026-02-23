@@ -50,7 +50,7 @@ export class MaaEvalDelegate {
     this.error = error
   }
 
-  query(task: string): [task: MaaTask, anchor: string][] {
+  query(_task: string): [task: MaaTask, anchor: string][] {
     return []
   }
 }
@@ -312,7 +312,7 @@ class MaaEvalContextImpl {
           this.delegate.error.warnCannotFindBaseTask(segs.join('@'))
         }
 
-        let result: MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null = null
+        let result: MaaTaskWithTraceInfo<MaaTaskBaseResolved> | null
         if (base) {
           this.cache[segs.join('@')] = base
 

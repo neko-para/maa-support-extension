@@ -1,8 +1,8 @@
 import type { Node } from 'jsonc-parser'
 
 import type { AnchorName, TaskName } from '../../utils/types'
-import { isString, parseArray, parseObject, parseObjectFlex } from '../utils'
-import type { TaskDeclInfo, TaskInfo, TaskParseContext } from './task'
+import { isString, parseArray, parseObjectFlex } from '../utils'
+import type { TaskInfo, TaskParseContext } from './task'
 
 function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
   if (isString(node)) {

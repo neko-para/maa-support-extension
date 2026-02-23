@@ -16,14 +16,14 @@ export function setupIpc(conn: rpc.MessageConnection) {
       console.log('<--', method)
     }
     try {
-      return (ipc as any).$[method](...args)
+      return ipc.$[method](...args)
     } catch (err) {
       console.error(`handle ${method} failed: ${err}`)
       return null
     }
   })
 
-  const handlers: Record<string, Function> = {}
+  const handlers: Record<string, unknown> = {}
 
   ipc = new Proxy(
     {},

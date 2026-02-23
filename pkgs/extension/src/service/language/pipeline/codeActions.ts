@@ -2,13 +2,13 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
 import {
-  AbsolutePath,
+  type AbsolutePath,
   InterfaceBundle,
-  InterfaceRefInfo,
-  TaskRefInfo,
+  type InterfaceRefInfo,
+  type TaskRefInfo,
   findDeclRef
 } from '@mse/pipeline-manager'
-import { Interface } from '@mse/types'
+import type { Interface } from '@mse/types'
 
 import { commands } from '../../../command'
 import { convertRange } from '../utils'
@@ -95,8 +95,8 @@ export class PipelineCodeActionsProvider
   async provideCodeActions(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
-    context: vscode.CodeActionContext,
-    token: vscode.CancellationToken
+    _context: vscode.CodeActionContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.CodeAction[]> {
     if (!isSelection(range)) {
       return []

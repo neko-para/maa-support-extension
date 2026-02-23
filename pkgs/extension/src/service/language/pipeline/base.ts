@@ -1,22 +1,21 @@
 import path from 'path'
-import { json } from 'stream/consumers'
 import * as vscode from 'vscode'
 
 import {
-  AbsolutePath,
-  AnchorName,
-  ImageRelativePath,
+  type AbsolutePath,
+  type AnchorName,
+  type ImageRelativePath,
   InterfaceBundle,
   LayerInfo,
-  TaskDeclInfo,
-  TaskName,
-  TaskRefInfo,
+  type TaskDeclInfo,
+  type TaskName,
+  type TaskRefInfo,
   extractTaskRef,
   joinPath,
   normalizeImageFolder
 } from '@mse/pipeline-manager'
-import { Interface } from '@mse/types'
-import { MaaTask } from '@nekosu/maa-tasker'
+import type { Interface } from '@mse/types'
+import type { MaaTask } from '@nekosu/maa-tasker'
 
 import { interfaceService, rootService } from '../..'
 import { isMaaAssistantArknights, pipelineSuffix } from '../../../utils/fs'
@@ -170,7 +169,7 @@ ${doc.getText(range)}
     }
     const final = this.evalTask(intBundle, task, current)
     if (final) {
-      let showImage = false
+      let showImage: boolean
       if (isMaaAssistantArknights) {
         const algo = (final?.algorithm as string) ?? 'MatchTemplate'
         showImage = ['MatchTemplate', 'FeatureMatch'].includes(algo)
@@ -261,7 +260,7 @@ ${JSON.stringify(final, null, 2)}
 
   makeDecls(
     decls: TaskDeclInfo[],
-    refs: TaskRefInfo[],
+    _refs: TaskRefInfo[],
     decl: TaskDeclInfo | null,
     ref: TaskRefInfo | null
   ): TaskDeclInfo[] {
@@ -297,7 +296,7 @@ ${JSON.stringify(final, null, 2)}
   }
 
   makeRefs(
-    decls: TaskDeclInfo[],
+    _decls: TaskDeclInfo[],
     refs: TaskRefInfo[],
     decl: TaskDeclInfo | null,
     ref: TaskRefInfo | null

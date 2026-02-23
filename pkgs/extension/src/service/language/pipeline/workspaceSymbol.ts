@@ -9,14 +9,14 @@ export class PipelineWorkspaceSymbolProvider
   implements vscode.WorkspaceSymbolProvider
 {
   constructor() {
-    super(sel => {
+    super(() => {
       return vscode.languages.registerWorkspaceSymbolProvider(this)
     })
   }
 
   async provideWorkspaceSymbols(
     query: string,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation[]> {
     const intBundle = await this.flush()
     if (!intBundle) {

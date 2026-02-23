@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
-import { InterfaceRuntime } from '@mse/types'
+import type { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel } from '@mse/utils'
 
 import { debugService, interfaceService, serverService } from '.'

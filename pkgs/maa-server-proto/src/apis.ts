@@ -5,7 +5,7 @@ type MarkReturnPromise<Func> = Func extends (...args: infer Args) => infer Ret
   : Func
 
 export type HostToSubApis = {
-  fetchConstants: () => any
+  fetchConstants: () => unknown
   updateController: (runtime: InterfaceRuntime['controller_param']) => boolean
   setupInstance: (
     runtime: InterfaceRuntime,
@@ -66,4 +66,7 @@ export type MarkApisImpl<T> = {
   [K in keyof T]: MarkReturnPromise<T[K]>
 }
 
-export type MarkApis<Server, Client> = MarkApisImpl<Server> & Readonly<MarkApisImpl<Client>>
+export type MarkApis<Server, Client> = MarkApisImpl<Server> &
+  Readonly<MarkApisImpl<Client>> & {
+    $: Record<string, (...args: unknown[]) => unknown>
+  }

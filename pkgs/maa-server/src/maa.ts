@@ -13,6 +13,7 @@ import { makePromise } from './utils'
 
 export function initMaa() {
   module.paths.unshift(option.module)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('@maaxyz/maa-node')
 
   logger.info(maa.Global.version)

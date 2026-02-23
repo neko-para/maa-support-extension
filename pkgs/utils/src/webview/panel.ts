@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises'
 import * as vscode from 'vscode'
 
-import { HostToWeb, ImplType, WebToHost } from '@mse/types'
+import type { HostToWeb, ImplType, WebToHost } from '@mse/types'
 
 import { cspMeta } from './data'
 import forwardHtml from './forward.html'

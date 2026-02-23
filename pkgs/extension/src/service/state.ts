@@ -1,4 +1,4 @@
-import { CropSettings, EvalTaskConfig } from '@mse/types'
+import type { CropSettings, EvalTaskConfig } from '@mse/types'
 
 import { BaseService, context } from './context'
 

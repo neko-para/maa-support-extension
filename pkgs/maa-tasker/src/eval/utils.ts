@@ -70,9 +70,11 @@ export function mergeTask(
   ) {
     for (const key of TaskBaseProps) {
       if (inherit.task[key] !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.task[key] = inherit.task[key] as any
         result.trace[key] = inherit.self
       } else if (base.task[key] !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         result.task[key] = base.task[key] as any
         result.trace[key] = base.self
       }
@@ -81,6 +83,7 @@ export function mergeTask(
     result.task = { ...base.task }
     result.trace = { ...base.trace }
     for (const [key, val] of Object.entries(inherit.task)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       result.task[key as keyof MaaTask] = val as any
       result.trace[key] = inherit.self
     }
@@ -127,6 +130,7 @@ export function mergeMultiPathTasks(
   // 就是直接覆盖
   prev.self = last.self
   for (const [key, val] of Object.entries(last.task)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     prev.task[key as keyof MaaTask] = val as any
     prev.trace[key] = last.self
   }

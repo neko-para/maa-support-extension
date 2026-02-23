@@ -48,11 +48,12 @@ export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>(
           document.documentElement.setAttribute('style', obj.htmlStyle)
           document.body.setAttribute('class', obj.bodyClass)
           break
-        case '__response':
+        case '__response': {
           const resolve = resps.get(obj.seq)!
           resps.delete(obj.seq)
           resolve?.(obj.data)
           break
+        }
       }
     } else {
       recv.value(obj)

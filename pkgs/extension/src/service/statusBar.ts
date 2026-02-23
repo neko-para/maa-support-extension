@@ -47,6 +47,6 @@ export class StatusBarService extends BaseService {
   }
 
   showServerStatus(status: 'check' | 'close' | 'loading~spin') {
-    this.extItem.text = `MaaSupport ${packageJson.version} \$(${status})`
+    this.extItem.text = `MaaSupport ${packageJson.version} $(${status})`
   }
 }

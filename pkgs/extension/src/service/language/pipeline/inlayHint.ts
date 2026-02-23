@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, extractTaskRef } from '@mse/pipeline-manager'
+import { type AbsolutePath, extractTaskRef } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
 import { debounce } from '../../utils/debounce'
@@ -42,7 +42,7 @@ export class PipelineInlayHintsProvider
   async provideInlayHints(
     document: vscode.TextDocument,
     range: vscode.Range,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.InlayHint[]> {
     const intBundle = await this.flush()
     if (!intBundle) {

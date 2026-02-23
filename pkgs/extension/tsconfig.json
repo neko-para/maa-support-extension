@@ -4,6 +4,7 @@
     "module": "ES2022",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
     "allowArbitraryExtensions": true,
     "types": ["@maaxyz/maa-node"]
   },

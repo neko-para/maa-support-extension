@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 import { findDeclRef } from '@mse/pipeline-manager'
 
-import { autoConvertRangeLocation, convertRangeLocation } from '../utils'
+import { autoConvertRangeLocation } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceReferenceProvider
@@ -18,8 +18,8 @@ export class InterfaceReferenceProvider
   async provideReferences(
     document: vscode.TextDocument,
     position: vscode.Position,
-    context: vscode.ReferenceContext,
-    token: vscode.CancellationToken
+    _context: vscode.ReferenceContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
     const index = await this.flushIndex()
     if (!index) {

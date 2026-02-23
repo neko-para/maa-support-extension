@@ -181,7 +181,7 @@ export async function parseOption(): Promise<ProgramOption | null> {
 
   const regex = /^--([a-z-]+)(?:=(.+))?$/
   for (const opt of args) {
-    let match = regex.exec(opt)
+    const match = regex.exec(opt)
     if (!match) {
       continue
     }

@@ -1,4 +1,3 @@
-import type { Node } from 'jsonc-parser'
 import EventEmitter from 'node:events'
 import * as path from 'node:path'
 
@@ -16,13 +15,7 @@ import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
-import {
-  type InterfaceInfo,
-  type InterfaceRefInfo,
-  parseInterface
-} from '../parser/interface/interface'
-import type { TaskDeclInfo } from '../parser/task/task'
-import { isString, parseObject } from '../parser/utils'
+import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
 import {
   type AbsolutePath,
   type RelativePath,
@@ -32,7 +25,7 @@ import {
 } from '../utils/types'
 import { LanguageBundle } from './language'
 
-class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
+class MaaEvalDelegateImpl<T> extends MaaEvalDelegate {
   intBundle: InterfaceBundle<T>
 
   constructor(intBundle: InterfaceBundle<T>) {
@@ -59,7 +52,7 @@ class MaaEvalDelegateImpl<T extends any> extends MaaEvalDelegate {
   }
 }
 
-export class InterfaceBundle<T extends any> extends EventEmitter<{
+export class InterfaceBundle<T> extends EventEmitter<{
   interfaceChanged: []
   importChanged: []
   slaveInterfaceChanged: []

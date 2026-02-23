@@ -26,7 +26,7 @@ export function visitJsonDocument<State = unknown>(
   let afterProp = false
 
   visit(doc.getText(), {
-    onObjectProperty: (property, offset, length, startLine, startCharacter, pathSupplier) => {
+    onObjectProperty: (property, offset, length, _startLine, _startCharacter, _pathSupplier) => {
       path[path.length - 1] = property
       //
       const state = visitor.onObjectProp?.(
@@ -37,7 +37,7 @@ export function visitJsonDocument<State = unknown>(
       states.unshift(state)
       afterProp = true
     },
-    onObjectBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+    onObjectBegin: (offset, _length, _startLine, _startCharacter, _pathSupplier) => {
       if (!afterProp) {
         // 数组中的对象
         states.unshift(undefined)
@@ -50,7 +50,7 @@ export function visitJsonDocument<State = unknown>(
       //
       path.push('')
     },
-    onObjectEnd: (offset, length, startLine, startCharacter) => {
+    onObjectEnd: (offset, length, _startLine, _startCharacter) => {
       path.pop()
       //
       const pos = positionStack.pop()
@@ -63,15 +63,16 @@ export function visitJsonDocument<State = unknown>(
         states.shift()
       }
     },
-    onSeparator: (character, offset, length, startLine, startCharacter) => {
+    onSeparator: (character, _offset, _length, _startLine, _startCharacter) => {
       if (character === ',') {
         if (typeof path[path.length - 1] === 'number') {
           ;(path[path.length - 1] as number)++
         }
       } else if (character === ':') {
+        //
       }
     },
-    onArrayBegin: (offset, length, startLine, startCharacter, pathSupplier) => {
+    onArrayBegin: (offset, _length, _startLine, _startCharacter, _pathSupplier) => {
       if (afterProp) {
         states.shift()
         afterProp = false
@@ -83,7 +84,7 @@ export function visitJsonDocument<State = unknown>(
       //
       path.push(0)
     },
-    onArrayEnd: (offset, length, startLine, startCharacter) => {
+    onArrayEnd: (offset, length, _startLine, _startCharacter) => {
       path.pop()
       //
       const pos = positionStack.pop()
@@ -91,7 +92,7 @@ export function visitJsonDocument<State = unknown>(
         visitor.onArrayEnd?.(new vscode.Range(pos, doc.positionAt(offset + length)), path)
       }
     },
-    onLiteralValue: (value, offset, length, startLine, startCharacter, pathSupplier) => {
+    onLiteralValue: (value, offset, length, _startLine, _startCharacter, _pathSupplier) => {
       if (afterProp) {
         afterProp = false
         states.shift()
@@ -104,6 +105,6 @@ export function visitJsonDocument<State = unknown>(
         states.find(x => x !== undefined)
       )
     },
-    onError: (error, offset, length, startLine, startCharacter) => {}
+    onError: (_error, _offset, _length, _startLine, _startCharacter) => {}
   })
 }

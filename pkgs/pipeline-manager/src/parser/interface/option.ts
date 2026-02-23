@@ -1,6 +1,5 @@
 import type { Node } from 'jsonc-parser'
 
-import type { AbsolutePath } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCases } from './case'
 import { parseInputs } from './input'

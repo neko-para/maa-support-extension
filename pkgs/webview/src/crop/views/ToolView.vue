@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NGrid, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'

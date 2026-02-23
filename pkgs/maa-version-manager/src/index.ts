@@ -53,7 +53,7 @@ export class MaaVersionManager {
   }
 
   async fetchAllLocalVersions() {
-    let release = await this.lock()
+    const release = await this.lock()
     if (!release) {
       return []
     }
@@ -66,7 +66,7 @@ export class MaaVersionManager {
   }
 
   async fetchAllVersions(minimumVersion: string) {
-    let release = await this.lock()
+    const release = await this.lock()
     if (!release) {
       return []
     }
@@ -86,7 +86,7 @@ export class MaaVersionManager {
   }
 
   async fetchLatest() {
-    let release = await this.lock()
+    const release = await this.lock()
     if (!release) {
       return null
     }
@@ -168,7 +168,7 @@ export class MaaVersionManager {
   }
 
   async cleanUnused(skipVersions: string[] = []) {
-    let release = await this.lock()
+    const release = await this.lock()
     if (!release) {
       return
     }

@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { NButton, NCard, NDynamicTags, NFlex, NScrollbar, NTab, NTabs, NText } from 'naive-ui'
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { t } from '../../utils/locale'
 import InputTask from '../components/InputTask.vue'
-import NodeScopeItem from '../components/NodeScopeItem.vue'
 import TaskScopeItem from '../components/TaskScopeItem.vue'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
-import { type LaunchGraph, afterLaunchGraph, launchGraph } from '../states/launch'
+import { afterLaunchGraph, launchGraph } from '../states/launch'
 
 function requestStop() {
   ipc.send({

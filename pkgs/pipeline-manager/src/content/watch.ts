@@ -22,7 +22,7 @@ export interface IContentWatcher {
 }
 
 export class FsContentWatcher implements IContentWatcher {
-  async watch(root: string, isFile: boolean, delegate: IContentWatcherDelegate) {
+  async watch(root: string, _isFile: boolean, delegate: IContentWatcherDelegate) {
     const watcher = chokidar.watch(root, {
       ignored: (file, stats) => {
         if (!stats) {

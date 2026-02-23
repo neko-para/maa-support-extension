@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs'
 import * as fs from 'fs/promises'
 
 import type { ProgramOption } from '../option'
@@ -33,7 +32,7 @@ export async function performRecoTest(option: ProgramOption) {
 }
 
 export async function performRecoTestImpl(option: ProgramOption, result: GroupRecoResult[]) {
-  const { enableColor, hitPrefix, missPrefix, resetSuffix } = getColorInfo(option)
+  const { hitPrefix, missPrefix, resetSuffix } = getColorInfo(option)
 
   for (const group of result) {
     if (!group.group.test) {

@@ -20,9 +20,9 @@ export const hsvColor = computed<[h: number, s: number, v: number] | null>(() =>
   const cmin = Math.min(rp, gp, bp)
   const dlt = cmax - cmin
 
-  let h: number, s: number, v: number
-
-  v = cmax
+  let h: number
+  let s: number
+  const v = cmax
 
   if (cmax === 0) {
     s = 0

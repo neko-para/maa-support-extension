@@ -204,7 +204,7 @@ function parseMaaBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) 
 }
 
 function parseBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
-  for (const [key, obj, prop] of props) {
+  for (const [key, obj] of props) {
     switch (key) {
       case 'next':
       case 'on_error':
@@ -333,7 +333,7 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
 }
 
 function parseUnknown(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
-  for (const [key, obj, prop] of props) {
+  for (const [key, _obj, prop] of props) {
     if (key.startsWith('$__mpe')) {
       info.decls.push({
         file: ctx.file,

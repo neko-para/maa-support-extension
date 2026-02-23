@@ -1,6 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
-import { isNumber, isString, parseArray, parseObject } from '../utils'
+import { isNumber, parseArray } from '../utils'
 import type { TaskInfo, TaskParseContext } from './task'
 
 function isColor(node: Node) {

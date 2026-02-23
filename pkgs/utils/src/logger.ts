@@ -35,6 +35,7 @@ export async function setupLogger(channel: vscode.OutputChannel, file: vscode.Ur
 
   logger.add(
     new (class VscodeOutputChannelTransport extends Transport {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       log(info: any, next: () => void) {
         channel.appendLine(info[MESSAGE])
         next()

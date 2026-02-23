@@ -9,7 +9,7 @@ const inputTask = ref('')
 
 const taskOptions = computed(() => {
   if (inputTask.value === ' ') {
-    return (hostState.value.knownTasks ?? []).map((info, index) => {
+    return (hostState.value.knownTasks ?? []).map(info => {
       return {
         value: info,
         label: ' ' + info
@@ -17,7 +17,7 @@ const taskOptions = computed(() => {
     })
   } else {
     return (hostState.value.knownTasks ?? [])
-      .map((info, index) => {
+      .map(info => {
         return {
           value: info,
           label: info

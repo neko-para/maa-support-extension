@@ -73,7 +73,9 @@ export function parseMaaExpr(node: Node, info: TaskInfo, ctx: TaskParseContext) 
     try {
       const ast = parseExpr(node.value as MaaTaskExpr)
       parseMaaExprTask(ast, tasks)
-    } catch {}
+    } catch (_err) {
+      return
+    }
   }
 }
 

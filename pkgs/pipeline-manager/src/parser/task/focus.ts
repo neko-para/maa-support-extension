@@ -4,7 +4,7 @@ import { isString, parseObject } from '../utils'
 import type { TaskInfo, TaskParseContext } from './task'
 
 export function parseFocus(node: Node, info: TaskInfo, ctx: TaskParseContext) {
-  for (const [key, obj] of parseObject(node)) {
+  for (const [_key, obj] of parseObject(node)) {
     if (isString(obj)) {
       if (obj.value.startsWith('$')) {
         info.refs.push({

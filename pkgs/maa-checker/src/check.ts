@@ -85,7 +85,7 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
       }
 
       for (const diag of diags) {
-        const [start, end, brief] = await buildDiagnosticMessage(
+        const [start, _end, brief] = await buildDiagnosticMessage(
           bundle.root,
           diag,
           locate,

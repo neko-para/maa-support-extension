@@ -1,8 +1,6 @@
-import type { Node } from 'jsonc-parser'
 import EventEmitter from 'node:events'
 import * as path from 'node:path'
 
-import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'

@@ -1,6 +1,5 @@
 import { type ShallowRef, onBeforeUnmount, onUnmounted, ref, watch } from 'vue'
 
-import { hostState } from '../state'
 import { Box, Pos, Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as imageSt from './image'
@@ -49,7 +48,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
         if (info.detail) {
           ctx.font = font
 
-          let detailEntries: {
+          const detailEntries: {
             name: string
             entry: maa.RecoDetailWithoutDraws['detail']
           }[] = [

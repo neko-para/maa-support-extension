@@ -31,7 +31,7 @@ function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
     }
     let failOffset = 0
     while (true) {
-      let match = /^\[([^\]]+)\]/.exec(name)
+      const match = /^\[([^\]]+)\]/.exec(name)
       if (!match) {
         break
       }

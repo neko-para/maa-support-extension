@@ -31,7 +31,7 @@ const allTasks = computed(() => {
 })
 
 const taskOptions = computed(() => {
-  return allTasks.value.map((info, index) => {
+  return allTasks.value.map(info => {
     return {
       value: info.name,
       label: makeBrief(info.name)
@@ -50,7 +50,7 @@ async function nativeSelectTask() {
   selectingTask.value = true
 
   const options = await Promise.all(
-    allTasks.value.map(async (info, index) => {
+    allTasks.value.map(async info => {
       const label = info.label
         ? await ipc.call({
             command: 'translate',

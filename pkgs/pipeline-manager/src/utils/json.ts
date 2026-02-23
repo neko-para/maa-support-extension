@@ -18,7 +18,7 @@ export function parseTreeWithoutParent(content: string): Node | undefined {
   return node
 }
 
-export function buildTree(node: Node): any {
+export function buildTree(node: Node): unknown {
   switch (node.type) {
     case 'string':
     case 'number':

@@ -21,7 +21,7 @@ export type LayerTaskInfo = {
   obj: unknown
 }
 
-function specialStringify(value: any, indent: string, indentCount: number): string {
+function specialStringify(value: unknown, indent: string, indentCount: number): string {
   if (Array.isArray(value)) {
     if (value.length === 0) {
       return '[]'
@@ -32,7 +32,7 @@ function specialStringify(value: any, indent: string, indentCount: number): stri
     }
     result.push(indent.repeat(indentCount - 1) + ']')
     return result.join('\n')
-  } else if (typeof value === 'object') {
+  } else if (typeof value === 'object' && value !== null) {
     if (Object.keys(value).length === 0) {
       return '{}'
     }
@@ -290,7 +290,7 @@ export class LayerInfo {
       reco?: maa.RecognitionType
       act?: maa.ActionType
     } = {}
-    for (const { layer, infos } of this.getTask(task)) {
+    for (const { infos } of this.getTask(task)) {
       for (const info of infos) {
         if (!result.reco && info.info.parts.recoType) {
           result.reco = info.info.parts.recoType.value as maa.RecognitionType
@@ -317,6 +317,7 @@ export class LayerInfo {
 
   toggleMode(mode: 1 | 2, info: LayerTaskInfo, indent = '    ') {
     const parts = info.info.parts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any = {}
     if (mode === 1) {
       if (parts.recoType) {

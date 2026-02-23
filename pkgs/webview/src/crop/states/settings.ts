@@ -34,7 +34,7 @@ export const fontWithDefault = (font: string | undefined, def: string) => {
 }
 
 export const toAlpha = (value: number | undefined, def: number) => {
-  if (!!!value) {
+  if (!value) {
     return def
   }
   return isNaN(value) ? def : value < 0 ? 0 : value > 1 ? 1 : value

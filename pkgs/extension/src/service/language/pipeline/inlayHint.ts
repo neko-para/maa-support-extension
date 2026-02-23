@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, extractTaskRef } from '@mse/pipeline-manager'
+import { type AbsolutePath, extractTaskRef } from '@mse/pipeline-manager'
 
 import { interfaceService } from '../..'
 import { debounce } from '../../utils/debounce'

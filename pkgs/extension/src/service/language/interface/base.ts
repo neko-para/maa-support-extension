@@ -1,7 +1,12 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { InterfaceDeclInfo, InterfaceInfo, InterfaceRefInfo, joinPath } from '@mse/pipeline-manager'
+import {
+  type InterfaceDeclInfo,
+  type InterfaceInfo,
+  type InterfaceRefInfo,
+  joinPath
+} from '@mse/pipeline-manager'
 
 import { interfaceService, rootService } from '../..'
 import { BaseService } from '../../context'

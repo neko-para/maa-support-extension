@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 
 import {
-  AbsolutePath,
-  RelativePath,
+  type AbsolutePath,
+  type RelativePath,
   joinImagePath,
   joinPath,
   normalizeImageFolder

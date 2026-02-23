@@ -4,8 +4,8 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
 import {
-  AbsolutePath,
-  DiagnosticOption,
+  type AbsolutePath,
+  type DiagnosticOption,
   buildDiagnosticMessage,
   performDiagnostic
 } from '@mse/pipeline-manager'

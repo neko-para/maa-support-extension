@@ -1,7 +1,7 @@
-import { Node } from 'jsonc-parser'
+import type { Node } from 'jsonc-parser'
 import * as vscode from 'vscode'
 
-import { AbsolutePath } from '@mse/pipeline-manager'
+import type { AbsolutePath } from '@mse/pipeline-manager'
 
 export function convertRange(document: vscode.TextDocument, location: Node) {
   return new vscode.Range(

@@ -1,15 +1,15 @@
 import * as vscode from 'vscode'
 
 import { locale } from '@mse/locale'
-import { TaskName } from '@mse/pipeline-manager'
-import { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
+import type { TaskName } from '@mse/pipeline-manager'
+import type { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
 
 import { interfaceService, nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
-import { IpcType } from '../server'
+import type { IpcType } from '../server'
 import { WebviewCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 

@@ -1,10 +1,10 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, RelativePath, relativePath } from '@mse/pipeline-manager'
+import { type AbsolutePath, type RelativePath, relativePath } from '@mse/pipeline-manager'
 import { logger } from '@mse/utils'
 
 import { stateService } from '.'
-import { ResourceRoot, locateResourceRoot } from '../utils/fs'
+import { type ResourceRoot, locateResourceRoot } from '../utils/fs'
 import { BaseService } from './context'
 
 export class RootService extends BaseService {

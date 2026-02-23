@@ -2,20 +2,20 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import {
-  AbsolutePath,
-  AnchorName,
-  ImageRelativePath,
+  type AbsolutePath,
+  type AnchorName,
+  type ImageRelativePath,
   InterfaceBundle,
   LayerInfo,
-  TaskDeclInfo,
-  TaskName,
-  TaskRefInfo,
+  type TaskDeclInfo,
+  type TaskName,
+  type TaskRefInfo,
   extractTaskRef,
   joinPath,
   normalizeImageFolder
 } from '@mse/pipeline-manager'
-import { Interface } from '@mse/types'
-import { MaaTask } from '@nekosu/maa-tasker'
+import type { Interface } from '@mse/types'
+import type { MaaTask } from '@nekosu/maa-tasker'
 
 import { interfaceService, rootService } from '../..'
 import { isMaaAssistantArknights, pipelineSuffix } from '../../../utils/fs'

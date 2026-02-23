@@ -1,9 +1,9 @@
 import * as vscode from 'vscode'
 
 import {
-  HostToSubApis,
-  MarkApis,
-  SubToHostApis,
+  type HostToSubApis,
+  type MarkApis,
+  type SubToHostApis,
   hostToSubReq,
   logNoti,
   subToHostReq

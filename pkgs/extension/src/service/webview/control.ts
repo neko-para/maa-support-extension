@@ -1,11 +1,11 @@
 import fs from 'fs/promises'
-import { Node } from 'jsonc-parser'
+import type { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { locale, t } from '@mse/locale'
-import { AbsolutePath } from '@mse/pipeline-manager'
-import { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
+import type { AbsolutePath } from '@mse/pipeline-manager'
+import type { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, logger, provideWebview } from '@mse/utils'
 
 import {

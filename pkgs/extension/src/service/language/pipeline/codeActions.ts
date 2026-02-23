@@ -2,13 +2,13 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
 import {
-  AbsolutePath,
+  type AbsolutePath,
   InterfaceBundle,
-  InterfaceRefInfo,
-  TaskRefInfo,
+  type InterfaceRefInfo,
+  type TaskRefInfo,
   findDeclRef
 } from '@mse/pipeline-manager'
-import { Interface } from '@mse/types'
+import type { Interface } from '@mse/types'
 
 import { commands } from '../../../command'
 import { convertRange } from '../utils'

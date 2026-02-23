@@ -3,14 +3,14 @@ import path from 'path'
 import * as vscode from 'vscode'
 
 import { locale, t } from '@mse/locale'
-import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
+import type { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, logger } from '@mse/utils'
 
 import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
-import { IpcType } from '../server'
+import type { IpcType } from '../server'
 import { toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
 

@@ -1,6 +1,11 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, TaskMaaTaskRef, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
+import {
+  type AbsolutePath,
+  type TaskMaaTaskRef,
+  findDeclRef,
+  findMaaDeclRef
+} from '@mse/pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'

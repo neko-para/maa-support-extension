@@ -6,7 +6,7 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
 import { InterfaceBundle, VscodeContentLoader, VscodeContentWatcher } from '@mse/pipeline-manager'
-import {
+import type {
   AgentConfig,
   InputItemType,
   Interface,

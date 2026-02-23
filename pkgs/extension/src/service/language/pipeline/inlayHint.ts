@@ -42,7 +42,7 @@ export class PipelineInlayHintsProvider
   async provideInlayHints(
     document: vscode.TextDocument,
     range: vscode.Range,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.InlayHint[]> {
     const intBundle = await this.flush()
     if (!intBundle) {

@@ -268,7 +268,7 @@ export class InterfaceService extends BaseService {
     }
     const rel = this.resolveRelative(uri)
     if (rel) {
-      const segs = rel.split(/[\/\\]+/)
+      const segs = rel.split(/[/\\]+/)
       return !!segs.find(x => x.startsWith('.'))
     }
     return true
@@ -655,7 +655,7 @@ export class InterfaceService extends BaseService {
     const debugSessionMapper: Record<string, string> = {}
     if (existsSync(cfgPath)) {
       const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {
-        'agent.debug'?: {}
+        'agent.debug'?: Record<string, string>
       }
       if (cfg['agent.debug']) {
         Object.assign(debugSessionMapper, cfg['agent.debug'])

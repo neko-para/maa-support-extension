@@ -56,7 +56,7 @@ export class NativeService extends BaseService {
     await this.manager.init()
 
     this.defer = vscode.commands.registerCommand(commands.NativeSelectRegistry, async () => {
-      let previous = this.registryType
+      const previous = this.registryType
 
       const options: (vscode.QuickPickItem & { value: NpmRegistryType | null })[] = Object.keys(
         MaaVersionManager.registries
@@ -108,7 +108,7 @@ export class NativeService extends BaseService {
         }
       )
 
-      let previous = this.explicitVersion
+      const previous = this.explicitVersion
 
       const options: (vscode.QuickPickItem & { value: string | null })[] = allRemote.map(ver => {
         const descTags: string[] = []

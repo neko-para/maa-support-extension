@@ -24,7 +24,7 @@ export class PipelineDocumentLinkProvider
 
   async provideDocumentLinks(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
     const intBundle = await this.flush()
     if (!intBundle) {

@@ -42,7 +42,7 @@ export class PipelineCodeLensProvider
 
   async provideCodeLenses(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
     const intBundle = await this.flush()
     if (!intBundle) {

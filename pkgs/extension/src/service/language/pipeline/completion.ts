@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { AbsolutePath, TaskName, findDeclRef } from '@mse/pipeline-manager'
+import { AbsolutePath, findDeclRef } from '@mse/pipeline-manager'
 
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
@@ -35,8 +35,8 @@ export class PipelineCompletionProvider
   async provideCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken,
-    context: vscode.CompletionContext
+    _token: vscode.CancellationToken,
+    _context: vscode.CompletionContext
   ): Promise<CustomCompletionItem[] | null> {
     const intBundle = await this.flush()
     if (!intBundle) {
@@ -270,7 +270,7 @@ export class PipelineCompletionProvider
         }
       }
     } else if (ref.type === 'task.template') {
-      for (const [imageFolder, layers] of layer.getImageFolders()) {
+      for (const [imageFolder] of layer.getImageFolders()) {
         const item: CustomCompletionItem = {
           label: imageFolder + '/',
           kind: vscode.CompletionItemKind.Folder,
@@ -311,7 +311,7 @@ export class PipelineCompletionProvider
 
   async resolveCompletionItem(
     item: CustomCompletionItem,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<CustomCompletionItem> {
     if (item.fillTaskDetail) {
       item.documentation = new vscode.MarkdownString(item.fillTaskDetail())

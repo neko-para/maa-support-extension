@@ -17,7 +17,7 @@ export class InterfaceDocumentLinkProvider
 
   async provideDocumentLinks(
     document: vscode.TextDocument,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
     const index = await this.flushIndex()
     if (!index) {

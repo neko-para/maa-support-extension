@@ -10,14 +10,15 @@ import {
 } from '@mse/maa-server-proto'
 import { logger } from '@mse/utils'
 
-import { agentService, nativeService, serverService, stateService, statusBarService } from '.'
+import { agentService, nativeService, stateService, statusBarService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
 import { WebviewLaunchPanel } from './webview/launch'
 
 export type IpcType = MarkApis<SubToHostApis, HostToSubApis>
 
-// 简单糊一下
+// 简单糊一下, 在这个文件里面把类型抹掉
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace globalThis {
   let maa: unknown | undefined
 }
@@ -97,14 +98,14 @@ export class ServerService extends BaseService {
           logger.info('<-- ' + method)
         }
         try {
-          return (this.ipc as any).$[method](...args)
+          return this.ipc?.$[method](...args)
         } catch (err) {
           logger.error(`handle ${method} failed: ${err}`)
           return null
         }
       })
 
-      const handlers: Record<string, Function> = {}
+      const handlers: Record<string, unknown> = {}
 
       this.ipc = new Proxy(
         {},
@@ -131,7 +132,7 @@ export class ServerService extends BaseService {
       ) as IpcType
 
       this.ipc.pushNotify = async (inst, msg) => {
-        await this.instMap[inst]?.pushNotify(msg as any)
+        await this.instMap[inst]?.pushNotify(msg as maa.TaskerNotify | maa.TaskerContextNotify)
       }
       this.ipc.startTask = async (exec, args, cwd, env) => {
         return await agentService.startTask(exec, args, cwd, env)

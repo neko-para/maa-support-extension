@@ -1,5 +1,4 @@
 import path from 'path'
-import { json } from 'stream/consumers'
 import * as vscode from 'vscode'
 
 import {
@@ -170,7 +169,7 @@ ${doc.getText(range)}
     }
     const final = this.evalTask(intBundle, task, current)
     if (final) {
-      let showImage = false
+      let showImage: boolean
       if (isMaaAssistantArknights) {
         const algo = (final?.algorithm as string) ?? 'MatchTemplate'
         showImage = ['MatchTemplate', 'FeatureMatch'].includes(algo)
@@ -261,7 +260,7 @@ ${JSON.stringify(final, null, 2)}
 
   makeDecls(
     decls: TaskDeclInfo[],
-    refs: TaskRefInfo[],
+    _refs: TaskRefInfo[],
     decl: TaskDeclInfo | null,
     ref: TaskRefInfo | null
   ): TaskDeclInfo[] {
@@ -297,7 +296,7 @@ ${JSON.stringify(final, null, 2)}
   }
 
   makeRefs(
-    decls: TaskDeclInfo[],
+    _decls: TaskDeclInfo[],
     refs: TaskRefInfo[],
     decl: TaskDeclInfo | null,
     ref: TaskRefInfo | null

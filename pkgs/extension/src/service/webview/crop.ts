@@ -6,14 +6,7 @@ import { locale, t } from '@mse/locale'
 import { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider, logger } from '@mse/utils'
 
-import {
-  interfaceService,
-  launchService,
-  nativeService,
-  rootService,
-  serverService,
-  stateService
-} from '..'
+import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
 import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
@@ -65,7 +58,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           this.response(data.seq, null)
         }
         break
-      case 'requestUpload':
+      case 'requestUpload': {
         const options: vscode.OpenDialogOptions = {
           canSelectMany: false,
           openLabel: 'Upload',
@@ -89,6 +82,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
 
         this.response(data.seq, toPngDataUrl(await vscode.workspace.fs.readFile(files[0])))
         break
+      }
       case 'requestSave': {
         const image = Buffer.from(data.image.replace('data:image/png;base64,', ''), 'base64')
         const jimpImage = await Jimp.read(image)

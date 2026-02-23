@@ -19,8 +19,8 @@ export class PipelineReferenceProvider
   async provideReferences(
     document: vscode.TextDocument,
     position: vscode.Position,
-    context: vscode.ReferenceContext,
-    token: vscode.CancellationToken
+    _context: vscode.ReferenceContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
     const intBundle = await this.flush()
     if (!intBundle) {

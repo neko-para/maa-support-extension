@@ -66,4 +66,7 @@ export type MarkApisImpl<T> = {
   [K in keyof T]: MarkReturnPromise<T[K]>
 }
 
-export type MarkApis<Server, Client> = MarkApisImpl<Server> & Readonly<MarkApisImpl<Client>>
+export type MarkApis<Server, Client> = MarkApisImpl<Server> &
+  Readonly<MarkApisImpl<Client>> & {
+    $: Record<string, (...args: any[]) => any>
+  }

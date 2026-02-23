@@ -18,7 +18,7 @@ export class PipelineHoverProvider
   async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
     const intBundle = await this.flush()
     if (!intBundle) {

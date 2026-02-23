@@ -1,7 +1,6 @@
 import {
   ContinuedEvent,
   DebugSession,
-  ExitedEvent,
   InitializedEvent,
   OutputEvent,
   StoppedEvent,
@@ -15,7 +14,7 @@ import * as vscode from 'vscode'
 import { BaseService } from './context'
 
 export class MaaDebugSession extends DebugSession {
-  constructor(session: vscode.DebugSession) {
+  constructor(_session: vscode.DebugSession) {
     super()
   }
 
@@ -146,7 +145,7 @@ export class DebugService extends BaseService implements vscode.DebugAdapterDesc
 
   createDebugAdapterDescriptor(
     session: vscode.DebugSession,
-    executable: vscode.DebugAdapterExecutable | undefined
+    _executable: vscode.DebugAdapterExecutable | undefined
   ): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
     const maa_session = new MaaDebugSession(session)
     this.sessions[session.configuration.maa_id]?.(maa_session)

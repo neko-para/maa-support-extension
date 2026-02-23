@@ -36,7 +36,7 @@ export class WebviewProvider<ToWebImpl extends ImplType, ToHostImpl extends Impl
   async resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ) {
     this.webview = webviewView.webview
 

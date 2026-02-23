@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
 import { TaskDeclInfo } from '@mse/pipeline-manager'
+import { logger } from '@mse/utils'
 import { MaaTaskExpr, TaskExprProps, TaskExprPropsVirtsMap, shouldStrip } from '@nekosu/maa-tasker'
 
 import { interfaceService, launchService, rootService, serverService, stateService } from '.'
@@ -111,7 +112,9 @@ export class CommandService extends BaseService {
           const targetSelection = new vscode.Selection(range.start, range.end)
           editor.selection = targetSelection
           editor.revealRange(targetSelection)
-        } catch {}
+        } catch (err) {
+          logger.error(`${err}`)
+        }
       }
     })
 

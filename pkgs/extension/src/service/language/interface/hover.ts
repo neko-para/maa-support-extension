@@ -1,7 +1,5 @@
 import * as vscode from 'vscode'
 
-import { findDeclRef } from '@mse/pipeline-manager'
-
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceHoverProvider
@@ -15,9 +13,9 @@ export class InterfaceHoverProvider
   }
 
   async provideHover(
-    document: vscode.TextDocument,
-    position: vscode.Position,
-    token: vscode.CancellationToken
+    _document: vscode.TextDocument,
+    _position: vscode.Position,
+    _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
     const index = await this.flushIndex()
     if (!index) {

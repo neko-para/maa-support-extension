@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const color = require('onecolor')
 
 function hsv2rgb(h, s, v) {

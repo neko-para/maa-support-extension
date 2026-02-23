@@ -95,8 +95,8 @@ export class PipelineCodeActionsProvider
   async provideCodeActions(
     document: vscode.TextDocument,
     range: vscode.Range | vscode.Selection,
-    context: vscode.CodeActionContext,
-    token: vscode.CancellationToken
+    _context: vscode.CodeActionContext,
+    _token: vscode.CancellationToken
   ): Promise<vscode.CodeAction[]> {
     if (!isSelection(range)) {
       return []

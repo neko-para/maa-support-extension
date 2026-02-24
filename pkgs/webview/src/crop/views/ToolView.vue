@@ -16,7 +16,6 @@ const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }
 
 const roiX = ref<maa.Rect | undefined>([0, 0, 0, 0])
 const roiY = ref<maa.Rect | undefined>([0, 0, 0, 0])
-const rectMoveMode = ref(false)
 const roiSum = computed(() => {
   if (roiX.value && roiY.value) {
     return Array.from({ length: 4 }, (_, idx) => roiY.value![idx]! + roiX.value![idx]!) as maa.Rect
@@ -25,15 +24,18 @@ const roiSum = computed(() => {
 })
 const roiDlt = computed(() => {
   if (roiX.value && roiY.value) {
-    if (rectMoveMode.value) {
-      return [
-        roiX.value[0] + roiY.value[0],
-        roiX.value[1] + roiY.value[1],
-        roiY.value[2],
-        roiY.value[3]
-      ] as maa.Rect
-    }
     return Array.from({ length: 4 }, (_, idx) => roiY.value![idx]! - roiX.value![idx]!) as maa.Rect
+  }
+  return undefined
+})
+const roiRectMove = computed(() => {
+  if (roiX.value && roiY.value) {
+    return [
+      roiX.value[0] + roiY.value[0],
+      roiX.value[1] + roiY.value[1],
+      roiY.value[2],
+      roiY.value[3]
+    ] as maa.Rect
   }
   return undefined
 })
@@ -72,12 +74,6 @@ const roiDlt = computed(() => {
     </n-card>
 
     <n-card :title="t('maa.crop.tools.roi-offset')" size="small">
-      <template #header-extra>
-        <n-flex align="center">
-          <n-switch v-model:value="rectMoveMode" size="small"></n-switch>
-          <n-text style="font-size: 12px">{{ t('maa.crop.tools.roi-offset.rect-move') }}</n-text>
-        </n-flex>
-      </template>
       <div
         style="
           display: grid;
@@ -87,16 +83,16 @@ const roiDlt = computed(() => {
           align-items: center;
         "
       >
-        <n-text>{{ rectMoveMode ? 'ROI' : 'ROI 1' }}</n-text>
+        <n-text>ROI 1</n-text>
         <roi-edit v-model:value="roiX"></roi-edit>
-        <n-text>{{ rectMoveMode ? 'rect_move' : 'ROI 2' }}</n-text>
+        <n-text>ROI 2</n-text>
         <roi-edit v-model:value="roiY"></roi-edit>
-        <template v-if="!rectMoveMode">
-          <n-text> 1 + 2 </n-text>
-          <roi-edit :value="roiSum" readonly></roi-edit>
-        </template>
-        <n-text>{{ rectMoveMode ? 'Result' : '2 - 1' }}</n-text>
+        <n-text> 1 + 2 </n-text>
+        <roi-edit :value="roiSum" readonly></roi-edit>
+        <n-text> 2 - 1 </n-text>
         <roi-edit :value="roiDlt" readonly></roi-edit>
+        <n-text> rect_move </n-text>
+        <roi-edit :value="roiRectMove" readonly></roi-edit>
       </div>
     </n-card>
 

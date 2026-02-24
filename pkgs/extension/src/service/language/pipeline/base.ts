@@ -135,7 +135,8 @@ export class PipelineLanguageProvider extends BaseService {
     if (isMaaAssistantArknights) {
       return `Algo: ${reco}\n\nAct: ${act}`
     } else {
-      return `Reco: ${reco}\n\nAct: ${act}`
+      const doc = intBundle.topLayer.getTaskDoc(task)
+      return `${doc}\n\nReco: ${reco}\n\nAct: ${act}`
     }
   }
 

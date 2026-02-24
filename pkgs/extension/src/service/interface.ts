@@ -19,7 +19,7 @@ import { logger } from '@mse/utils'
 
 import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
-import { currentWorkspace, isMaaAssistantArknights } from '../utils/fs'
+import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 
 export class InterfaceService extends BaseService {
@@ -283,7 +283,7 @@ export class InterfaceService extends BaseService {
       return null
     }
     const projectDir = vscode.Uri.joinPath(
-      currentWorkspace()!,
+      rootService.activeResource.workspace,
       rootService.activeResource.dirRelative
     ).fsPath
 
@@ -468,7 +468,7 @@ export class InterfaceService extends BaseService {
       return '无interface'
     }
     const projectDir = vscode.Uri.joinPath(
-      currentWorkspace()!,
+      rootService.activeResource.workspace,
       rootService.activeResource.dirRelative
     ).fsPath
 
@@ -651,7 +651,11 @@ export class InterfaceService extends BaseService {
       }
     }
 
-    const cfgPath = vscode.Uri.joinPath(currentWorkspace()!, '.vscode', 'mse_config.json').fsPath
+    const cfgPath = vscode.Uri.joinPath(
+      rootService.activeResource.workspace,
+      '.vscode',
+      'mse_config.json'
+    ).fsPath
     const debugSessionMapper: Record<string, string> = {}
     if (existsSync(cfgPath)) {
       const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {

@@ -43,11 +43,17 @@ export class RootService extends BaseService {
     this.refreshing = true
     this.refreshingChanged.fire()
 
+    const oldWorkspace = this.activeResource?.workspace.fsPath ?? stateService.state.activeWorkspace
     const old = this.activeResource?.interfaceRelative ?? stateService.state.activeInterface ?? null
     const roots = await locateResourceRoot()
     if (roots.length > 0) {
       this.resourceRoots = roots
-      this.activeResource = roots.find(res => res.interfaceRelative === old) ?? roots[0]
+      this.activeResource =
+        roots.find(
+          res =>
+            res.interfaceRelative === old &&
+            (!oldWorkspace || oldWorkspace === res.workspace.fsPath)
+        ) ?? roots[0]
     } else {
       this.resourceRoots = []
       this.activeResource = null

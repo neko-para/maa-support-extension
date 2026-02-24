@@ -8,7 +8,7 @@ import { WebviewPanelProvider, logger } from '@mse/utils'
 
 import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
-import { currentWorkspace, imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
+import { imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { context } from '../context'
 import type { IpcType } from '../server'
 import { toPngDataUrl } from '../utils/png'
@@ -101,7 +101,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
             filters: {
               Png: ['png']
             },
-            defaultUri: currentWorkspace() ?? undefined
+            defaultUri: rootService.activeResource?.workspace ?? undefined
           })
           if (path) {
             await vscode.workspace.fs.writeFile(path, finalImage)

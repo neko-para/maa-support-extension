@@ -7,8 +7,7 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 
-import { serverService } from '.'
-import { currentWorkspace } from '../utils/fs'
+import { rootService, serverService } from '.'
 import { BaseService } from './context'
 
 type AgentInfo =
@@ -66,7 +65,11 @@ export class AgentService extends BaseService {
   }
 
   async startDebugSession(name: string, identifier: string) {
-    const launchJsonPath = path.join(currentWorkspace()!.fsPath, '.vscode', 'launch.json')
+    const launchJsonPath = path.join(
+      rootService.activeResource!.workspace.fsPath,
+      '.vscode',
+      'launch.json'
+    )
     if (!existsSync(launchJsonPath)) {
       logger.error('Cannot find launch.json')
       return null

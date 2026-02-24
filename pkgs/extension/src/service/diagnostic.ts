@@ -10,8 +10,7 @@ import {
   performDiagnostic
 } from '@mse/pipeline-manager'
 
-import { interfaceService } from '.'
-import { currentWorkspace } from '../utils/fs'
+import { interfaceService, rootService } from '.'
 import { BaseService } from './context'
 import { debounce } from './utils/debounce'
 import { FlushHelper } from './utils/flush'
@@ -51,7 +50,11 @@ class DiagnosticScanner extends FlushHelper {
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
     const diagOption: DiagnosticOption = {}
 
-    const rcPath = vscode.Uri.joinPath(currentWorkspace()!, '.vscode', 'maa_checker.json').fsPath
+    const rcPath = vscode.Uri.joinPath(
+      rootService.activeResource!.workspace,
+      '.vscode',
+      'maa_checker.json'
+    ).fsPath
     if (existsSync(rcPath)) {
       const rc = JSON.parse(await fs.readFile(rcPath, 'utf8'))
       Object.assign(diagOption, rc)
@@ -60,7 +63,7 @@ class DiagnosticScanner extends FlushHelper {
     const diags = performDiagnostic(intBundle, diagOption)
     for (const diag of diags) {
       const [start, end, brief] = await buildDiagnosticMessage(
-        currentWorkspace()!.fsPath as AbsolutePath,
+        rootService.activeResource!.workspace.fsPath as AbsolutePath,
         diag,
         async (file, offset) => {
           const doc = await vscode.workspace.openTextDocument(file)

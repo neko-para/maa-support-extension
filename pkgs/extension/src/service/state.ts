@@ -5,6 +5,7 @@ import { BaseService, context } from './context'
 export type State = {
   admin?: boolean
 
+  activeWorkspace?: string
   activeInterface?: string
 
   uploadDir?: string

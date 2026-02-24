@@ -46,7 +46,7 @@ export function parseColor(
   } else {
     for (const item of parseArray(node)) {
       if (isColor(item)) {
-        parseColorSingle(node, info, ctx, method)
+        parseColorSingle(item, info, ctx, method)
       }
     }
   }

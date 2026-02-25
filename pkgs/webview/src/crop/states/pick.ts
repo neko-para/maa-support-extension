@@ -45,7 +45,7 @@ export const hsvColor = computed<[h: number, s: number, v: number] | null>(() =>
   }
   h = h * 60
 
-  return [Math.round(h), Math.round(s * 255), Math.round(v * 255)]
+  return [Math.floor(h / 2), Math.round(s * 255), Math.round(v * 255)]
 })
 
 export function start() {

@@ -62,7 +62,7 @@ export async function performTemplateMatch(
         recognition: 'TemplateMatch',
         template: '@mse_image',
         ...opts
-      } // satisfies maa.Task 暂时先不加这个, method对不上
+      } satisfies maa.Task
     })
 
     if (!detail) {

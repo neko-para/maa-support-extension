@@ -30,7 +30,12 @@ export function findDeclRef<T extends { location: Node }>(infos: T[], offset: nu
 }
 
 export function extractTaskRef(r: TaskRefInfo): TaskName | null {
-  if (r.type === 'task.target' || r.type === 'task.anchor' || r.type === 'task.entry') {
+  if (
+    r.type === 'task.target' ||
+    r.type === 'task.anchor' ||
+    r.type === 'task.color_filter' ||
+    r.type === 'task.entry'
+  ) {
     return r.target
   } else if (r.type === 'task.next') {
     return !r.anchor ? r.target : null

@@ -6,6 +6,7 @@ import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../.
 import { type PropPair, type StringNode, isNumber, isString, parseArray } from '../utils'
 import { parseAnchor } from './anchor'
 import { parseColor } from './color'
+import { parseColorFilter } from './colorFilter'
 import { parseFocus } from './focus'
 import { parseFreeze } from './freeze'
 import { parseMaaBaseTask } from './maa/baseTask'
@@ -139,6 +140,11 @@ export type TaskColorRefInfo = {
   color: number[]
 }
 
+export type TaskColorFilterRefInfo = {
+  type: 'task.color_filter'
+  target: TaskName
+}
+
 type MaaFwTaskRefInfo =
   | TaskNextRefInfo
   | TaskTargetRefInfo
@@ -150,6 +156,7 @@ type MaaFwTaskRefInfo =
   | TaskLocaleTextRefInfo
   | TaskCanLocaleRefInfo
   | TaskColorRefInfo
+  | TaskColorFilterRefInfo
 
 export type TaskMaaBaseTaskRefInfo = {
   type: 'task.maa.base_task'
@@ -263,6 +270,9 @@ function parseReco(
         break
       case 'template':
         parseTemplate(obj, info, ctx)
+        break
+      case 'color_filter':
+        parseColorFilter(obj, info, ctx)
         break
       case 'all_of':
       case 'any_of':

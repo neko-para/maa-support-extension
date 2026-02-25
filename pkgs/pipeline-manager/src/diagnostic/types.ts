@@ -25,6 +25,11 @@ export type DiagnosticTask =
       task: string
     }
   | {
+      type: 'color-filter-invalid'
+      task: string
+      reco: maa.RecognitionType
+    }
+  | {
       type: 'dynamic-image'
     }
   | {

@@ -180,11 +180,18 @@ export class PipelineCompletionProvider
       (ref.type === 'task.next' && ref.objMode && !ref.anchor) ||
       ref.type === 'task.target' ||
       ref.type === 'task.anchor' ||
+      ref.type === 'task.color_filter' ||
       ref.type === 'task.roi' ||
       ref.type === 'task.entry'
     ) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
       for (const task of layer.getTaskList()) {
+        if (ref.type === 'task.color_filter') {
+          const { reco } = layer.getTaskBriefInfo(task)
+          if (reco !== 'ColorMatch') {
+            continue
+          }
+        }
         const item: CustomCompletionItem = {
           label: task,
           kind: vscode.CompletionItemKind.Class,

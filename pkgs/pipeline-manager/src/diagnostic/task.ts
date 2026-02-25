@@ -80,8 +80,8 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
     const imageFolders = layer.getImageFolders()
     for (const ref of refs) {
       const task = extractTaskRef(ref)
-      if (task) {
-        if (!tasks.has(task)) {
+      if (task !== null) {
+        if (!tasks.has(task) && ref.type !== 'task.anchor') {
           let offset = ref.location.offset
           let length = ref.location.length
           if (ref.type === 'task.next' && typeof ref.offset === 'number') {
@@ -96,6 +96,20 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
             type: 'unknown-task',
             task: task
           })
+        }
+        if (ref.type === 'task.color_filter') {
+          const { reco } = layer.getTaskBriefInfo(ref.target)
+          if (reco !== 'ColorMatch') {
+            result.push({
+              level: 'error',
+              file: ref.file,
+              offset: ref.location.offset,
+              length: ref.location.length,
+              type: 'color-filter-invalid',
+              task: task,
+              reco: reco ?? 'DirectHit'
+            })
+          }
         }
       } else if (ref.type === 'task.template') {
         let imagePath = ref.target

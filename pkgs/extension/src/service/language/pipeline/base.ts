@@ -304,7 +304,12 @@ ${JSON.stringify(final, null, 2)}
   ): TaskRefInfo[] {
     const findTask = (task: TaskName) => {
       return refs.filter(r => {
-        if (r.type === 'task.target' || r.type === 'task.anchor' || r.type === 'task.entry') {
+        if (
+          r.type === 'task.target' ||
+          r.type === 'task.anchor' ||
+          r.type === 'task.color_filter' ||
+          r.type === 'task.entry'
+        ) {
           return r.target === task
         } else if (r.type === 'task.next') {
           return r.target === task && !r.anchor

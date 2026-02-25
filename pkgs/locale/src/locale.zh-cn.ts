@@ -64,6 +64,7 @@ export default {
   'maa.pipeline.error.not-exists': '{0} 不存在',
   'maa.pipeline.error.conflict-task': '冲突任务 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-task': '未知任务 {0}',
+  'maa.pipeline.error.color-filter-invalid': 'color_filter 任务 {0} 非法, 识别类型为 {1}',
   'maa.pipeline.error.unknown-image': '未知图片 {0}',
   'maa.pipeline.error.unknown-anchor': '未知Anchor {0}',
   'maa.pipeline.error.unknown-attr': '未知属性 {0}',

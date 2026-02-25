@@ -27,6 +27,8 @@ export async function buildDiagnosticMessage(
         return t('maa.pipeline.error.duplicate-next', diag.task)
       case 'unknown-task':
         return t('maa.pipeline.error.unknown-task', diag.task)
+      case 'color-filter-invalid':
+        return t('maa.pipeline.error.color-filter-invalid', diag.task, diag.reco)
       case 'dynamic-image':
         return t('maa.pipeline.warning.image-path-dynamic')
       case 'image-path-back-slash':

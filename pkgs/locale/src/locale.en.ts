@@ -66,6 +66,8 @@ export default {
   'maa.pipeline.error.not-exists': '{0} not exists',
   'maa.pipeline.error.conflict-task': 'Conflict task {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-task': 'Unknown task {0}',
+  'maa.pipeline.error.color-filter-invalid':
+    'Invalid task {0} for color_filter, recognition type is {1}',
   'maa.pipeline.error.unknown-image': 'Unknown image {0}',
   'maa.pipeline.error.unknown-anchor': 'Unknown anchor {0}',
   'maa.pipeline.error.unknown-attr': 'Unknown attribute {0}',

@@ -77,13 +77,17 @@ export type Task = EntryBase & {
   option?: string[]
 }
 
+export type OptionBase = EntryBase & {
+  controller?: string[]
+}
+
 export type SelectCase = EntryBase & {
   name: string
   option?: string[]
   pipeline_override?: unknown
 }
 
-export type SelectOption = EntryBase & {
+export type SelectOption = OptionBase & {
   type?: 'select'
   cases?: SelectCase[]
   default_case?: string
@@ -100,7 +104,7 @@ export type InputItem = EntryBase & {
   pattern_msg?: string
 }
 
-export type InputOption = EntryBase & {
+export type InputOption = OptionBase & {
   type: 'input'
   inputs?: InputItem[]
   pipeline_override?: unknown
@@ -112,7 +116,7 @@ export type SwitchCase = EntryBase & {
   pipeline_override?: unknown
 }
 
-export type SwitchOption = EntryBase & {
+export type SwitchOption = OptionBase & {
   type: 'switch'
   cases?: SwitchCase[]
   default_case?: string

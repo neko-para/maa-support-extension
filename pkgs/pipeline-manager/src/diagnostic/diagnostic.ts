@@ -3,7 +3,6 @@ import { checkInterface } from './interface'
 import { checkTask } from './task'
 import type { Diagnostic, DiagnosticOption } from './types'
 
-export type { Diagnostic, DiagnosticOption }
 export { buildDiagnosticMessage } from './message'
 
 export function performDiagnostic<T>(

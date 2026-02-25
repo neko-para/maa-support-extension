@@ -4,7 +4,7 @@
   "devDependencies": {
     "@mse/types": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
-    "@types/node": "^25.2.2",
+    "@types/node": "^25.3.0",
     "@types/triple-beam": "^1.3.5",
     "@types/vscode": "^1.109.0",
     "@types/ws": "^8.18.1",

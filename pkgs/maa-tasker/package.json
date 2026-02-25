@@ -4,6 +4,6 @@
   "devDependencies": {
     "@nekosu/simple-parser": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
-    "@types/node": "^25.2.2"
+    "@types/node": "^25.3.0"
   }
 }

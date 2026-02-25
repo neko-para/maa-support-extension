@@ -50,6 +50,7 @@ export default {
   'maa.crop.tools': 'Tools',
   'maa.crop.tools.pick-color': 'Pick Color',
   'maa.crop.tools.roi-offset': 'Roi Offset',
+  'maa.crop.tools.roi-offset.rect-move': 'rect_move',
   'maa.crop.tools.quick-match': 'Quick Match',
   'maa.crop.tools.quick-match-ocr': 'OCR',
   'maa.crop.tools.quick-match-tmpl': 'Template',

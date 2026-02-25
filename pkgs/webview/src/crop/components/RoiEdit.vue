@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NFlex, NInput } from 'naive-ui'
+import { NButton, NFlex, NInput, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -10,6 +10,7 @@ const props = defineProps<{
   value?: maa.Rect
   readonly?: boolean
   hideUse?: boolean
+  label?: string
 }>()
 
 const emits = defineEmits<{
@@ -23,7 +24,7 @@ const extracted = computed(() => {
 watch(
   () => props.value,
   rc => {
-    if (rc) {
+    if (rc && JSON.stringify(rc) !== JSON.stringify(extracted.value)) {
       cache.value = JSON.stringify(rc)
     }
   },
@@ -56,7 +57,8 @@ async function paste() {
 </script>
 
 <template>
-  <n-flex>
+  <n-flex align="center">
+    <n-text v-if="label" style="min-width: 48px;">{{ label }}</n-text>
     <div>
       <n-input v-model:value="cache" :readonly="readonly" size="small"></n-input>
     </div>

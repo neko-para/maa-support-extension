@@ -28,6 +28,17 @@ const roiDlt = computed(() => {
   }
   return undefined
 })
+const roiRectMove = computed(() => {
+  if (roiX.value && roiY.value) {
+    return [
+      roiX.value[0] + roiY.value[0],
+      roiX.value[1] + roiY.value[1],
+      roiY.value[2],
+      roiY.value[3]
+    ] as maa.Rect
+  }
+  return undefined
+})
 </script>
 
 <template>
@@ -72,14 +83,16 @@ const roiDlt = computed(() => {
           align-items: center;
         "
       >
-        <n-text> X </n-text>
+        <n-text>ROI 1</n-text>
         <roi-edit v-model:value="roiX"></roi-edit>
-        <n-text> Y </n-text>
+        <n-text>ROI 2</n-text>
         <roi-edit v-model:value="roiY"></roi-edit>
-        <n-text> X + Y </n-text>
+        <n-text> 1 + 2 </n-text>
         <roi-edit :value="roiSum" readonly></roi-edit>
-        <n-text> Y - X </n-text>
+        <n-text> 2 - 1 </n-text>
         <roi-edit :value="roiDlt" readonly></roi-edit>
+        <n-text> rect_move </n-text>
+        <roi-edit :value="roiRectMove" readonly></roi-edit>
       </div>
     </n-card>
 

@@ -14,8 +14,7 @@ import {
   nativeService,
   rootService,
   serverService,
-  stateService,
-  statusBarService
+  stateService
 } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
@@ -37,14 +36,6 @@ export class WebviewControlService extends BaseService {
       index: 'control',
       webId: 'maa.view.control-panel',
       dev: isCtrlDev
-    })
-
-    this.provider.sendSt.on('change', _bps => {
-      this.updateTransportStatus()
-    })
-
-    this.provider.recvSt.on('change', _bps => {
-      this.updateTransportStatus()
     })
 
     this.provider.recv = async data => {
@@ -349,13 +340,6 @@ export class WebviewControlService extends BaseService {
     this.defer = nativeService.onVersionChanged(() => {
       this.pushState()
     })
-  }
-
-  updateTransportStatus() {
-    if (this.provider) {
-      const sum = this.provider.sendSt.sum + this.provider.recvSt.sum
-      statusBarService.transportItem.text = `${(sum / 5000).toFixed(2)} kbps`
-    }
   }
 
   get state(): ControlHostState {

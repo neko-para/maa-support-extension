@@ -33,7 +33,7 @@ export class ServerService extends BaseService {
     super()
     console.log('construct ServerService')
     this.rpc = new RpcManager(
-      context.asAbsolutePath('server/index.js'),
+      context.asAbsolutePath('server/index.mjs'),
       stateService.state.admin ?? false
     )
     this.ipc = null

@@ -1,4 +1,4 @@
-import * as path from 'path'
+import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
 import { MaaVersionManager } from '@mse/maa-version-manager'
@@ -56,7 +56,7 @@ export async function performReco(option: ProgramOption, bundle: InterfaceBundle
     const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
     console2.timeLog('checker', 'resource switched')
 
-    const pool = workerpool.pool(path.join(__dirname, 'reco', 'worker.js'), {
+    const pool = workerpool.pool(path.join(import.meta.dirname, 'reco', 'worker.js'), {
       maxWorkers: option.job,
       workerType: 'process',
       forkOpts: {

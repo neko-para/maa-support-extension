@@ -1,5 +1,5 @@
-import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
+import { existsSync } from 'node:fs'
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'

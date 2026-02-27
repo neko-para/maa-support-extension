@@ -1,5 +1,6 @@
 {
   "name": "@mse/locale",
+  "type": "module",
   "main": "src/index.ts",
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",

@@ -16,7 +16,8 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "main": "./out/extension.js",
+  "type": "module",
+  "main": "./out/extension.mjs",
   "contributes": {
     "commands": [
       {

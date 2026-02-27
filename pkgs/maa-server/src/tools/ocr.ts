@@ -1,8 +1,8 @@
 import * as crypto from 'crypto'
-import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
+import { existsSync } from 'node:fs'
+import * as path from 'node:path'
 import * as os from 'os'
-import * as path from 'path'
 
 import { logger } from '../server'
 // import { isMaaAssistantArknights } from '../utils/fs'

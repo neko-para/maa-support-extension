@@ -1,13 +1,16 @@
 import * as fs from 'fs/promises'
-import * as path from 'path'
+import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
 import { makeFakeController, toArrayBuffer } from '../utils'
 import type { RecoJob, RecoResult } from './types'
 
-module.paths.unshift(process.env.MAAFW_MODULE_PATH!)
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-require('@maaxyz/maa-node')
+const importTarget = path.join(
+  process.env.MAAFW_MODULE_PATH!,
+  '@maaxyz/maa-node/dist/index-client.js'
+)
+await import(importTarget)
+
 if (process.env.MAAFW_SILENCE_STDOUT === '1') {
   maa.Global.stdout_level = 'Off'
 }

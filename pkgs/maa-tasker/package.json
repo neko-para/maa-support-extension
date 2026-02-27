@@ -1,8 +1,11 @@
 {
   "name": "@nekosu/maa-tasker",
+  "type": "module",
   "main": "src/index.ts",
+  "dependencies": {
+    "@nekosu/simple-parser": "workspace:*"
+  },
   "devDependencies": {
-    "@nekosu/simple-parser": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.0"
   }

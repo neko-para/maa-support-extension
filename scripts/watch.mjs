@@ -1,43 +1,10 @@
-import { context as esContext } from 'esbuild'
-import path from 'path'
+import path from 'node:path'
+import { build } from 'tsdown'
 import { build as viteBuild } from 'vite'
 
-esContext({
-  entryPoints: ['pkgs/extension/src/extension.ts'],
-  bundle: true,
-  outdir: 'release/out',
-  external: ['@maaxyz/maa-node', 'vscode', 'node-gyp/bin/node-gyp.js'],
-  platform: 'node',
-  sourcemap: true,
-  mainFields: ['module', 'main'],
-  loader: {
-    '.html': 'text'
-  }
-}).then(ctx => {
-  ctx.watch()
-})
-
-esContext({
-  entryPoints: ['pkgs/maa-server/src/index.ts'],
-  bundle: true,
-  outdir: 'release/server',
-  external: ['@maaxyz/maa-node'],
-  platform: 'node',
-  sourcemap: true
-}).then(ctx => {
-  ctx.watch()
-})
-
-esContext({
-  entryPoints: ['pkgs/maa-checker/src/main.ts', 'pkgs/maa-checker/src/reco/worker.ts'],
-  bundle: true,
-  outdir: 'pkgs/maa-checker/dist',
-  external: ['@maaxyz/maa-node', 'node-gyp/bin/node-gyp.js'],
-  platform: 'node',
-  sourcemap: true,
-  mainFields: ['module', 'main']
-}).then(ctx => {
-  ctx.watch()
+build({
+  config: path.resolve(import.meta.dirname, '../tsdown.config.mts'),
+  watch: true
 })
 
 viteBuild({

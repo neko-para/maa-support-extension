@@ -1,5 +1,5 @@
-import { existsSync } from 'fs'
-import path from 'path'
+import { existsSync } from 'node:fs'
+import * as path from 'node:path'
 import * as vscode from 'vscode'
 
 export function currentWorkspace() {

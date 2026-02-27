@@ -1,5 +1,5 @@
 import * as fs from 'fs/promises'
-import path from 'path'
+import * as path from 'node:path'
 import * as vscode from 'vscode'
 
 import { locale, t } from '@mse/locale'

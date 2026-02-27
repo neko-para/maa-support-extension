@@ -1,5 +1,6 @@
 {
   "name": "@mse/webview",
+  "type": "module",
   "devDependencies": {
     "@maaxyz/maa-node": "5.7.2",
     "@mse/types": "workspace:*",

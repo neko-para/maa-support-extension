@@ -11,10 +11,9 @@ import { logger } from './server'
 import { convertImage } from './tools/utils'
 import { makePromise } from './utils'
 
-export function initMaa() {
-  module.paths.unshift(option.module)
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('@maaxyz/maa-node')
+export async function initMaa() {
+  const importTarget = path.join(option.module, '@maaxyz/maa-node/dist/index-client.js')
+  await import(importTarget)
 
   logger.info(maa.Global.version)
   maa.Global.debug_mode = true

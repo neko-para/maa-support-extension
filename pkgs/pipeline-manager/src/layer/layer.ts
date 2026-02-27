@@ -1,5 +1,5 @@
 import type { Node } from 'jsonc-parser'
-import path from 'node:path'
+import * as path from 'node:path'
 
 import type { IContentLoader } from '../content/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'

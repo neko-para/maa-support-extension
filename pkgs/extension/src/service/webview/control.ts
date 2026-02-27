@@ -1,4 +1,4 @@
-import fs from 'fs/promises'
+import * as fs from 'fs/promises'
 import type { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'

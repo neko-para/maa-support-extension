@@ -1,5 +1,6 @@
 {
   "name": "@mse/types",
+  "type": "module",
   "main": "./src/index.ts",
   "devDependencies": {
     "@maaxyz/maa-node": "5.7.2"

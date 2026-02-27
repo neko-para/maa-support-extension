@@ -1,7 +1,7 @@
-import { existsSync } from 'fs'
 import * as fs from 'fs/promises'
 import { parse } from 'jsonc-parser'
-import path from 'path'
+import { existsSync } from 'node:fs'
+import * as path from 'node:path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 

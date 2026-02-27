@@ -1,2 +1,2 @@
 export * from './declares'
-export * from './apis'
+export type * from './apis'

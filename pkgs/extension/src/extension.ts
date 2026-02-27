@@ -1,6 +1,6 @@
-import os from 'os'
+import * as os from 'node:os'
 import sms from 'source-map-support'
-import vscode from 'vscode'
+import * as vscode from 'vscode'
 
 import { setLocale, t } from '@mse/locale'
 import { logger, setupLogger } from '@mse/utils'

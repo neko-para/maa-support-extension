@@ -1,4 +1,4 @@
-import * as path from 'path'
+import * as path from 'node:path'
 
 export type RelativePath = string & { __brand: 'RelativePath' }
 export type AbsolutePath = string & { __brand: 'AbsolutePath' }

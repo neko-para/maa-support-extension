@@ -37,7 +37,7 @@ export type IntTaskDeclInfo = {
   name: TaskName
 }
 
-export type IntOptionType = 'select' | 'switch' | 'input'
+export type IntOptionType = 'select' | 'checkbox' | 'switch' | 'input'
 
 export type IntOptionDeclInfo = {
   type: 'interface.option'
@@ -163,6 +163,9 @@ function parseController(node: Node, info: InterfaceInfo, ctx: InterfaceParseCon
         break
       case 'attach_resource_path':
         decl.attachs = parsePath(obj, info, ctx)
+        break
+      case 'option':
+        parseOptionRef(obj, info, ctx)
         break
     }
   }
@@ -313,6 +316,9 @@ export function parseInterface(node: Node, info: InterfaceInfo, ctx: InterfacePa
         break
       case 'option':
         parseOption(obj, info, ctx)
+        break
+      case 'global_option':
+        parseOptionRef(obj, info, ctx)
         break
       case 'import':
         for (const sub of parseArray(obj)) {

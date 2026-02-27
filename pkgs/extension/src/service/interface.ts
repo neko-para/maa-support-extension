@@ -34,6 +34,7 @@ export class InterfaceService extends BaseService {
     const final = structuredClone(this.interfaceBundle.content.object)
     final.task = final.task ?? []
     final.option = final.option ?? {}
+    final.preset = final.preset ?? []
     for (const imp of this.interfaceBundle.imports) {
       if (imp.object) {
         if (imp.object.task) {
@@ -41,6 +42,9 @@ export class InterfaceService extends BaseService {
         }
         if (imp.object.option) {
           Object.assign(final.option, imp.object.option)
+        }
+        if (imp.object.preset) {
+          final.preset.push(...imp.object.preset)
         }
       }
     }

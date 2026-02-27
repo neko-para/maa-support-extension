@@ -12,6 +12,7 @@ export type ControllerBase = EntryBase & {
   display_raw?: boolean
   permission_required?: boolean
   attach_resource_path?: string[]
+  option?: string[]
 }
 
 export type AdbController = ControllerBase & {
@@ -65,6 +66,7 @@ export type Resource = EntryBase & {
   name: string
   path: string | string[]
   controller?: string[]
+  option?: string[]
 }
 
 export type Task = EntryBase & {
@@ -79,6 +81,7 @@ export type Task = EntryBase & {
 
 export type OptionBase = EntryBase & {
   controller?: string[]
+  resource?: string[]
 }
 
 export type SelectCase = EntryBase & {
@@ -91,6 +94,18 @@ export type SelectOption = OptionBase & {
   type?: 'select'
   cases?: SelectCase[]
   default_case?: string
+}
+
+export type CheckboxCase = EntryBase & {
+  name: string
+  option?: string[]
+  pipeline_override?: unknown
+}
+
+export type CheckboxOption = OptionBase & {
+  type?: 'checkbox'
+  cases?: CheckboxCase[]
+  default_case?: string[]
 }
 
 export type InputItemType = 'string' | 'int' | 'bool'
@@ -150,4 +165,9 @@ export type InterfaceV2 = EntryBase & {
   resource?: Resource[]
   task?: Task[]
   option?: Record<string, Option>
+  global_option?: string[]
+  // TODO: 之后再做
+  preset: unknown[]
+
+  import?: string[]
 }

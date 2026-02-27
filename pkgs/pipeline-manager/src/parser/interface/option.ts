@@ -2,9 +2,11 @@ import type { Node } from 'jsonc-parser'
 
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCases } from './case'
+import { parseCtrlRef } from './ctrlRef'
 import { parseInputs } from './input'
 import type { IntOptionType, InterfaceInfo, InterfaceParseContext } from './interface'
 import { parseOverride } from './override'
+import { parseResRef } from './resRef'
 
 function parseInputRef(
   node: Node,
@@ -50,9 +52,15 @@ function parseOptionSec(
   let overrideNode: Node | null = null
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
+      case 'controller':
+        parseCtrlRef(obj, info, ctx)
+        break
+      case 'resource':
+        parseResRef(obj, info, ctx)
+        break
       case 'type':
         if (isString(obj)) {
-          if (['select', 'switch', 'input'].includes(obj.value)) {
+          if (['select', 'checkbox', 'switch', 'input'].includes(obj.value)) {
             type = obj.value as IntOptionType
           }
         }
@@ -75,6 +83,18 @@ function parseOptionSec(
             target: obj.value,
             option
           })
+        } else {
+          for (const sub of parseArray(obj)) {
+            if (isString(sub)) {
+              info.refs.push({
+                file: ctx.file,
+                location: sub,
+                type: 'interface.case',
+                target: sub.value,
+                option
+              })
+            }
+          }
         }
         break
     }

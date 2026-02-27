@@ -2,15 +2,22 @@
 import { NButton, NCard, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { InputOption, SelectOption, SwitchOption, TaskConfig } from '@mse/types'
+import type {
+  CheckboxOption,
+  InputOption,
+  SelectOption,
+  SwitchOption,
+  TaskConfig
+} from '@mse/types'
 
 import { ipc } from '../ipc'
 import { hostState } from '../state'
 import LocaleText from './LocaleText.vue'
+import TaskCheckboxOption from './TaskCheckboxOption.vue'
 import TaskInputOption from './TaskInputOption.vue'
 import TaskSelectOption from './TaskSelectOption.vue'
 import TaskSwitchOption from './TaskSwitchOption.vue'
-import type { OptionInfo } from './types'
+import type { OptionInfo, OptionIntro } from './types'
 
 const props = defineProps<{
   task: TaskConfig
@@ -42,9 +49,43 @@ function revealEntry() {
 
 const allOptions = computed<OptionInfo[]>(() => {
   const resolved: OptionInfo[] = []
-  const options: OptionInfo[] = [...(taskMeta.value?.option ?? [])].map(option => ({
-    option
-  }))
+  const options: OptionInfo[] = []
+
+  const addOptions = (opts: string[] | undefined, intro: OptionIntro) => {
+    if (opts) {
+      for (const opt of opts) {
+        options.push({
+          option: opt,
+          intro
+        })
+      }
+    }
+  }
+
+  addOptions(hostState.value.interfaceJson?.global_option, {
+    type: 'global_option'
+  })
+
+  const ctrlName = hostState.value.interfaceConfigJson?.controller?.name
+  addOptions(
+    hostState.value.interfaceJson?.controller?.find(ctrl => ctrl.name === ctrlName)?.option,
+    {
+      type: 'controller',
+      name: ctrlName
+    }
+  )
+
+  const resName = hostState.value.interfaceConfigJson?.resource
+  addOptions(hostState.value.interfaceJson?.resource?.find(res => res.name === resName)?.option, {
+    type: 'resource',
+    name: resName
+  })
+
+  addOptions(taskMeta.value?.option, {
+    type: 'task',
+    name: props.task.name
+  })
+
   while (options.length > 0) {
     const opt = options.shift()!
     if (resolved.findIndex(info => info.option === opt.option) !== -1) {
@@ -59,40 +100,42 @@ const allOptions = computed<OptionInfo[]>(() => {
     if ((optMeta.type ?? 'select') === 'select') {
       const selectMeta = optMeta as SelectOption
 
-      let optValue = props.task.option?.[opt.option]?.default
-      if (typeof optValue === 'object') {
-        optValue = undefined
-      }
+      const optValue = props.task.option?.[opt.option]?.default
       const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0]?.name
       if (val) {
         const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
-        if (caseMeta?.option) {
-          options.push(
-            ...caseMeta.option.map(option => ({
-              option,
-              intro: opt.option
-            }))
-          )
+
+        addOptions(caseMeta?.option, {
+          type: 'option',
+          name: opt.option
+        })
+      }
+    } else if (optMeta.type === 'checkbox') {
+      const selectMeta = optMeta as CheckboxOption
+
+      const optValue = props.task.option?.[opt.option]
+      const val = (optValue ? Object.keys(optValue) : selectMeta.default_case) ?? []
+
+      for (const caseMeta of selectMeta.cases ?? []) {
+        if (val.includes(caseMeta.name)) {
+          addOptions(caseMeta?.option, {
+            type: 'option',
+            name: opt.option
+          })
         }
       }
     } else if (optMeta.type === 'switch') {
       const switchMeta = optMeta as SwitchOption
 
-      let optValue = props.task.option?.[opt.option]?.default
-      if (typeof optValue === 'object') {
-        optValue = undefined
-      }
+      const optValue = props.task.option?.[opt.option]?.default
       const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0]?.name
       if (val) {
         const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
-        if (caseMeta?.option) {
-          options.push(
-            ...caseMeta.option.map(option => ({
-              option,
-              intro: opt.option
-            }))
-          )
-        }
+
+        addOptions(caseMeta?.option, {
+          type: 'option',
+          name: opt.option
+        })
       }
     }
   }
@@ -131,6 +174,13 @@ function cast<T>(val: unknown): T {
               :opt="opt"
               :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt.option])"
             ></task-select-option>
+          </template>
+          <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'checkbox'">
+            <task-checkbox-option
+              :task="task"
+              :opt="opt"
+              :opt-meta="cast<CheckboxOption>(hostState.interfaceJson.option[opt.option])"
+            ></task-checkbox-option>
           </template>
           <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'input'">
             <task-input-option

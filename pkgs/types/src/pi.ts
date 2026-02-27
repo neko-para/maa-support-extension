@@ -9,7 +9,6 @@ export type TaskConfig = {
   }
 
   __vscKey?: string
-  __vscExpand?: boolean
 }
 
 export type InterfaceConfig = {
@@ -89,6 +88,7 @@ export type InterfaceRuntime = {
     display_raw?: boolean
     permission_required?: boolean
     attach_resource_path?: string[]
+    option?: string[]
   }
   resource_path: string[]
   task: {

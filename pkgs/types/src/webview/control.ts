@@ -110,11 +110,28 @@ export type ControlWebToHost =
       value?: string
     }
   | {
+      command: 'clearOption'
+      key: string
+      option: string
+    }
+  | {
       command: 'revealInterface'
       dest?:
         | {
             type: 'entry'
             entry: string
+          }
+        | {
+            type: 'controller'
+            ctrl: string
+          }
+        | {
+            type: 'resource'
+            res: string
+          }
+        | {
+            type: 'task'
+            task: string
           }
         | {
             type: 'option'

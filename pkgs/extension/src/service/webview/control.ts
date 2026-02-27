@@ -209,6 +209,17 @@ export class WebviewControlService extends BaseService {
           }
           break
         }
+        case 'clearOption': {
+          const tasks = interfaceService.interfaceConfigJson.task
+          const task = tasks?.find(info => info.__vscKey === data.key)
+          if (task?.option) {
+            delete task.option[data.option]
+            interfaceService.reduceConfig({
+              task: tasks
+            })
+          }
+          break
+        }
         case 'revealInterface': {
           let loc:
             | {
@@ -221,6 +232,27 @@ export class WebviewControlService extends BaseService {
               const info = data.dest
               loc = interfaceService.interfaceBundle?.info.refs.find(
                 ref => ref.type === 'interface.task_entry' && ref.target === info.entry
+              )
+              break
+            }
+            case 'controller': {
+              const info = data.dest
+              loc = interfaceService.interfaceBundle?.info.decls.find(
+                decl => decl.type === 'interface.controller' && decl.name === info.ctrl
+              )
+              break
+            }
+            case 'resource': {
+              const info = data.dest
+              loc = interfaceService.interfaceBundle?.info.decls.find(
+                decl => decl.type === 'interface.resource' && decl.name === info.res
+              )
+              break
+            }
+            case 'task': {
+              const info = data.dest
+              loc = interfaceService.interfaceBundle?.info.decls.find(
+                decl => decl.type === 'interface.task' && decl.name === info.task
               )
               break
             }

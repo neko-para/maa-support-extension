@@ -7,8 +7,8 @@ import type { SelectOption, TaskConfig } from '@mse/types'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'
+import TaskOptionHeader from './TaskOptionHeader.vue'
 import type { OptionInfo } from './types'
-import { revealOption } from './utils'
 
 const props = defineProps<{
   task: TaskConfig
@@ -73,18 +73,7 @@ function clearOption() {
 </script>
 
 <template>
-  <n-flex>
-    <n-popover trigger="hover" :disabled="!optMeta.label && !optMeta.description">
-      <template #trigger>
-        <n-button @click="revealOption(opt.option)" text> {{ opt.option }} </n-button>
-      </template>
-
-      <locale-text :text="optMeta.label"></locale-text>
-      <locale-text :text="optMeta.description"></locale-text>
-    </n-popover>
-
-    <n-button v-if="!!opt.intro" @click="revealOption(opt.intro)" text> @{{ opt.intro }} </n-button>
-
+  <task-option-header :opt="opt" :opt-meta="optMeta">
     <n-popover
       v-if="effectiveCase"
       trigger="hover"
@@ -99,7 +88,8 @@ function clearOption() {
       <locale-text :text="effectiveCase.label"></locale-text>
       <locale-text :text="effectiveCase.description"></locale-text>
     </n-popover>
-  </n-flex>
+  </task-option-header>
+
   <n-flex :wrap="false">
     <n-select
       :options="

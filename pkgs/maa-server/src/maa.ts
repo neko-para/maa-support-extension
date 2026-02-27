@@ -22,7 +22,6 @@ export async function initMaa() {
 
 type InstanceCache = {
   controller: maa.Controller
-  attaches: string[]
 }
 
 type TaskerAgentInfo = {
@@ -112,8 +111,7 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
 
   if (controller.connected) {
     cache = {
-      controller,
-      attaches: runtime.attach_resource_path ?? []
+      controller
     }
     cacheKey = key
     return true
@@ -219,7 +217,6 @@ async function setupAgent(
 
 async function setupResource(
   runtime: InterfaceRuntime,
-  attaches: string[],
   timeout: number
 ): Promise<{ resource: maa.Resource; agents: TaskerAgentInfo[] } | null> {
   const resource = new maa.Resource()
@@ -231,7 +228,7 @@ async function setupResource(
   for (const path of runtime.resource_path) {
     await resource.post_bundle(path).wait()
   }
-  for (const path of attaches) {
+  for (const path of runtime.controller_param.attach_resource_path ?? []) {
     await resource.post_bundle(path).wait()
   }
 
@@ -284,7 +281,7 @@ export async function setupInst(
     }
   }
 
-  const resourceInfo = await setupResource(runtime, cache.attaches, timeout)
+  const resourceInfo = await setupResource(runtime, timeout)
   if (!resourceInfo) {
     return {
       error: 'maa.debug.init-resource-failed'

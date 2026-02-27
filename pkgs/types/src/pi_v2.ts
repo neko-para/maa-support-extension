@@ -103,7 +103,7 @@ export type CheckboxCase = EntryBase & {
 }
 
 export type CheckboxOption = OptionBase & {
-  type?: 'checkbox'
+  type: 'checkbox'
   cases?: CheckboxCase[]
   default_case?: string[]
 }
@@ -137,7 +137,7 @@ export type SwitchOption = OptionBase & {
   default_case?: string
 }
 
-export type Option = SelectOption | InputOption | SwitchOption
+export type Option = SelectOption | CheckboxOption | InputOption | SwitchOption
 
 export type AgentConfig = {
   child_exec?: string

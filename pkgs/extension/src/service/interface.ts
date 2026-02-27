@@ -8,6 +8,7 @@ import { t } from '@mse/locale'
 import { InterfaceBundle, VscodeContentLoader, VscodeContentWatcher } from '@mse/pipeline-manager'
 import type {
   AgentConfig,
+  CheckboxOption,
   InputItemType,
   Interface,
   InterfaceConfig,
@@ -338,6 +339,7 @@ export class InterfaceService extends BaseService {
     const attach_resource_path = ctrlInfo.attach_resource_path?.map(resPath =>
       path.resolve(projectDir, resPath)
     )
+    const option = ctrlInfo.option ?? []
 
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
@@ -359,7 +361,8 @@ export class InterfaceService extends BaseService {
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
         permission_required,
-        attach_resource_path
+        attach_resource_path,
+        option
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -392,7 +395,8 @@ export class InterfaceService extends BaseService {
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
         permission_required,
-        attach_resource_path
+        attach_resource_path,
+        option
       }
     } else if (ctrlInfo.type === 'PlayCover') {
       if (!config.playcover) {
@@ -424,7 +428,8 @@ export class InterfaceService extends BaseService {
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
         permission_required,
-        attach_resource_path
+        attach_resource_path,
+        option
       }
     } else if (ctrlInfo.type === 'Gamepad') {
       if (!config.gamepad) {
@@ -456,7 +461,8 @@ export class InterfaceService extends BaseService {
         display_long_side: ctrlInfo.display_long_side,
         display_raw: ctrlInfo.display_raw,
         permission_required,
-        attach_resource_path
+        attach_resource_path,
+        option
       }
     }
 
@@ -504,6 +510,15 @@ export class InterfaceService extends BaseService {
         return path.resolve(projectDir, resPath)
       })
 
+    const globalOptions = [
+      ...(data.global_option ?? []),
+      ...(ctrlRt.option ?? []),
+      ...(resInfo.option ?? [])
+    ]
+
+    const ctrlName = config.controller!.name
+    const resName = config.resource!
+
     if (!skipTask) {
       result.task = []
       for (const task of config.task ?? []) {
@@ -515,7 +530,7 @@ export class InterfaceService extends BaseService {
 
         const getAllOption = () => {
           const resolved: string[] = []
-          const options = [...(taskInfo.option ?? [])]
+          const options = [...globalOptions, ...(taskInfo.option ?? [])]
           while (options.length > 0) {
             const opt = options.shift()!
             if (resolved.indexOf(opt) !== -1) {
@@ -527,13 +542,22 @@ export class InterfaceService extends BaseService {
             if (!optMeta) {
               continue
             }
+
+            if (
+              ctrlName !== '$fixed' &&
+              optMeta.controller &&
+              !optMeta.controller.includes(ctrlName)
+            ) {
+              continue
+            }
+            if (optMeta.resource && !optMeta.resource.includes(resName)) {
+              continue
+            }
+
             if ((optMeta.type ?? 'select') === 'select') {
               const selectMeta = optMeta as SelectOption
 
-              let optValue = task.option?.[opt]?.default
-              if (typeof optValue === 'object') {
-                optValue = undefined
-              }
+              const optValue = task.option?.[opt]?.default
               const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0].name
               if (val) {
                 const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
@@ -541,13 +565,22 @@ export class InterfaceService extends BaseService {
                   options.push(...caseMeta.option)
                 }
               }
+            } else if (optMeta.type === 'checkbox') {
+              const checkboxMeta = optMeta as CheckboxOption
+
+              const optValue = task.option?.[opt]
+              const val = (optValue ? Object.keys(optValue) : checkboxMeta.default_case) ?? []
+              for (const caseMeta of checkboxMeta.cases ?? []) {
+                if (val.includes(caseMeta.name)) {
+                  if (caseMeta?.option) {
+                    options.push(...caseMeta.option)
+                  }
+                }
+              }
             } else if (optMeta.type === 'switch') {
               const switchMeta = optMeta as SwitchOption
 
-              let optValue = task.option?.[opt]?.default
-              if (typeof optValue === 'object') {
-                optValue = undefined
-              }
+              const optValue = task.option?.[opt]?.default
               const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0].name
               if (val) {
                 const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
@@ -581,6 +614,14 @@ export class InterfaceService extends BaseService {
             }
 
             params.push(csInfo.pipeline_override ?? {})
+          } else if (optInfo.type === 'checkbox') {
+            const val = (optEntry ? Object.keys(optEntry) : optInfo.default_case) ?? []
+
+            for (const caseMeta of optInfo.cases ?? []) {
+              if (val.includes(caseMeta.name)) {
+                params.push(caseMeta.pipeline_override ?? {})
+              }
+            }
           } else if (optInfo.type === 'input') {
             const optValue = optEntry ?? {}
             for (const subOpt of optInfo.inputs ?? []) {

@@ -11,6 +11,7 @@ import { parseOption } from './option'
 import { parseOptionRef } from './optionRef'
 import { parseOverride } from './override'
 import { parsePath } from './path'
+import { parsePreset } from './preset'
 import { parseResRef } from './resRef'
 
 export type IntLangDeclInfo = {
@@ -58,6 +59,11 @@ export type IntInputDeclInfo = {
   cast?: 'string' | 'int' | 'bool'
 }
 
+export type IntPresetDeclInfo = {
+  type: 'interface.preset'
+  name: string
+}
+
 export type InterfaceDeclInfo = {
   file: AbsolutePath
   location: Node
@@ -69,6 +75,7 @@ export type InterfaceDeclInfo = {
   | IntOptionDeclInfo
   | IntCaseDeclInfo
   | IntInputDeclInfo
+  | IntPresetDeclInfo
 )
 
 export type IntLangPathRefInfo = {
@@ -88,6 +95,11 @@ export type IntCtrlRefInfo = {
 
 export type IntResRefInfo = {
   type: 'interface.resource'
+  target: string
+}
+
+export type IntTaskRefInfo = {
+  type: 'interface.task'
   target: string
 }
 
@@ -111,7 +123,7 @@ export type IntInputRefInfo = {
   type: 'interface.input'
   target: string
   option: string
-  offset: number
+  offset?: number
 }
 
 export type IntImportPathRefInfo = {
@@ -127,6 +139,7 @@ export type InterfaceRefInfo = {
   | IntResPathRefInfo
   | IntCtrlRefInfo
   | IntResRefInfo
+  | IntTaskRefInfo
   | IntTaskEntryRefInfo
   | IntOptionRefInfo
   | IntCaseRefInfo
@@ -292,7 +305,7 @@ function parseLocalization(node: Node, info: InterfaceInfo, ctx: InterfaceParseC
 
 export function parseInterface(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
   for (const [key, obj] of parseObject(node)) {
-    if (ctx.import && !['option', 'task'].includes(key)) {
+    if (ctx.import && !['option', 'task', 'preset'].includes(key)) {
       continue
     }
     switch (key) {
@@ -324,6 +337,9 @@ export function parseInterface(node: Node, info: InterfaceInfo, ctx: InterfacePa
         for (const sub of parseArray(obj)) {
           parseImport(sub, info, ctx)
         }
+        break
+      case 'preset':
+        parsePreset(obj, info, ctx)
         break
     }
   }

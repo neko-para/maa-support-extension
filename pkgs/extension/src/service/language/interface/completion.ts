@@ -85,6 +85,51 @@ export class InterfaceCompletionProvider
           range
         }
       })
+    } else if (ref.type === 'interface.task') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls.filter(decl => decl.type === 'interface.task').map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
+    } else if (ref.type === 'interface.case') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.case')
+        .filter(decl => decl.option === ref.option)
+        .map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
+    } else if (ref.type === 'interface.input' && ref.offset === undefined) {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.input')
+        .filter(decl => decl.option === ref.option)
+        .map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
     }
 
     return null

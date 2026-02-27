@@ -145,6 +145,16 @@ export type AgentConfig = {
   identifier?: string
 }
 
+export type PresetTask = {
+  name: string
+  enabled?: boolean
+  option?: Record<string, string | string[] | Record<string, string>>
+}
+
+export type Preset = EntryBase & {
+  task?: PresetTask[]
+}
+
 export type InterfaceV2 = EntryBase & {
   interface_version: 2
   languages?: Record<string, string>
@@ -169,5 +179,5 @@ export type InterfaceV2 = EntryBase & {
   // TODO: 之后再做
   preset: unknown[]
 
-  import?: string[]
+  import?: Preset[]
 }

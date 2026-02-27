@@ -71,6 +71,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         decl.type === 'interface.controller' ||
         decl.type === 'interface.resource' ||
+        decl.type === 'interface.task' ||
         decl.type === 'interface.option'
       ) {
         const decls = this.findDecls(index, decl.type).filter(decl2 => decl2.name === decl.name)
@@ -85,6 +86,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         ref.type === 'interface.controller' ||
         ref.type === 'interface.resource' ||
+        ref.type === 'interface.task' ||
         ref.type === 'interface.option'
       ) {
         const decls = this.findDecls(index, ref.type).filter(decl => decl.name === ref.target)
@@ -104,6 +106,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         decl.type === 'interface.controller' ||
         decl.type === 'interface.resource' ||
+        decl.type === 'interface.task' ||
         decl.type === 'interface.option'
       ) {
         const refs = this.findRefs(index, decl.type).filter(ref => ref.target === decl.name)
@@ -118,6 +121,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         ref.type === 'interface.controller' ||
         ref.type === 'interface.resource' ||
+        ref.type === 'interface.task' ||
         ref.type === 'interface.option'
       ) {
         const decls = this.findRefs(index, ref.type).filter(ref2 => ref2.target === ref.target)

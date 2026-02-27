@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import * as url from 'node:url'
 import { v4 } from 'uuid'
 
 import type { InterfaceAgentRuntime, InterfaceRuntime } from '@mse/types'
@@ -13,7 +14,7 @@ import { makePromise } from './utils'
 
 export async function initMaa() {
   const importTarget = path.join(option.module, '@maaxyz/maa-node/dist/index-client.js')
-  await import(importTarget)
+  await import(url.pathToFileURL(importTarget).toString())
 
   logger.info(maa.Global.version)
   maa.Global.debug_mode = true

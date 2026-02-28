@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/maa-checker",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "type": "module",
   "bin": {
     "maa-checker": "bin/maa-checker"

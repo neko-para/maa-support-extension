@@ -16,9 +16,7 @@ import { performReco } from './reco/reco'
 import { performRecoTest } from './reco/recoTest'
 import { console2 } from './utils'
 
-async function main() {
-  console2.time('checker')
-
+async function runCliImpl() {
   const option = await parseOption()
   if (!option) {
     printUsage()
@@ -67,7 +65,9 @@ async function main() {
   }
 }
 
-main().then(succ => {
+export async function runCli() {
+  console2.time('checker')
+  const ret = await runCliImpl()
   console2.timeEnd('checker')
-  process.exit(succ ? 0 : 1)
-})
+  return ret
+}

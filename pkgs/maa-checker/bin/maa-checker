@@ -1,2 +1,6 @@
 #!/usr/bin/env node
-require('../dist/main.mjs')
+import { runCli } from '../dist/main.mjs'
+
+runCli().then(succ => {
+  process.exit(succ ? 0 : 1)
+})

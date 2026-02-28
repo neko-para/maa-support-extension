@@ -78,6 +78,7 @@ jobs:
           path: 'release/vsix'
 
       - name: Publish packages
+        if: github.ref == 'refs/heads/main'
         shell: bash
         run: |
           for pkg in simple-parser maa-tasker maa-locale maa-version-manager maa-pipeline-manager maa-checker; do
@@ -88,7 +89,7 @@ jobs:
               echo "Skip $PKG_NAME"
             else
               echo "Publish $PKG_NAME"
-              pnpm publish --provenance
+              pnpm publish --provenance --no-git-checks
             fi
             cd - > /dev/null
           done

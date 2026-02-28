@@ -2,8 +2,9 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig([
   {
-    entry: ['pkgs/extension/src/extension.ts'],
-    outDir: 'release/out',
+    cwd: 'pkgs/extension',
+    entry: ['src/extension.ts'],
+    outDir: '../../release/out',
     format: 'esm',
     sourcemap: true,
     nodeProtocol: true,
@@ -69,7 +70,8 @@ export default defineConfig([
     nodeProtocol: true,
     dts: {
       sourcemap: true
-    }
+    },
+    external: ['@nekosu/simple-parser']
   },
   {
     entry: ['pkgs/maa-version-manager/src/index.ts'],
@@ -80,6 +82,16 @@ export default defineConfig([
     dts: {
       sourcemap: true
     },
-    external: ['pacote', 'proper-lockfile', 'semver/functions/compare']
+    external: ['pacote', 'proper-lockfile', 'semver/functions/compare.js']
+  },
+  {
+    entry: ['pkgs/simple-parser/src/index.ts'],
+    outDir: 'pkgs/simple-parser/dist',
+    format: 'esm',
+    sourcemap: true,
+    nodeProtocol: true,
+    dts: {
+      sourcemap: true
+    }
   }
 ])

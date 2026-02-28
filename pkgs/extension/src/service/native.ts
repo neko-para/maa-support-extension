@@ -1,4 +1,4 @@
-import semVerCompare from 'semver/functions/compare'
+import semVerCompare from 'semver/functions/compare.js'
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'

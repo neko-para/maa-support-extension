@@ -3,7 +3,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as pacote from 'pacote'
 import { lock } from 'proper-lockfile'
-import semVerCompare from 'semver/functions/compare'
+import semVerCompare from 'semver/functions/compare.js'
 
 export type NpmRegistryType = keyof typeof MaaVersionManager.registries
 

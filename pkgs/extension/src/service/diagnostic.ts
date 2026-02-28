@@ -2,6 +2,7 @@ import * as fs from 'fs/promises'
 import { existsSync } from 'node:fs'
 import * as vscode from 'vscode'
 
+import { t } from '@nekosu/maa-locale'
 import {
   type AbsolutePath,
   type DiagnosticOption,

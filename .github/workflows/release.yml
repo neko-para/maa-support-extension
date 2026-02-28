@@ -65,15 +65,15 @@ jobs:
             npm --prefix pkgs/maa-checker pkg set version=${ver}
           fi
 
-      - name: Lint check
-        shell: bash
-        run: |
-          npm run lint
-
       - name: Build extension
         shell: bash
         run: |
           node scripts/build.mjs
+
+      - name: Lint check
+        shell: bash
+        run: |
+          npm run lint
 
       - name: Package extension
         shell: bash

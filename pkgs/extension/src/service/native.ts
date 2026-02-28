@@ -1,7 +1,7 @@
 import semVerCompare from 'semver/functions/compare.js'
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
+import { t } from '@nekosu/maa-locale'
 import { MaaVersionManager, type NpmRegistryType } from '@nekosu/maa-version-manager'
 
 import { serverService } from '.'

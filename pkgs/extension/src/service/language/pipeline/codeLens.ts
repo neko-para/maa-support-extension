@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
+import { t } from '@nekosu/maa-locale'
 import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 
 import { interfaceService } from '../..'

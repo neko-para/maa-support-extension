@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@mse/locale": "workspace:*",
+    "@nekosu/maa-locale": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",
     "@actions/core": "^3.0.0",

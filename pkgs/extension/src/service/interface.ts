@@ -4,7 +4,6 @@ import * as path from 'node:path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
 import type {
   AgentConfig,
   CheckboxOption,
@@ -16,6 +15,7 @@ import type {
   SwitchOption
 } from '@mse/types'
 import { logger } from '@mse/utils'
+import { t } from '@nekosu/maa-locale'
 import {
   FsContentWatcher,
   type IContentLoader,

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
 import type { Interface } from '@mse/types'
+import { t } from '@nekosu/maa-locale'
 import {
   type AbsolutePath,
   InterfaceBundle,

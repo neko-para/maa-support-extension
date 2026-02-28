@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { existsSync, statSync } from 'node:fs'
 import * as path from 'node:path'
 
-import { setLocale } from '@mse/locale'
+import { setLocale } from '@nekosu/maa-locale'
 import {
   type AbsolutePath,
   FsContentLoader,

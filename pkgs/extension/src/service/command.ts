@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
 import { logger } from '@mse/utils'
+import { t } from '@nekosu/maa-locale'
 import { type TaskDeclInfo } from '@nekosu/maa-pipeline-manager'
 import {
   type MaaTaskExpr,

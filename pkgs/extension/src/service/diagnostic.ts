@@ -2,11 +2,9 @@ import * as fs from 'fs/promises'
 import { existsSync } from 'node:fs'
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
 import {
   type AbsolutePath,
   type DiagnosticOption,
-  type Translator,
   buildDiagnosticMessage,
   performDiagnostic
 } from '@nekosu/maa-pipeline-manager'
@@ -64,7 +62,6 @@ class DiagnosticScanner extends FlushHelper {
     const diags = performDiagnostic(intBundle, diagOption)
     for (const diag of diags) {
       const [start, end, brief] = await buildDiagnosticMessage(
-        t as unknown as Translator,
         rootService.activeResource!.workspace.fsPath as AbsolutePath,
         diag,
         async (file, offset) => {

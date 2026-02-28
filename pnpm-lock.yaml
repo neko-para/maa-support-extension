@@ -73,15 +73,15 @@ importers:
       '@jimp/plugin-crop':
         specifier: ^1.6.0
         version: 1.6.0
-      '@mse/locale':
-        specifier: workspace:*
-        version: link:../locale
       '@mse/maa-server-proto':
         specifier: workspace:*
         version: link:../maa-server-proto
       '@mse/utils':
         specifier: workspace:*
         version: link:../utils
+      '@nekosu/maa-locale':
+        specifier: workspace:*
+        version: link:../maa-locale
       '@nekosu/maa-pipeline-manager':
         specifier: workspace:*
         version: link:../maa-pipeline-manager
@@ -144,23 +144,14 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  pkgs/locale:
-    devDependencies:
-      '@tsconfig/node24':
-        specifier: ^24.0.4
-        version: 24.0.4
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   pkgs/maa-checker:
     dependencies:
       '@actions/core':
         specifier: ^3.0.0
         version: 3.0.0
-      '@mse/locale':
+      '@nekosu/maa-locale':
         specifier: workspace:*
-        version: link:../locale
+        version: link:../maa-locale
       '@nekosu/maa-pipeline-manager':
         specifier: workspace:*
         version: link:../maa-pipeline-manager
@@ -193,8 +184,20 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  pkgs/maa-locale:
+    devDependencies:
+      '@tsconfig/node24':
+        specifier: ^24.0.4
+        version: 24.0.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   pkgs/maa-pipeline-manager:
     dependencies:
+      '@nekosu/maa-locale':
+        specifier: workspace:*
+        version: link:../maa-locale
       '@nekosu/maa-tasker':
         specifier: workspace:*
         version: link:../maa-tasker
@@ -208,9 +211,6 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.7.2
         version: 5.7.2
-      '@mse/locale':
-        specifier: workspace:*
-        version: link:../locale
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4

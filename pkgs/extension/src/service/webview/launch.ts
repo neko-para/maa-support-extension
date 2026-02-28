@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 
-import { locale } from '@mse/locale'
 import type { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
+import { locale } from '@nekosu/maa-locale'
 import type { TaskName } from '@nekosu/maa-pipeline-manager'
 
 import { interfaceService, nativeService, serverService, stateService } from '..'

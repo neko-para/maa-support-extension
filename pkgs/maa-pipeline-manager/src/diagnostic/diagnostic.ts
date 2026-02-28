@@ -3,7 +3,7 @@ import { checkInterface } from './interface'
 import { checkTask } from './task'
 import type { Diagnostic, DiagnosticOption } from './types'
 
-export { buildDiagnosticMessage, type Translator } from './message'
+export { buildDiagnosticMessage } from './message'
 
 export function performDiagnostic<T>(
   bundle: InterfaceBundle<T>,

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 
-import { t } from '@mse/locale'
 import type { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel } from '@mse/utils'
+import { t } from '@nekosu/maa-locale'
 
 import { debugService, interfaceService, serverService } from '.'
 import { BaseService } from './context'

@@ -39,6 +39,7 @@ export default defineConfig([
     },
     external: [
       '@maaxyz/maa-node',
+      '@nekosu/maa-locale',
       '@nekosu/maa-version-manager',
       '@nekosu/maa-pipeline-manager',
       '@actions/core',
@@ -55,7 +56,13 @@ export default defineConfig([
     dts: {
       sourcemap: true
     },
-    external: ['@maaxyz/maa-node', '@nekosu/maa-tasker', 'chokidar', 'jsonc-parser'],
+    external: [
+      '@maaxyz/maa-node',
+      '@nekosu/maa-locale',
+      '@nekosu/maa-tasker',
+      'chokidar',
+      'jsonc-parser'
+    ],
     inputOptions: {
       resolve: {
         mainFields: ['module', 'main']
@@ -83,6 +90,16 @@ export default defineConfig([
       sourcemap: true
     },
     external: ['pacote', 'proper-lockfile', 'semver/functions/compare.js']
+  },
+  {
+    entry: ['pkgs/maa-locale/src/index.ts'],
+    outDir: 'pkgs/maa-locale/dist',
+    format: 'esm',
+    sourcemap: true,
+    nodeProtocol: true,
+    dts: {
+      sourcemap: true
+    }
   },
   {
     entry: ['pkgs/simple-parser/src/index.ts'],

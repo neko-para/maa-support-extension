@@ -5,7 +5,7 @@
     "@jimp/core": "^1.6.0",
     "@jimp/js-png": "^1.6.0",
     "@jimp/plugin-crop": "^1.6.0",
-    "@mse/locale": "workspace:*",
+    "@nekosu/maa-locale": "workspace:*",
     "@mse/maa-server-proto": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",

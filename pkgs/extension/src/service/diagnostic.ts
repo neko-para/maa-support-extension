@@ -6,9 +6,10 @@ import { t } from '@mse/locale'
 import {
   type AbsolutePath,
   type DiagnosticOption,
+  type Translator,
   buildDiagnosticMessage,
   performDiagnostic
-} from '@mse/pipeline-manager'
+} from '@nekosu/maa-pipeline-manager'
 
 import { interfaceService, rootService } from '.'
 import { BaseService } from './context'
@@ -63,6 +64,7 @@ class DiagnosticScanner extends FlushHelper {
     const diags = performDiagnostic(intBundle, diagOption)
     for (const diag of diags) {
       const [start, end, brief] = await buildDiagnosticMessage(
+        t as unknown as Translator,
         rootService.activeResource!.workspace.fsPath as AbsolutePath,
         diag,
         async (file, offset) => {

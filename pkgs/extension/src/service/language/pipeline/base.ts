@@ -1,6 +1,7 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
+import type { Interface } from '@mse/types'
 import {
   type AbsolutePath,
   type AnchorName,
@@ -13,8 +14,7 @@ import {
   extractTaskRef,
   joinPath,
   normalizeImageFolder
-} from '@mse/pipeline-manager'
-import type { Interface } from '@mse/types'
+} from '@nekosu/maa-pipeline-manager'
 import type { MaaTask } from '@nekosu/maa-tasker'
 
 import { interfaceService, rootService } from '../..'

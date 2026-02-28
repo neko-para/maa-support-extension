@@ -1,8 +1,5 @@
 import { defineConfig } from 'tsdown'
 
-const banner =
-  'import __path from "node:path"; import __url from "node:url"; const __filename = __url.fileURLToPath(import.meta.url); const __dirname = __path.dirname(__filename);'
-
 export default defineConfig([
   {
     entry: ['pkgs/extension/src/extension.ts'],
@@ -13,17 +10,12 @@ export default defineConfig([
     loader: {
       html: 'text'
     },
-    deps: {
-      neverBundle: ['vscode', '@maaxyz/maa-node'],
-      onlyAllowBundle: false
-    },
+    external: ['vscode', '@maaxyz/maa-node'],
+    inlineOnly: false,
     inputOptions: {
       resolve: {
         mainFields: ['module', 'main']
       }
-    },
-    outputOptions: {
-      banner
     }
   },
   {
@@ -32,10 +24,8 @@ export default defineConfig([
     format: 'esm',
     sourcemap: true,
     nodeProtocol: true,
-    deps: {
-      neverBundle: ['@maaxyz/maa-node'],
-      onlyAllowBundle: false
-    }
+    external: ['@maaxyz/maa-node'],
+    inlineOnly: false
   },
   {
     entry: ['pkgs/maa-checker/src/main.ts', 'pkgs/maa-checker/src/reco/worker.ts'],
@@ -46,17 +36,50 @@ export default defineConfig([
     dts: {
       sourcemap: true
     },
-    deps: {
-      neverBundle: ['@maaxyz/maa-node'],
-      onlyAllowBundle: false
+    external: [
+      '@maaxyz/maa-node',
+      '@nekosu/maa-version-manager',
+      '@nekosu/maa-pipeline-manager',
+      '@actions/core',
+      'workerpool'
+    ]
+  },
+
+  {
+    entry: ['pkgs/maa-pipeline-manager/src/index.ts'],
+    outDir: 'pkgs/maa-pipeline-manager/dist',
+    format: 'esm',
+    sourcemap: true,
+    nodeProtocol: true,
+    dts: {
+      sourcemap: true
     },
+    external: ['@maaxyz/maa-node', '@nekosu/maa-tasker', 'chokidar', 'jsonc-parser'],
     inputOptions: {
       resolve: {
         mainFields: ['module', 'main']
       }
-    },
-    outputOptions: {
-      banner
     }
+  },
+  {
+    entry: ['pkgs/maa-tasker/src/index.ts'],
+    outDir: 'pkgs/maa-tasker/dist',
+    format: 'esm',
+    sourcemap: true,
+    nodeProtocol: true,
+    dts: {
+      sourcemap: true
+    }
+  },
+  {
+    entry: ['pkgs/maa-version-manager/src/index.ts'],
+    outDir: 'pkgs/maa-version-manager/dist',
+    format: 'esm',
+    sourcemap: true,
+    nodeProtocol: true,
+    dts: {
+      sourcemap: true
+    },
+    external: ['pacote', 'proper-lockfile', 'semver/functions/compare']
   }
 ])

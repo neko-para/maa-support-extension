@@ -10,3 +10,4 @@ azure.token
 .DS_Store
 
 /checker
+dist

@@ -1,14 +1,14 @@
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
+import type { Interface } from '@mse/types'
 import {
   type AbsolutePath,
   InterfaceBundle,
   type InterfaceRefInfo,
   type TaskRefInfo,
   findDeclRef
-} from '@mse/pipeline-manager'
-import type { Interface } from '@mse/types'
+} from '@nekosu/maa-pipeline-manager'
 
 import { commands } from '../../../command'
 import { convertRange } from '../utils'

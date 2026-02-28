@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 
 export default defineConfig([
   {
-    ignores: ['pkgs/maa-checker/dist/**', 'release/**']
+    ignores: ['**/dist/**', 'release/**']
   },
   {
     files: [

@@ -24,3 +24,5 @@ export function t<K extends LocaleIndex>(key: K, ...args: CountBrace<(typeof loc
   }
   return str
 }
+
+export type t = typeof t

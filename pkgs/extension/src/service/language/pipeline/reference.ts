@@ -5,7 +5,7 @@ import {
   type TaskMaaTaskRef,
   findDeclRef,
   findMaaDeclRef
-} from '@mse/pipeline-manager'
+} from '@nekosu/maa-pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'

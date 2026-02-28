@@ -1,4 +1,4 @@
-import type { AbsolutePath } from '@mse/pipeline-manager'
+import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 
 export type RecoJob = {
   nodes: string[]

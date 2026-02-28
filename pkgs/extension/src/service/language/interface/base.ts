@@ -6,7 +6,7 @@ import {
   type InterfaceInfo,
   type InterfaceRefInfo,
   joinPath
-} from '@mse/pipeline-manager'
+} from '@nekosu/maa-pipeline-manager'
 
 import { interfaceService, rootService } from '../..'
 import { BaseService } from '../../context'

@@ -1,8 +1,8 @@
 import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
-import { MaaVersionManager } from '@mse/maa-version-manager'
-import { type InterfaceBundle, joinPath } from '@mse/pipeline-manager'
+import { type InterfaceBundle, joinPath } from '@nekosu/maa-pipeline-manager'
+import { MaaVersionManager } from '@nekosu/maa-version-manager'
 
 import type { ProgramOption } from '../option'
 import { console2, getColorInfo, gzCompress } from '../utils'

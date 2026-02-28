@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
-import { type TaskDeclInfo } from '@mse/pipeline-manager'
 import { logger } from '@mse/utils'
+import { type TaskDeclInfo } from '@nekosu/maa-pipeline-manager'
 import {
   type MaaTaskExpr,
   TaskExprProps,

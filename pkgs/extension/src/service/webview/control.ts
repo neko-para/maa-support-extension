@@ -4,9 +4,9 @@ import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { locale, t } from '@mse/locale'
-import type { AbsolutePath } from '@mse/pipeline-manager'
 import type { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
 import { WebviewProvider, logger, provideWebview } from '@mse/utils'
+import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 
 import {
   interfaceService,

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import type { AbsolutePath } from '@mse/pipeline-manager'
+import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 
 import { hsv2rgb } from '../../utils/color'
 import { convertRange } from '../utils'

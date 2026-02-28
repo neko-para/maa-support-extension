@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 import { t } from '@mse/locale'
-import type { AbsolutePath } from '@mse/pipeline-manager'
+import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 
 import { interfaceService } from '../..'
 import { commands } from '../../../command'

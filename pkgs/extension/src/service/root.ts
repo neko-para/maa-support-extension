@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
-import { type AbsolutePath, type RelativePath, relativePath } from '@mse/pipeline-manager'
 import { logger } from '@mse/utils'
+import { type AbsolutePath, type RelativePath, relativePath } from '@nekosu/maa-pipeline-manager'
 
 import { stateService } from '.'
 import { type ResourceRoot, locateResourceRoot } from '../utils/fs'

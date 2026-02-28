@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { type AbsolutePath, findDeclRef, findMaaDeclRef } from '@mse/pipeline-manager'
+import { type AbsolutePath, findDeclRef, findMaaDeclRef } from '@nekosu/maa-pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'

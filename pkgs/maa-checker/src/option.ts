@@ -4,7 +4,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 
 import type { LocaleType } from '@mse/locale'
-import type { AbsolutePath, DiagnosticType } from '@mse/pipeline-manager'
+import type { AbsolutePath, DiagnosticType } from '@nekosu/maa-pipeline-manager'
 
 import pkg from '../package.json'
 import type { RecoJobGroup, RecoTestConfig } from './reco/types'

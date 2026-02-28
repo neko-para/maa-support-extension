@@ -11,7 +11,7 @@ export class MaaVersionManager {
   static readonly registries = {
     npm: 'https://registry.npmjs.org',
     cnpm: 'https://registry.npmmirror.com'
-  }
+  } as const
   static isValidRegistryType(key: unknown): key is NpmRegistryType {
     return typeof key === 'string' && Object.keys(MaaVersionManager.registries).includes(key)
   }
@@ -37,7 +37,7 @@ export class MaaVersionManager {
     await fs.mkdir(this.installPath, { recursive: true })
   }
 
-  lock() {
+  lock(): Promise<(() => Promise<void>) | null> {
     return lock(this.root).then(
       release => release,
       () => null

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'node:events'
+import EventEmitter from 'node:events'
 
 import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'

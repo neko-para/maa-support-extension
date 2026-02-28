@@ -8,7 +8,7 @@ import {
   FsContentLoader,
   FsContentWatcher,
   InterfaceBundle
-} from '@mse/pipeline-manager'
+} from '@nekosu/maa-pipeline-manager'
 
 import { performCheck } from './check'
 import { parseOption, printUsage } from './option'

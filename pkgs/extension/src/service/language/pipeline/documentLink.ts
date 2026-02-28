@@ -6,7 +6,7 @@ import {
   joinImagePath,
   joinPath,
   normalizeImageFolder
-} from '@mse/pipeline-manager'
+} from '@nekosu/maa-pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { convertRange } from '../utils'

@@ -2,13 +2,15 @@ import * as core from '@actions/core'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
+import { t } from '@mse/locale'
 import {
   type Diagnostic,
   type DiagnosticOption,
   InterfaceBundle,
+  type Translator,
   buildDiagnosticMessage,
   performDiagnostic
-} from '@mse/pipeline-manager'
+} from '@nekosu/maa-pipeline-manager'
 
 import type { ProgramOption } from './option'
 import { console2, gzCompress } from './utils'
@@ -86,6 +88,7 @@ export async function performCheck(option: ProgramOption, bundle: InterfaceBundl
 
       for (const diag of diags) {
         const [start, _end, brief] = await buildDiagnosticMessage(
+          t as unknown as Translator,
           bundle.root,
           diag,
           locate,

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { findDeclRef } from '@mse/pipeline-manager'
+import { findDeclRef } from '@nekosu/maa-pipeline-manager'
 
 import { convertRangeWithDelta } from '../utils'
 import { InterfaceLanguageProvider } from './base'

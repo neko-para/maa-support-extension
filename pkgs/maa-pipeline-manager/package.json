@@ -1,18 +1,23 @@
 {
-  "name": "@mse/pipeline-manager",
+  "name": "@nekosu/maa-pipeline-manager",
+  "version": "1.0.0",
   "type": "module",
-  "main": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
   "dependencies": {
-    "@mse/locale": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",
     "chokidar": "^5.0.0",
     "jsonc-parser": "^3.3.1"
   },
   "devDependencies": {
     "@maaxyz/maa-node": "5.7.2",
+    "@mse/locale": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.0",
-    "@types/vscode": "^1.109.0",
     "typescript": "^5.9.3"
   }
 }

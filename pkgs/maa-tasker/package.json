@@ -1,7 +1,13 @@
 {
   "name": "@nekosu/maa-tasker",
+  "version": "1.0.0",
   "type": "module",
-  "main": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
   "dependencies": {
     "@nekosu/simple-parser": "workspace:*"
   },

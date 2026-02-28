@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@mse/locale": "workspace:*",
-    "@mse/maa-version-manager": "workspace:*",
-    "@mse/pipeline-manager": "workspace:*",
+    "@nekosu/maa-version-manager": "workspace:*",
+    "@nekosu/maa-pipeline-manager": "workspace:*",
     "@actions/core": "^3.0.0",
     "workerpool": "^10.0.1"
   },

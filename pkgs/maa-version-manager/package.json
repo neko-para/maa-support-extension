@@ -1,7 +1,13 @@
 {
-  "name": "@mse/maa-version-manager",
+  "name": "@nekosu/maa-version-manager",
+  "version": "1.0.0",
   "type": "module",
-  "main": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
   "dependencies": {
     "pacote": "^21.4.0",
     "proper-lockfile": "^4.1.2",

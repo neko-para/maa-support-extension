@@ -1,4 +1,4 @@
-import { createJiti } from 'jiti/static'
+import { createJiti } from 'jiti'
 
 import type { FullConfig } from '../types/config'
 

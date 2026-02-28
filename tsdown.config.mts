@@ -44,6 +44,7 @@ export default defineConfig([
       '@nekosu/maa-version-manager',
       '@nekosu/maa-pipeline-manager',
       '@actions/core',
+      'jiti',
       'workerpool'
     ]
   },

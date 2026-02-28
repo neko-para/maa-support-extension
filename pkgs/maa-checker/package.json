@@ -14,6 +14,9 @@
     "type": "github",
     "url": "git+https://github.com/neko-para/maa-support-extension.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@mse/locale": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",

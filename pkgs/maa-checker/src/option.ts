@@ -186,7 +186,6 @@ export async function parseOption(): Promise<ProgramOption | null> {
     }
     switch (match[1]) {
       case 'help':
-        printUsage()
         return null
       case 'raw':
         option.rawMode = true

@@ -1,2 +1,5 @@
 packages:
   - pkgs/*
+
+patchedDependencies:
+  jiti: patches/jiti-430.patch

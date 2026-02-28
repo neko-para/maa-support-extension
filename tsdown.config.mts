@@ -30,7 +30,7 @@ export default defineConfig([
     inlineOnly: false
   },
   {
-    entry: ['pkgs/maa-checker/src/main.ts', 'pkgs/maa-checker/src/reco/worker.ts'],
+    entry: ['pkgs/maa-checker/src/index.ts', 'pkgs/maa-checker/src/reco/worker.ts'],
     outDir: 'pkgs/maa-checker/dist',
     format: 'esm',
     sourcemap: true,

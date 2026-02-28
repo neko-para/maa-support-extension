@@ -10,7 +10,7 @@ import {
   InterfaceBundle
 } from '@nekosu/maa-pipeline-manager'
 
-import { performCheck } from './check'
+import { performCheck } from './check_old'
 import { parseOption, printUsage } from './option'
 import { performReco } from './reco/reco'
 import { performRecoTest } from './reco/recoTest'

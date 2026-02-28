@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-import { runCli } from '../dist/main.mjs'
+import * as path from 'node:path'
 
-runCli().then(succ => {
-  process.exit(succ ? 0 : 1)
-})
+import { runCli } from '../dist/index.mjs'
+
+runCli(process.argv[2], process.argv[3] ?? path.join(process.cwd(), 'maachecker.config.mts')).then(
+  succ => {
+    process.exit(succ ? 0 : 1)
+  }
+)

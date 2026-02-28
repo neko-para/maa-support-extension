@@ -13,6 +13,7 @@ import { MaaVersionManager } from '@nekosu/maa-version-manager'
 import pkg from '../../package.json'
 import type { FullConfig } from '../types/config'
 import type { GroupRecoResult, RecoJob, RecoResult } from './types'
+import { checkRect } from './utils'
 
 function splitChunk<T>(arr: T[], size: number) {
   const result: T[][] = []
@@ -84,9 +85,13 @@ export async function runTest(cfg: FullConfig) {
       image: path.resolve(testCases.configs.imageRoot, c.image) + '.png',
       imageRaw: c.image
     }))
-    const allNodes = testCases.cases
-      .map(c => c.hits.map(hit => (typeof hit === 'string' ? hit : hit.node)).flat())
-      .flat()
+    const allNodes = [
+      ...new Set(
+        testCases.cases
+          .map(c => c.hits.map(hit => (typeof hit === 'string' ? hit : hit.node)).flat())
+          .flat()
+      )
+    ]
 
     await bundle.switchActive(testCases.configs.controller, testCases.configs.resource)
     const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
@@ -143,5 +148,36 @@ export async function runTest(cfg: FullConfig) {
     await pool.terminate()
   }
 
-  console.log(result)
+  for (const group of result) {
+    const groupName =
+      group.cases.configs.name ??
+      `${group.cases.configs.controller}:${group.cases.configs.resource}`
+
+    console.log(`${groupName}:`)
+    for (const testCase of group.cases.cases) {
+      for (const res of group.result.filter(res => res.imagePathRaw === testCase.image)) {
+        const hitCfg = testCase.hits.find(hit => {
+          if (typeof hit === 'string') {
+            return hit === res.node
+          } else {
+            return hit.node === res.node
+          }
+        })
+        if (hitCfg) {
+          if (!res.hit) {
+            console.log(`  ${testCase.image} ${res.node} should hit but missed`)
+          } else if (typeof hitCfg !== 'string') {
+            if (!res.detail || !checkRect(hitCfg.box, res.detail!.box)) {
+              console.log(`  ${testCase.image} ${res.node} box mismatch`)
+            }
+          }
+        } else {
+          if (res.hit) {
+            console.log(`  ${testCase.image} ${res.node} should missed but hit`)
+          }
+        }
+      }
+    }
+  }
+  return true
 }

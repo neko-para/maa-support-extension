@@ -27,7 +27,6 @@
   },
   "devDependencies": {
     "@maaxyz/maa-node": "5.7.2",
-    "@mse/types": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.0",
     "@types/source-map-support": "^0.5.10",

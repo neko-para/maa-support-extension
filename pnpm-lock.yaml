@@ -165,9 +165,6 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.7.2
         version: 5.7.2
-      '@mse/types':
-        specifier: workspace:*
-        version: link:../types
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4

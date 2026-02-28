@@ -12,6 +12,7 @@ export default defineConfig([
       html: 'text'
     },
     external: ['vscode', '@maaxyz/maa-node'],
+    noExternal: ['@nekosu/maa-version-manager', '@nekosu/maa-tasker'],
     inlineOnly: false,
     inputOptions: {
       resolve: {

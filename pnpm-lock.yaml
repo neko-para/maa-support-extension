@@ -58,7 +58,7 @@ importers:
         version: 3.2.5(typescript@5.9.3)
 
   pkgs/extension:
-    dependencies:
+    devDependencies:
       '@jimp/core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -68,9 +68,15 @@ importers:
       '@jimp/plugin-crop':
         specifier: ^1.6.0
         version: 1.6.0
+      '@maaxyz/maa-node':
+        specifier: 5.7.2
+        version: 5.7.2
       '@mse/maa-server-proto':
         specifier: workspace:*
         version: link:../maa-server-proto
+      '@mse/types':
+        specifier: workspace:*
+        version: link:../types
       '@mse/utils':
         specifier: workspace:*
         version: link:../utils
@@ -89,6 +95,21 @@ importers:
       '@nekosu/simple-parser':
         specifier: workspace:*
         version: link:../simple-parser
+      '@tsconfig/node24':
+        specifier: ^24.0.4
+        version: 24.0.4
+      '@types/node':
+        specifier: ^25.3.0
+        version: 25.3.0
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
+      '@types/source-map-support':
+        specifier: ^0.5.10
+        version: 0.5.10
+      '@types/vscode':
+        specifier: ^1.109.0
+        version: 1.109.0
       '@vscode/debugadapter':
         specifier: ^1.68.0
         version: 1.68.0
@@ -107,37 +128,15 @@ importers:
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
       vscode-jsonrpc:
         specifier: ^8.2.1
         version: 8.2.1
-    devDependencies:
-      '@maaxyz/maa-node':
-        specifier: 5.7.2
-        version: 5.7.2
-      '@mse/types':
-        specifier: workspace:*
-        version: link:../types
-      '@tsconfig/node24':
-        specifier: ^24.0.4
-        version: 24.0.4
-      '@types/node':
-        specifier: ^25.3.0
-        version: 25.3.0
-      '@types/semver':
-        specifier: ^7.7.1
-        version: 7.7.1
-      '@types/source-map-support':
-        specifier: ^0.5.10
-        version: 0.5.10
-      '@types/vscode':
-        specifier: ^1.109.0
-        version: 1.109.0
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
 
   pkgs/maa-checker:
     dependencies:

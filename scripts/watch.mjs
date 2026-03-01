@@ -3,10 +3,16 @@ import path from 'node:path'
 import { build } from 'tsdown'
 import { build as viteBuild } from 'vite'
 
+let startWatch = false
+
 build({
   config: path.resolve(import.meta.dirname, '../tsdown.config.mts'),
   watch: true,
   onSuccess: () => {
+    if (startWatch) {
+      return
+    }
+    startWatch = true
     esContext({
       entryPoints: ['pkgs/extension/src/extension.ts'],
       bundle: true,

@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+import * as path from 'node:path'
+
+import { runCli } from '../dist/index.mjs'
+
+runCli(
+  process.argv[2] ?? 'help',
+  process.argv[3] ?? path.join(process.cwd(), 'maatools.config.mts')
+).then(succ => {
+  process.exit(succ ? 0 : 1)
+})

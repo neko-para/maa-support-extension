@@ -232,8 +232,15 @@ export class InterfaceBundle<T> extends EventEmitter<{
       .map(info => info.name)
   }
 
-  allResourceNames() {
-    return this.info.decls.filter(decl => decl.type === 'interface.resource').map(info => info.name)
+  allResourceNames(checkController = '') {
+    return this.info.decls
+      .filter(decl => decl.type === 'interface.resource')
+      .filter(
+        checkController
+          ? decl => !decl.controller || decl.controller.includes(checkController)
+          : () => true
+      )
+      .map(info => info.name)
   }
 
   updatePaths() {

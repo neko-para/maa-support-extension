@@ -1,5 +1,7 @@
 import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 
+import type { TestCases } from '../types/config'
+
 export type RecoJob = {
   nodes: string[]
   imagePath: string
@@ -25,25 +27,8 @@ export type RecoResult = {
 }
 
 export type GroupRecoResult = {
-  group: RecoJobGroup
+  cases: TestCases
   result: RecoResult[]
 }
 
-export type RecoTestConfig = {
-  configs: {
-    name?: string
-    controller: string
-    resource: string
-  }
-  cases: {
-    name: string
-    image: string
-    hits: (
-      | string
-      | {
-          node: string
-          box: maa.Rect
-        }
-    )[]
-  }[]
-}
+export type RecoTestConfig = TestCases

@@ -1,7 +1,4 @@
-import { Console } from 'node:console'
 import * as zlib from 'node:zlib'
-
-import type { ProgramOption } from './option'
 
 export function toArrayBuffer(buffer: Buffer): ArrayBuffer {
   if (buffer.byteOffset === 0 && buffer.byteLength === buffer.buffer.byteLength) {
@@ -44,24 +41,4 @@ export function gzCompress(data: string) {
 
 export function gzDecompress(data: string): string {
   return zlib.gunzipSync(Buffer.from(data, 'base64')).toString()
-}
-
-export const console2 = new Console(process.stderr)
-
-export function getColorInfo(option: ProgramOption) {
-  const enableColor = option.color === 'enable'
-  let hitPrefix = ''
-  let missPrefix = ''
-  let resetSuffix = ''
-  if (enableColor) {
-    hitPrefix = '\x1b[32m'
-    missPrefix = '\x1b[31m'
-    resetSuffix = '\x1b[m'
-  }
-  return {
-    enableColor,
-    hitPrefix,
-    missPrefix,
-    resetSuffix
-  }
 }

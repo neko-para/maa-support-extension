@@ -1,14 +1,14 @@
 {
-  "name": "@nekosu/maa-checker",
-  "version": "1.2.7",
+  "name": "@nekosu/maa-tools",
+  "version": "1.0.0",
   "type": "module",
   "bin": {
-    "maa-checker": "bin/maa-checker"
+    "maa-tools": "bin/maa-tools"
   },
   "exports": {
     ".": {
-      "import": "./dist/main.mjs",
-      "types": "./dist/main.d.mts"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     }
   },
   "repository": {
@@ -19,10 +19,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@nekosu/maa-locale": "workspace:*",
-    "@nekosu/maa-version-manager": "workspace:*",
-    "@nekosu/maa-pipeline-manager": "workspace:*",
     "@actions/core": "^3.0.0",
+    "@nekosu/maa-locale": "workspace:*",
+    "@nekosu/maa-pipeline-manager": "workspace:*",
+    "@nekosu/maa-version-manager": "workspace:*",
+    "jiti": "^2.6.1",
     "workerpool": "^10.0.1"
   },
   "devDependencies": {

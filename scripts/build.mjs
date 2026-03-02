@@ -4,7 +4,13 @@ import { build as viteBuild } from 'vite'
 
 build({
   config: path.resolve(import.meta.dirname, '../tsdown.config.mts'),
-  minify: true
+  minify: true,
+  onSuccess: () => {
+    build({
+      config: path.resolve(import.meta.dirname, '../pkgs/extension/tsdown.config.mts'),
+      shims: true
+    })
+  }
 })
 
 viteBuild({

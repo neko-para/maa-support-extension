@@ -2,25 +2,6 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig([
   {
-    cwd: 'pkgs/extension',
-    entry: ['src/extension.ts'],
-    outDir: '../../release/out',
-    format: 'esm',
-    sourcemap: true,
-    nodeProtocol: true,
-    loader: {
-      html: 'text'
-    },
-    external: ['vscode', '@maaxyz/maa-node'],
-    noExternal: ['@nekosu/maa-version-manager', '@nekosu/maa-tasker'],
-    inlineOnly: false,
-    inputOptions: {
-      resolve: {
-        mainFields: ['module', 'main']
-      }
-    }
-  },
-  {
     entry: ['pkgs/maa-server/src/index.ts'],
     outDir: 'release/server',
     format: 'esm',
@@ -30,8 +11,8 @@ export default defineConfig([
     inlineOnly: false
   },
   {
-    entry: ['pkgs/maa-checker/src/main.ts', 'pkgs/maa-checker/src/reco/worker.ts'],
-    outDir: 'pkgs/maa-checker/dist',
+    entry: ['pkgs/maa-tools/src/index.ts', 'pkgs/maa-tools/src/test/worker.ts'],
+    outDir: 'pkgs/maa-tools/dist',
     format: 'esm',
     sourcemap: true,
     nodeProtocol: true,
@@ -44,8 +25,18 @@ export default defineConfig([
       '@nekosu/maa-version-manager',
       '@nekosu/maa-pipeline-manager',
       '@actions/core',
+      'jiti',
       'workerpool'
-    ]
+    ],
+    outputOptions: {
+      banner: chunk => {
+        if (chunk.fileName.endsWith('.d.mts')) {
+          return '/// <reference types="@maaxyz/maa-node" />'
+        } else {
+          return ''
+        }
+      }
+    }
   },
 
   {
@@ -67,6 +58,15 @@ export default defineConfig([
     inputOptions: {
       resolve: {
         mainFields: ['module', 'main']
+      }
+    },
+    outputOptions: {
+      banner: chunk => {
+        if (chunk.fileName.endsWith('.d.mts')) {
+          return '/// <reference types="@maaxyz/maa-node" />'
+        } else {
+          return ''
+        }
       }
     }
   },

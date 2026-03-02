@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
+import { logger } from '@mse/utils'
+
 export function currentWorkspace() {
   return vscode.workspace.workspaceFolders?.[0]?.uri ?? null
 }
@@ -21,7 +23,7 @@ async function locateResourceRootImpl(root: vscode.Uri) {
   const travel = async (current: vscode.Uri) => {
     const childs = await vscode.workspace.fs.readDirectory(current)
     for (const [name, type] of childs) {
-      if (['node_modules'].includes(name) || name.startsWith('.')) {
+      if (['node_modules', 'MaaUtils', 'MaaDeps'].includes(name) || name.startsWith('.')) {
         continue
       }
       if (name === 'interface.json' && type === vscode.FileType.File) {
@@ -38,7 +40,11 @@ async function locateResourceRootImpl(root: vscode.Uri) {
         })
       }
       if (type === vscode.FileType.Directory) {
-        await travel(vscode.Uri.joinPath(current, name))
+        try {
+          await travel(vscode.Uri.joinPath(current, name))
+        } catch (err) {
+          logger.error(`${err}`)
+        }
       }
     }
   }

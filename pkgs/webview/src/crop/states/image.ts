@@ -75,7 +75,7 @@ export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
 
   const cropPos = controlSt.cropBox.value.flat()
   if (cropPos[2] === 0 || cropPos[3] === 0) {
-    return [null, null]
+    return [data.value, [0, 0, size.value.w, size.value.h]]
   }
 
   return [data.value, cropPos]

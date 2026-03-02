@@ -192,7 +192,8 @@ ${doc.getText(range)}
         }
       }
 
-      content.push(`
+      content.push(`merged
+
 \`\`\`json
 ${JSON.stringify(final, null, 2)}
 \`\`\`

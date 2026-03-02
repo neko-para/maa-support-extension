@@ -2,11 +2,12 @@ import type { LocaleType } from '@nekosu/maa-locale'
 import type { DiagnosticType } from '@nekosu/maa-pipeline-manager'
 
 export type BaseConfig = {
+  cwd?: string
   mode?: 'stdio' | 'github' | 'json'
   repo?: string
   locale?: LocaleType
 
-  color?: 'auto' | 'enable' | 'disable'
+  // color?: 'auto' | 'enable' | 'disable'
 }
 
 export type CheckConfig = {
@@ -20,7 +21,7 @@ export type TestCases = {
     name?: string
     resource: string
     controller: string
-    imageRoot: string
+    imageRoot?: string
   }
   cases: {
     image: string
@@ -36,6 +37,7 @@ export type TestCases = {
 
 export type TestConfig = {
   interfacePath: string
+  casesCwd?: string
   cases: TestCases[]
 
   maaVersion?: string

@@ -1,16 +1,15 @@
+import { error as coreError, warning as coreWarning, endGroup, startGroup } from '@actions/core'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
 import {
   type Diagnostic,
-  FsContentLoader,
-  FsContentWatcher,
-  InterfaceBundle,
   buildDiagnosticMessage,
   performDiagnostic
 } from '@nekosu/maa-pipeline-manager'
 
 import type { FullConfig } from '../types/config'
+import { loadBundle } from '../utils/bundle'
 import { calucateLocation } from './utils'
 
 export async function runCheck(cfg: FullConfig): Promise<boolean> {
@@ -18,45 +17,13 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return false
   }
 
+  const repo = path.resolve(cfg.cwd ?? process.cwd(), cfg.repo ?? '.')
+
   const result: Diagnostic[] = []
 
-  const bundle = new InterfaceBundle(
-    new FsContentLoader(),
-    new FsContentWatcher(),
-    false,
-    path.dirname(cfg.check.interfacePath),
-    path.basename(cfg.check.interfacePath)
-  )
-  await bundle.load()
-  await bundle.flush(false) // 刷下 imports
-
-  const ctrlNames = bundle.allControllerNames()
-
-  for (const ctrlName of ctrlNames) {
-    const resNames = bundle.allResourceNames(ctrlName)
-    for (const resName of resNames) {
-      await bundle.switchActive(ctrlName, resName)
-
-      const rawDiags = performDiagnostic(bundle, {})
-      for (const diag of rawDiags) {
-        const override = cfg.check.override?.[diag.type]
-        if (override === 'ignore') {
-          continue
-        }
-        if (override) {
-          result.push({
-            ...diag,
-            level: override
-          })
-        } else {
-          result.push(diag)
-        }
-      }
-    }
-  }
+  const bundle = await loadBundle(path.resolve(cfg.cwd ?? process.cwd(), cfg.check.interfacePath))
 
   const files: Record<string, string> = {}
-
   const locate = async (file: string, offset: number) => {
     let content = files[file]
     if (!content) {
@@ -66,21 +33,73 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return calucateLocation(content, offset)
   }
 
-  for (const diag of result) {
-    const [start, _end, brief] = await buildDiagnosticMessage(bundle.root, diag, locate, {})
+  const ctrlNames = bundle.allControllerNames()
+  for (const ctrlName of ctrlNames) {
+    const resNames = bundle.allResourceNames(ctrlName)
+    for (const resName of resNames) {
+      await bundle.switchActive(ctrlName, resName)
 
-    const [line, col] = start
-    const relative = path.relative(bundle.root, diag.file)
-    // if (option.githubMode) {
-    //   core[diag.level](brief, {
-    //     file: path.relative(option.repoFolder, diag.file),
-    //     startLine: line,
-    //     startColumn: col,
-    //     endColumn: col + diag.length
-    //   })
-    // } else {
-    console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
-    // }
+      const rawDiags = performDiagnostic(bundle, {})
+      const currDiags: Diagnostic[] = []
+      for (const diag of rawDiags) {
+        const override = cfg.check.override?.[diag.type]
+        if (override === 'ignore') {
+          continue
+        }
+        if (override) {
+          currDiags.push({
+            ...diag,
+            level: override
+          })
+        } else {
+          currDiags.push(diag)
+        }
+      }
+
+      if (cfg.mode === 'github') {
+        startGroup(`${ctrlName} ${resName}`)
+      }
+      for (const diag of currDiags) {
+        const [start, _end, brief] = await buildDiagnosticMessage(bundle.root, diag, locate, {})
+
+        const [line, col] = start
+        const relative = path.relative(bundle.root, diag.file)
+        switch (cfg.mode ?? 'stdio') {
+          case 'stdio':
+            console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
+            break
+          case 'github':
+            switch (diag.level) {
+              case 'warning':
+                coreWarning(brief, {
+                  file: path.relative(repo, diag.file),
+                  startLine: line,
+                  startColumn: col,
+                  endColumn: col + diag.length
+                })
+                break
+              case 'error':
+                coreError(brief, {
+                  file: path.relative(repo, diag.file),
+                  startLine: line,
+                  startColumn: col,
+                  endColumn: col + diag.length
+                })
+                break
+            }
+        }
+      }
+      if (cfg.mode === 'github') {
+        endGroup()
+      }
+
+      result.push(...currDiags)
+    }
+  }
+
+  if (cfg.mode === 'json') {
+    process.stdout.write(JSON.stringify(result))
+    return true
   }
 
   return result.length === 0

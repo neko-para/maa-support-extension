@@ -27,7 +27,16 @@ export default defineConfig([
       '@actions/core',
       'jiti',
       'workerpool'
-    ]
+    ],
+    outputOptions: {
+      banner: chunk => {
+        if (chunk.fileName.endsWith('.d.mts')) {
+          return '/// <reference types="@maaxyz/maa-node" />'
+        } else {
+          return ''
+        }
+      }
+    }
   },
 
   {
@@ -49,6 +58,15 @@ export default defineConfig([
     inputOptions: {
       resolve: {
         mainFields: ['module', 'main']
+      }
+    },
+    outputOptions: {
+      banner: chunk => {
+        if (chunk.fileName.endsWith('.d.mts')) {
+          return '/// <reference types="@maaxyz/maa-node" />'
+        } else {
+          return ''
+        }
       }
     }
   },

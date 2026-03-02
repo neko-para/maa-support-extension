@@ -9,6 +9,8 @@ export type BaseConfig = {
 
   maaVersion?: string
   maaCache?: string
+  // from @maaxyz/maa-node
+  maaStdoutLevel?: 'Off' | 'Fatal' | 'Error' | 'Warn' | 'Info' | 'Debug' | 'Trace' | 'All'
 
   // color?: 'auto' | 'enable' | 'disable'
 }

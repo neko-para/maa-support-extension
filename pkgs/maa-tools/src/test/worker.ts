@@ -8,8 +8,13 @@ import type { RecoJob, RecoResult } from './types'
 
 await loadMaa(process.env.MAAFW_MODULE_PATH!)
 
-if (process.env.MAAFW_SILENCE_STDOUT === '1') {
-  maa.Global.stdout_level = 'Off'
+const stdoutLevels = ['Off', 'Fatal', 'Error', 'Warn', 'Info', 'Debug', 'Trace', 'All'] as const
+type MaaStdoutLevel = (typeof stdoutLevels)[number]
+if (
+  process.env.MAAFW_STDOUT_LEVEL &&
+  stdoutLevels.includes(process.env.MAAFW_STDOUT_LEVEL as MaaStdoutLevel)
+) {
+  maa.Global.stdout_level = process.env.MAAFW_STDOUT_LEVEL as MaaStdoutLevel
 }
 
 let inst: maa.Tasker | undefined = undefined

@@ -76,7 +76,7 @@ export async function runTest(cfg: FullConfig) {
       forkOpts: {
         env: {
           MAAFW_MODULE_PATH: modulePath,
-          MAAFW_SILENCE_STDOUT: cfg.mode === 'json' ? '1' : '',
+          MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
           MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter)
         }
       }

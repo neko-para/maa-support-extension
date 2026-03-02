@@ -24,6 +24,9 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return false
   }
   await loadMaa(modulePath)
+  if (cfg.maaStdoutLevel) {
+    maa.Global.stdout_level = cfg.maaStdoutLevel
+  }
 
   const repo = path.resolve(cfg.cwd ?? process.cwd(), cfg.repo ?? '.')
 

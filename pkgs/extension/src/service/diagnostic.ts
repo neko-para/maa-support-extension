@@ -1,11 +1,9 @@
-import * as fs from 'fs/promises'
-import { existsSync } from 'node:fs'
 import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
 import {
   type AbsolutePath,
-  type DiagnosticOption,
+  type Diagnostic,
   buildDiagnosticMessage,
   performDiagnostic
 } from '@nekosu/maa-pipeline-manager'
@@ -38,6 +36,10 @@ class DiagnosticScanner extends FlushHelper {
     setTimeout(() => {
       this.flushDirty()
     }, 5000)
+
+    rootService.onConfigChanged(() => {
+      this.flushDirty()
+    })
   }
 
   async doFlushImpl() {
@@ -48,19 +50,24 @@ class DiagnosticScanner extends FlushHelper {
     await intBundle.flush(true)
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
-    const diagOption: DiagnosticOption = {}
 
-    const rcPath = vscode.Uri.joinPath(
-      rootService.activeResource!.workspace,
-      '.vscode',
-      'maa_checker.json'
-    ).fsPath
-    if (existsSync(rcPath)) {
-      const rc = JSON.parse(await fs.readFile(rcPath, 'utf8'))
-      Object.assign(diagOption, rc)
+    const rawDiags = performDiagnostic(intBundle, {})
+    const diags: Diagnostic[] = []
+    for (const diag of rawDiags) {
+      const override = rootService.config?.check?.override?.[diag.type]
+      if (override === 'ignore') {
+        continue
+      }
+      if (override) {
+        diags.push({
+          ...diag,
+          level: override
+        })
+      } else {
+        diags.push(diag)
+      }
     }
 
-    const diags = performDiagnostic(intBundle, diagOption)
     for (const diag of diags) {
       const [start, end, brief] = await buildDiagnosticMessage(
         rootService.activeResource!.workspace.fsPath as AbsolutePath,
@@ -70,7 +77,7 @@ class DiagnosticScanner extends FlushHelper {
           const pos = doc.positionAt(offset)
           return [pos.line, pos.character]
         },
-        diagOption
+        {}
       )
 
       const uri = vscode.Uri.file(diag.file)

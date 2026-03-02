@@ -11,10 +11,11 @@ await buildChain([
   'pkgs/maa-pipeline-manager',
   'pkgs/maa-locale',
 
-  'pkgs/extension',
+  'pkgs/maa-server',
   'pkgs/maa-tools',
-  'pkgs/prettier-plugin-maafw-sort',
-  'pkgs/maa-server'
+  'pkgs/extension',
+
+  'pkgs/prettier-plugin-maafw-sort'
 ])
 
 viteBuild({

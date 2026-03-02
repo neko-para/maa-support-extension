@@ -2,14 +2,17 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 import { type AbsolutePath, type RelativePath, relativePath } from '@nekosu/maa-pipeline-manager'
+import type { FullConfig } from '@nekosu/maa-tools'
 
 import { stateService } from '.'
+import { loadConfig } from '../utils/config'
 import { type ResourceRoot, locateResourceRoot } from '../utils/fs'
 import { BaseService } from './context'
 
 export class RootService extends BaseService {
   resourceRoots: ResourceRoot[] = []
   activeResource: ResourceRoot | null = null
+  config: FullConfig | null = null
 
   refreshing: boolean = false
 
@@ -23,11 +26,27 @@ export class RootService extends BaseService {
     return this.activeResourceChanged.event
   }
 
+  configChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onConfigChanged() {
+    return this.configChanged.event
+  }
+
   constructor() {
     super()
     console.log('construct RootService')
 
     this.defer = this.activeResourceChanged
+
+    this.onActiveResourceChanged(async () => {
+      if (!this.activeResource) {
+        this.config = null
+      } else {
+        this.config = await loadConfig(
+          vscode.Uri.joinPath(this.activeResource.workspace, 'maatools.config.mts').fsPath
+        )
+      }
+      this.configChanged.fire()
+    })
   }
 
   async init() {

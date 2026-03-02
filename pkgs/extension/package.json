@@ -12,6 +12,7 @@
     "@nekosu/maa-locale": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",
+    "@nekosu/maa-tools": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",
     "@nekosu/simple-parser": "workspace:*",
     "@tsconfig/node24": "^24.0.4",

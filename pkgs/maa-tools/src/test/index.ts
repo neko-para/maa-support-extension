@@ -40,11 +40,13 @@ export async function runTest(cfg: FullConfig) {
 
   let finished = 0
 
-  const taskCount = cfg.test.cases.map(testCase => {
-    const imageCount = testCase.cases.length
-    const nodeCount = testCase.cases.map(c => c.hits.length).reduce((a, b) => a + b, 0)
-    return imageCount * nodeCount
-  })
+  const taskCount = cfg.test.cases
+    .map(testCase => {
+      const imageCount = testCase.cases.length
+      const nodeCount = testCase.cases.map(c => c.hits.length).reduce((a, b) => a + b, 0)
+      return imageCount * nodeCount
+    })
+    .reduce((a, b) => a + b, 0)
 
   const maxNodePerJob = cfg.test.maxNodePerJob ?? 50
 

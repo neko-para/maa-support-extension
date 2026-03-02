@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises'
 
-import type { FullConfig, TestCases } from '@nekosu/maa-checker'
+import type { FullConfig, TestCases } from '@nekosu/maa-tools'
 
 const loadCase = async (file: string) => {
   const testCases = JSON.parse(await fs.readFile(file, 'utf8')) as TestCases

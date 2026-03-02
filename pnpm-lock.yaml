@@ -141,46 +141,6 @@ importers:
         specifier: ^8.2.1
         version: 8.2.1
 
-  pkgs/maa-checker:
-    dependencies:
-      '@actions/core':
-        specifier: ^3.0.0
-        version: 3.0.0
-      '@nekosu/maa-locale':
-        specifier: workspace:*
-        version: link:../maa-locale
-      '@nekosu/maa-pipeline-manager':
-        specifier: workspace:*
-        version: link:../maa-pipeline-manager
-      '@nekosu/maa-version-manager':
-        specifier: workspace:*
-        version: link:../maa-version-manager
-      jiti:
-        specifier: ^2.6.1
-        version: 2.6.1
-      workerpool:
-        specifier: ^10.0.1
-        version: 10.0.1
-    devDependencies:
-      '@maaxyz/maa-node':
-        specifier: 5.7.2
-        version: 5.7.2
-      '@tsconfig/node24':
-        specifier: ^24.0.4
-        version: 24.0.4
-      '@types/node':
-        specifier: ^25.3.0
-        version: 25.3.0
-      '@types/source-map-support':
-        specifier: ^0.5.10
-        version: 0.5.10
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   pkgs/maa-locale:
     devDependencies:
       '@tsconfig/node24':
@@ -289,6 +249,46 @@ importers:
       '@types/node':
         specifier: ^25.3.0
         version: 25.3.0
+
+  pkgs/maa-tools:
+    dependencies:
+      '@actions/core':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@nekosu/maa-locale':
+        specifier: workspace:*
+        version: link:../maa-locale
+      '@nekosu/maa-pipeline-manager':
+        specifier: workspace:*
+        version: link:../maa-pipeline-manager
+      '@nekosu/maa-version-manager':
+        specifier: workspace:*
+        version: link:../maa-version-manager
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
+      workerpool:
+        specifier: ^10.0.1
+        version: 10.0.1
+    devDependencies:
+      '@maaxyz/maa-node':
+        specifier: 5.7.2
+        version: 5.7.2
+      '@tsconfig/node24':
+        specifier: ^24.0.4
+        version: 24.0.4
+      '@types/node':
+        specifier: ^25.3.0
+        version: 25.3.0
+      '@types/source-map-support':
+        specifier: ^0.5.10
+        version: 0.5.10
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   pkgs/maa-version-manager:
     dependencies:

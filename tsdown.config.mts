@@ -11,8 +11,8 @@ export default defineConfig([
     inlineOnly: false
   },
   {
-    entry: ['pkgs/maa-checker/src/index.ts', 'pkgs/maa-checker/src/test/worker.ts'],
-    outDir: 'pkgs/maa-checker/dist',
+    entry: ['pkgs/maa-tools/src/index.ts', 'pkgs/maa-tools/src/test/worker.ts'],
+    outDir: 'pkgs/maa-tools/dist',
     format: 'esm',
     sourcemap: true,
     nodeProtocol: true,

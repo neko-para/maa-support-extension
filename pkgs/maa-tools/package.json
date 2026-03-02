@@ -1,9 +1,9 @@
 {
-  "name": "@nekosu/maa-checker",
-  "version": "1.2.7",
+  "name": "@nekosu/maa-tools",
+  "version": "1.0.0",
   "type": "module",
   "bin": {
-    "maa-checker": "bin/maa-checker"
+    "maa-tools": "bin/maa-tools"
   },
   "exports": {
     ".": {

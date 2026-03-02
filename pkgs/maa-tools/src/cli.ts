@@ -3,12 +3,13 @@ import * as fs from 'node:fs/promises'
 
 import { setLocale } from '@nekosu/maa-locale'
 
+import pkg from '../package.json'
 import { runCheck } from './check'
 import { runTest } from './test'
 import type { FullConfig } from './types/config'
 import { loadConfig } from './utils/config'
 
-const defaultConfig = `import type { FullConfig } from '@nekosu/maa-checker'
+const defaultConfig = `import type { FullConfig } from '${pkg.name}'
 
 const config: FullConfig = {
   check: {
@@ -19,10 +20,11 @@ const config: FullConfig = {
 export default config
 `
 
-export async function runCli(cmd: 'init' | 'check' | 'test', cfg: string | FullConfig) {
+export async function runCli(cmd: string, cfg: string | FullConfig) {
   if (typeof cfg === 'string') {
     const resolvedCfg = await loadConfig(cfg)
     if (!resolvedCfg) {
+      console.error(`load ${cfg} failed`)
       return false
     }
     cfg = resolvedCfg
@@ -37,8 +39,8 @@ export async function runCli(cmd: 'init' | 'check' | 'test', cfg: string | FullC
   }
   switch (cmd) {
     case 'init':
-      if (existsSync('maachecker.config.mts')) {
-        await fs.writeFile('maachecker.config.mts', defaultConfig)
+      if (existsSync('maatools.config.mts')) {
+        await fs.writeFile('maatools.config.mts', defaultConfig)
       }
       return true
 
@@ -48,5 +50,8 @@ export async function runCli(cmd: 'init' | 'check' | 'test', cfg: string | FullC
     case 'test':
       return await runTest(cfg)
   }
+
+  console.log(`Usage: npx ${pkg.name} <init|check|test> [path to maatools.config.mts]`)
+
   return false
 }

@@ -10,8 +10,8 @@ export default defineConfig([
     loader: {
       html: 'text'
     },
+    shims: true,
     external: ['vscode', '@maaxyz/maa-node'],
-    noExternal: ['@nekosu/maa-version-manager', '@nekosu/maa-tasker'],
     inlineOnly: false,
     inputOptions: {
       resolve: {

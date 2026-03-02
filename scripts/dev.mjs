@@ -1,38 +1,19 @@
-import { context as esContext } from 'esbuild'
 import * as path from 'node:path'
-import { build } from 'tsdown'
 import { createServer as viteWatch } from 'vite'
 
-let startWatch = false
+import { buildChain, watchChain } from './utils.mjs'
 
-build({
-  config: path.resolve(import.meta.dirname, '../tsdown.config.mts'),
-  watch: true,
-  onSuccess: () => {
-    if (startWatch) {
-      return
-    }
-    startWatch = true
-    esContext({
-      entryPoints: ['pkgs/extension/src/extension.ts'],
-      bundle: true,
-      outdir: 'release/out',
-      external: ['@maaxyz/maa-node', 'vscode', 'node-gyp/bin/node-gyp.js'],
-      platform: 'node',
-      format: 'esm',
-      outExtension: {
-        '.js': '.mjs'
-      },
-      sourcemap: true,
-      mainFields: ['module', 'main'],
-      loader: {
-        '.html': 'text'
-      },
-      inject: ['scripts/cjs-shim.ts']
-    }).then(ctx => {
-      ctx.watch()
-    })
-  }
+buildChain(['pkgs/simple-parser', 'pkgs/maa-tasker']).then(() => {
+  watchChain([
+    'pkgs/maa-version-manager',
+    'pkgs/maa-pipeline-manager',
+    'pkgs/maa-locale',
+
+    'pkgs/extension',
+    'pkgs/maa-tools',
+    'pkgs/prettier-plugin-maafw-sort',
+    'pkgs/maa-server'
+  ])
 })
 
 viteWatch({

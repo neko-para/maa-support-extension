@@ -1,19 +1,17 @@
 {
   "name": "@mse/maa-server",
   "type": "module",
-  "dependencies": {
-    "@mse/maa-server-proto": "workspace:*",
-    "semver": "^7.7.4",
-    "source-map-support": "^0.5.21",
-    "uuid": "^13.0.0",
-    "vscode-jsonrpc": "^8.2.1"
-  },
   "devDependencies": {
     "@maaxyz/maa-node": "5.7.2",
+    "@mse/maa-server-proto": "workspace:*",
     "@mse/types": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.0",
     "@types/source-map-support": "^0.5.10",
-    "typescript": "^5.9.3"
+    "semver": "^7.7.4",
+    "source-map-support": "^0.5.21",
+    "typescript": "^5.9.3",
+    "uuid": "^13.0.0",
+    "vscode-jsonrpc": "^8.2.1"
   }
 }

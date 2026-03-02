@@ -179,26 +179,13 @@ importers:
         version: 5.9.3
 
   pkgs/maa-server:
-    dependencies:
-      '@mse/maa-server-proto':
-        specifier: workspace:*
-        version: link:../maa-server-proto
-      semver:
-        specifier: ^7.7.4
-        version: 7.7.4
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
-      uuid:
-        specifier: ^13.0.0
-        version: 13.0.0
-      vscode-jsonrpc:
-        specifier: ^8.2.1
-        version: 8.2.1
     devDependencies:
       '@maaxyz/maa-node':
         specifier: 5.7.2
         version: 5.7.2
+      '@mse/maa-server-proto':
+        specifier: workspace:*
+        version: link:../maa-server-proto
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -211,9 +198,21 @@ importers:
       '@types/source-map-support':
         specifier: ^0.5.10
         version: 0.5.10
+      semver:
+        specifier: ^7.7.4
+        version: 7.7.4
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.0
+      vscode-jsonrpc:
+        specifier: ^8.2.1
+        version: 8.2.1
 
   pkgs/maa-server-proto:
     dependencies:

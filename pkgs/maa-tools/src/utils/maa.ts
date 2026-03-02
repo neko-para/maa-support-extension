@@ -8,11 +8,28 @@ import pkg from '../../package.json'
 import type { FullConfig } from '../types/config'
 
 export async function setupMaa(cfg: FullConfig) {
-  const maaVersion = cfg.maaVersion ?? pkg.devDependencies['@maaxyz/maa-node']
-
   const versionManager = new MaaVersionManager(
     cfg.maaCache ?? path.join(os.homedir(), '.maa-checker')
   )
+
+  let maaVersion = cfg.maaVersion
+  if (maaVersion === 'latest') {
+    const latest = (await versionManager.fetchLatest())?.version
+    if (latest) {
+      maaVersion = latest
+      if (cfg.mode !== 'json') {
+        console.log(`use latest version ${latest}`)
+      }
+    }
+  }
+  if (!maaVersion) {
+    const fallback = pkg.devDependencies['@maaxyz/maa-node']
+    maaVersion = fallback
+    if (cfg.mode !== 'json') {
+      console.log(`use fallback version ${fallback}`)
+    }
+  }
+
   await versionManager.init()
   if (
     !(await versionManager.prepare(maaVersion, msg => {

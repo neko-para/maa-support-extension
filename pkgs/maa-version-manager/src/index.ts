@@ -85,7 +85,7 @@ export class MaaVersionManager {
     }
   }
 
-  async fetchLatest() {
+  async fetchLatest(): Promise<(pacote.AbbreviatedManifest & pacote.ManifestResult) | null> {
     const release = await this.lock()
     if (!release) {
       return null

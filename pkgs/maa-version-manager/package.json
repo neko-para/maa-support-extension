@@ -8,6 +8,10 @@
       "types": "./dist/index.d.mts"
     }
   },
+  "repository": {
+    "type": "github",
+    "url": "git+https://github.com/neko-para/maa-support-extension.git"
+  },
   "publishConfig": {
     "access": "public"
   },

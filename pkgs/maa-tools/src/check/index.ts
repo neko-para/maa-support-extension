@@ -5,11 +5,13 @@ import * as path from 'node:path'
 import {
   type Diagnostic,
   buildDiagnosticMessage,
+  joinPath,
   performDiagnostic
 } from '@nekosu/maa-pipeline-manager'
 
 import type { FullConfig } from '../types/config'
 import { loadBundle } from '../utils/bundle'
+import { loadMaa, setupMaa } from '../utils/maa'
 import { calucateLocation } from './utils'
 
 export async function runCheck(cfg: FullConfig): Promise<boolean> {
@@ -17,11 +19,20 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return false
   }
 
+  const modulePath = await setupMaa(cfg)
+  if (!modulePath) {
+    return false
+  }
+  await loadMaa(modulePath)
+
   const repo = path.resolve(cfg.cwd ?? process.cwd(), cfg.repo ?? '.')
 
   const result: Diagnostic[] = []
 
   const bundle = await loadBundle(path.resolve(cfg.cwd ?? process.cwd(), cfg.check.interfacePath))
+  if (!bundle) {
+    return false
+  }
 
   const files: Record<string, string> = {}
   const locate = async (file: string, offset: number) => {
@@ -33,11 +44,19 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return calucateLocation(content, offset)
   }
 
+  let loadResourceFailed = false
+
   const ctrlNames = bundle.allControllerNames()
   for (const ctrlName of ctrlNames) {
     const resNames = bundle.allResourceNames(ctrlName)
     for (const resName of resNames) {
       await bundle.switchActive(ctrlName, resName)
+
+      if (!cfg.mode || cfg.mode === 'stdio') {
+        console.log(`${ctrlName} ${resName}`)
+      } else if (cfg.mode === 'github') {
+        startGroup(`${ctrlName} ${resName}`)
+      }
 
       const rawDiags = performDiagnostic(bundle, {})
       const currDiags: Diagnostic[] = []
@@ -56,14 +75,11 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
         }
       }
 
-      if (cfg.mode === 'github') {
-        startGroup(`${ctrlName} ${resName}`)
-      }
       for (const diag of currDiags) {
         const [start, _end, brief] = await buildDiagnosticMessage(bundle.root, diag, locate, {})
 
         const [line, col] = start
-        const relative = path.relative(bundle.root, diag.file)
+        const relative = path.relative(repo, diag.file)
         switch (cfg.mode ?? 'stdio') {
           case 'stdio':
             console.log(`  ${diag.level}: ${relative}:${line}:${col} ${brief}`)
@@ -72,7 +88,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
             switch (diag.level) {
               case 'warning':
                 coreWarning(brief, {
-                  file: path.relative(repo, diag.file),
+                  file: relative,
                   startLine: line,
                   startColumn: col,
                   endColumn: col + diag.length
@@ -80,7 +96,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
                 break
               case 'error':
                 coreError(brief, {
-                  file: path.relative(repo, diag.file),
+                  file: relative,
                   startLine: line,
                   startColumn: col,
                   endColumn: col + diag.length
@@ -94,6 +110,20 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
       }
 
       result.push(...currDiags)
+
+      const res = new maa.Resource()
+      for (const folder of bundle.paths) {
+        const succ = await res.post_bundle(joinPath(bundle.root, folder)).wait().succeeded
+        if (!succ) {
+          if (!cfg.mode || cfg.mode === 'stdio') {
+            console.error('  load resource failed')
+          } else if (cfg.mode === 'github') {
+            coreError('  load resource failed')
+          }
+          loadResourceFailed = true
+        }
+      }
+      res.destroy()
     }
   }
 
@@ -102,5 +132,5 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return true
   }
 
-  return result.length === 0
+  return result.length === 0 || !loadResourceFailed
 }

@@ -1,16 +1,12 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import * as url from 'node:url'
 import * as workerpool from 'workerpool'
 
 import { makeFakeController, toArrayBuffer } from '../utils'
+import { loadMaa } from '../utils/maa'
 import type { RecoJob, RecoResult } from './types'
 
-const importTarget = path.join(
-  process.env.MAAFW_MODULE_PATH!,
-  '@maaxyz/maa-node/dist/index-client.js'
-)
-await import(url.pathToFileURL(importTarget).toString())
+await loadMaa(process.env.MAAFW_MODULE_PATH!)
 
 if (process.env.MAAFW_SILENCE_STDOUT === '1') {
   maa.Global.stdout_level = 'Off'

@@ -3,11 +3,10 @@ import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
 import { joinPath } from '@nekosu/maa-pipeline-manager'
-import { MaaVersionManager } from '@nekosu/maa-version-manager'
 
-import pkg from '../../package.json'
 import type { FullConfig } from '../types/config'
 import { loadBundle } from '../utils/bundle'
+import { setupMaa } from '../utils/maa'
 import type { GroupRecoResult, RecoJob, RecoResult } from './types'
 import { checkRect } from './utils'
 
@@ -20,28 +19,6 @@ function splitChunk<T>(arr: T[], size: number) {
     curr = next
   }
   return result
-}
-
-async function setupMaa(cfg: FullConfig) {
-  const maaVersion = cfg.test!.maaVersion ?? pkg.devDependencies['@maaxyz/maa-node']
-
-  const versionManager = new MaaVersionManager(
-    cfg.test!.maaCache ?? path.join(os.homedir(), '.maa-checker')
-  )
-  await versionManager.init()
-  if (
-    !(await versionManager.prepare(maaVersion, msg => {
-      if (cfg.mode !== 'json') {
-        if (msg === 'prepare-folder') {
-          console.log('preparing maafw')
-        }
-        console.log('    ' + msg)
-      }
-    }))
-  ) {
-    return null
-  }
-  return versionManager.moduleFolder(maaVersion)
 }
 
 export async function runTest(cfg: FullConfig) {
@@ -57,6 +34,9 @@ export async function runTest(cfg: FullConfig) {
   const result: GroupRecoResult[] = []
 
   const bundle = await loadBundle(path.resolve(cfg.cwd ?? process.cwd(), cfg.test.interfacePath))
+  if (!bundle) {
+    return false
+  }
 
   let finished = 0
 

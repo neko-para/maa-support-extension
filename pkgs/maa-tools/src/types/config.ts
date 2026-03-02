@@ -7,6 +7,9 @@ export type BaseConfig = {
   repo?: string
   locale?: LocaleType
 
+  maaVersion?: string
+  maaCache?: string
+
   // color?: 'auto' | 'enable' | 'disable'
 }
 
@@ -39,9 +42,6 @@ export type TestConfig = {
   interfacePath: string
   casesCwd?: string
   cases: TestCases[]
-
-  maaVersion?: string
-  maaCache?: string
 
   job?: number
   maxNodePerJob?: number

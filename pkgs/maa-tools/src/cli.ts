@@ -21,6 +21,15 @@ export default config
 `
 
 export async function runCli(cmd: string, cfg: string | FullConfig) {
+  if (cmd === 'init') {
+    if (!existsSync('maatools.config.mts')) {
+      await fs.writeFile('maatools.config.mts', defaultConfig)
+    } else {
+      console.error('maatools.config.mts exists')
+    }
+    return true
+  }
+
   if (typeof cfg === 'string') {
     const resolvedCfg = await loadConfig(cfg)
     if (!resolvedCfg) {
@@ -38,12 +47,6 @@ export async function runCli(cmd: string, cfg: string | FullConfig) {
     setLocale(cfg.locale)
   }
   switch (cmd) {
-    case 'init':
-      if (existsSync('maatools.config.mts')) {
-        await fs.writeFile('maatools.config.mts', defaultConfig)
-      }
-      return true
-
     case 'check':
       return await runCheck(cfg)
 

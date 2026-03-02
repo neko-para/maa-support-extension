@@ -1,0 +1,24 @@
+{
+  "name": "@nekosu/prettier-plugin-maafw-sort",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "repository": {
+    "type": "github",
+    "url": "git+https://github.com/neko-para/maa-support-extension.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@babel/types": "^7.29.0",
+    "@tsconfig/node24": "^24.0.4",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  }
+}

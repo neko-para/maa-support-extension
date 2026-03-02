@@ -111,5 +111,16 @@ export default defineConfig([
     dts: {
       sourcemap: true
     }
+  },
+  {
+    entry: ['pkgs/prettier-plugin-maafw-sort/src/index.ts'],
+    outDir: 'pkgs/prettier-plugin-maafw-sort/dist',
+    format: 'esm',
+    sourcemap: true,
+    nodeProtocol: true,
+    dts: {
+      sourcemap: true
+    },
+    external: ['@babel/types', 'prettier', 'prettier/plugins/babel']
   }
 ])

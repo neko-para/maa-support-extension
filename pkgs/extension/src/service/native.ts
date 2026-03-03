@@ -260,13 +260,8 @@ export class NativeService extends BaseService {
   }
 
   get currentVersionInfo(): string[] {
-    let loadedVersion: string | undefined = undefined
-    if (globalThis.maa) {
-      loadedVersion = maa.Global.version
-    }
-
     return [
-      `${t('maa.native.loaded-ver')}: ${this.version}${loadedVersion ? '' : ` <${t('maa.status.not-loaded')}>`}`,
+      `${t('maa.native.loaded-ver')}: ${this.version} ${serverService.status ? t('maa.status.service-connected') : t('maa.status.service-disconnected')}`,
       `${t('maa.native.ext-int-ver')}: ${defaultMaaVersion}`
     ]
   }

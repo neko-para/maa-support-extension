@@ -369,6 +369,10 @@ export class WebviewControlService extends BaseService {
       this.pushState()
     })
 
+    this.defer = serverService.onStatusChanged(() => {
+      this.pushState()
+    })
+
     this.defer = nativeService.onVersionChanged(() => {
       this.pushState()
     })

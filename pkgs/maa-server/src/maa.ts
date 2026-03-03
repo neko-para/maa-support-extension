@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+import { existsSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as url from 'node:url'
@@ -80,6 +81,9 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
   } else if (runtime.ctype === 'gamepad') {
     controller = new maa.GamepadController(runtime.hwnd, runtime.screencap, runtime.gamepad)
   } else if (runtime.ctype === 'vscFixed') {
+    if (!existsSync(runtime.image)) {
+      return false
+    }
     const image = (await fs.readFile(runtime.image)).buffer as ArrayBuffer
     controller = new maa.CustomController({
       connect() {

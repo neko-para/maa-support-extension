@@ -26,8 +26,14 @@ declare namespace globalThis {
 export class ServerService extends BaseService {
   rpc: RpcManager
   ipc: IpcType | null
+  status: boolean
 
   instMap: Record<string, WebviewLaunchPanel>
+
+  statusChanged = new vscode.EventEmitter<boolean>()
+  get onStatusChanged() {
+    return this.statusChanged.event
+  }
 
   constructor() {
     super()
@@ -37,12 +43,16 @@ export class ServerService extends BaseService {
       stateService.state.admin ?? false
     )
     this.ipc = null
+    this.status = false
 
     this.instMap = {}
 
     this.rpc.on('connectionLost', () => {
+      this.pushStatus(false)
       statusBarService.showServerStatus('close')
     })
+
+    this.defer = this.statusChanged
   }
 
   async init() {
@@ -73,6 +83,7 @@ export class ServerService extends BaseService {
       stateService.reduce({
         admin
       })
+      this.pushStatus(false)
       statusBarService.showServerStatus('close')
     }
   }
@@ -147,9 +158,11 @@ export class ServerService extends BaseService {
         return (await vscode.window.showQuickPick(items)) ?? null
       }
 
+      this.pushStatus(true)
       statusBarService.showServerStatus('check')
       return true
     } else {
+      this.pushStatus(false)
       statusBarService.showServerStatus('close')
       return false
     }
@@ -178,5 +191,10 @@ export class ServerService extends BaseService {
     } else {
       return false
     }
+  }
+
+  pushStatus(value: boolean) {
+    this.status = value
+    this.statusChanged.fire(this.status)
   }
 }

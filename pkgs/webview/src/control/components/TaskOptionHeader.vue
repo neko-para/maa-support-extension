@@ -4,6 +4,7 @@ import { NButton, NFlex, NPopover } from 'naive-ui'
 import type { OptionBase } from '@mse/types'
 
 import { ipc } from '../ipc'
+import LocaleText from './LocaleText.vue'
 import type { OptionInfo, OptionIntro } from './types'
 import { revealOption } from './utils'
 

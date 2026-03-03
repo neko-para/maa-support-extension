@@ -37,7 +37,7 @@ class DiagnosticScanner extends FlushHelper {
       this.flushDirty()
     }, 5000)
 
-    rootService.onConfigChanged(() => {
+    this.defer = rootService.onConfigChanged(() => {
       this.flushDirty()
     })
   }

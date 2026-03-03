@@ -92,7 +92,9 @@ export async function performTemplateMatch(
 
   tasker.destroy()
   res.destroy()
-  ctrl.destroy()
+  setTimeout(() => {
+    ctrl.destroy()
+  }, 1000)
 
   return result
 }

@@ -109,6 +109,8 @@ export default {
 
   'maa.status.checking-task': 'MaaSupport 检查任务中',
   'maa.status.not-loaded': '未加载',
+  'maa.status.service-disconnected': '服务已断开',
+  'maa.status.service-connected': '服务已连接',
 
   'maa.core.cannot-find-log': '无法找到日志文件: {0}',
   'maa.core.load-maafw-failed': '加载 MaaFramework 失败',

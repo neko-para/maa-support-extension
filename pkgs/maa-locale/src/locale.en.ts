@@ -113,6 +113,8 @@ export default {
 
   'maa.status.checking-task': 'MaaSupport checking task',
   'maa.status.not-loaded': 'Not loaded',
+  'maa.status.service-disconnected': 'Service disconnected',
+  'maa.status.service-connected': 'Service connected',
 
   'maa.core.cannot-find-log': 'Cannot find log file: {0}',
   'maa.core.load-maafw-failed': 'Load MaaFramework failed',

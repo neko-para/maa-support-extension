@@ -37,7 +37,9 @@ export class RootService extends BaseService {
 
     this.defer = this.activeResourceChanged
 
-    this.onActiveResourceChanged(async () => {
+    this.defer = this.configChanged
+
+    this.defer = this.onActiveResourceChanged(async () => {
       if (!this.activeResource) {
         this.config = null
       } else {

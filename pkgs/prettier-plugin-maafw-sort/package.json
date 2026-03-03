@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/prettier-plugin-maafw-sort",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "exports": {
     ".": {
@@ -15,8 +15,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "@babel/types": "^7.29.0"
+  },
   "devDependencies": {
-    "@babel/types": "^7.29.0",
     "@tsconfig/node24": "^24.0.4",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"

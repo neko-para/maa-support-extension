@@ -189,13 +189,14 @@ function processPipelineTask(node: ObjectExpression) {
       'doc',
 
       'enabled',
-      'inverse',
       'max_hit',
 
       'sub_name',
 
       'recognition',
       ...recoKeys,
+
+      'inverse',
 
       'pre_wait_freezes',
       'pre_delay',

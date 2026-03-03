@@ -85,7 +85,7 @@ jobs:
             cd pkgs/$pkg
             PKG_NAME=`npm pkg get name | jq -r`
             PKG_VER=`npm pkg get version | jq -r`
-            if npm view ${PKG_NAME}@${PKG_VER}; then
+            if npm view ${PKG_NAME}@${PKG_VER} > /dev/null 2> /dev/null; then
               echo "Skip $PKG_NAME"
             else
               echo "Publish $PKG_NAME"

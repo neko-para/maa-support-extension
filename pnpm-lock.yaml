@@ -332,10 +332,11 @@ importers:
         version: 5.9.3
 
   pkgs/prettier-plugin-maafw-sort:
-    devDependencies:
+    dependencies:
       '@babel/types':
         specifier: ^7.29.0
         version: 7.29.0
+    devDependencies:
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4

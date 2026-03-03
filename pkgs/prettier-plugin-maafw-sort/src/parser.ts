@@ -8,6 +8,7 @@ import {
   type StringLiteral,
   stringLiteral
 } from '@babel/types'
+import * as path from 'node:path'
 import type { ParserOptions } from 'prettier'
 import { parsers as babelParsers } from 'prettier/plugins/babel'
 
@@ -271,6 +272,31 @@ function processPipelineRoot(node: Expression) {
   }
 }
 
+function processInterfaceRoot(node: Expression | PatternLike | SpreadElement) {
+  if (node.type === 'ObjectExpression') {
+    for (const prop of node.properties) {
+      if (prop.type !== 'ObjectProperty') {
+        continue
+      }
+
+      if (prop.key.type === 'StringLiteral' && prop.key.value === 'pipeline_override') {
+        if (prop.value.type === 'ObjectExpression') {
+          processPipelineRoot(prop.value)
+          continue
+        }
+      }
+
+      processInterfaceRoot(prop.value)
+    }
+  } else if (node.type === 'ArrayExpression') {
+    for (const elem of node.elements) {
+      if (elem) {
+        processInterfaceRoot(elem)
+      }
+    }
+  }
+}
+
 type ParseFunc = (text: string, options: ParserOptions) => Promise<BabelParseResult>
 
 export function createParser(parser: 'json' | 'jsonc', otherParse?: ParseFunc): ParseFunc {
@@ -278,16 +304,16 @@ export function createParser(parser: 'json' | 'jsonc', otherParse?: ParseFunc): 
     otherParse = otherParse ?? babelParsers[parser].parse.bind(babelParsers[parser])
     const jsonRootAst = (await otherParse(text, prettierOptions)) as BabelParseResult
 
-    console.error(prettierOptions.filepath)
-
     if (!prettierOptions.filepath) {
       return jsonRootAst
     }
 
+    const filepath = prettierOptions.filepath.replaceAll(path.sep, '/')
+
     const { pipelinePatterns, interfacePatterns } = parseOption(prettierOptions)
 
     for (const reg of pipelinePatterns) {
-      if (reg.test(prettierOptions.filepath)) {
+      if (reg.test(filepath)) {
         console.error('use pipeline mode')
         processPipelineRoot(jsonRootAst.node)
         return jsonRootAst
@@ -295,9 +321,9 @@ export function createParser(parser: 'json' | 'jsonc', otherParse?: ParseFunc): 
     }
 
     for (const reg of interfacePatterns) {
-      if (reg.test(prettierOptions.filepath)) {
+      if (reg.test(filepath)) {
         console.error('use interface mode')
-        // processPipelineRoot(jsonRootAst.node)
+        processInterfaceRoot(jsonRootAst.node)
         return jsonRootAst
       }
     }

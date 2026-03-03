@@ -81,7 +81,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         shell: bash
         run: |
-          for pkg in simple-parser maa-tasker maa-locale maa-version-manager maa-pipeline-manager maa-tools; do
+          for pkg in simple-parser maa-tasker maa-locale maa-version-manager maa-pipeline-manager maa-tools prettier-plugin-maafw-sort; do
             cd pkgs/$pkg
             PKG_NAME=`npm pkg get name | jq -r`
             PKG_VER=`npm pkg get version | jq -r`

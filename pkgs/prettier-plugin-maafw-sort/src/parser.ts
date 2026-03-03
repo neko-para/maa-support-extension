@@ -144,7 +144,11 @@ export const actKeys = [
   'detach',
 
   'cmd',
-  'shell_timeout'
+  'shell_timeout',
+
+  'filename',
+  'format',
+  'quality'
 ]
 
 const swipeKeys = [

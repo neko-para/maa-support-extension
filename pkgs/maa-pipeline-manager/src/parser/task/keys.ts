@@ -73,6 +73,9 @@ export const actKeys = [
   'detach',
   'cmd',
   'shell_timeout',
+  'filename',
+  'format',
+  'quality',
   'custom_action',
   'custom_action_param'
 ]

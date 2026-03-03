@@ -256,6 +256,7 @@ function parseMaaReco(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) 
 
 function parseReco(
   props: PropPair[],
+  baseProps: PropPair[],
   info: TaskInfo,
   prev: StringNode[],
   ctx: TaskParseContext,
@@ -288,13 +289,8 @@ function parseReco(
             })
           } else {
             const subInfo = splitNode(sub, false)
-            parseReco(subInfo.reco, info, prev, ctx, sub)
+            parseReco(subInfo.reco, subInfo.base, info, prev, ctx, sub)
           }
-        }
-        break
-      case 'sub_name':
-        if (parent) {
-          subName = parseSubName(obj, info, parent, ctx)
         }
         break
       case 'method':
@@ -309,6 +305,15 @@ function parseReco(
             default:
               colorMatchMethod = null
           }
+        }
+        break
+    }
+  }
+  for (const [key, obj] of baseProps) {
+    switch (key) {
+      case 'sub_name':
+        if (parent) {
+          subName = parseSubName(obj, info, parent, ctx)
         }
         break
     }
@@ -396,7 +401,7 @@ export function parseTask(node: Node, ctx: TaskParseContext): TaskInfo {
     parseMaaReco(parts.reco, info, ctx)
   } else {
     parseBase(info.parts.base, info, ctx)
-    parseReco(parts.reco, info, [], ctx)
+    parseReco(parts.reco, parts.base, info, [], ctx)
     parseAct(parts.act, info, ctx)
     parseUnknown(parts.unknown, info, ctx)
   }

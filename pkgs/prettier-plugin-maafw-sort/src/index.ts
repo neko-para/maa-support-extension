@@ -1,97 +1,48 @@
-import type {
-  Expression,
-  ObjectExpression,
-  ObjectMethod,
-  ObjectProperty,
-  SpreadElement,
-  StringLiteral
-} from '@babel/types'
-import { stringLiteral } from '@babel/types'
-import type { ParserOptions } from 'prettier'
-import { parsers as babelParsers } from 'prettier/plugins/babel'
+import type { Plugin } from 'prettier'
 
-interface BabelParseResult {
-  node: Expression
+import { options } from './option'
+import { createParser, parsers } from './parser'
+
+export { options, parsers }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const plugin: Plugin = {
+  options,
+  parsers
 }
 
-function makeStringLit(value: string): StringLiteral {
-  const node = stringLiteral(value)
-  node.extra = {
-    raw: JSON.stringify(value),
-    rawValue: value
+export function patchPlugin(plugin: Plugin) {
+  const newPlugin = {
+    ...plugin
   }
-  return node
-}
 
-function processPipelineTask(node: ObjectExpression) {
-  let docProp: ObjectProperty | undefined = undefined
-  let descProp: ObjectProperty | undefined = undefined
-
-  const finalProps: (ObjectProperty | ObjectMethod | SpreadElement)[] = []
-
-  for (const prop of node.properties) {
-    if (prop.type === 'ObjectProperty') {
-      if (prop.key.type === 'StringLiteral') {
-        if (prop.key.value === 'doc') {
-          docProp = prop
-          continue
-        } else if (prop.key.value === 'desc') {
-          descProp = prop
-          continue
-        }
-      }
+  if (newPlugin.parsers?.json) {
+    const old = newPlugin.parsers.json
+    newPlugin.parsers.json = {
+      ...old,
+      parse: createParser('json', old.parse.bind(old))
     }
-    finalProps.push(prop)
+  } else {
+    newPlugin.parsers = newPlugin.parsers ?? {}
+    newPlugin.parsers.json = parsers.json
   }
 
-  if (docProp && !descProp) {
-    docProp.key = makeStringLit('desc')
-  }
-  if (docProp) {
-    finalProps.unshift(docProp)
-  }
-  if (descProp) {
-    finalProps.unshift(descProp)
-  }
-  node.properties = finalProps
-}
-
-function processPipelineRoot(node: Expression) {
-  if (node.type !== 'ObjectExpression') {
-    return
-  }
-  for (const prop of node.properties) {
-    if (prop.type === 'ObjectProperty') {
-      if (prop.value.type !== 'ObjectExpression') {
-        continue
-      }
-      processPipelineTask(prop.value)
+  if (newPlugin.parsers?.jsonc) {
+    const old = newPlugin.parsers.jsonc
+    newPlugin.parsers.jsonc = {
+      ...old,
+      parse: createParser('jsonc', old.parse.bind(old))
     }
+  } else {
+    newPlugin.parsers = newPlugin.parsers ?? {}
+    newPlugin.parsers.jsonc = parsers.jsonc
   }
-}
 
-function createParser(
-  parser: 'json' | 'jsonc'
-): (text: string, options: ParserOptions) => Promise<BabelParseResult> {
-  return async (text: string, prettierOptions: ParserOptions): Promise<BabelParseResult> => {
-    const jsonRootAst = (await babelParsers[parser].parse(
-      text,
-      prettierOptions
-    )) as BabelParseResult
-
-    processPipelineRoot(jsonRootAst.node)
-
-    return jsonRootAst
+  newPlugin.options = newPlugin.options ?? {}
+  newPlugin.options = {
+    ...(newPlugin.options ?? {}),
+    ...options
   }
-}
 
-export const parsers = {
-  json: {
-    ...babelParsers.json,
-    parse: createParser('json')
-  },
-  jsonc: {
-    ...babelParsers.jsonc,
-    parse: createParser('jsonc')
-  }
+  return newPlugin
 }

@@ -17,7 +17,9 @@ export const nodeKeys = [
   'focus',
   'attach',
   'doc',
-  'desc'
+  'desc',
+
+  'sub_name'
 ]
 
 export const recoKeys = [
@@ -43,7 +45,6 @@ export const recoKeys = [
   'labels',
   'all_of',
   'box_index',
-  'sub_name',
   'any_of',
   'custom_recognition',
   'custom_recognition_param'
@@ -71,6 +72,7 @@ export const actKeys = [
   'args',
   'detach',
   'cmd',
+  'shell_timeout',
   'custom_action',
   'custom_action_param'
 ]

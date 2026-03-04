@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import * as workerpool from 'workerpool'
@@ -40,7 +41,12 @@ export async function runTest(cfg: FullConfig) {
 
   let finished = 0
 
-  const taskCount = cfg.test.cases
+  let allTestCases = cfg.test.cases
+  if (typeof allTestCases === 'function') {
+    allTestCases = await allTestCases()
+  }
+
+  const taskCount = allTestCases
     .map(testCase => {
       const imageCount = testCase.cases.length
       const nodeCount = testCase.cases.map(c => c.hits.length).reduce((a, b) => a + b, 0)
@@ -50,17 +56,29 @@ export async function runTest(cfg: FullConfig) {
 
   const maxNodePerJob = cfg.test.maxNodePerJob ?? 50
 
-  for (const testCases of cfg.test.cases) {
-    const allImages = testCases.cases.map(c => ({
-      image:
-        path.resolve(
-          cfg.cwd ?? process.cwd(),
-          cfg.test!.casesCwd ?? '.',
-          testCases.configs.imageRoot ?? '.',
-          c.image
-        ) + '.png',
-      imageRaw: c.image
-    }))
+  for (const testCases of allTestCases) {
+    const name =
+      testCases.configs.name ?? `${testCases.configs.controller}:${testCases.configs.resource}`
+
+    const allImages = testCases.cases
+      .map(c => ({
+        image:
+          path.resolve(
+            cfg.cwd ?? process.cwd(),
+            cfg.test!.casesCwd ?? '.',
+            testCases.configs.imageRoot ?? '.',
+            c.image
+          ) + '.png',
+        imageRaw: c.image
+      }))
+      .filter(({ image, imageRaw }) => {
+        if (!existsSync(image)) {
+          console.log(`${name} ${imageRaw} not exists, ignored`)
+          return false
+        } else {
+          return true
+        }
+      })
     const allNodes = [
       ...new Set(
         testCases.cases

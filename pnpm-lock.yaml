@@ -280,6 +280,9 @@ importers:
       jiti:
         specifier: ^2.6.1
         version: 2.6.1(patch_hash=61ff68a4cec75a38e00365c27dee56dc3a7ffd68b2199a5889ad3446bdb19a8a)
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
       workerpool:
         specifier: ^10.0.1
         version: 10.0.1

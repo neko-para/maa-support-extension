@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/maa-tools",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "module",
   "bin": {
     "maa-tools": "bin/maa-tools"
@@ -24,6 +24,7 @@
     "@nekosu/maa-pipeline-manager": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",
     "jiti": "^2.6.1",
+    "jsonc-parser": "^3.3.1",
     "workerpool": "^10.0.1"
   },
   "devDependencies": {

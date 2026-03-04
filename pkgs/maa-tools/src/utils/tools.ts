@@ -18,7 +18,7 @@ export async function loadAllTestCases(
   const results: TestCases[] = []
   const fails: string[] = []
   for await (const file of fs.glob(pattern, { cwd: folder })) {
-    const testCases = await loadTestCases(path.resolve(pattern, file))
+    const testCases = await loadTestCases(path.resolve(folder, file))
     if (testCases) {
       results.push(testCases)
     } else {

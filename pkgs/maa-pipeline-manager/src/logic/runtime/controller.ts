@@ -64,8 +64,8 @@ export function buildControllerRuntime(
       args: [
         config.adb.adb_path,
         config.adb.address,
-        config.adb.screencap ?? maa.AdbScreencapMethod.Default,
-        config.adb.input ?? maa.AdbInputMethod.Default,
+        config.adb.screencap,
+        config.adb.input,
         JSON.stringify(config.adb.config)
       ],
 
@@ -86,9 +86,10 @@ export function buildControllerRuntime(
         config.win32.hwnd,
 
         fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.DXGI_DesktopDup,
+          maa.Win32ScreencapMethod.FramePool,
 
-        fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
+        fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ??
+          maa.Win32InputMethod.SendMessageWithCursorPos,
 
         fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage
       ],
@@ -128,7 +129,7 @@ export function buildControllerRuntime(
         config.gamepad.hwnd,
 
         fixNum(ctrlInfo.gamepad?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.DXGI_DesktopDup,
+          maa.Win32ScreencapMethod.FramePool,
         fixNum(ctrlInfo.gamepad?.gamepad_type, maa.GamepadType) ?? maa.GamepadType.Xbox360
       ],
 

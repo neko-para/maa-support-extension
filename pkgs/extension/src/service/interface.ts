@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 import type {
   AgentConfig,
   CheckboxOption,
+  ControllerRuntimeBase,
   InputItemType,
   Interface,
   InterfaceConfig,
@@ -397,11 +398,16 @@ export class InterfaceService extends BaseService {
       }
     }
 
-    const permission_required = ctrlInfo.permission_required ?? false
-    const attach_resource_path = ctrlInfo.attach_resource_path?.map(resPath =>
-      path.resolve(projectDir, resPath)
-    )
-    const option = ctrlInfo.option ?? []
+    const baseOption: ControllerRuntimeBase = {
+      display_short_side: ctrlInfo.display_short_side,
+      display_long_side: ctrlInfo.display_long_side,
+      display_raw: ctrlInfo.display_raw,
+      permission_required: ctrlInfo.permission_required,
+      attach_resource_path: ctrlInfo.attach_resource_path?.map(resPath =>
+        path.resolve(projectDir, resPath)
+      ),
+      option: ctrlInfo.option
+    }
 
     if (ctrlInfo.type === 'Adb') {
       if (!config.adb) {
@@ -419,12 +425,7 @@ export class InterfaceService extends BaseService {
         input: config.adb.input ?? maa.AdbInputMethod.Default,
         config: JSON.stringify(config.adb.config),
 
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw,
-        permission_required,
-        attach_resource_path,
-        option
+        ...baseOption
       }
     } else if (ctrlInfo.type === 'Win32') {
       if (!config.win32) {
@@ -453,12 +454,7 @@ export class InterfaceService extends BaseService {
           fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ??
           maa.Win32InputMethod.SendMessage,
 
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw,
-        permission_required,
-        attach_resource_path,
-        option
+        ...baseOption
       }
     } else if (ctrlInfo.type === 'PlayCover') {
       if (!config.playcover) {
@@ -486,12 +482,7 @@ export class InterfaceService extends BaseService {
         address: config.playcover.address,
         uuid: 'maa.playcover',
 
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw,
-        permission_required,
-        attach_resource_path,
-        option
+        ...baseOption
       }
     } else if (ctrlInfo.type === 'Gamepad') {
       if (!config.gamepad) {
@@ -519,12 +510,7 @@ export class InterfaceService extends BaseService {
           maa.Win32ScreencapMethod.DXGI_DesktopDup,
         gamepad: fixNum(ctrlInfo.gamepad?.gamepad_type, maa.GamepadType) ?? maa.GamepadType.Xbox360,
 
-        display_short_side: ctrlInfo.display_short_side,
-        display_long_side: ctrlInfo.display_long_side,
-        display_raw: ctrlInfo.display_raw,
-        permission_required,
-        attach_resource_path,
-        option
+        ...baseOption
       }
     }
 

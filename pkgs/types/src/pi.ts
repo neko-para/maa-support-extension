@@ -49,47 +49,50 @@ export type InterfaceAgentRuntime = {
   debug_session?: string
 }
 
+export type ControllerRuntimeBase = {
+  display_short_side?: number
+  display_long_side?: number
+  display_raw?: boolean
+  permission_required?: boolean
+  attach_resource_path?: string[]
+  option?: string[]
+}
+
+export type ControllerRuntimeVariant =
+  | {
+      ctype: 'adb'
+      adb_path: string
+      address: string
+      screencap: maa.ScreencapOrInputMethods
+      input: maa.ScreencapOrInputMethods
+      config: string
+    }
+  | {
+      ctype: 'win32'
+      hwnd: maa.DesktopHandle
+      screencap: maa.ScreencapOrInputMethods
+      mouse: maa.ScreencapOrInputMethods
+      keyboard: maa.ScreencapOrInputMethods
+    }
+  | {
+      ctype: 'playcover'
+      address: string
+      uuid: string
+    }
+  | {
+      ctype: 'gamepad'
+      hwnd: maa.DesktopHandle
+      screencap: maa.ScreencapOrInputMethods
+      gamepad: maa.Uint64
+    }
+  | {
+      ctype: 'vscFixed'
+      image: string
+    }
+
 export type InterfaceRuntime = {
   root: string
-  controller_param: (
-    | {
-        ctype: 'adb'
-        adb_path: string
-        address: string
-        screencap: maa.ScreencapOrInputMethods
-        input: maa.ScreencapOrInputMethods
-        config: string
-      }
-    | {
-        ctype: 'win32'
-        hwnd: maa.DesktopHandle
-        screencap: maa.ScreencapOrInputMethods
-        mouse: maa.ScreencapOrInputMethods
-        keyboard: maa.ScreencapOrInputMethods
-      }
-    | {
-        ctype: 'playcover'
-        address: string
-        uuid: string
-      }
-    | {
-        ctype: 'gamepad'
-        hwnd: maa.DesktopHandle
-        screencap: maa.ScreencapOrInputMethods
-        gamepad: maa.Uint64
-      }
-    | {
-        ctype: 'vscFixed'
-        image: string
-      }
-  ) & {
-    display_short_side?: number
-    display_long_side?: number
-    display_raw?: boolean
-    permission_required?: boolean
-    attach_resource_path?: string[]
-    option?: string[]
-  }
+  controller_param: ControllerRuntimeBase & ControllerRuntimeVariant
   resource_path: string[]
   task: {
     name: string

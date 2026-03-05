@@ -81,7 +81,7 @@ export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
     for (const ref of refs) {
       const task = extractTaskRef(ref)
       if (task !== null) {
-        if (!tasks.has(task) && ref.type !== 'task.anchor') {
+        if (!tasks.has(task) && !(task === '' && ref.type === 'task.anchor')) {
           let offset = ref.location.offset
           let length = ref.location.length
           if (ref.type === 'task.next' && typeof ref.offset === 'number') {

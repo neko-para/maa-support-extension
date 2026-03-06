@@ -1,6 +1,9 @@
 {
   "name": "@mse/extension",
   "type": "module",
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "devDependencies": {
     "@jimp/core": "^1.6.0",
     "@jimp/js-png": "^1.6.0",

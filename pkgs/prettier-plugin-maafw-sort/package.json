@@ -15,6 +15,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "dependencies": {
     "@babel/types": "^7.29.0"
   },

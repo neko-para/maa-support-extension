@@ -2,6 +2,9 @@
   "name": "@mse/types",
   "type": "module",
   "main": "./src/index.ts",
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "devDependencies": {
     "@maaxyz/maa-node": "5.9.0-alpha.1",
     "@nekosu/maa-pipeline-manager": "workspace:*"

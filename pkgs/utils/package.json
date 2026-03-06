@@ -2,8 +2,10 @@
   "name": "@mse/utils",
   "type": "module",
   "main": "./src/index.ts",
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "dependencies": {
-    "jsonc-parser": "^3.3.1",
     "triple-beam": "^1.4.1",
     "winston": "^3.19.0",
     "winston-transport": "^4.9.0"

@@ -15,6 +15,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "dependencies": {
     "@nekosu/simple-parser": "workspace:*"
   },

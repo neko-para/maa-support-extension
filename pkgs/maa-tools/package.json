@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/maa-tools",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "type": "module",
   "bin": {
     "maa-tools": "bin/maa-tools"
@@ -17,6 +17,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",

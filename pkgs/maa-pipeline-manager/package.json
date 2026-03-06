@@ -19,6 +19,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "dependencies": {
     "@nekosu/maa-locale": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",

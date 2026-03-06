@@ -1,6 +1,9 @@
 {
   "name": "@mse/maa-server",
   "type": "module",
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "devDependencies": {
     "@maaxyz/maa-node": "5.9.0-alpha.1",
     "@mse/maa-server-proto": "workspace:*",

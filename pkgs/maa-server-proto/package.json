@@ -2,6 +2,9 @@
   "name": "@mse/maa-server-proto",
   "type": "module",
   "main": "src/index.ts",
+  "scripts": {
+    "lint": "tsc -p . --noEmit"
+  },
   "dependencies": {
     "vscode-jsonrpc": "^8.2.1"
   },

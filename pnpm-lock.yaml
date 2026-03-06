@@ -67,9 +67,6 @@ importers:
       vite:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.3.0)(jiti@2.6.1(patch_hash=61ff68a4cec75a38e00365c27dee56dc3a7ffd68b2199a5889ad3446bdb19a8a))(yaml@2.8.0)
-      vue-tsc:
-        specifier: ^3.2.5
-        version: 3.2.5(typescript@5.9.3)
 
   pkgs/extension:
     devDependencies:
@@ -373,9 +370,6 @@ importers:
 
   pkgs/utils:
     dependencies:
-      jsonc-parser:
-        specifier: ^3.3.1
-        version: 3.3.1
       triple-beam:
         specifier: ^1.4.1
         version: 1.4.1
@@ -458,6 +452,9 @@ importers:
       vue:
         specifier: ^3.5.29
         version: 3.5.29(typescript@5.9.3)
+      vue-tsc:
+        specifier: ^3.2.5
+        version: 3.2.5(typescript@5.9.3)
 
 packages:
 

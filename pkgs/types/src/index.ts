@@ -1,5 +1,4 @@
 export type * from './logger'
-export type * from './pi'
 export type * from './webview/base'
 export type * from './webview/control'
 export type * from './webview/crop'

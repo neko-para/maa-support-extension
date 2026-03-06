@@ -1,4 +1,4 @@
-import type { InterfaceRuntime } from '@mse/types'
+import type { ControllerRuntime, InterfaceRuntime } from '@nekosu/maa-pipeline-manager'
 
 type MarkReturnPromise<Func> = Func extends (...args: infer Args) => infer Ret
   ? (...args: Args) => Promise<Awaited<Ret> | null>
@@ -6,7 +6,7 @@ type MarkReturnPromise<Func> = Func extends (...args: infer Args) => infer Ret
 
 export type HostToSubApis = {
   fetchConstants: () => unknown
-  updateController: (runtime: InterfaceRuntime['controller_param']) => boolean
+  updateController: (runtime: ControllerRuntime) => boolean
   setupInstance: (
     runtime: InterfaceRuntime,
     timeout: number

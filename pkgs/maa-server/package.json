@@ -5,6 +5,7 @@
     "@maaxyz/maa-node": "5.7.2",
     "@mse/maa-server-proto": "workspace:*",
     "@mse/types": "workspace:*",
+    "@nekosu/maa-pipeline-manager": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.0",
     "@types/source-map-support": "^0.5.10",

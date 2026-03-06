@@ -315,7 +315,7 @@ export function createParser(parser: 'json' | 'jsonc', otherParse?: ParseFunc): 
 
     for (const reg of pipelinePatterns) {
       if (reg.test(filepath)) {
-        console.error('use pipeline mode')
+        console.log('use pipeline mode')
         processPipelineRoot(jsonRootAst.node)
         return jsonRootAst
       }
@@ -323,7 +323,7 @@ export function createParser(parser: 'json' | 'jsonc', otherParse?: ParseFunc): 
 
     for (const reg of interfacePatterns) {
       if (reg.test(filepath)) {
-        console.error('use interface mode')
+        console.log('use interface mode')
         processInterfaceRoot(jsonRootAst.node)
         return jsonRootAst
       }

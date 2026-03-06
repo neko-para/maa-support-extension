@@ -5,11 +5,11 @@ import { computed } from 'vue'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
-import { hostState } from '../state'
+import { hostState, interfaceJson } from '../state'
 
 const filteredResource = computed(() => {
-  const curr = hostState.value.interfaceConfigJson?.controller?.name ?? ''
-  return (hostState.value.interfaceJson?.resource ?? []).filter(info => {
+  const curr = hostState.value.interfaceConfigJson?.controller ?? ''
+  return (interfaceJson.value?.resource ?? []).filter(info => {
     if (curr === '$fixed') {
       return true
     }

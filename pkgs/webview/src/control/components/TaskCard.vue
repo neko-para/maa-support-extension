@@ -2,38 +2,39 @@
 import { NButton, NCard, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { TaskConfig } from '@mse/types'
-import type {
-  CheckboxOption,
-  InputOption,
-  SelectOption,
-  SwitchOption
+import {
+  type CheckboxOption,
+  type InputOption,
+  type OptionTrace,
+  type SelectOption,
+  type SwitchOption,
+  type TaskConfig,
+  buildOption
 } from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
-import { hostState } from '../state'
+import { ctrlRt, interfaceJson, resRt } from '../state'
 import LocaleText from './LocaleText.vue'
 import TaskCheckboxOption from './TaskCheckboxOption.vue'
 import TaskInputOption from './TaskInputOption.vue'
 import TaskSelectOption from './TaskSelectOption.vue'
 import TaskSwitchOption from './TaskSwitchOption.vue'
-import type { OptionInfo, OptionIntro } from './types'
 
 const props = defineProps<{
   task: TaskConfig
 }>()
 
 const taskMeta = computed(() => {
-  return hostState.value.interfaceJson?.task?.find(info => info.name === props.task.name) ?? null
+  return interfaceJson.value?.task?.find(info => info.name === props.task.name) ?? null
 })
 
 function removeTask() {
-  if (!props.task.__vscKey) {
+  if (!props.task.__key) {
     return
   }
   ipc.send({
     command: 'removeTask',
-    key: props.task.__vscKey
+    key: props.task.__key
   })
 }
 
@@ -47,99 +48,12 @@ function revealEntry() {
   })
 }
 
-const allOptions = computed<OptionInfo[]>(() => {
-  const resolved: OptionInfo[] = []
-  const options: OptionInfo[] = []
-
-  const addOptions = (opts: string[] | undefined, intro: OptionIntro) => {
-    if (opts) {
-      for (const opt of opts) {
-        options.push({
-          option: opt,
-          intro
-        })
-      }
-    }
+const allOptions = computed<OptionTrace[]>(() => {
+  if (!interfaceJson.value || !ctrlRt.value.rt || !resRt.value.rt) {
+    return []
   }
-
-  addOptions(hostState.value.interfaceJson?.global_option, {
-    type: 'global_option'
-  })
-
-  const ctrlName = hostState.value.interfaceConfigJson?.controller?.name
-  addOptions(
-    hostState.value.interfaceJson?.controller?.find(ctrl => ctrl.name === ctrlName)?.option,
-    {
-      type: 'controller',
-      name: ctrlName
-    }
-  )
-
-  const resName = hostState.value.interfaceConfigJson?.resource
-  addOptions(hostState.value.interfaceJson?.resource?.find(res => res.name === resName)?.option, {
-    type: 'resource',
-    name: resName
-  })
-
-  addOptions(taskMeta.value?.option, {
-    type: 'task',
-    name: props.task.name
-  })
-
-  while (options.length > 0) {
-    const opt = options.shift()!
-    if (resolved.findIndex(info => info.option === opt.option) !== -1) {
-      continue
-    }
-    resolved.push(opt)
-
-    const optMeta = hostState.value.interfaceJson?.option?.[opt.option]
-    if (!optMeta) {
-      continue
-    }
-    if ((optMeta.type ?? 'select') === 'select') {
-      const selectMeta = optMeta as SelectOption
-
-      const optValue = props.task.option?.[opt.option]?.default
-      const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0]?.name
-      if (val) {
-        const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
-
-        addOptions(caseMeta?.option, {
-          type: 'option',
-          name: opt.option
-        })
-      }
-    } else if (optMeta.type === 'checkbox') {
-      const selectMeta = optMeta as CheckboxOption
-
-      const optValue = props.task.option?.[opt.option]
-      const val = (optValue ? Object.keys(optValue) : selectMeta.default_case) ?? []
-
-      for (const caseMeta of selectMeta.cases ?? []) {
-        if (val.includes(caseMeta.name)) {
-          addOptions(caseMeta?.option, {
-            type: 'option',
-            name: opt.option
-          })
-        }
-      }
-    } else if (optMeta.type === 'switch') {
-      const switchMeta = optMeta as SwitchOption
-
-      const optValue = props.task.option?.[opt.option]?.default
-      const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0]?.name
-      if (val) {
-        const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
-
-        addOptions(caseMeta?.option, {
-          type: 'option',
-          name: opt.option
-        })
-      }
-    }
-  }
-  return resolved
+  const opts = buildOption(interfaceJson.value, props.task, ctrlRt.value.rt, resRt.value.rt)
+  return typeof opts === 'string' ? [] : opts
 })
 
 function cast<T>(val: unknown): T {
@@ -165,35 +79,33 @@ function cast<T>(val: unknown): T {
     </template>
     <n-flex vertical>
       <template v-for="opt in allOptions" :key="opt">
-        <template v-if="hostState.interfaceJson?.option?.[opt.option]">
-          <template
-            v-if="(hostState.interfaceJson.option[opt.option]?.type ?? 'select') === 'select'"
-          >
+        <template v-if="interfaceJson?.option?.[opt.name]">
+          <template v-if="(interfaceJson.option[opt.name]?.type ?? 'select') === 'select'">
             <task-select-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<SelectOption>(hostState.interfaceJson.option[opt.option])"
+              :opt-meta="cast<SelectOption>(interfaceJson.option[opt.name])"
             ></task-select-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'checkbox'">
+          <template v-else-if="interfaceJson.option[opt.name]?.type === 'checkbox'">
             <task-checkbox-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<CheckboxOption>(hostState.interfaceJson.option[opt.option])"
+              :opt-meta="cast<CheckboxOption>(interfaceJson.option[opt.name])"
             ></task-checkbox-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'input'">
+          <template v-else-if="interfaceJson.option[opt.name]?.type === 'input'">
             <task-input-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<InputOption>(hostState.interfaceJson.option[opt.option])"
+              :opt-meta="cast<InputOption>(interfaceJson.option[opt.name])"
             ></task-input-option>
           </template>
-          <template v-else-if="hostState.interfaceJson.option[opt.option]?.type === 'switch'">
+          <template v-else-if="interfaceJson.option[opt.name]?.type === 'switch'">
             <task-switch-option
               :task="task"
               :opt="opt"
-              :opt-meta="cast<SwitchOption>(hostState.interfaceJson.option[opt.option])"
+              :opt-meta="cast<SwitchOption>(interfaceJson.option[opt.name])"
             ></task-switch-option>
           </template>
         </template>

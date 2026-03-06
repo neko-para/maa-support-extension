@@ -8,15 +8,15 @@ import type { NativeSelectOption } from '@mse/types'
 import { t } from '../../utils/locale'
 import TaskCard from '../components/TaskCard.vue'
 import { ipc } from '../ipc'
-import { hostState } from '../state'
+import { hostState, interfaceJson } from '../state'
 import { makeBrief } from '../utils'
 
 const selectingTask = ref(false)
 
 const allTasks = computed(() => {
-  const currCtrl = hostState.value.interfaceConfigJson?.controller?.name ?? ''
+  const currCtrl = hostState.value.interfaceConfigJson?.controller ?? ''
 
-  return (hostState.value.interfaceJson?.task ?? []).filter(info => {
+  return (interfaceJson.value?.task ?? []).filter(info => {
     if (info.controller && currCtrl !== '$fixed' && !info.controller.includes(currCtrl)) {
       return false
     }
@@ -108,7 +108,7 @@ async function nativeSelectTask() {
     <n-flex vertical>
       <task-card
         v-for="task in hostState.interfaceConfigJson?.task ?? []"
-        :key="task.__vscKey"
+        :key="task.__key"
         :task="task"
       ></task-card>
     </n-flex>

@@ -53,7 +53,7 @@ export class InterfaceCodeLensProvider
         const activated = decl.name === interfaceService.interfaceConfigJson.resource
         const disabled =
           decl.controller &&
-          !decl.controller.includes(interfaceService.interfaceConfigJson.controller?.name ?? '')
+          !decl.controller.includes(interfaceService.interfaceConfigJson.controller ?? '')
 
         const range = convertRange(document, decl.location)
 
@@ -75,7 +75,7 @@ export class InterfaceCodeLensProvider
                 })
         )
       } else if (decl.type === 'interface.language') {
-        const activated = decl.name === interfaceService.interfaceConfigJson.locale
+        const activated = decl.name === interfaceService.interfaceConfigJson.__locale
 
         const range = convertRange(document, decl.location)
 

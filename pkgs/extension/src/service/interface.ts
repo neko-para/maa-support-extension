@@ -4,17 +4,19 @@ import * as path from 'node:path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import type { ControllerRuntimeBase, InterfaceConfig, InterfaceRuntime } from '@mse/types'
-import { logger } from '@mse/utils'
-import { t } from '@nekosu/maa-locale'
 import type {
   AgentConfig,
-  CheckboxOption,
-  InputItemType,
-  SelectOption,
-  SwitchOption
+  ControllerRuntime,
+  InterfaceConfig,
+  InterfaceRuntime
 } from '@nekosu/maa-pipeline-manager'
-import { type Interface, InterfaceBundle } from '@nekosu/maa-pipeline-manager'
+import {
+  type Interface,
+  InterfaceBundle,
+  buildControllerRuntime,
+  buildResourceRuntime,
+  buildTaskRuntime
+} from '@nekosu/maa-pipeline-manager'
 
 import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
@@ -24,7 +26,7 @@ import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 
 export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle
-  interfaceConfigJson: Partial<InterfaceConfig>
+  interfaceConfigJson: InterfaceConfig
 
   get interfaceJson(): Interface {
     if (!this.interfaceBundle?.content.object) {
@@ -186,7 +188,14 @@ export class InterfaceService extends BaseService {
   }
 
   fixConfig() {
-    const fixConfig: Partial<InterfaceConfig> = {}
+    const fixConfig: InterfaceConfig = {}
+
+    let ctrlFixed = false
+    if (typeof this.interfaceConfigJson.controller === 'object') {
+      // 老版本插件使用的是对象, 兼容下
+      ctrlFixed = true
+      fixConfig.controller = (this.interfaceConfigJson.controller as { name: string }).name
+    }
 
     let resFixed = false
     const prevRes = this.interfaceJson.resource?.find(
@@ -203,9 +212,9 @@ export class InterfaceService extends BaseService {
       const newTask = {
         ...task
       }
-      if (!newTask.__vscKey) {
+      if (!newTask.__key) {
         taskFixed = true
-        newTask.__vscKey = v4()
+        newTask.__key = v4()
       }
       if (Array.isArray(newTask.option)) {
         const newOptions: Record<string, Record<string, string>> = {}
@@ -222,14 +231,14 @@ export class InterfaceService extends BaseService {
     if (taskFixed) {
       fixConfig.task = fixedTasks
     }
-    if (resFixed || taskFixed) {
+    if (ctrlFixed || resFixed || taskFixed) {
       return fixConfig
     } else {
       return null
     }
   }
 
-  async reduceConfig(config?: Partial<InterfaceConfig>) {
+  async reduceConfig(config?: InterfaceConfig) {
     this.interfaceConfigJson = {
       ...this.interfaceConfigJson,
       ...config
@@ -247,7 +256,7 @@ export class InterfaceService extends BaseService {
 
   updateResource() {
     this.interfaceBundle?.switchActive(
-      this.interfaceConfigJson?.controller?.name ?? '',
+      this.interfaceConfigJson?.controller ?? '',
       this.interfaceConfigJson?.resource ?? ''
     )
   }
@@ -278,7 +287,7 @@ export class InterfaceService extends BaseService {
     return true
   }
 
-  async buildControllerRuntime(): Promise<InterfaceRuntime['controller_param'] | null> {
+  async buildControllerRuntime(): Promise<ControllerRuntime | null> {
     if (!(await serverService.fetchConstants())) {
       return null
     }
@@ -286,10 +295,6 @@ export class InterfaceService extends BaseService {
     if (!rootService.activeResource) {
       return null
     }
-    const projectDir = vscode.Uri.joinPath(
-      rootService.activeResource.workspace,
-      rootService.activeResource.dirRelative
-    ).fsPath
 
     const data = this.interfaceJson
     const config = this.interfaceConfigJson
@@ -297,160 +302,13 @@ export class InterfaceService extends BaseService {
       return null
     }
 
-    if (config.controller?.name === '$fixed') {
-      if (!config.vscFixed) {
-        vscode.window.showErrorMessage('No vscFixed for controller')
-        return null
-      }
-
-      if (!config.vscFixed.image) {
-        vscode.window.showErrorMessage('No vscFixed image for controller')
-        return null
-      }
-
-      return {
-        ctype: 'vscFixed',
-        image: config.vscFixed.image,
-        display_raw: true
-      }
-    }
-
-    const ctrlInfo = data.controller?.find(x => x.name === config.controller?.name)
-
-    if (!ctrlInfo) {
-      vscode.window.showErrorMessage(
-        t('maa.pi.error.cannot-find-controller', config.controller?.name ?? '<unknown>')
-      )
+    const runtime = buildControllerRuntime(data, config)
+    if (typeof runtime === 'string') {
+      vscode.window.showErrorMessage(runtime)
       return null
     }
 
-    const fixNum = (v?: string | number, dic?: Record<string, string>) => {
-      if (typeof v === 'number') {
-        return `${v}`
-      } else if (dic && typeof v === 'string' && v in dic) {
-        return dic[v]
-      } else {
-        return v
-      }
-    }
-
-    const baseOption: ControllerRuntimeBase = {
-      display_short_side: ctrlInfo.display_short_side,
-      display_long_side: ctrlInfo.display_long_side,
-      display_raw: ctrlInfo.display_raw,
-      permission_required: ctrlInfo.permission_required,
-      attach_resource_path: ctrlInfo.attach_resource_path?.map(resPath =>
-        path.resolve(projectDir, resPath)
-      ),
-      option: ctrlInfo.option
-    }
-
-    if (ctrlInfo.type === 'Adb') {
-      if (!config.adb) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-adb-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      return {
-        ctype: 'adb',
-        adb_path: config.adb.adb_path,
-        address: config.adb.address,
-        screencap: config.adb.screencap ?? maa.AdbScreencapMethod.Default,
-        input: config.adb.input ?? maa.AdbInputMethod.Default,
-        config: JSON.stringify(config.adb.config),
-
-        ...baseOption
-      }
-    } else if (ctrlInfo.type === 'Win32') {
-      if (!config.win32) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-win32-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      if (!config.win32.hwnd) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      return {
-        ctype: 'win32',
-        hwnd: config.win32.hwnd,
-        screencap:
-          fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.DXGI_DesktopDup,
-        mouse:
-          fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage,
-        keyboard:
-          fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ??
-          maa.Win32InputMethod.SendMessage,
-
-        ...baseOption
-      }
-    } else if (ctrlInfo.type === 'PlayCover') {
-      if (!config.playcover) {
-        vscode.window.showErrorMessage(
-          t(
-            'maa.pi.error.cannot-find-playcover-for-controller',
-            config.controller?.name ?? '<unknown>'
-          )
-        )
-        return null
-      }
-
-      if (!config.playcover?.address) {
-        vscode.window.showErrorMessage(
-          t(
-            'maa.pi.error.cannot-find-address-for-controller',
-            config.controller?.name ?? '<unknown>'
-          )
-        )
-        return null
-      }
-
-      return {
-        ctype: 'playcover',
-        address: config.playcover.address,
-        uuid: 'maa.playcover',
-
-        ...baseOption
-      }
-    } else if (ctrlInfo.type === 'Gamepad') {
-      if (!config.gamepad) {
-        vscode.window.showErrorMessage(
-          t(
-            'maa.pi.error.cannot-find-gamepad-for-controller',
-            config.controller?.name ?? '<unknown>'
-          )
-        )
-        return null
-      }
-
-      if (!config.gamepad.hwnd) {
-        vscode.window.showErrorMessage(
-          t('maa.pi.error.cannot-find-hwnd-for-controller', config.controller?.name ?? '<unknown>')
-        )
-        return null
-      }
-
-      return {
-        ctype: 'gamepad',
-        hwnd: config.gamepad.hwnd,
-        screencap:
-          fixNum(ctrlInfo.gamepad?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.DXGI_DesktopDup,
-        gamepad: fixNum(ctrlInfo.gamepad?.gamepad_type, maa.GamepadType) ?? maa.GamepadType.Xbox360,
-
-        ...baseOption
-      }
-    }
-
-    return null
+    return runtime
   }
 
   async buildRuntime(skipTask = false) {
@@ -481,203 +339,25 @@ export class InterfaceService extends BaseService {
     if (!ctrlRt) {
       return '构建controller失败'
     }
-    result.controller_param = ctrlRt
+    result.controller = ctrlRt
 
-    const resInfo = data.resource?.find(info => info.name === config.resource)
-    if (!resInfo) {
-      return t('maa.pi.error.cannot-find-resource', config.resource ?? '')
+    const resRt = buildResourceRuntime(data, config)
+    if (typeof resRt === 'string') {
+      return resRt
     }
 
-    result.resource_path = (typeof resInfo.path === 'string' ? [resInfo.path] : resInfo.path)
-      .map(replaceVar)
-      .map(resPath => {
-        return path.resolve(projectDir, resPath)
-      })
+    result.resource = resRt
 
-    const globalOptions = [
-      ...(data.global_option ?? []),
-      ...(ctrlRt.option ?? []),
-      ...(resInfo.option ?? [])
-    ]
-
-    const ctrlName = config.controller!.name
-    const resName = config.resource!
-
+    result.task = {
+      tasks: []
+    }
     if (!skipTask) {
-      result.task = []
-      for (const task of config.task ?? []) {
-        const taskInfo = data.task?.find(x => x.name === task.name)
-
-        if (!taskInfo) {
-          return t('maa.pi.error.cannot-find-task', task.name)
-        }
-
-        const getAllOption = () => {
-          const resolved: string[] = []
-          const options = [...globalOptions, ...(taskInfo.option ?? [])]
-          while (options.length > 0) {
-            const opt = options.shift()!
-            if (resolved.indexOf(opt) !== -1) {
-              continue
-            }
-            resolved.push(opt)
-
-            const optMeta = data.option?.[opt]
-            if (!optMeta) {
-              continue
-            }
-
-            if (
-              ctrlName !== '$fixed' &&
-              optMeta.controller &&
-              !optMeta.controller.includes(ctrlName)
-            ) {
-              continue
-            }
-            if (optMeta.resource && !optMeta.resource.includes(resName)) {
-              continue
-            }
-
-            if ((optMeta.type ?? 'select') === 'select') {
-              const selectMeta = optMeta as SelectOption
-
-              const optValue = task.option?.[opt]?.default
-              const val = optValue ?? selectMeta.default_case ?? selectMeta.cases?.[0].name
-              if (val) {
-                const caseMeta = selectMeta.cases?.find(cs => cs.name === val)
-                if (caseMeta?.option) {
-                  options.push(...caseMeta.option)
-                }
-              }
-            } else if (optMeta.type === 'checkbox') {
-              const checkboxMeta = optMeta as CheckboxOption
-
-              const optValue = task.option?.[opt]
-              const val = (optValue ? Object.keys(optValue) : checkboxMeta.default_case) ?? []
-              for (const caseMeta of checkboxMeta.cases ?? []) {
-                if (val.includes(caseMeta.name)) {
-                  if (caseMeta?.option) {
-                    options.push(...caseMeta.option)
-                  }
-                }
-              }
-            } else if (optMeta.type === 'switch') {
-              const switchMeta = optMeta as SwitchOption
-
-              const optValue = task.option?.[opt]?.default
-              const val = optValue ?? switchMeta.default_case ?? switchMeta.cases?.[0].name
-              if (val) {
-                const caseMeta = switchMeta.cases?.find(cs => cs.name === val)
-                if (caseMeta?.option) {
-                  options.push(...caseMeta.option)
-                }
-              }
-            }
-          }
-          return resolved
-        }
-
-        const params: unknown[] = [taskInfo.pipeline_override ?? {}]
-
-        for (const optName of getAllOption()) {
-          const optInfo = data.option?.[optName]
-
-          if (!optInfo) {
-            return t('maa.pi.error.cannot-find-option', optName)
-          }
-
-          const optEntry = task.option?.[optName]
-
-          if (!optInfo.type || optInfo.type === 'select' || optInfo.type === 'switch') {
-            const optValue = optEntry?.default ?? optInfo.default_case ?? optInfo.cases?.[0].name
-
-            const csInfo = optInfo.cases?.find(x => x.name === optValue)
-
-            if (!csInfo) {
-              return t('maa.pi.error.cannot-find-case-for-option', optName, optValue ?? '<unknown>')
-            }
-
-            params.push(csInfo.pipeline_override ?? {})
-          } else if (optInfo.type === 'checkbox') {
-            const val = (optEntry ? Object.keys(optEntry) : optInfo.default_case) ?? []
-
-            for (const caseMeta of optInfo.cases ?? []) {
-              if (val.includes(caseMeta.name)) {
-                params.push(caseMeta.pipeline_override ?? {})
-              }
-            }
-          } else if (optInfo.type === 'input') {
-            const optValue = optEntry ?? {}
-            for (const subOpt of optInfo.inputs ?? []) {
-              if (!(subOpt.name in optValue)) {
-                optValue[subOpt.name] = subOpt.default ?? ''
-              }
-              if (subOpt.verify) {
-                const re = new RegExp(subOpt.verify)
-                if (!re.test(optValue[subOpt.name]!)) {
-                  return 'verify failed'
-                }
-              }
-            }
-
-            const templateOverride = optInfo.pipeline_override ?? {}
-
-            const updateOverride = (v: unknown): unknown => {
-              if (Array.isArray(v)) {
-                return v.map(updateOverride)
-              } else if (typeof v === 'object' && v !== null) {
-                const obj = v as Record<string, unknown>
-                return Object.fromEntries(
-                  Object.entries(obj).map(([key, val]) => {
-                    return [key, updateOverride(val)] as [string, unknown]
-                  })
-                )
-              } else if (typeof v === 'string') {
-                let finalType: InputItemType | undefined = undefined
-                let result = v
-                for (const subOpt of optInfo.inputs ?? []) {
-                  const idx = result.indexOf(`{${subOpt.name}}`)
-                  if (idx !== -1) {
-                    const expectType = subOpt.pipeline_type ?? 'string'
-                    if (finalType && finalType !== expectType) {
-                      throw 'input type mismatch!'
-                    }
-                    finalType = expectType
-                    result = result.replaceAll(`{${subOpt.name}}`, optValue[subOpt.name]!)
-                  }
-                }
-                switch (finalType) {
-                  case 'string':
-                    return result
-                  case 'int':
-                    return parseInt(result)
-                }
-                return ''
-              } else {
-                return v
-              }
-            }
-
-            try {
-              params.push(updateOverride(templateOverride))
-            } catch (err) {
-              if (typeof err === 'string') {
-                return err
-              } else {
-                throw err
-              }
-            }
-          }
-        }
-
-        logger.debug(`${task.name} ${taskInfo.entry} ${JSON.stringify(params)}`)
-
-        result.task.push({
-          name: task.name,
-          entry: taskInfo.entry,
-          pipeline_override: params
-        })
+      const taskRt = buildTaskRuntime(data, config, ctrlRt, resRt)
+      if (typeof taskRt === 'string') {
+        return taskRt
       }
+
+      result.task = taskRt
     }
 
     const cfgPath = vscode.Uri.joinPath(

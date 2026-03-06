@@ -50,13 +50,15 @@ export class CommandService extends BaseService {
         vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
         return false
       }
-      launchService.launchRuntime(runtime, [
-        {
-          name: task,
-          entry: task,
-          pipeline_override: []
-        }
-      ])
+      launchService.launchRuntime(runtime, {
+        tasks: [
+          {
+            name: task,
+            entry: task,
+            pipeline_override: []
+          }
+        ]
+      })
       return true
     })
 
@@ -68,7 +70,7 @@ export class CommandService extends BaseService {
 
     this.defer = vscode.commands.registerCommand(commands.PISwitchLocale, locale => {
       interfaceService.reduceConfig({
-        locale
+        __locale: locale
       })
     })
 

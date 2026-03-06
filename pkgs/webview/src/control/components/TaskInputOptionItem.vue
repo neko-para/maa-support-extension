@@ -2,8 +2,12 @@
 import { NButton, NFlex, NInput, NPopover } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import type { TaskConfig } from '@mse/types'
-import type { InputItem } from '@nekosu/maa-pipeline-manager/logic'
+import {
+  type InputConfig,
+  type InputItem,
+  type OptionTrace,
+  type TaskConfig
+} from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'
@@ -11,12 +15,13 @@ import LocaleText from './LocaleText.vue'
 const props = defineProps<{
   taskKey: string
   task: TaskConfig
-  opt: string
+  opt: OptionTrace
   item: InputItem
+  fullConfig?: InputConfig
 }>()
 
 const optValue = computed(() => {
-  return props.task.option?.[props.opt]?.[props.item.name]
+  return props.fullConfig?.[props.item.name]
 })
 
 const defaultValue = computed(() => {
@@ -55,9 +60,11 @@ const inputValue = computed<string | null>({
       ipc.send({
         command: 'configTask',
         key: props.taskKey,
-        option: props.opt,
-        name: props.item.name,
-        value: v
+        option: props.opt.name,
+        value: {
+          ...(props.fullConfig ?? {}),
+          [props.item.name]: v
+        }
       })
       flushTimer = setTimeout(() => {
         flushTimer = null
@@ -74,11 +81,15 @@ function clearOption() {
   }
 
   cache.value = null
+  const cfg = {
+    ...(props.fullConfig ?? {})
+  }
+  delete cfg[props.item.name]
   ipc.send({
     command: 'configTask',
     key: props.taskKey,
-    option: props.opt,
-    name: props.item.name
+    option: props.opt.name,
+    value: cfg
   })
 }
 
@@ -87,7 +98,7 @@ function revealInput(name: string) {
     command: 'revealInterface',
     dest: {
       type: 'input',
-      option: props.opt,
+      option: props.opt.name,
       name
     }
   })

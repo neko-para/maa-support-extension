@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 
-import type { InterfaceRuntime } from '@mse/types'
 import { logger, loggerChannel } from '@mse/utils'
 import { t } from '@nekosu/maa-locale'
+import type { InterfaceRuntime } from '@nekosu/maa-pipeline-manager'
 
 import { debugService, interfaceService, serverService } from '.'
 import { BaseService } from './context'
@@ -67,7 +67,7 @@ export class LaunchService extends BaseService {
   }
 
   async launchRuntimeImpl(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
-    if (runtime.controller_param.permission_required && !serverService.rpc.admin) {
+    if (runtime.controller.permission_required && !serverService.rpc.admin) {
       vscode.window.showWarningMessage(t('maa.pi.warning.require-admin'))
     }
 
@@ -120,7 +120,7 @@ export class LaunchService extends BaseService {
       await panel.stop()
     }
 
-    for (const task of tasks ?? runtime.task) {
+    for (const task of (tasks ?? runtime.task).tasks) {
       session.pushMessage(t('maa.debug.task-started', task.name, task.entry))
       const succeeded =
         (await ipc.postTask(

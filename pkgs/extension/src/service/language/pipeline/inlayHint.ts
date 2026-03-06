@@ -66,7 +66,7 @@ export class PipelineInlayHintsProvider
       )
     })
 
-    const preferredLocale = interfaceService.interfaceConfigJson.locale
+    const preferredLocale = interfaceService.interfaceConfigJson.__locale
     const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
 
     const locales = refs

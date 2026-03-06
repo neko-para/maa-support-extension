@@ -2,23 +2,25 @@
 import { NButton, NCheckbox, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { TaskConfig } from '@mse/types'
-import type { CheckboxOption } from '@nekosu/maa-pipeline-manager/logic'
+import {
+  type CheckboxOption,
+  type OptionTrace,
+  type TaskConfig,
+  resolveOptionConfig
+} from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'
 import TaskOptionHeader from './TaskOptionHeader.vue'
-import type { OptionInfo } from './types'
 
 const props = defineProps<{
   task: TaskConfig
-  opt: OptionInfo
+  opt: OptionTrace
   optMeta: CheckboxOption
 }>()
 
 const optValue = computed(() => {
-  const val = props.task.option?.[props.opt.option]
-  return val ? Object.keys(val) : undefined
+  return resolveOptionConfig(props.task, props.opt.name, 'checkbox')
 })
 
 const defaultValue = computed(() => {
@@ -30,40 +32,43 @@ const effectiveValue = computed(() => {
 })
 
 function revealCase(name: string) {
-  if (effectiveValue.value) {
-    ipc.send({
-      command: 'revealInterface',
-      dest: {
-        type: 'case',
-        option: props.opt.option,
-        case: name
-      }
-    })
-  }
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'case',
+      option: props.opt.name,
+      case: name
+    }
+  })
 }
 
-function configTask(option: string, name: string, value: string | undefined) {
-  if (!props.task.__vscKey) {
+function configTask(name: string, value: boolean) {
+  if (!props.task.__key) {
     return
+  }
+  const values = new Set(effectiveValue.value)
+  if (value) {
+    values.add(name)
+  } else {
+    values.delete(name)
   }
   ipc.send({
     command: 'configTask',
-    key: props.task.__vscKey,
-    option,
-    name,
-    value
+    key: props.task.__key,
+    option: props.opt.name,
+    value: [...values]
   })
 }
 
 function clearOption() {
-  if (!props.task.__vscKey) {
+  if (!props.task.__key) {
     return
   }
-
   ipc.send({
-    command: 'clearOption',
-    key: props.task.__vscKey,
-    option: props.opt.option
+    command: 'configTask',
+    key: props.task.__key,
+    option: props.opt.name,
+    value: undefined
   })
 }
 </script>
@@ -78,7 +83,7 @@ function clearOption() {
           :checked="effectiveValue.includes(caseMeta.name)"
           @update:checked="
             val => {
-              configTask(opt.option, caseMeta.name, val ? '' : undefined)
+              configTask(caseMeta.name, val)
             }
           "
         >

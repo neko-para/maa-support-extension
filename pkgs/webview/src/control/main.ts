@@ -4,7 +4,7 @@ import '../utils/base.css'
 import { vscodeLocale } from '../utils/locale'
 import App from './App.vue'
 import { ipc } from './ipc'
-import { hostState } from './state'
+import { hostState, interfaceJson } from './state'
 
 createApp(App).mount('#app')
 
@@ -13,6 +13,9 @@ ipc.recv.value = data => {
     case 'updateState':
       hostState.value = data.state
       vscodeLocale.value = data.state.locale ?? 'zh'
+      break
+    case 'updateInterface':
+      interfaceJson.value = data.interfaceJson
       break
   }
 }

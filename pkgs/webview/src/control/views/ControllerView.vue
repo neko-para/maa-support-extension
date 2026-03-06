@@ -7,11 +7,11 @@ import { computed, ref } from 'vue'
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
-import { hostState } from '../state'
+import { hostState, interfaceJson } from '../state'
 import { makeBrief } from '../utils'
 
 const controllerOptions = computed(() => {
-  return (hostState.value.interfaceJson?.controller ?? [])
+  return (interfaceJson.value?.controller ?? [])
     .map((info, index) => {
       return {
         value: index,
@@ -25,12 +25,11 @@ const controllerOptions = computed(() => {
 })
 
 const currentController = computed(() => {
-  const curr = hostState.value.interfaceConfigJson?.controller?.name
+  const curr = hostState.value.interfaceConfigJson?.controller
   if (curr === '$fixed') {
     return -1
   }
-  const index =
-    hostState.value.interfaceJson?.controller?.findIndex(info => info.name === curr) ?? -1
+  const index = interfaceJson.value?.controller?.findIndex(info => info.name === curr) ?? -1
   return index === -1 ? null : index
 })
 
@@ -47,7 +46,7 @@ const currentControllerMeta = computed(() => {
       win32?: never
     }
   }
-  return hostState.value.interfaceJson?.controller?.[currentController.value] ?? null
+  return interfaceJson.value?.controller?.[currentController.value] ?? null
 })
 
 const currentType = computed(() => {

@@ -1,80 +1,81 @@
 import { computed, ref } from 'vue'
 
 import type { ControlHostState } from '@mse/types'
+import {
+  type ControllerRuntime,
+  type Interface,
+  type ResourceRuntime,
+  buildControllerRuntime,
+  buildResourceRuntime
+} from '@nekosu/maa-pipeline-manager/logic'
 
 export const hostState = ref<ControlHostState>({})
+export const interfaceJson = ref<Interface>({})
+
+globalThis.maa = new Proxy(
+  {},
+  {
+    get() {
+      return new Proxy(
+        {},
+        {
+          get() {
+            return '0'
+          }
+        }
+      )
+    }
+  }
+) as typeof maa
+
+export const ctrlRt = computed<{
+  rt?: ControllerRuntime
+  err?: string
+}>(() => {
+  if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
+    return {}
+  }
+  const rt = buildControllerRuntime(interfaceJson.value, hostState.value.interfaceConfigJson)
+  return typeof rt === 'string'
+    ? {
+        err: rt
+      }
+    : {
+        rt
+      }
+})
+
+export const resRt = computed<{
+  rt?: ResourceRuntime
+  err?: string
+}>(() => {
+  if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
+    return {}
+  }
+  const rt = buildResourceRuntime(interfaceJson.value, hostState.value.interfaceConfigJson)
+  return typeof rt === 'string'
+    ? {
+        err: rt
+      }
+    : {
+        rt
+      }
+})
 
 export const controllerConfigured = computed(() => {
-  if (!hostState.value.interfaceJson || !hostState.value.interfaceConfigJson) {
-    return false
-  }
-  const ctrlName = hostState.value.interfaceConfigJson?.controller?.name
-  if (ctrlName === '$fixed') {
-    return !!hostState.value.interfaceConfigJson.vscFixed?.image
-  }
-  const controller = hostState.value.interfaceJson.controller?.find(
-    info => info.name === hostState.value.interfaceConfigJson?.controller?.name
-  )
-  if (!controller) {
-    return false
-  }
-  if (controller.type === 'Adb') {
-    const adb = hostState.value.interfaceConfigJson.adb
-    if (!adb) {
-      return false
-    }
-    if (!adb.adb_path || !adb.address || !adb.config) {
-      return false
-    }
-  } else if (controller.type === 'Win32') {
-    const win32 = hostState.value.interfaceConfigJson.win32
-    if (!win32) {
-      return false
-    }
-    if (!win32.hwnd) {
-      return false
-    }
-  } else if (controller.type === 'PlayCover') {
-    const playcover = hostState.value.interfaceConfigJson.playcover
-    if (!playcover) {
-      return false
-    }
-    if (!playcover.address) {
-      return false
-    }
-  } else if (controller.type === 'Gamepad') {
-    const gamepad = hostState.value.interfaceConfigJson.gamepad
-    if (!gamepad) {
-      return false
-    }
-    if (!gamepad.hwnd) {
-      return false
-    }
-  } else {
-    return false
-  }
-  return true
+  return !!ctrlRt.value.rt
 })
 
 export const resourceConfigured = computed(() => {
-  if (!hostState.value.interfaceJson || !hostState.value.interfaceConfigJson) {
-    return false
-  }
-  const resource = hostState.value.interfaceJson.resource?.find(
-    info => info.name === hostState.value.interfaceConfigJson?.resource
-  )
-  if (!resource) {
-    return false
-  }
-  return true
+  return !!resRt.value.rt
 })
 
 export const taskConfigured = computed(() => {
-  if (!hostState.value.interfaceJson || !hostState.value.interfaceConfigJson) {
+  if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
     return false
   }
   for (const task of hostState.value.interfaceConfigJson?.task ?? []) {
-    const taskMeta = hostState.value.interfaceJson.task?.find(info => info.name === task.name)
+    const taskMeta = interfaceJson.value.task?.find(info => info.name === task.name)
     if (!taskMeta) {
       return false
     }

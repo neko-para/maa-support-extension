@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import { NButton, NFlex, NPopover } from 'naive-ui'
 
-import type { OptionBase } from '@nekosu/maa-pipeline-manager/logic'
+import type { OptionBase, OptionTrace } from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'
-import type { OptionInfo, OptionIntro } from './types'
 import { revealOption } from './utils'
 
 defineProps<{
-  opt: OptionInfo
+  opt: OptionTrace
   optMeta: OptionBase
 }>()
 
-function revealIntro(intro: OptionIntro) {
-  if (intro.type === 'global_option') {
+function revealIntro(intro: OptionTrace) {
+  if (intro.from === 'global') {
     return
   }
   if (!intro.name) {
     return
   }
-  switch (intro.type) {
+  switch (intro.from) {
     case 'controller':
       ipc.send({
         command: 'revealInterface',
@@ -59,15 +58,15 @@ function revealIntro(intro: OptionIntro) {
   <n-flex>
     <n-popover trigger="hover" :disabled="!optMeta.label && !optMeta.description">
       <template #trigger>
-        <n-button @click="revealOption(opt.option)" text> {{ opt.option }} </n-button>
+        <n-button @click="revealOption(opt.name)" text> {{ opt.name }} </n-button>
       </template>
 
       <locale-text :text="optMeta.label"></locale-text>
       <locale-text :text="optMeta.description"></locale-text>
     </n-popover>
 
-    <n-button @click="revealIntro(opt.intro)" text>
-      {{ `${opt.intro.type}@${opt.intro.name}` }}
+    <n-button @click="revealIntro(opt)" text>
+      {{ `${opt.from}@${opt.origin}` }}
     </n-button>
 
     <slot></slot>

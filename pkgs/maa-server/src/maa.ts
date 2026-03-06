@@ -5,7 +5,11 @@ import * as path from 'node:path'
 import * as url from 'node:url'
 import { v4 } from 'uuid'
 
-import type { InterfaceAgentRuntime, InterfaceRuntime } from '@mse/types'
+import type {
+  AgentRuntime,
+  ControllerRuntime,
+  InterfaceRuntime
+} from '@nekosu/maa-pipeline-manager'
 
 import { ipc } from './apis'
 import { option } from './options'
@@ -48,7 +52,7 @@ const events = new EventEmitter<{
   agentStopped: [id: string]
 }>()
 
-export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) {
+export async function updateCtrl(runtime: ControllerRuntime) {
   const key = JSON.stringify(runtime)
   if (key !== cacheKey) {
     cache = undefined
@@ -61,30 +65,19 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
     return true
   }
 
-  if (runtime.ctype === 'adb') {
-    controller = new maa.AdbController(
-      runtime.adb_path,
-      runtime.address,
-      runtime.screencap,
-      runtime.input,
-      runtime.config
-    )
-  } else if (runtime.ctype === 'win32') {
-    controller = new maa.Win32Controller(
-      runtime.hwnd,
-      runtime.screencap,
-      runtime.mouse,
-      runtime.keyboard
-    )
-  } else if (runtime.ctype === 'playcover') {
-    controller = new maa.PlayCoverController(runtime.address, runtime.uuid)
-  } else if (runtime.ctype === 'gamepad') {
-    controller = new maa.GamepadController(runtime.hwnd, runtime.screencap, runtime.gamepad)
-  } else if (runtime.ctype === 'vscFixed') {
-    if (!existsSync(runtime.image)) {
+  if (runtime.type === 'adb') {
+    controller = new maa.AdbController(...runtime.args)
+  } else if (runtime.type === 'win32') {
+    controller = new maa.Win32Controller(...runtime.args)
+  } else if (runtime.type === 'playcover') {
+    controller = new maa.PlayCoverController(...runtime.args)
+  } else if (runtime.type === 'gamepad') {
+    controller = new maa.GamepadController(...runtime.args)
+  } else if (runtime.type === 'vscFixed') {
+    if (!existsSync(runtime.args[0])) {
       return false
     }
-    const image = (await fs.readFile(runtime.image)).buffer as ArrayBuffer
+    const image = (await fs.readFile(runtime.args[0])).buffer as ArrayBuffer
     controller = new maa.CustomController({
       connect() {
         return true
@@ -127,7 +120,7 @@ export async function updateCtrl(runtime: InterfaceRuntime['controller_param']) 
 }
 
 async function setupAgent(
-  agentConfig: InterfaceAgentRuntime,
+  agentConfig: AgentRuntime,
   runtime: InterfaceRuntime,
   resource: maa.Resource,
   timeout: number
@@ -153,7 +146,9 @@ async function setupAgent(
       {
         VSCODE_MAAFW_AGENT: '1',
         VSCODE_MAAFW_AGENT_ROOT: runtime.root,
-        VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource_path.join(path.delimiter)
+        VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource.paths
+          .map(p => path.resolve(runtime.root, p))
+          .join(path.delimiter)
       }
     )
     if (!handle) {
@@ -230,11 +225,11 @@ async function setupResource(
     logger.info(`${JSON.stringify(msg)}`)
   })
 
-  for (const path of runtime.resource_path) {
-    await resource.post_bundle(path).wait()
+  for (const p of runtime.resource.paths) {
+    await resource.post_bundle(path.resolve(runtime.root, p)).wait()
   }
-  for (const path of runtime.controller_param.attach_resource_path ?? []) {
-    await resource.post_bundle(path).wait()
+  for (const p of runtime.controller.attach_resource_path ?? []) {
+    await resource.post_bundle(path.resolve(runtime.root, p)).wait()
   }
 
   const agents: TaskerAgentInfo[] = []
@@ -272,7 +267,7 @@ export async function setupInst(
   taskerInst?.resource.destroy()
   taskerInst = undefined
 
-  if (!(await updateCtrl(runtime['controller_param']))) {
+  if (!(await updateCtrl(runtime.controller))) {
     return {
       error: 'maa.debug.init-controller-failed'
     }

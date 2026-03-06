@@ -1,6 +1,5 @@
-import type { Interface } from '@nekosu/maa-pipeline-manager'
+import type { Interface, InterfaceConfig } from '@nekosu/maa-pipeline-manager'
 
-import type { InterfaceConfig } from '../pi'
 import type { HostStateBase } from './base'
 
 export type EvalTaskConfig = {
@@ -15,16 +14,20 @@ export type ControlHostState = HostStateBase & {
   activeInterface?: string
   refreshingInterface?: boolean
 
-  interfaceJson?: Interface
-  interfaceConfigJson?: Partial<InterfaceConfig>
+  interfaceConfigJson?: InterfaceConfig
 
   evalTaskConfig?: EvalTaskConfig
 }
 
-export type ControlHostToWeb = {
-  command: 'updateState'
-  state: ControlHostState
-}
+export type ControlHostToWeb =
+  | {
+      command: 'updateState'
+      state: ControlHostState
+    }
+  | {
+      command: 'updateInterface'
+      interfaceJson: Interface
+    }
 
 export type NativeSelectOption = {
   value: string | number
@@ -108,13 +111,7 @@ export type ControlWebToHost =
       command: 'configTask'
       key: string
       option: string
-      name: string
-      value?: string
-    }
-  | {
-      command: 'clearOption'
-      key: string
-      option: string
+      value: undefined | string | string[] | Record<string, string>
     }
   | {
       command: 'revealInterface'

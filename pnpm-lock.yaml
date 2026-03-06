@@ -203,6 +203,9 @@ importers:
       '@mse/types':
         specifier: workspace:*
         version: link:../types
+      '@nekosu/maa-pipeline-manager':
+        specifier: workspace:*
+        version: link:../maa-pipeline-manager
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -240,6 +243,9 @@ importers:
       '@mse/types':
         specifier: workspace:*
         version: link:../types
+      '@nekosu/maa-pipeline-manager':
+        specifier: workspace:*
+        version: link:../maa-pipeline-manager
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4

@@ -2,73 +2,72 @@
 import { NButton, NFlex, NPopover, NSwitch } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { TaskConfig } from '@mse/types'
-import type { SwitchOption } from '@nekosu/maa-pipeline-manager/logic'
+import {
+  type OptionTrace,
+  type SwitchOption,
+  type TaskConfig,
+  resolveOptionConfig,
+  resolveSelect
+} from '@nekosu/maa-pipeline-manager/logic'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'
 import TaskOptionHeader from './TaskOptionHeader.vue'
-import type { OptionInfo } from './types'
 
 const props = defineProps<{
   task: TaskConfig
-  opt: OptionInfo
+  opt: OptionTrace
   optMeta: SwitchOption
 }>()
 
 const optValue = computed(() => {
-  return props.task.option?.[props.opt.option]?.default
+  return resolveOptionConfig(props.task, props.opt.name, 'switch')
 })
 
 const defaultValue = computed(() => {
   return props.optMeta.default_case ?? props.optMeta.cases?.[0]?.name
 })
 
-const effectiveValue = computed(() => {
-  return optValue.value ?? defaultValue.value
-})
-
 const effectiveCase = computed(() => {
-  return props.optMeta.cases?.find(cs => cs.name === effectiveValue.value)
+  return resolveSelect(props.task, props.opt.name, props.optMeta)
 })
 
 function revealCase() {
-  if (effectiveValue.value) {
+  if (effectiveCase.value) {
     ipc.send({
       command: 'revealInterface',
       dest: {
         type: 'case',
-        option: props.opt.option,
-        case: effectiveValue.value
+        option: props.opt.name,
+        case: effectiveCase.value.name
       }
     })
   }
 }
 
-function configTask(option: string, value: string) {
-  if (!props.task.__vscKey) {
+function configTask(value: string) {
+  if (!props.task.__key) {
     return
   }
   ipc.send({
     command: 'configTask',
-    key: props.task.__vscKey,
-    option,
-    name: 'default',
+    key: props.task.__key,
+    option: props.opt.name,
     value
   })
 }
 
 function clearOption() {
-  if (!props.task.__vscKey) {
+  if (!props.task.__key) {
     return
   }
 
   ipc.send({
     command: 'configTask',
-    key: props.task.__vscKey,
-    option: props.opt.option,
-    name: 'default'
+    key: props.task.__key,
+    option: props.opt.name,
+    value: undefined
   })
 }
 </script>
@@ -96,7 +95,7 @@ function clearOption() {
       :value="(optValue ?? defaultValue) === 'Yes'"
       @update:value="
         value => {
-          configTask(opt.option, value ? 'Yes' : 'No')
+          configTask(value ? 'Yes' : 'No')
         }
       "
     ></n-switch>

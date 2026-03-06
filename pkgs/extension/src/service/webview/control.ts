@@ -42,6 +42,7 @@ export class WebviewControlService extends BaseService {
       switch (data.command) {
         case '__init':
           this.pushState()
+          this.pushInterface()
           break
         case 'showSelect': {
           const choice = await vscode.window.showQuickPick<
@@ -103,10 +104,6 @@ export class WebviewControlService extends BaseService {
               : interfaceService.interfaceJson.controller?.[data.index].name
           interfaceService.reduceConfig({
             controller: name
-              ? {
-                  name
-                }
-              : undefined
           })
           break
         }
@@ -178,7 +175,7 @@ export class WebviewControlService extends BaseService {
               {
                 name: data.task,
                 option: {},
-                __vscKey: v4()
+                __key: v4()
               }
             ])
           })
@@ -186,34 +183,16 @@ export class WebviewControlService extends BaseService {
         case 'removeTask':
           interfaceService.reduceConfig({
             task:
-              interfaceService.interfaceConfigJson.task?.filter(
-                task => task.__vscKey !== data.key
-              ) ?? []
+              interfaceService.interfaceConfigJson.task?.filter(task => task.__key !== data.key) ??
+              []
           })
           break
         case 'configTask': {
           const tasks = interfaceService.interfaceConfigJson.task
-          const task = tasks?.find(info => info.__vscKey === data.key)
+          const task = tasks?.find(info => info.__key === data.key)
           if (task) {
             task.option = task.option ?? {}
-            const option = task.option[data.option] ?? {}
-            if (typeof data.value === 'string') {
-              option[data.name] = data.value
-            } else {
-              delete option[data.name]
-            }
-            task.option[data.option] = option
-            interfaceService.reduceConfig({
-              task: tasks
-            })
-          }
-          break
-        }
-        case 'clearOption': {
-          const tasks = interfaceService.interfaceConfigJson.task
-          const task = tasks?.find(info => info.__vscKey === data.key)
-          if (task?.option) {
-            delete task.option[data.option]
+            task.option[data.option] = data.value
             interfaceService.reduceConfig({
               task: tasks
             })
@@ -326,7 +305,7 @@ export class WebviewControlService extends BaseService {
             break
           }
 
-          const preferredLocale = interfaceService.interfaceConfigJson.locale
+          const preferredLocale = interfaceService.interfaceConfigJson.__locale
           const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
 
           const result = intBundle.langBundle.queryKey(data.key.slice(1))
@@ -362,7 +341,7 @@ export class WebviewControlService extends BaseService {
     })
 
     this.defer = interfaceService.onInterfaceChanged(() => {
-      this.pushState()
+      this.pushInterface()
     })
 
     this.defer = interfaceService.onInterfaceConfigChanged(() => {
@@ -390,7 +369,6 @@ export class WebviewControlService extends BaseService {
       activeInterface: rootService.activeResource?.interfaceRelative,
       refreshingInterface: rootService.refreshing,
 
-      interfaceJson: interfaceService.interfaceJson,
       interfaceConfigJson: interfaceService.interfaceConfigJson,
 
       evalTaskConfig: stateService.state.evalTaskConfig
@@ -401,6 +379,13 @@ export class WebviewControlService extends BaseService {
     this.provider?.send({
       command: 'updateState',
       state: this.state
+    })
+  }
+
+  pushInterface() {
+    this.provider?.send({
+      command: 'updateInterface',
+      interfaceJson: interfaceService.interfaceJson
     })
   }
 }

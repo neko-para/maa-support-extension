@@ -30,6 +30,8 @@ export default {
   'maa.pi.error.cannot-find-resource': '无法找到资源 {0}',
   'maa.pi.error.cannot-find-task': '无法找到任务 {0}',
   'maa.pi.error.cannot-find-option': '无法找到选项组 {0}',
+  'maa.pi.error.cannot-find-option-from': '无法找到选项组 {0}, 由 {1} {2} 引入',
+  'maa.pi.error.cannot-resolve-option': '无法计算选项组 {0}',
   'maa.pi.error.cannot-find-case-for-option': '无法找到选项组 {1} 的值 {0}',
   'maa.pi.error.no-devices-found': '未找到设备',
   'maa.pi.error.no-win32-config-provided': '未提供 Win32 配置',

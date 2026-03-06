@@ -6,6 +6,10 @@
     ".": {
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.mts"
+    },
+    "./logic": {
+      "import": "./dist/logic/index.mjs",
+      "types": "./dist/logic/index.d.mts"
     }
   },
   "repository": {

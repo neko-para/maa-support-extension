@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 
-import type { Interface } from '@mse/types'
 import { t } from '@nekosu/maa-locale'
 import {
   type AbsolutePath,
@@ -35,7 +34,7 @@ export class PipelineCodeActionsProvider
     this.defer = vscode.commands.registerCommand(
       commands.LocaleExtract,
       async (
-        intBundle: InterfaceBundle<Partial<Interface>>,
+        intBundle: InterfaceBundle,
         document: vscode.TextDocument,
         ref: TaskRefInfo & { type: 'task.can_locale' }
       ) => {

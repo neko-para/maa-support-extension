@@ -1,4 +1,6 @@
-import type { Interface, InterfaceConfig } from '../pi'
+import type { Interface } from '@nekosu/maa-pipeline-manager'
+
+import type { InterfaceConfig } from '../pi'
 import type { HostStateBase } from './base'
 
 export type EvalTaskConfig = {
@@ -13,7 +15,7 @@ export type ControlHostState = HostStateBase & {
   activeInterface?: string
   refreshingInterface?: boolean
 
-  interfaceJson?: Partial<Interface>
+  interfaceJson?: Interface
   interfaceConfigJson?: Partial<InterfaceConfig>
 
   evalTaskConfig?: EvalTaskConfig

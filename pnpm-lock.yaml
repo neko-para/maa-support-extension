@@ -361,6 +361,9 @@ importers:
       '@maaxyz/maa-node':
         specifier: 5.7.2
         version: 5.7.2
+      '@nekosu/maa-pipeline-manager':
+        specifier: workspace:*
+        version: link:../maa-pipeline-manager
 
   pkgs/utils:
     dependencies:
@@ -404,6 +407,9 @@ importers:
       '@mse/types':
         specifier: workspace:*
         version: link:../types
+      '@nekosu/maa-pipeline-manager':
+        specifier: workspace:*
+        version: link:../maa-pipeline-manager
       '@types/node':
         specifier: ^25.3.0
         version: 25.3.0

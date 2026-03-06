@@ -27,7 +27,7 @@ export function buildTask(
   for (const opt of options) {
     const optMeta = data.option?.[opt.name]
     if (!optMeta) {
-      return `Cannot find option ${opt.name}, introduced by ${opt.from} ${opt.origin}`
+      return t('maa.pi.error.cannot-find-option-from', opt.name, opt.from, opt.origin)
     }
 
     if (!optMeta.type || optMeta.type === 'select' || optMeta.type === 'switch') {

@@ -9,7 +9,7 @@ import {
 } from '../utils/types'
 import type { Diagnostic } from './types'
 
-export function checkTask<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
+export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
   const result: Diagnostic[] = []
 
   for (const layer of bundle.allLayers) {

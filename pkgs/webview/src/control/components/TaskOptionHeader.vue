@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NButton, NFlex, NPopover } from 'naive-ui'
 
-import type { OptionBase } from '@mse/types'
+import type { OptionBase } from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'

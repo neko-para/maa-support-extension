@@ -2,7 +2,8 @@
 import { NButton, NFlex, NPopover, NSwitch } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { SwitchOption, TaskConfig } from '@mse/types'
+import type { TaskConfig } from '@mse/types'
+import type { SwitchOption } from '@nekosu/maa-pipeline-manager/logic'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'

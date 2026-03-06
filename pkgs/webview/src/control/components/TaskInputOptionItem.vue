@@ -2,7 +2,8 @@
 import { NButton, NFlex, NInput, NPopover } from 'naive-ui'
 import { computed, ref } from 'vue'
 
-import type { InputItem, TaskConfig } from '@mse/types'
+import type { TaskConfig } from '@mse/types'
+import type { InputItem } from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'

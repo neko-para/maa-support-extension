@@ -1,5 +1,3 @@
-import type { InterfaceV2 } from './pi_v2'
-
 export type TaskConfig = {
   name: string
   option?: {
@@ -102,5 +100,3 @@ export type InterfaceRuntime = {
   // gpu: number
   agent: InterfaceAgentRuntime[]
 }
-
-export type Interface = InterfaceV2

@@ -141,7 +141,7 @@ export function buildOption(
 
     const optMeta = data.option?.[opt.name]
     if (!optMeta) {
-      return `Cannot find option ${opt.name}, introduced by ${opt.from} ${opt.origin}`
+      return t('maa.pi.error.cannot-find-option-from', opt.name, opt.from, opt.origin)
     }
 
     if (
@@ -159,7 +159,7 @@ export function buildOption(
     if (!optMeta.type || optMeta.type === 'select' || optMeta.type === 'switch') {
       const caseMeta = resolveSelect(task, opt.name, optMeta)
       if (!caseMeta) {
-        return `Cannot resolve option ${opt.name}`
+        return t('maa.pi.error.cannot-resolve-option', opt.name)
       }
       for (const sub of caseMeta.option ?? []) {
         pending.push({
@@ -171,7 +171,7 @@ export function buildOption(
     } else if (optMeta.type === 'checkbox') {
       const caseMetas = resolveCheckbox(task, opt.name, optMeta)
       if (!caseMetas) {
-        return `Cannot resolve option ${opt.name}`
+        return t('maa.pi.error.cannot-resolve-option', opt.name)
       }
       for (const caseMeta of caseMetas) {
         for (const sub of caseMeta.option ?? []) {

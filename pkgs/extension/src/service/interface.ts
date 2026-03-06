@@ -4,24 +4,22 @@ import * as path from 'node:path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
+import type { ControllerRuntimeBase, InterfaceConfig, InterfaceRuntime } from '@mse/types'
+import { logger } from '@mse/utils'
+import { t } from '@nekosu/maa-locale'
 import type {
   AgentConfig,
   CheckboxOption,
-  ControllerRuntimeBase,
   InputItemType,
-  Interface,
-  InterfaceConfig,
-  InterfaceRuntime,
   SelectOption,
   SwitchOption
-} from '@mse/types'
-import { logger } from '@mse/utils'
-import { t } from '@nekosu/maa-locale'
+} from '@nekosu/maa-pipeline-manager'
 import {
   FsContentWatcher,
   type IContentLoader,
   type IContentWatcher,
   type IContentWatcherDelegate,
+  type Interface,
   InterfaceBundle
 } from '@nekosu/maa-pipeline-manager'
 
@@ -87,10 +85,10 @@ export class VscodeContentWatcher extends FsContentWatcher implements IContentWa
 }
 
 export class InterfaceService extends BaseService {
-  interfaceBundle?: InterfaceBundle<Partial<Interface>>
+  interfaceBundle?: InterfaceBundle
   interfaceConfigJson: Partial<InterfaceConfig>
 
-  get interfaceJson(): Partial<Interface> {
+  get interfaceJson(): Interface {
     if (!this.interfaceBundle?.content.object) {
       return {}
     }

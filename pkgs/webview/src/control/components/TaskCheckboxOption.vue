@@ -2,7 +2,8 @@
 import { NButton, NCheckbox, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { CheckboxOption, TaskConfig } from '@mse/types'
+import type { TaskConfig } from '@mse/types'
+import type { CheckboxOption } from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'

@@ -1,7 +1,6 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import type { Interface } from '@mse/types'
 import {
   type AbsolutePath,
   type AnchorName,
@@ -91,7 +90,7 @@ export class PipelineLanguageProvider extends BaseService {
   }
 
   evalTask(
-    intBundle: InterfaceBundle<Partial<Interface>>,
+    intBundle: InterfaceBundle,
     task: TaskName,
     current?: TaskName
   ): Partial<Record<keyof maa.Task | keyof MaaTask, unknown>> | null {
@@ -104,7 +103,7 @@ export class PipelineLanguageProvider extends BaseService {
   }
 
   getTaskRecoAct(
-    intBundle: InterfaceBundle<Partial<Interface>>,
+    intBundle: InterfaceBundle,
     task: TaskName,
     current?: TaskName
   ): [reco: string, act: string] {
@@ -130,7 +129,7 @@ export class PipelineLanguageProvider extends BaseService {
     }
   }
 
-  getTaskBrief(intBundle: InterfaceBundle<Partial<Interface>>, task: TaskName, current?: TaskName) {
+  getTaskBrief(intBundle: InterfaceBundle, task: TaskName, current?: TaskName) {
     const [reco, act] = this.getTaskRecoAct(intBundle, task, current)
     if (isMaaAssistantArknights) {
       return `Algo: ${reco}\n\nAct: ${act}`
@@ -141,7 +140,7 @@ export class PipelineLanguageProvider extends BaseService {
   }
 
   async getTaskHover(
-    intBundle: InterfaceBundle<Partial<Interface>>,
+    intBundle: InterfaceBundle,
     layer: LayerInfo,
     task: TaskName,
     current?: TaskName
@@ -202,11 +201,7 @@ ${JSON.stringify(final, null, 2)}
     return content.join('\n\n')
   }
 
-  getImageHover(
-    intBundle: InterfaceBundle<Partial<Interface>>,
-    layer: LayerInfo,
-    image: ImageRelativePath
-  ) {
+  getImageHover(intBundle: InterfaceBundle, layer: LayerInfo, image: ImageRelativePath) {
     const content: string[] = []
     if (!intBundle.maa && !image.endsWith('.png')) {
       const imageFolders = layer.getImageFolders()

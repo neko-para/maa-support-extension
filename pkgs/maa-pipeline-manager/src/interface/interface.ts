@@ -15,6 +15,7 @@ import { ContentJson } from '../content/json'
 import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
+import type { Interface } from '../logic'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
 import {
   type AbsolutePath,
@@ -25,10 +26,10 @@ import {
 } from '../utils/types'
 import { LanguageBundle } from './language'
 
-class MaaEvalDelegateImpl<T> extends MaaEvalDelegate {
-  intBundle: InterfaceBundle<T>
+class MaaEvalDelegateImpl extends MaaEvalDelegate {
+  intBundle: InterfaceBundle
 
-  constructor(intBundle: InterfaceBundle<T>) {
+  constructor(intBundle: InterfaceBundle) {
     super(new MaaErrorDelegate())
 
     this.intBundle = intBundle
@@ -52,7 +53,7 @@ class MaaEvalDelegateImpl<T> extends MaaEvalDelegate {
   }
 }
 
-export class InterfaceBundle<T> extends EventEmitter<{
+export class InterfaceBundle extends EventEmitter<{
   interfaceChanged: []
   importChanged: []
   slaveInterfaceChanged: []
@@ -67,12 +68,12 @@ export class InterfaceBundle<T> extends EventEmitter<{
   root: AbsolutePath
   file: AbsolutePath
 
-  content: ContentJson<T>
+  content: ContentJson<Interface>
 
   info: InterfaceInfo
 
   importFiles: RelativePath[]
-  imports: ContentJson<T>[]
+  imports: ContentJson<Interface>[]
 
   activeController: string
   activeResource: string
@@ -81,7 +82,7 @@ export class InterfaceBundle<T> extends EventEmitter<{
 
   langBundle: LanguageBundle
 
-  eval: MaaEvalDelegateImpl<T>
+  eval: MaaEvalDelegateImpl
 
   set evalErrorDelegate(delegate: MaaErrorDelegate) {
     this.eval.error = delegate

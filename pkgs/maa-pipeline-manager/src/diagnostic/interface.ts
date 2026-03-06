@@ -1,7 +1,7 @@
 import type { InterfaceBundle } from '../interface/interface'
 import type { Diagnostic } from './types'
 
-export function checkInterface<T>(bundle: InterfaceBundle<T>): Diagnostic[] {
+export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
   const result: Diagnostic[] = []
 
   const layer = bundle.topLayer

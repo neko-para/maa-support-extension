@@ -32,6 +32,8 @@ export default {
   'maa.pi.error.cannot-find-resource': 'Cannot find resource {0}',
   'maa.pi.error.cannot-find-task': 'Cannot find task {0}',
   'maa.pi.error.cannot-find-option': 'Cannot find option {0}',
+  'maa.pi.error.cannot-find-option-from': 'Cannot find option {0}, introduced via {1} {2}',
+  'maa.pi.error.cannot-resolve-option': 'Cannot resolve option {0}',
   'maa.pi.error.cannot-find-case-for-option': 'Cannot find case {0} for option {1}',
   'maa.pi.error.no-devices-found': 'No devices found',
   'maa.pi.error.no-win32-config-provided': 'No win32 config provided',

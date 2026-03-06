@@ -2,7 +2,8 @@
 import { NButton, NFlex, NPopover, NSelect } from 'naive-ui'
 import { computed } from 'vue'
 
-import type { SelectOption, TaskConfig } from '@mse/types'
+import type { TaskConfig } from '@mse/types'
+import type { SelectOption } from '@nekosu/maa-pipeline-manager/logic'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'

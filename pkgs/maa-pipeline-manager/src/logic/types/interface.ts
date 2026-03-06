@@ -151,7 +151,7 @@ export type Preset = EntryBase & {
 }
 
 export type Interface = EntryBase & {
-  interface_version: 2
+  // interface_version: 2
   languages?: Record<string, string>
   name?: string
   mirrorchyan_rid?: string

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { InputOption, TaskConfig } from '@mse/types'
+import type { TaskConfig } from '@mse/types'
+import type { InputOption } from '@nekosu/maa-pipeline-manager/logic'
 
 import TaskInputOptionItem from './TaskInputOptionItem.vue'
 import TaskOptionHeader from './TaskOptionHeader.vue'

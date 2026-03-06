@@ -5,10 +5,7 @@ import type { Diagnostic, DiagnosticOption } from './types'
 
 export { buildDiagnosticMessage } from './message'
 
-export function performDiagnostic<T>(
-  bundle: InterfaceBundle<T>,
-  option: DiagnosticOption
-): Diagnostic[] {
+export function performDiagnostic(bundle: InterfaceBundle, option: DiagnosticOption): Diagnostic[] {
   const result: Diagnostic[] = []
 
   result.push(...checkTask(bundle))

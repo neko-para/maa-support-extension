@@ -2,13 +2,13 @@
 import { NButton, NCard, NFlex, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
+import type { TaskConfig } from '@mse/types'
 import type {
   CheckboxOption,
   InputOption,
   SelectOption,
-  SwitchOption,
-  TaskConfig
-} from '@mse/types'
+  SwitchOption
+} from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
 import { hostState } from '../state'

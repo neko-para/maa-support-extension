@@ -22,6 +22,7 @@ export default {
   'maa.control.controller.device-list': 'Device list',
   'maa.control.controller.window-list': 'Window list',
   'maa.control.task.task': 'Task',
+  'maa.control.task.use-preset': 'Use Preset',
   'maa.control.task.add-task': 'Add',
   'maa.control.task.current-case': 'Curr Case',
   'maa.control.launch.launch': 'Launch',

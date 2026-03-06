@@ -3,7 +3,12 @@ import type { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import type { ControlHostState, ControlHostToWeb, ControlWebToHost } from '@mse/types'
+import type {
+  ControlHostState,
+  ControlHostToWeb,
+  ControlWebToHost,
+  InterfaceRevealOption
+} from '@mse/types'
 import { WebviewProvider, logger, provideWebview } from '@mse/utils'
 import { locale, t } from '@nekosu/maa-locale'
 import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
@@ -169,6 +174,25 @@ export class WebviewControlService extends BaseService {
           })
           break
         }
+        case 'usePreset': {
+          const presetInfo = interfaceService.interfaceJson.preset?.find(
+            preset => preset.name === data.preset
+          )
+          if (!presetInfo) {
+            break
+          }
+          interfaceService.reduceConfig({
+            task:
+              presetInfo.task?.map(presetTask => {
+                return {
+                  name: presetTask.name,
+                  option: presetTask.option ?? {},
+                  __key: v4()
+                }
+              }) ?? []
+          })
+          break
+        }
         case 'addTask':
           interfaceService.reduceConfig({
             task: (interfaceService.interfaceConfigJson.task ?? []).concat([
@@ -200,89 +224,7 @@ export class WebviewControlService extends BaseService {
           break
         }
         case 'revealInterface': {
-          let loc:
-            | {
-                file: AbsolutePath
-                location: Node
-              }
-            | undefined = undefined
-          switch (data.dest?.type) {
-            case 'entry': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.refs.find(
-                ref => ref.type === 'interface.task_entry' && ref.target === info.entry
-              )
-              break
-            }
-            case 'controller': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.decls.find(
-                decl => decl.type === 'interface.controller' && decl.name === info.ctrl
-              )
-              break
-            }
-            case 'resource': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.decls.find(
-                decl => decl.type === 'interface.resource' && decl.name === info.res
-              )
-              break
-            }
-            case 'task': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.decls.find(
-                decl => decl.type === 'interface.task' && decl.name === info.task
-              )
-              break
-            }
-            case 'option': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.decls.find(
-                decl => decl.type === 'interface.option' && decl.name === info.option
-              )
-              break
-            }
-            case 'case': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.decls.find(
-                decl =>
-                  decl.type === 'interface.case' &&
-                  decl.name === info.case &&
-                  decl.option === info.option
-              )
-              break
-            }
-            case 'input': {
-              const info = data.dest
-              loc = interfaceService.interfaceBundle?.info.decls.find(
-                decl =>
-                  decl.type === 'interface.input' &&
-                  decl.name === info.name &&
-                  decl.option === info.option
-              )
-              break
-            }
-          }
-          if (loc) {
-            try {
-              const doc = await vscode.workspace.openTextDocument(loc.file)
-              const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
-              if (editor) {
-                const range = convertRange(doc, loc.location)
-                editor.revealRange(range)
-                editor.selection = new vscode.Selection(range.start, range.end)
-              }
-            } catch (err) {
-              logger.error(`${err}`)
-            }
-          } else {
-            if (interfaceService.interfaceBundle?.file) {
-              const doc = await vscode.workspace.openTextDocument(
-                interfaceService.interfaceBundle?.file
-              )
-              await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
-            }
-          }
+          this.revealInterface(data.dest)
           break
         }
         case 'launch': {
@@ -355,6 +297,93 @@ export class WebviewControlService extends BaseService {
     this.defer = nativeService.onVersionChanged(() => {
       this.pushState()
     })
+  }
+
+  async revealInterface(dest?: InterfaceRevealOption) {
+    const bundle = interfaceService.interfaceBundle
+    if (!bundle) {
+      return
+    }
+
+    let loc:
+      | {
+          file: AbsolutePath
+          location: Node
+        }
+      | undefined = undefined
+
+    switch (dest?.type) {
+      case 'entry':
+        loc = bundle.info.refs.find(
+          ref =>
+            ref.type === 'interface.task_entry' &&
+            ref.target === dest.entry &&
+            ref.task === dest.task
+        )
+        break
+      case 'controller':
+        loc = bundle.info.decls.find(
+          decl => decl.type === 'interface.controller' && decl.name === dest.ctrl
+        )
+        break
+      case 'resource':
+        loc = bundle.info.decls.find(
+          decl => decl.type === 'interface.resource' && decl.name === dest.res
+        )
+        break
+      case 'task':
+        loc = bundle.info.decls.find(
+          decl => decl.type === 'interface.task' && decl.name === dest.task
+        )
+        break
+      case 'option':
+        loc = bundle.info.decls.find(
+          decl => decl.type === 'interface.option' && decl.name === dest.option
+        )
+        break
+      case 'case':
+        loc = bundle.info.decls.find(
+          decl =>
+            decl.type === 'interface.case' && decl.name === dest.case && decl.option === dest.option
+        )
+        break
+      case 'input':
+        loc = bundle.info.decls.find(
+          decl =>
+            decl.type === 'interface.input' &&
+            decl.name === dest.name &&
+            decl.option === dest.option
+        )
+        break
+      case 'option_ref':
+        loc = bundle.info.refs
+          .filter(ref => ref.type === 'interface.option')
+          .find(
+            ref =>
+              ref.trace.name === dest.trace.name &&
+              ref.trace.from === dest.trace.from &&
+              ref.trace.origin === dest.trace.origin
+          )
+        break
+    }
+    if (loc) {
+      try {
+        const doc = await vscode.workspace.openTextDocument(loc.file)
+        const editor = await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
+        if (editor) {
+          const range = convertRange(doc, loc.location)
+          editor.revealRange(range)
+          editor.selection = new vscode.Selection(range.start, range.end)
+        }
+      } catch (err) {
+        logger.error(`${err}`)
+      }
+    } else {
+      if (bundle.file) {
+        const doc = await vscode.workspace.openTextDocument(bundle.file)
+        await vscode.window.showTextDocument(doc, vscode.ViewColumn.Active)
+      }
+    }
   }
 
   get state(): ControlHostState {

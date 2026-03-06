@@ -15,7 +15,7 @@ import type {
 
 export type OptionTrace = {
   name: string
-  from: 'global' | 'controller' | 'resource' | 'task' | 'option'
+  from: 'global' | 'controller' | 'resource' | 'task' | 'option' | 'preset'
   origin: string
 }
 

@@ -11,7 +11,63 @@ import { ipc } from '../ipc'
 import { hostState, interfaceJson } from '../state'
 import { makeBrief } from '../utils'
 
-const selectingTask = ref(false)
+const selecting = ref(false)
+
+const allPresets = computed(() => {
+  return interfaceJson.value.preset ?? []
+})
+
+const presetOptions = computed(() => {
+  return allPresets.value.map(info => {
+    return {
+      value: info.name,
+      label: info.name
+    } satisfies SelectMixedOption
+  })
+})
+
+function usePreset(preset: string) {
+  ipc.send({
+    command: 'usePreset',
+    preset
+  })
+}
+
+async function nativeUsePreset() {
+  selecting.value = true
+
+  const options = await Promise.all(
+    allPresets.value.map(async info => {
+      const label = info.label
+        ? await ipc.call({
+            command: 'translate',
+            key: info.label
+          })
+        : ''
+      const desc = info.description
+        ? await ipc.call({
+            command: 'translate',
+            key: info.description
+          })
+        : ''
+      return {
+        value: info.name,
+        title: info.name,
+        desc: `${info.task?.length} tasks`,
+        subtitle: `${label}\n${desc}`
+      } satisfies NativeSelectOption
+    })
+  )
+
+  const choice = (await ipc.call({
+    command: 'showSelect',
+    options
+  })) as string | null
+  if (typeof choice === 'string') {
+    usePreset(choice)
+  }
+  selecting.value = false
+}
 
 const allTasks = computed(() => {
   const currCtrl = hostState.value.interfaceConfigJson?.controller ?? ''
@@ -47,7 +103,7 @@ function addTask(task: string) {
 }
 
 async function nativeSelectTask() {
-  selectingTask.value = true
+  selecting.value = true
 
   const options = await Promise.all(
     allTasks.value.map(async info => {
@@ -79,30 +135,49 @@ async function nativeSelectTask() {
   if (typeof choice === 'string') {
     addTask(choice)
   }
-  selectingTask.value = false
+  selecting.value = false
 }
 </script>
 
 <template>
   <n-card :title="t('maa.control.task.task')" size="small">
     <template #header-extra>
-      <n-popselect
-        :disabled="selectingTask"
-        trigger="hover"
-        :options="taskOptions"
-        @update:value="addTask"
-        size="small"
-        scrollable
-      >
-        <n-button
-          :loading="selectingTask"
-          :disabled="selectingTask"
+      <n-flex>
+        <n-popselect
+          :disabled="selecting"
+          trigger="hover"
+          :options="presetOptions"
+          @update:value="usePreset"
           size="small"
-          @click="nativeSelectTask"
+          scrollable
         >
-          {{ t('maa.control.task.add-task') }}
-        </n-button>
-      </n-popselect>
+          <n-button
+            :loading="selecting"
+            :disabled="selecting"
+            size="small"
+            @click="nativeUsePreset"
+          >
+            {{ t('maa.control.task.use-preset') }}
+          </n-button>
+        </n-popselect>
+        <n-popselect
+          :disabled="selecting"
+          trigger="hover"
+          :options="taskOptions"
+          @update:value="addTask"
+          size="small"
+          scrollable
+        >
+          <n-button
+            :loading="selecting"
+            :disabled="selecting"
+            size="small"
+            @click="nativeSelectTask"
+          >
+            {{ t('maa.control.task.add-task') }}
+          </n-button>
+        </n-popselect>
+      </n-flex>
     </template>
 
     <n-flex vertical>

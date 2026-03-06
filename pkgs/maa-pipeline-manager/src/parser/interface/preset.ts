@@ -3,13 +3,23 @@ import type { Node } from 'jsonc-parser'
 import { isString, parseArray, parseObject, parseObjectFlex } from '../utils'
 import type { InterfaceInfo, InterfaceParseContext } from './interface'
 
-function parsePresetOption(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
+function parsePresetOption(
+  node: Node,
+  info: InterfaceInfo,
+  ctx: InterfaceParseContext,
+  name: string
+) {
   for (const [key, obj, prop] of parseObjectFlex(node)) {
     info.refs.push({
       file: ctx.file,
       location: prop,
       type: 'interface.option',
-      target: key
+      target: key,
+      trace: {
+        name: key,
+        from: 'preset',
+        origin: name
+      }
     })
     if (!obj) {
       continue
@@ -49,10 +59,12 @@ function parsePresetOption(node: Node, info: InterfaceInfo, ctx: InterfaceParseC
 }
 
 function parsePresetTask(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
+  let name = ''
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
         if (isString(obj)) {
+          name = obj.value
           info.refs.push({
             file: ctx.file,
             location: obj,
@@ -61,8 +73,12 @@ function parsePresetTask(node: Node, info: InterfaceInfo, ctx: InterfaceParseCon
           })
         }
         break
+    }
+  }
+  for (const [key, obj] of parseObject(node)) {
+    switch (key) {
       case 'option':
-        parsePresetOption(obj, info, ctx)
+        parsePresetOption(obj, info, ctx, name)
         break
     }
   }

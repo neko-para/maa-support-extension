@@ -1,6 +1,7 @@
 import type { Node } from 'jsonc-parser'
 
 import { LayerInfo } from '../../layer/layer'
+import type { OptionTrace } from '../../logic'
 import type { AbsolutePath, RelativePath, TaskName } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
@@ -106,11 +107,13 @@ export type IntTaskRefInfo = {
 export type IntTaskEntryRefInfo = {
   type: 'interface.task_entry'
   target: TaskName
+  task: string
 }
 
 export type IntOptionRefInfo = {
   type: 'interface.option'
   target: string
+  trace: OptionTrace
 }
 
 export type IntCaseRefInfo = {
@@ -177,8 +180,15 @@ function parseController(node: Node, info: InterfaceInfo, ctx: InterfaceParseCon
       case 'attach_resource_path':
         decl.attachs = parsePath(obj, info, ctx)
         break
+    }
+  }
+  for (const [key, obj] of parseObject(node)) {
+    switch (key) {
       case 'option':
-        parseOptionRef(obj, info, ctx)
+        parseOptionRef(obj, info, ctx, {
+          from: 'controller',
+          origin: decl.name
+        })
         break
     }
   }
@@ -212,8 +222,15 @@ function parseResource(node: Node, info: InterfaceInfo, ctx: InterfaceParseConte
       case 'controller':
         decl.controller = parseCtrlRef(obj, info, ctx)
         break
+    }
+  }
+  for (const [key, obj] of parseObject(node)) {
+    switch (key) {
       case 'option':
-        parseOptionRef(obj, info, ctx)
+        parseOptionRef(obj, info, ctx, {
+          from: 'resource',
+          origin: decl.name
+        })
         break
     }
   }
@@ -227,31 +244,17 @@ function parseResource(node: Node, info: InterfaceInfo, ctx: InterfaceParseConte
 }
 
 function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {
+  let name = ''
   for (const [key, obj] of parseObject(node)) {
     switch (key) {
       case 'name':
         if (isString(obj)) {
+          name = obj.value
           info.decls.push({
             file: ctx.file,
             location: obj,
             type: 'interface.task',
             name: obj.value as TaskName
-          })
-        }
-        break
-      case 'entry':
-        if (isString(obj)) {
-          info.refs.push({
-            file: ctx.file,
-            location: obj,
-            type: 'interface.task_entry',
-            target: obj.value as TaskName
-          })
-          info.layer.extraRefs.push({
-            file: ctx.file,
-            location: obj,
-            type: 'task.entry',
-            target: obj.value as TaskName
           })
         }
         break
@@ -264,8 +267,32 @@ function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContex
       case 'pipeline_override':
         parseOverride(obj, info, ctx)
         break
+    }
+  }
+  for (const [key, obj] of parseObject(node)) {
+    switch (key) {
+      case 'entry':
+        if (isString(obj)) {
+          info.refs.push({
+            file: ctx.file,
+            location: obj,
+            type: 'interface.task_entry',
+            target: obj.value as TaskName,
+            task: name
+          })
+          info.layer.extraRefs.push({
+            file: ctx.file,
+            location: obj,
+            type: 'task.entry',
+            target: obj.value as TaskName
+          })
+        }
+        break
       case 'option':
-        parseOptionRef(obj, info, ctx)
+        parseOptionRef(obj, info, ctx, {
+          from: 'task',
+          origin: name
+        })
         break
     }
   }
@@ -331,7 +358,10 @@ export function parseInterface(node: Node, info: InterfaceInfo, ctx: InterfacePa
         parseOption(obj, info, ctx)
         break
       case 'global_option':
-        parseOptionRef(obj, info, ctx)
+        parseOptionRef(obj, info, ctx, {
+          from: 'global',
+          origin: ''
+        })
         break
       case 'import':
         for (const sub of parseArray(obj)) {

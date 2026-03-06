@@ -37,13 +37,23 @@ function removeTask() {
     key: props.task.__key
   })
 }
+function revealTask() {
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'task',
+      task: props.task.name
+    }
+  })
+}
 
 function revealEntry() {
   ipc.send({
     command: 'revealInterface',
     dest: {
       type: 'entry',
-      entry: props.task.name
+      entry: taskMeta.value!.entry,
+      task: props.task.name
     }
   })
 }
@@ -64,18 +74,24 @@ function cast<T>(val: unknown): T {
 <template>
   <n-card size="small" closable @close="removeTask">
     <template #header>
-      <n-popover
-        v-if="taskMeta"
-        trigger="hover"
-        :disabled="!taskMeta.label && !taskMeta.description"
-      >
-        <template #trigger>
-          <n-button size="large" @click="revealEntry" text> {{ task.name }} </n-button>
-        </template>
+      <n-flex>
+        <n-popover
+          v-if="taskMeta"
+          trigger="hover"
+          :disabled="!taskMeta.label && !taskMeta.description"
+        >
+          <template #trigger>
+            <n-button size="large" @click="revealTask" text> {{ task.name }} </n-button>
+          </template>
 
-        <locale-text :text="taskMeta.label"></locale-text>
-        <locale-text :text="taskMeta.description"></locale-text>
-      </n-popover>
+          <locale-text :text="taskMeta.label"></locale-text>
+          <locale-text :text="taskMeta.description"></locale-text>
+        </n-popover>
+
+        <n-button v-if="taskMeta" size="large" @click="revealEntry" text>
+          {{ taskMeta.entry }}
+        </n-button>
+      </n-flex>
     </template>
     <n-flex vertical>
       <template v-for="opt in allOptions" :key="opt">

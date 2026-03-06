@@ -22,6 +22,7 @@ export default {
   'maa.control.controller.device-list': '设备列表',
   'maa.control.controller.window-list': '窗口列表',
   'maa.control.task.task': '任务',
+  'maa.control.task.use-preset': '使用预设',
   'maa.control.task.add-task': '添加',
   'maa.control.task.current-case': '当前值',
   'maa.control.launch.launch': '执行',

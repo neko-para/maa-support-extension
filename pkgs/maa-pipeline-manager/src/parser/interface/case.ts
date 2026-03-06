@@ -20,7 +20,10 @@ function parseCase(node: Node, info: InterfaceInfo, option: string, ctx: Interfa
         }
         break
       case 'option':
-        parseOptionRef(obj, info, ctx)
+        parseOptionRef(obj, info, ctx, {
+          from: 'option',
+          origin: option
+        })
         break
       case 'pipeline_override':
         parseOverride(obj, info, ctx)

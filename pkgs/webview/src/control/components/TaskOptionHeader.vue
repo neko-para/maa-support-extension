@@ -5,52 +5,30 @@ import type { OptionBase, OptionTrace } from '@nekosu/maa-pipeline-manager/logic
 
 import { ipc } from '../ipc'
 import LocaleText from './LocaleText.vue'
-import { revealOption } from './utils'
 
 defineProps<{
   opt: OptionTrace
   optMeta: OptionBase
 }>()
 
+function revealOption(option: string) {
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'option',
+      option: option
+    }
+  })
+}
+
 function revealIntro(intro: OptionTrace) {
-  if (intro.from === 'global') {
-    return
-  }
-  if (!intro.name) {
-    return
-  }
-  switch (intro.from) {
-    case 'controller':
-      ipc.send({
-        command: 'revealInterface',
-        dest: {
-          type: 'controller',
-          ctrl: intro.name
-        }
-      })
-      break
-    case 'resource':
-      ipc.send({
-        command: 'revealInterface',
-        dest: {
-          type: 'resource',
-          res: intro.name
-        }
-      })
-      break
-    case 'task':
-      ipc.send({
-        command: 'revealInterface',
-        dest: {
-          type: 'task',
-          task: intro.name
-        }
-      })
-      break
-    case 'option':
-      revealOption(intro.name)
-      break
-  }
+  ipc.send({
+    command: 'revealInterface',
+    dest: {
+      type: 'option_ref',
+      trace: intro
+    }
+  })
 }
 </script>
 

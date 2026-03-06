@@ -1,4 +1,4 @@
-import type { Interface, InterfaceConfig } from '@nekosu/maa-pipeline-manager'
+import type { Interface, InterfaceConfig, OptionTrace } from '@nekosu/maa-pipeline-manager'
 
 import type { HostStateBase } from './base'
 
@@ -41,6 +41,43 @@ export type ToolkitJumpTarget =
   | 'crop-tool'
   | 'switch-maa-ver'
   | 'switch-admin'
+
+export type InterfaceRevealOption =
+  | {
+      type: 'entry'
+      entry: string
+      task: string
+    }
+  | {
+      type: 'controller'
+      ctrl: string
+    }
+  | {
+      type: 'resource'
+      res: string
+    }
+  | {
+      type: 'task'
+      task: string
+    }
+  | {
+      type: 'option'
+      option: string
+    }
+  | {
+      type: 'case'
+      option: string
+      case: string
+    }
+  | {
+      type: 'input'
+      option: string
+      name: string
+    }
+  | {
+      type: 'option_ref'
+      trace: OptionTrace
+    }
 
 export type ControlWebToHost =
   | {
@@ -100,6 +137,10 @@ export type ControlWebToHost =
       command: 'uploadImage'
     }
   | {
+      command: 'usePreset'
+      preset: string
+    }
+  | {
       command: 'addTask'
       task: string
     }
@@ -115,37 +156,7 @@ export type ControlWebToHost =
     }
   | {
       command: 'revealInterface'
-      dest?:
-        | {
-            type: 'entry'
-            entry: string
-          }
-        | {
-            type: 'controller'
-            ctrl: string
-          }
-        | {
-            type: 'resource'
-            res: string
-          }
-        | {
-            type: 'task'
-            task: string
-          }
-        | {
-            type: 'option'
-            option: string
-          }
-        | {
-            type: 'case'
-            option: string
-            case: string
-          }
-        | {
-            type: 'input'
-            option: string
-            name: string
-          }
+      dest?: InterfaceRevealOption
     }
   | {
       command: 'launch'

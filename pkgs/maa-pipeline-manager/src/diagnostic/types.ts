@@ -118,6 +118,11 @@ export type DiagnosticInterface =
       type: 'int-switch-should-fixed'
     }
   | {
+      type: 'int-preset-type-error'
+      option: string
+      expected: 'string' | 'array' | 'object'
+    }
+  | {
       type: 'int-unknown-entry-task'
       task: string
     }

@@ -90,6 +90,8 @@ export default {
   'maa.pipeline.error.switch-missing-no': 'Switch option missing No',
   'maa.pipeline.error.switch-missing-all': 'Switch option missing Yes and No',
   'maa.pipeline.warning.switch-name-should-fixed': 'Switch name should use Yes or No',
+  'maa.pipeline.error.preset-type-error':
+    'Type of preset config for option {0} error, expected {1}',
   'maa.pipeline.error.unknown-entry-task': 'Unknown entry task {0}',
   'maa.pipeline.error.override-unknown-task': 'Overriding unknown task {0}',
   'maa.pipeline.warning.image-path-backslash':

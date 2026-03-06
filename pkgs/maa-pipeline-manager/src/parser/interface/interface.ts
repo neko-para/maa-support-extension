@@ -114,6 +114,7 @@ export type IntOptionRefInfo = {
   type: 'interface.option'
   target: string
   trace: OptionTrace
+  preset?: Node
 }
 
 export type IntCaseRefInfo = {

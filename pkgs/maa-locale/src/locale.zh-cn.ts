@@ -87,6 +87,7 @@ export default {
   'maa.pipeline.error.switch-missing-no': '开关选项缺少 No',
   'maa.pipeline.error.switch-missing-all': '开关选项缺少 Yes 和 No',
   'maa.pipeline.warning.switch-name-should-fixed': '开关名应使用 Yes 或 No',
+  'maa.pipeline.error.preset-type-error': '选项 {0} 预设的类型错误, 预期为 {1}',
   'maa.pipeline.error.unknown-entry-task': '未知入口任务 {0}',
   'maa.pipeline.error.override-unknown-task': '覆盖未知任务 {0}',
   'maa.pipeline.warning.image-path-backslash': '图片路径中包含反斜杠, 应使用正斜杠',

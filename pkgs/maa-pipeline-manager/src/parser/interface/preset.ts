@@ -19,7 +19,8 @@ function parsePresetOption(
         name: key,
         from: 'preset',
         origin: name
-      }
+      },
+      preset: obj ?? undefined
     })
     if (!obj) {
       continue

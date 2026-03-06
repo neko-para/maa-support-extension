@@ -82,6 +82,8 @@ export async function buildDiagnosticMessage(
         }
       case 'int-switch-should-fixed':
         return t('maa.pipeline.warning.switch-name-should-fixed')
+      case 'int-preset-type-error':
+        return t('maa.pipeline.error.preset-type-error', diag.option, diag.expected)
       case 'int-unknown-entry-task':
         return t('maa.pipeline.error.unknown-entry-task', diag.task)
       case 'int-override-unknown-task':

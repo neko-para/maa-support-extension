@@ -1,4 +1,5 @@
 import type { InterfaceBundle } from '../interface/interface'
+import { isString } from '../parser/utils'
 import type { Diagnostic } from './types'
 
 export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
@@ -236,6 +237,53 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
           type: 'int-unknown-option',
           option: ref.target
         })
+      }
+      if (ref.preset) {
+        const optDecl = optDecls.find(decl => decl.name === ref.target)
+        if (optDecl) {
+          switch (optDecl.optionType ?? 'select') {
+            case 'select':
+            case 'switch':
+              if (!isString(ref.preset)) {
+                result.push({
+                  level: 'error',
+                  file: ref.file,
+                  offset: ref.preset.offset,
+                  length: ref.preset.length,
+                  type: 'int-preset-type-error',
+                  option: ref.target,
+                  expected: 'string'
+                })
+              }
+              break
+            case 'checkbox':
+              if (ref.preset.type !== 'array') {
+                result.push({
+                  level: 'error',
+                  file: ref.file,
+                  offset: ref.preset.offset,
+                  length: ref.preset.length,
+                  type: 'int-preset-type-error',
+                  option: ref.target,
+                  expected: 'array'
+                })
+              }
+              break
+            case 'input':
+              if (ref.preset.type !== 'object') {
+                result.push({
+                  level: 'error',
+                  file: ref.file,
+                  offset: ref.preset.offset,
+                  length: ref.preset.length,
+                  type: 'int-preset-type-error',
+                  option: ref.target,
+                  expected: 'object'
+                })
+              }
+              break
+          }
+        }
       }
     }
   }

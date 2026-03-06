@@ -14,75 +14,13 @@ import type {
   SelectOption,
   SwitchOption
 } from '@nekosu/maa-pipeline-manager'
-import {
-  FsContentWatcher,
-  type IContentLoader,
-  type IContentWatcher,
-  type IContentWatcherDelegate,
-  type Interface,
-  InterfaceBundle
-} from '@nekosu/maa-pipeline-manager'
+import { type Interface, InterfaceBundle } from '@nekosu/maa-pipeline-manager'
 
 import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
-
-export class VscodeContentLoader implements IContentLoader {
-  vscode: typeof import('vscode')
-
-  constructor(vscode: typeof import('vscode')) {
-    this.vscode = vscode
-  }
-
-  async get(file: string) {
-    try {
-      const doc = await this.vscode.workspace.openTextDocument(file)
-      return doc.getText()
-    } catch {
-      return null
-    }
-  }
-}
-
-export class VscodeContentWatcher extends FsContentWatcher implements IContentWatcher {
-  vscode: typeof import('vscode')
-
-  constructor(vscode: typeof import('vscode')) {
-    super()
-
-    this.vscode = vscode
-  }
-
-  async watch(root: string, isFile: boolean, delegate: IContentWatcherDelegate) {
-    let disp: import('vscode').Disposable
-    if (isFile) {
-      disp = this.vscode.workspace.onDidChangeTextDocument(ev => {
-        const file = ev.document.uri.fsPath
-        if (root === file) {
-          delegate.fileChanged(file)
-        }
-      })
-    } else {
-      const prefix = this.vscode.Uri.file(root).fsPath + path.sep
-      disp = this.vscode.workspace.onDidChangeTextDocument(ev => {
-        const file = ev.document.uri.fsPath
-        if (file.startsWith(prefix)) {
-          delegate.fileChanged(file)
-        }
-      })
-    }
-
-    const watcher = await super.watch(root, isFile, delegate)
-
-    return {
-      stop() {
-        watcher.stop()
-        disp.dispose()
-      }
-    }
-  }
-}
+import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 
 export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle
@@ -206,8 +144,8 @@ export class InterfaceService extends BaseService {
     }
 
     this.interfaceBundle = new InterfaceBundle(
-      new VscodeContentLoader(vscode),
-      new VscodeContentWatcher(vscode),
+      new VscodeContentLoader(),
+      new VscodeContentWatcher(),
       isMaaAssistantArknights,
       root.dirUri.fsPath,
       path.basename(root.interfaceUri.fsPath)

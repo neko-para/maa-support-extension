@@ -6,7 +6,7 @@
     "vscode-jsonrpc": "^8.2.1"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "5.7.2",
+    "@maaxyz/maa-node": "5.9.0-alpha.1",
     "@mse/types": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",
     "@tsconfig/node24": "^24.0.4",

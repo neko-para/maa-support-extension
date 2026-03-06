@@ -2,7 +2,7 @@
   "name": "@mse/maa-server",
   "type": "module",
   "devDependencies": {
-    "@maaxyz/maa-node": "5.7.2",
+    "@maaxyz/maa-node": "5.9.0-alpha.1",
     "@mse/maa-server-proto": "workspace:*",
     "@mse/types": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",

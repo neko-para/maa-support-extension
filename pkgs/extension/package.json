@@ -5,7 +5,7 @@
     "@jimp/core": "^1.6.0",
     "@jimp/js-png": "^1.6.0",
     "@jimp/plugin-crop": "^1.6.0",
-    "@maaxyz/maa-node": "5.7.2",
+    "@maaxyz/maa-node": "5.9.0-alpha.1",
     "@mse/maa-server-proto": "workspace:*",
     "@mse/types": "workspace:*",
     "@mse/utils": "workspace:*",

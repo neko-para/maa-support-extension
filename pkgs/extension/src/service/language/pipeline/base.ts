@@ -11,6 +11,7 @@ import {
   type TaskName,
   type TaskRefInfo,
   extractTaskRef,
+  isAnchorRef,
   joinPath,
   normalizeImageFolder
 } from '@nekosu/maa-pipeline-manager'
@@ -277,7 +278,7 @@ ${JSON.stringify(final, null, 2)}
       const task = extractTaskRef(ref)
       if (task && 'target' in ref) {
         return decls.filter(d => d.type === 'task.decl' && d.task === ref.target)
-      } else if (ref.type === 'task.next' && ref.anchor) {
+      } else if (isAnchorRef(ref)) {
         return decls.filter(
           d => d.type === 'task.anchor' && d.anchor === (ref.target as string as AnchorName)
         )
@@ -301,15 +302,15 @@ ${JSON.stringify(final, null, 2)}
     const findTask = (task: TaskName) => {
       return refs.filter(r => {
         if (
-          r.type === 'task.target' ||
           r.type === 'task.anchor' ||
+          r.type === 'task.reco' ||
           r.type === 'task.color_filter' ||
           r.type === 'task.entry'
         ) {
           return r.target === task
-        } else if (r.type === 'task.next') {
-          return r.target === task && !r.anchor
-        } else if (r.type === 'task.roi') {
+        } else if (r.type === 'task.next' || r.type === 'task.target') {
+          return r.target === task && !r.attrs.attrs.Anchor
+        } else if (r.type === 'task.roi' && !r.attrs.attrs.Anchor) {
           const prev = r.prev.filter(decl => decl.value === r.target)
           return prev.length === 0 && r.target === task
         } else {
@@ -323,8 +324,7 @@ ${JSON.stringify(final, null, 2)}
         return findTask(decl.task)
       } else if (decl.type === 'task.anchor') {
         return refs.filter(
-          r =>
-            r.type === 'task.next' && r.anchor && (r.target as string as AnchorName) === decl.anchor
+          r => isAnchorRef(r) && (r.target as string as AnchorName) === decl.anchor
         )
       } else if (decl.type === 'task.sub_reco') {
         return refs.filter(
@@ -337,8 +337,8 @@ ${JSON.stringify(final, null, 2)}
       const task = extractTaskRef(ref)
       if (task) {
         return findTask(task)
-      } else if (ref.type === 'task.next' && ref.anchor) {
-        return refs.filter(r => r.type === 'task.next' && r.anchor && r.target === ref.target)
+      } else if (isAnchorRef(ref)) {
+        return refs.filter(r => isAnchorRef(r) && r.target === ref.target)
       } else if (ref.type === 'task.roi') {
         return refs.filter(
           r => r.type === 'task.roi' && r.target === ref.target && r.task === ref.task

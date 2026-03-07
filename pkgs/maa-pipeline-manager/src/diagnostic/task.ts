@@ -1,6 +1,6 @@
 import type { InterfaceBundle } from '../interface/interface'
 import type { TaskRefInfo } from '../parser/task/task'
-import { extractTaskRef } from '../utils/helper'
+import { extractTaskRef, isAnchorRef } from '../utils/helper'
 import {
   type AnchorName,
   type ImageRelativePath,
@@ -37,7 +37,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
         for (const taskInfo of taskInfos) {
           const existsNext = new Set<TaskName>()
           const refs = taskInfo.info.refs.filter(
-            ref => ref.type === 'task.next' && !ref.anchor
+            ref => ref.type === 'task.next' && !ref.attrs.attrs.Anchor
           ) as (TaskRefInfo & {
             type: 'task.next'
           })[]
@@ -84,9 +84,9 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
         if (!tasks.has(task) && !(task === '' && ref.type === 'task.anchor')) {
           let offset = ref.location.offset
           let length = ref.location.length
-          if (ref.type === 'task.next' && typeof ref.offset === 'number') {
-            offset = ref.location.offset + ref.offset + 1
-            length = ref.location.length - ref.offset - 2
+          if (ref.type === 'task.next' && ref.attrs.offset > 0) {
+            offset = ref.location.offset + ref.attrs.offset + 1
+            length = ref.location.length - ref.attrs.offset - 2
           }
           result.push({
             level: 'error',
@@ -184,13 +184,13 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
             })
           }
         }
-      } else if (ref.type === 'task.next' && ref.anchor) {
+      } else if (isAnchorRef(ref)) {
         if (!anchors.has(ref.target as string as AnchorName)) {
           result.push({
             level: 'error',
             file: ref.file,
-            offset: ref.location.offset,
-            length: ref.location.length,
+            offset: ref.location.offset + ref.attrs.offset + 1,
+            length: ref.location.length - ref.attrs.offset - 2,
             type: 'unknown-anchor',
             anchor: ref.target
           })
@@ -226,8 +226,11 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
           }
         }
       }
-      if (ref.type === 'task.next' && ref.unknown && ref.unknown.length > 0) {
-        for (const [attr, offset, length] of ref.unknown) {
+      if (
+        (ref.type === 'task.next' || ref.type === 'task.roi' || ref.type === 'task.target') &&
+        ref.attrs.unknown.length > 0
+      ) {
+        for (const [attr, offset, length] of ref.attrs.unknown) {
           result.push({
             level: 'error',
             file: ref.file,

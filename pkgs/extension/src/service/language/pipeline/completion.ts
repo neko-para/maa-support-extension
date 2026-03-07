@@ -177,11 +177,10 @@ export class PipelineCompletionProvider
     }
 
     if (
-      (ref.type === 'task.next' && ref.objMode && !ref.anchor) ||
-      ref.type === 'task.target' ||
+      (ref.type === 'task.next' && ref.objMode && !ref.attrs.attrs.Anchor) ||
       ref.type === 'task.anchor' ||
+      ref.type === 'task.reco' ||
       ref.type === 'task.color_filter' ||
-      ref.type === 'task.roi' ||
       ref.type === 'task.entry'
     ) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
@@ -201,19 +200,7 @@ export class PipelineCompletionProvider
         }
         result.push(item)
       }
-
-      if (ref.type === 'task.roi') {
-        for (const subName of ref.prev) {
-          const item: CustomCompletionItem = {
-            label: subName.value,
-            kind: vscode.CompletionItemKind.Reference,
-            range,
-            sortText: '0_' + subName.value
-          }
-          result.push(item)
-        }
-      }
-    } else if (ref.type === 'task.next' && ref.objMode && ref.anchor) {
+    } else if (ref.type === 'task.next' && ref.objMode && ref.attrs.attrs.Anchor) {
       const anchors = layer.getAnchorList().map(([anchor]) => anchor)
       for (const anchor of new Set(anchors)) {
         const item: CustomCompletionItem = {
@@ -224,16 +211,21 @@ export class PipelineCompletionProvider
         }
         result.push(item)
       }
-    } else if (ref.type === 'task.next' && !ref.objMode) {
+    } else if (
+      (ref.type === 'task.next' && !ref.objMode) ||
+      ref.type === 'task.roi' ||
+      ref.type === 'task.target'
+    ) {
       let triggerNext: vscode.Command | undefined = {
         command: commands.TriggerCompletion,
         title: 'trigger next'
       }
-      const range = convertRangeWithDelta(document, ref.location, -1, 1 + (ref.offset ?? 0))
+      const range = convertRangeWithDelta(document, ref.location, -1, 1 + ref.attrs.offset)
       if (range.start.line !== range.end.line || range.start.character !== range.end.character) {
         triggerNext = undefined
       }
-      if (!ref.jumpBack) {
+
+      if (ref.type === 'task.next' && !ref.attrs.attrs.JumpBack) {
         const item: CustomCompletionItem = {
           label: '[JumpBack]',
           kind: vscode.CompletionItemKind.Property,
@@ -243,7 +235,8 @@ export class PipelineCompletionProvider
         }
         result.push(item)
       }
-      if (!ref.anchor) {
+
+      if (!ref.attrs.attrs.Anchor) {
         const item: CustomCompletionItem = {
           label: '[Anchor]',
           kind: vscode.CompletionItemKind.Property,
@@ -253,7 +246,8 @@ export class PipelineCompletionProvider
         }
         result.push(item)
       }
-      if (ref.anchor) {
+
+      if (ref.attrs.attrs.Anchor) {
         const anchors = layer.getAnchorList().map(([anchor]) => anchor)
         for (const anchor of new Set(anchors)) {
           const item: CustomCompletionItem = {
@@ -272,6 +266,18 @@ export class PipelineCompletionProvider
             range,
             sortText: '1_' + task,
             fillTaskDetail: () => this.getTaskBrief(intBundle, task)
+          }
+          result.push(item)
+        }
+      }
+
+      if (ref.type === 'task.roi') {
+        for (const subName of ref.prev) {
+          const item: CustomCompletionItem = {
+            label: subName.value,
+            kind: vscode.CompletionItemKind.Reference,
+            range,
+            sortText: '0_' + subName.value
           }
           result.push(item)
         }

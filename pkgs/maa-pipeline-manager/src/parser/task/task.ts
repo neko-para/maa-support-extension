@@ -5,6 +5,7 @@ import type { MaaTaskExpr } from '@nekosu/maa-tasker'
 import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../../utils/types'
 import { type PropPair, type StringNode, isNumber, isString, parseArray } from '../utils'
 import { parseAnchor } from './anchor'
+import type { TaskAttrInfo } from './attr'
 import { parseColor } from './color'
 import { parseColorFilter } from './colorFilter'
 import { parseFocus } from './focus'
@@ -78,15 +79,13 @@ export type TaskNextRefInfo = {
   type: 'task.next'
   target: TaskName // 有可能是 AnchorName
   objMode: boolean
-  offset?: number
-  jumpBack?: boolean
-  anchor?: boolean
-  unknown?: [attr: string, offset: number, length: number][]
+  attrs: TaskAttrInfo<'JumpBack' | 'Anchor'>
 }
 
 export type TaskTargetRefInfo = {
   type: 'task.target'
-  target: TaskName
+  target: TaskName // 有可能是 AnchorName
+  attrs: TaskAttrInfo<'Anchor'>
 }
 
 export type TaskAnchorRefInfo = {
@@ -96,18 +95,18 @@ export type TaskAnchorRefInfo = {
 
 export type TaskRoiRefInfo = {
   type: 'task.roi'
+  target: TaskName // 有可能是 subname或者AnchorName
+  attrs: TaskAttrInfo<'Anchor'>
   prev: StringNode[]
   task: TaskName
-} & (
-  | {
-      prevRef?: false
-      target: TaskName
-    }
-  | {
-      prevRef: true
-      target: string // SubName
-    }
-)
+  prevRef: boolean
+}
+
+// and_of any_of
+export type TaskRecoRefInfo = {
+  type: 'task.reco'
+  target: TaskName
+}
 
 export type TaskTemplateRefInfo = {
   type: 'task.template'
@@ -150,6 +149,7 @@ type MaaFwTaskRefInfo =
   | TaskTargetRefInfo
   | TaskAnchorRefInfo
   | TaskRoiRefInfo
+  | TaskRecoRefInfo
   | TaskTemplateRefInfo
   | TaskEntryRefInfo
   | TaskLocaleRefInfo
@@ -282,10 +282,8 @@ function parseReco(
             info.refs.push({
               file: ctx.file,
               location: sub,
-              type: 'task.roi',
-              target: sub.value as TaskName,
-              prev: [],
-              task: ctx.taskName
+              type: 'task.reco',
+              target: sub.value as TaskName
             })
           } else {
             const subInfo = splitNode(sub, false)

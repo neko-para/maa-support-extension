@@ -2,67 +2,43 @@ import type { Node } from 'jsonc-parser'
 
 import type { TaskName } from '../../utils/types'
 import { isBool, isString, parseArray, parseObject } from '../utils'
+import { parseAttr } from './attr'
 import type { TaskInfo, TaskNextRefInfo, TaskParseContext } from './task'
 
 function parseSingle(node: Node, info: TaskInfo, ctx: TaskParseContext) {
   if (isString(node)) {
-    const ref: TaskNextRefInfo = {
-      type: 'task.next',
-      target: '' as TaskName,
-      objMode: false,
-      unknown: []
-    }
-    let name = node.value
-    let offset = 0
-    while (true) {
-      if (name.startsWith('[JumpBack]')) {
-        ref.jumpBack = true
-        name = name.substring(10)
-        offset += 10
-        continue
-      }
-      if (name.startsWith('[Anchor]')) {
-        ref.anchor = true
-        name = name.substring(8)
-        offset += 8
-        continue
-      }
-      break
-    }
-    let failOffset = 0
-    while (true) {
-      const match = /^\[([^\]]+)\]/.exec(name)
-      if (!match) {
-        break
-      }
-      const len = match[0].length
-      ref.unknown!.push([match[1], failOffset, failOffset + len])
-      failOffset = failOffset + len
-      name = name.substring(len)
-    }
-    ref.target = name as TaskName
-    ref.offset = offset + failOffset
+    const [target, attrs] = parseAttr(node.value, ['JumpBack', 'Anchor'] as const)
+
     info.refs.push({
       file: ctx.file,
       location: node,
-      ...ref
+      type: 'task.next',
+      target: target as TaskName,
+      objMode: false,
+      attrs
     })
   } else if (node.type === 'object') {
     let loc: Node | null = null
     const ref: TaskNextRefInfo = {
       type: 'task.next',
       target: '' as TaskName,
-      objMode: true
+      objMode: true,
+      attrs: {
+        offset: 0,
+        attrs: {},
+        unknown: []
+      }
     }
     for (const [key, obj] of parseObject(node)) {
       if (key === 'name' && isString(obj)) {
         ref.target = obj.value as TaskName
         loc = obj
       } else if (key === 'jump_back' && isBool(obj)) {
-        ref.jumpBack = obj.value
+        ref.attrs.attrs.JumpBack = obj.value
       } else if (key === 'anchor' && isBool(obj)) {
-        ref.anchor = obj.value
+        ref.attrs.attrs.Anchor = obj.value
       }
+      // 其实应该填unknown的，但是格式不一样，而且对象模式deprecated了，就算了
     }
     if (loc) {
       info.refs.push({

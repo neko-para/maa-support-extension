@@ -1,6 +1,11 @@
 import * as vscode from 'vscode'
 
-import { type AbsolutePath, findDeclRef, findMaaDeclRef } from '@nekosu/maa-pipeline-manager'
+import {
+  type AbsolutePath,
+  extractTaskRef,
+  findDeclRef,
+  findMaaDeclRef
+} from '@nekosu/maa-pipeline-manager'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
@@ -72,22 +77,9 @@ export class PipelineHoverProvider
         }
       }
 
-      if (
-        ref.type === 'task.next' ||
-        ref.type === 'task.target' ||
-        ref.type === 'task.anchor' ||
-        ref.type === 'task.color_filter' ||
-        ref.type === 'task.roi' ||
-        ref.type === 'task.entry'
-      ) {
-        if (ref.type === 'task.next' && ref.anchor) {
-          return null
-        } else if (ref.type === 'task.roi') {
-          if (ref.prevRef) {
-            return null
-          }
-        }
-        const hover = await this.getTaskHover(intBundle, intBundle.topLayer, ref.target)
+      const task = extractTaskRef(ref)
+      if (task) {
+        const hover = await this.getTaskHover(intBundle, intBundle.topLayer, task)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.template') {
         const hover = this.getImageHover(intBundle, intBundle.topLayer, ref.target)

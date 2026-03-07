@@ -31,19 +31,33 @@ export function findDeclRef<T extends { location: Node }>(infos: T[], offset: nu
 
 export function extractTaskRef(r: TaskRefInfo): TaskName | null {
   if (
-    r.type === 'task.target' ||
     r.type === 'task.anchor' ||
+    r.type === 'task.reco' ||
     r.type === 'task.color_filter' ||
     r.type === 'task.entry'
   ) {
     return r.target
-  } else if (r.type === 'task.next') {
-    return !r.anchor ? r.target : null
-  } else if (r.type === 'task.roi') {
-    return r.prevRef ? null : r.target
+  } else if (r.type === 'task.next' || r.type === 'task.roi' || r.type === 'task.target') {
+    if (r.attrs.attrs.Anchor) {
+      return null
+    }
+    if (r.type === 'task.roi' && r.prevRef) {
+      return null
+    }
+    return r.target
   } else {
     return null
   }
+}
+
+export function isAnchorRef(r: TaskRefInfo): r is TaskRefInfo & {
+  type: 'task.next' | 'task.roi' | 'task.target'
+  attrs: { attrs: { Anchor: true } }
+} {
+  return (
+    (r.type === 'task.next' || r.type === 'task.roi' || r.type === 'task.target') &&
+    !!r.attrs.attrs.Anchor
+  )
 }
 
 export function findMaaDeclRef<T extends { offset: number; length: number }>(

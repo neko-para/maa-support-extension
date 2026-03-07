@@ -2,6 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import type { TaskName } from '../../utils/types'
 import { isString, parseArray } from '../utils'
+import { parseAttr } from './attr'
 import type { TaskInfo, TaskParseContext } from './task'
 
 export function parseTarget(
@@ -11,11 +12,13 @@ export function parseTarget(
   acceptArray = false
 ) {
   if (isString(node)) {
+    const [target, attrs] = parseAttr(node.value, ['Anchor'])
     info.refs.push({
       file: ctx.file,
       location: node,
       type: 'task.target',
-      target: node.value as TaskName
+      target: target as TaskName,
+      attrs
     })
   } else if (acceptArray) {
     for (const obj of parseArray(node)) {

@@ -11,6 +11,7 @@ export async function setupMaa(cfg: FullConfig) {
   const versionManager = new MaaVersionManager(
     cfg.maaCache ?? path.join(os.homedir(), '.maa-checker')
   )
+  versionManager.registry = MaaVersionManager.registries[cfg.maaMirror ?? 'npm']
 
   let maaVersion = cfg.maaVersion
   if (maaVersion === 'latest') {

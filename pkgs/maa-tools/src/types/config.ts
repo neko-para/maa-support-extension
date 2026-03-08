@@ -1,5 +1,6 @@
 import type { LocaleType } from '@nekosu/maa-locale'
 import type { DiagnosticType } from '@nekosu/maa-pipeline-manager'
+import type { NpmRegistryType } from '@nekosu/maa-version-manager'
 
 export type BaseConfig = {
   cwd?: string
@@ -9,6 +10,7 @@ export type BaseConfig = {
 
   maaVersion?: string
   maaCache?: string
+  maaMirror?: NpmRegistryType
   // from @maaxyz/maa-node
   maaStdoutLevel?: 'Off' | 'Fatal' | 'Error' | 'Warn' | 'Info' | 'Debug' | 'Trace' | 'All'
 

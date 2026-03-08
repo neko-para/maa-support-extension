@@ -19,7 +19,7 @@ export async function setupMaa(cfg: FullConfig) {
     if (latest) {
       maaVersion = latest
       if (cfg.mode !== 'json') {
-        console.log(`use latest version ${latest}`)
+        process.stdout.write(`use latest version ${latest}\n`)
       }
     }
   }
@@ -27,7 +27,7 @@ export async function setupMaa(cfg: FullConfig) {
     const fallback = pkg.devDependencies['@maaxyz/maa-node']
     maaVersion = fallback
     if (cfg.mode !== 'json') {
-      console.log(`use fallback version ${fallback}`)
+      process.stdout.write(`use fallback version ${fallback}\n`)
     }
   }
 

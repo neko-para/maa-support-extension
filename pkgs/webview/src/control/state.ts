@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { ControlHostState } from '@mse/types'
 import {
   type ControllerRuntime,
+  type ControllerRuntimeBase,
   type Interface,
   type ResourceRuntime,
   buildControllerRuntime,
@@ -27,6 +28,16 @@ globalThis.maa = new Proxy(
     }
   }
 ) as typeof maa
+
+export const ctrlRtBase = computed<ControllerRuntimeBase | null>(() => {
+  if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
+    return null
+  }
+  const info = interfaceJson.value.controller?.find(
+    ctrl => ctrl.name === hostState.value.interfaceConfigJson?.controller
+  )
+  return info ?? null
+})
 
 export const ctrlRt = computed<{
   rt?: ControllerRuntime

@@ -13,7 +13,7 @@ import {
 } from '@nekosu/maa-pipeline-manager/logic'
 
 import { ipc } from '../ipc'
-import { ctrlRt, interfaceJson, resRt } from '../state'
+import { ctrlRtBase, interfaceJson, resRt } from '../state'
 import LocaleText from './LocaleText.vue'
 import TaskCheckboxOption from './TaskCheckboxOption.vue'
 import TaskInputOption from './TaskInputOption.vue'
@@ -59,10 +59,10 @@ function revealEntry() {
 }
 
 const allOptions = computed<OptionTrace[]>(() => {
-  if (!interfaceJson.value || !ctrlRt.value.rt || !resRt.value.rt) {
+  if (!interfaceJson.value || !ctrlRtBase.value || !resRt.value.rt) {
     return []
   }
-  const opts = buildOption(interfaceJson.value, props.task, ctrlRt.value.rt, resRt.value.rt)
+  const opts = buildOption(interfaceJson.value, props.task, ctrlRtBase.value, resRt.value.rt)
   return typeof opts === 'string' ? [] : opts
 })
 

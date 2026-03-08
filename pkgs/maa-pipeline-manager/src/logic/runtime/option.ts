@@ -3,7 +3,7 @@ import { t } from '@nekosu/maa-locale'
 import type {
   CheckboxConfig,
   CheckboxOption,
-  ControllerRuntime,
+  ControllerRuntimeBase,
   InputConfig,
   Interface,
   ResourceRuntime,
@@ -85,7 +85,7 @@ export function resolveCheckbox(task: TaskConfig, option: string, optMeta: Check
 export function buildOption(
   data: Interface,
   task: TaskConfig,
-  ctrlRt: ControllerRuntime,
+  ctrlRt: ControllerRuntimeBase,
   resRt: ResourceRuntime
 ): OptionTrace[] | string {
   const taskInfo = data.task?.find(x => x.name === task.name)

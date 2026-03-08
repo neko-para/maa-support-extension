@@ -280,6 +280,9 @@ importers:
       '@nekosu/maa-version-manager':
         specifier: workspace:*
         version: link:../maa-version-manager
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
       jiti:
         specifier: ^2.6.1
         version: 2.6.1(patch_hash=61ff68a4cec75a38e00365c27dee56dc3a7ffd68b2199a5889ad3446bdb19a8a)
@@ -1639,6 +1642,10 @@ packages:
 
   caniuse-lite@1.0.30001721:
     resolution: {integrity: sha512-cOuvmUVtKrtEaoKiO0rSc29jcjwMwX5tOHDy4MgVFEWiUXj4uBMJkwI8MDySkgXidpMiHUcviogAvFi4pA2hDQ==}
+
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   chokidar@5.0.0:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
@@ -4039,6 +4046,8 @@ snapshots:
       function-bind: 1.1.2
 
   caniuse-lite@1.0.30001721: {}
+
+  chalk@5.6.2: {}
 
   chokidar@5.0.0:
     dependencies:

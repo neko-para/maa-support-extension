@@ -1,3 +1,5 @@
+import { info as coreInfo } from '@actions/core'
+import chalk from 'chalk'
 import { existsSync } from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
@@ -30,6 +32,14 @@ export async function runTest(cfg: FullConfig) {
   const modulePath = await setupMaa(cfg)
   if (!modulePath) {
     return false
+  }
+
+  const putLog = (log: string) => {
+    if (cfg.mode === 'github') {
+      coreInfo(log)
+    } else {
+      console.log(log)
+    }
   }
 
   const result: GroupRecoResult[] = []
@@ -172,12 +182,22 @@ export async function runTest(cfg: FullConfig) {
 
   await poolCache?.terminate()
 
+  let failed = false
   for (const group of result) {
     const groupName =
       group.cases.configs.name ??
       `${group.cases.configs.controller}:${group.cases.configs.resource}`
 
-    console.log(`${groupName}`)
+    let printed = false
+    const putError = (err: string) => {
+      if (!printed) {
+        putLog(chalk.red(groupName))
+        printed = true
+      }
+      putLog(err)
+      failed = true
+    }
+
     for (const testCase of group.cases.cases) {
       for (const res of group.result.filter(res => res.imagePathRaw === testCase.image)) {
         const hitCfg = testCase.hits.find(hit => {
@@ -189,23 +209,27 @@ export async function runTest(cfg: FullConfig) {
         })
         if (hitCfg) {
           if (!res.hit) {
-            console.log(`  ${testCase.image} ${res.node} should hit but missed`)
+            putError(`  ${testCase.image} ${res.node} should hit but missed`)
           } else if (typeof hitCfg !== 'string') {
             if (!res.detail) {
-              console.log(`  ${testCase.image} ${res.node} missing detail.`)
+              putError(`  ${testCase.image} ${res.node} missing detail.`)
             } else if (!checkRect(hitCfg.box, res.detail!.box)) {
-              console.log(
+              putError(
                 `  ${testCase.image} ${res.node} box mismatch. Expect ${JSON.stringify(hitCfg.box)}, hit ${JSON.stringify(res.detail.box)}`
               )
             }
           }
         } else {
           if (res.hit) {
-            console.log(`  ${testCase.image} ${res.node} should missed but hit`)
+            putError(`  ${testCase.image} ${res.node} should missed but hit`)
           }
         }
       }
     }
+
+    if (!printed) {
+      putLog(chalk.green(groupName))
+    }
   }
-  return true
+  return !failed
 }

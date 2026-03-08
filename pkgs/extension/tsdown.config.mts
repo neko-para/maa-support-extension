@@ -11,8 +11,10 @@ export default defineConfig([
       html: 'text'
     },
     shims: true,
-    external: ['vscode', '@maaxyz/maa-node'],
-    inlineOnly: false,
+    deps: {
+      neverBundle: ['vscode', '@maaxyz/maa-node'],
+      onlyAllowBundle: false
+    },
     inputOptions: {
       resolve: {
         mainFields: ['module', 'main']

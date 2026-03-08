@@ -6,7 +6,7 @@
     "lint": "tsc -p . --noEmit"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "5.9.0-alpha.1",
+    "@maaxyz/maa-node": "5.9.0-alpha.4",
     "@nekosu/maa-pipeline-manager": "workspace:*"
   }
 }

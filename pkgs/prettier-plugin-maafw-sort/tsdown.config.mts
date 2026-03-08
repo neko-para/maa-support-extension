@@ -11,6 +11,8 @@ export default defineConfig([
       sourcemap: true
     },
 
-    external: ['@babel/types', 'prettier', 'prettier/plugins/babel']
+    deps: {
+      neverBundle: ['@babel/types', 'prettier', 'prettier/plugins/babel']
+    }
   }
 ])

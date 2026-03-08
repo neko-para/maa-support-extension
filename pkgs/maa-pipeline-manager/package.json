@@ -29,9 +29,9 @@
     "jsonc-parser": "^3.3.1"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "5.9.0-alpha.1",
+    "@maaxyz/maa-node": "5.9.0-alpha.4",
     "@tsconfig/node24": "^24.0.4",
-    "@types/node": "^25.3.0",
+    "@types/node": "^25.3.5",
     "typescript": "^5.9.3"
   }
 }

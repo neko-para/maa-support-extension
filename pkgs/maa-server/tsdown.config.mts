@@ -7,7 +7,9 @@ export default defineConfig([
     format: 'esm',
     sourcemap: true,
     nodeProtocol: true,
-    external: ['@maaxyz/maa-node'],
-    inlineOnly: false
+    deps: {
+      neverBundle: ['@maaxyz/maa-node'],
+      onlyAllowBundle: false
+    }
   }
 ])

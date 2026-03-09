@@ -1,6 +1,7 @@
 import { info as coreInfo } from '@actions/core'
 import chalk from 'chalk'
 import { existsSync } from 'node:fs'
+import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import * as workerpool from 'workerpool'
@@ -183,6 +184,7 @@ export async function runTest(cfg: FullConfig) {
   await poolCache?.terminate()
 
   let failed = false
+  const errorDetails: RecoResult[] = []
   for (const group of result) {
     const groupName =
       group.cases.configs.name ??
@@ -210,18 +212,22 @@ export async function runTest(cfg: FullConfig) {
         if (hitCfg) {
           if (!res.hit) {
             putError(`  ${testCase.image} ${res.node} should hit but missed`)
+            errorDetails.push(res)
           } else if (typeof hitCfg !== 'string') {
             if (!res.detail) {
               putError(`  ${testCase.image} ${res.node} missing detail.`)
+              errorDetails.push(res)
             } else if (!checkRect(hitCfg.box, res.detail!.box)) {
               putError(
                 `  ${testCase.image} ${res.node} box mismatch. Expect ${JSON.stringify(hitCfg.box)}, hit ${JSON.stringify(res.detail.box)}`
               )
+              errorDetails.push(res)
             }
           }
         } else {
           if (res.hit) {
             putError(`  ${testCase.image} ${res.node} should missed but hit`)
+            errorDetails.push(res)
           }
         }
       }
@@ -231,5 +237,14 @@ export async function runTest(cfg: FullConfig) {
       putLog(chalk.green(groupName))
     }
   }
+
+  if (errorDetails.length > 0) {
+    const file = path.resolve(
+      cfg.cwd ?? process.cwd(),
+      cfg.test.errorDetailsPath ?? 'maatoolsErrorDetails.json'
+    )
+    await fs.writeFile(file, JSON.stringify(errorDetails, null, 2))
+  }
+
   return !failed
 }

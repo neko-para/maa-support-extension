@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/maa-tools",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "type": "module",
   "bin": {
     "maa-tools": "bin/maa-tools"

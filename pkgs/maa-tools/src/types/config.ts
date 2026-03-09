@@ -46,6 +46,7 @@ export type TestConfig = {
   interfacePath: string
   casesCwd?: string
   cases: TestCases[] | (() => Promise<TestCases[]>)
+  errorDetailsPath?: string
 
   job?: number
   maxNodePerJob?: number

@@ -33,6 +33,11 @@ export const ctrlRtBase = computed<ControllerRuntimeBase | null>(() => {
   if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
     return null
   }
+  if (hostState.value.interfaceConfigJson.controller === '$fixed') {
+    return {
+      name: '$fixed'
+    }
+  }
   const info = interfaceJson.value.controller?.find(
     ctrl => ctrl.name === hostState.value.interfaceConfigJson?.controller
   )

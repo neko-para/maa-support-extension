@@ -88,6 +88,7 @@ export default {
   'maa.launch.reco-detail': 'Reco Detail',
   'maa.launch.act-detail': 'Action Detail',
   'maa.launch.dbclick-to-open-in-crop': 'Double click image to open in crop tool',
+  'maa.launch.open-in-crop': 'Open In Crop Tool',
   'maa.launch.task-definition': 'Task Definition',
   'maa.launch.process': 'Process',
   'maa.launch.continue': 'Continue',

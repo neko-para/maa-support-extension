@@ -104,7 +104,7 @@ export class LaunchService extends BaseService {
     session.pushMessage(t('maa.debug.init-instance-succeeded'))
     session.pushContinued()
 
-    const panel = new WebviewLaunchPanel(ipc, errorOrHandle, 'maa launch')
+    const panel = new WebviewLaunchPanel(ipc, errorOrHandle, 'Maa Launch')
     serverService.instMap[errorOrHandle] = panel
     await panel.init()
 

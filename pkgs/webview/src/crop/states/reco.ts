@@ -6,8 +6,6 @@ import * as imageSt from './image'
 
 export const loading = ref(false)
 export const result = ref<string | null>(null)
-export const draw = ref(false)
-export const drawType = ref<'all' | 'best' | 'filtered'>('all')
 
 export const resultObject = computed(() => {
   if (!result.value) {

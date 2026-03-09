@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { NCard, NFlex, NScrollbar, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NScrollbar, NText } from 'naive-ui'
 
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { actInfo, recoInfo, taskInfo } from '../states/info'
 
-function openCrop(image: string) {
+function openCrop(image: string, detail: maa.RecoDetailWithoutDraws) {
   ipc.send({
     command: 'openCrop',
-    image
+    image,
+    detail
   })
 }
 </script>
@@ -23,18 +24,18 @@ function openCrop(image: string) {
         :closable="!!recoInfo"
         @close="recoInfo = null"
       >
+        <template #header-extra>
+          <n-button v-if="recoInfo" @click="openCrop(recoInfo.raw, recoInfo.info)" size="small">
+            {{ t('maa.launch.open-in-crop') }}
+          </n-button>
+        </template>
+
         <template v-if="recoInfo">
           <n-flex vertical>
             <json-code :code="JSON.stringify(recoInfo.info, null, 2)"></json-code>
 
-            <n-text> {{ t('maa.launch.dbclick-to-open-in-crop') }} </n-text>
-            <img :src="recoInfo.raw" @dblclick="openCrop(recoInfo.raw)" />
-            <img
-              v-for="(draw, idx) in recoInfo.draws"
-              :key="idx"
-              :src="draw"
-              @dblclick="openCrop(draw)"
-            />
+            <img :src="recoInfo.raw" />
+            <img v-for="(draw, idx) in recoInfo.draws" :key="idx" :src="draw" />
           </n-flex>
         </template>
       </n-card>

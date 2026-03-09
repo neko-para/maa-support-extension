@@ -108,6 +108,12 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
           command: 'setImage',
           image: data.image
         })
+        if (data.detail) {
+          panel.send({
+            command: 'setRecoDetail',
+            detail: data.detail
+          })
+        }
         break
       }
       case 'gotoTask':

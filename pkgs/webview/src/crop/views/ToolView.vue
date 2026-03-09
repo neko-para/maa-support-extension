@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import JsonCode from '../../components/JsonCode.vue'
 import { t } from '../../utils/locale'
 import ColorBox from '../components/ColorBox.vue'
+import RecoDetail from '../components/RecoDetail.vue'
 import RoiEdit from '../components/RoiEdit.vue'
 import { hostState } from '../state'
 import * as pickSt from '../states/pick'
@@ -91,8 +92,10 @@ const roiRectMove = computed(() => {
         <roi-edit :value="roiSum" readonly></roi-edit>
         <n-text> 2 - 1 </n-text>
         <roi-edit :value="roiDlt" readonly></roi-edit>
-        <n-text> rect_move </n-text>
-        <roi-edit :value="roiRectMove" readonly></roi-edit>
+        <template v-if="hostState.isMAA">
+          <n-text> rect_move </n-text>
+          <roi-edit :value="roiRectMove" readonly></roi-edit>
+        </template>
       </div>
     </n-card>
 
@@ -179,16 +182,10 @@ const roiRectMove = computed(() => {
 
       <template v-if="recoSt.result">
         <n-flex vertical>
-          <n-flex>
-            <n-switch v-model:value="recoSt.draw.value"> </n-switch>
-            <n-text> {{ t('maa.crop.tools.draw') }} </n-text>
-          </n-flex>
-          <n-text> {{ t('maa.crop.tools.draw-mode') }} </n-text>
-          <n-select
-            v-model:value="recoSt.drawType.value"
-            :options="drawOptions"
-            size="small"
-          ></n-select>
+          <reco-detail
+            v-if="recoSt.resultObject.value"
+            :detail="recoSt.resultObject.value"
+          ></reco-detail>
           <json-code :code="recoSt.result.value ?? ''"></json-code>
         </n-flex>
       </template>

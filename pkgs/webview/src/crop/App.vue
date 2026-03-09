@@ -54,8 +54,8 @@ canvasSt.setup(canvasSizeEl, canvasEl)
             ></canvas>
           </div>
           <n-scrollbar v-if="showTab" style="width: 40vw">
-            <settings-view v-if="showTab === 'settings'"></settings-view>
-            <tool-view v-else-if="showTab === 'tool'"></tool-view>
+            <settings-view v-show="showTab === 'settings'"></settings-view>
+            <tool-view v-show="showTab === 'tool'"></tool-view>
           </n-scrollbar>
         </n-flex>
       </n-card>

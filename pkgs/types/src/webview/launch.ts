@@ -50,6 +50,7 @@ export type LaunchWebToHost =
   | {
       command: 'openCrop'
       image: string
+      detail?: maa.RecoDetailWithoutDraws
     }
   | {
       command: 'gotoTask'

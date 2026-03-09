@@ -7,6 +7,8 @@ import App from './App.vue'
 import { ipc } from './ipc'
 import { hostState } from './state'
 import * as imageSt from './states/image'
+import * as recoSt from './states/reco'
+import { showTab } from './states/visible'
 
 globalThis.Buffer = Buffer
 
@@ -20,6 +22,10 @@ ipc.recv.value = data => {
       break
     case 'setImage':
       imageSt.set(data.image)
+      break
+    case 'setRecoDetail':
+      recoSt.result.value = JSON.stringify(data.detail)
+      showTab.value = 'tool'
       break
   }
 }

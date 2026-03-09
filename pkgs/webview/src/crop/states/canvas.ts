@@ -1,15 +1,38 @@
-import { type ShallowRef, onBeforeUnmount, onUnmounted, ref, watch } from 'vue'
+import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { Box, Pos, Size } from '../utils/2d'
+import { Box, Pos, Size, Viewport } from '../utils/2d'
 import * as controlSt from './control'
 import * as imageSt from './image'
 import * as pickSt from './pick'
 import * as matchSt from './quickMatch'
-import * as recoSt from './reco'
 import * as settingsSt from './settings'
 
 export const size = ref<Size>(Size.from(0, 0))
 let dashOffset = 0
+
+export type DrawStep = (ctx: CanvasRenderingContext2D, vp: Viewport) => void
+
+export const drawSteps: DrawStep[] = []
+
+export function addDrawStep(step: DrawStep): () => void {
+  drawSteps.push(step)
+  return () => {
+    const idx = drawSteps.findIndex(func => func === step)
+    if (idx !== -1) {
+      drawSteps.splice(idx, 1)
+    }
+  }
+}
+
+export function useDrawStep(step: DrawStep) {
+  let release: () => void
+  onMounted(() => {
+    release = addDrawStep(step)
+  })
+  onUnmounted(() => {
+    release()
+  })
+}
 
 export function draw(ctx: CanvasRenderingContext2D) {
   ctx.reset()
@@ -34,8 +57,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     for (const [st, stroke, font] of [
-      [matchSt, settingsSt.ocrStroke.eff, settingsSt.ocrFont.eff],
-      [recoSt, settingsSt.recoStroke.eff, settingsSt.recoFont.eff]
+      [matchSt, settingsSt.ocrStroke.eff, settingsSt.ocrFont.eff]
     ] as const) {
       if (st.draw.value && st.resultObject.value) {
         ctx.save()
@@ -95,6 +117,12 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
         ctx.restore()
       }
+    }
+
+    for (const step of drawSteps) {
+      ctx.save()
+      step(ctx, controlSt.viewport.value)
+      ctx.restore()
     }
   }
 

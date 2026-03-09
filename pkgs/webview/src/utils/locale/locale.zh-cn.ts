@@ -88,6 +88,7 @@ export default {
   'maa.launch.reco-detail': '识别详情',
   'maa.launch.act-detail': '操作详情',
   'maa.launch.dbclick-to-open-in-crop': '双击图片以在截图工具中打开',
+  'maa.launch.open-in-crop': '在截图工具中打开',
   'maa.launch.task-definition': '任务定义',
   'maa.launch.process': '流程',
   'maa.launch.continue': '继续',

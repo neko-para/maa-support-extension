@@ -33,6 +33,10 @@ export type CropHostToWeb =
       command: 'setImage'
       image: string
     }
+  | {
+      command: 'setRecoDetail'
+      detail: maa.RecoDetailWithoutDraws
+    }
 
 export type CropWebToHost =
   | {

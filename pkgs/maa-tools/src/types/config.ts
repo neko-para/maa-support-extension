@@ -13,6 +13,7 @@ export type BaseConfig = {
   maaMirror?: NpmRegistryType
   // from @maaxyz/maa-node
   maaStdoutLevel?: 'Off' | 'Fatal' | 'Error' | 'Warn' | 'Info' | 'Debug' | 'Trace' | 'All'
+  maaLogDir?: string
 
   // color?: 'auto' | 'enable' | 'disable'
 }

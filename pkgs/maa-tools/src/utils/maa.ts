@@ -47,7 +47,8 @@ export async function setupMaa(cfg: FullConfig) {
   return versionManager.moduleFolder(maaVersion)
 }
 
-export async function loadMaa(modulePath: string) {
+export async function loadMaa(modulePath: string, logDir: string) {
   const importTarget = path.join(modulePath, '@maaxyz/maa-node/dist/index-client.js')
   await import(url.pathToFileURL(importTarget).toString())
+  maa.Global.log_dir = logDir
 }

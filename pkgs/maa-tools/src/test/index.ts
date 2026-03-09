@@ -1,4 +1,4 @@
-import { info as coreInfo } from '@actions/core'
+import { info as coreInfo, warning as coreWarning } from '@actions/core'
 import chalk from 'chalk'
 import { existsSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
@@ -98,7 +98,11 @@ export async function runTest(cfg: FullConfig) {
       }))
       .filter(({ image, imageRaw }) => {
         if (!existsSync(image)) {
-          console.log(`${name} ${imageRaw} not exists, ignored`)
+          if (cfg.mode === 'github') {
+            coreWarning(`${name} ${imageRaw} not exists, ignored`)
+          } else {
+            console.log(`${name} ${imageRaw} not exists, ignored`)
+          }
           return false
         } else {
           return true
@@ -132,6 +136,7 @@ export async function runTest(cfg: FullConfig) {
           env: {
             MAAFW_MODULE_PATH: modulePath,
             MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
+            MAAFW_LOG_DIR: path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? '.'),
             MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter)
           }
         }
@@ -243,6 +248,7 @@ export async function runTest(cfg: FullConfig) {
       cfg.cwd ?? process.cwd(),
       cfg.test.errorDetailsPath ?? 'maatoolsErrorDetails.json'
     )
+    await fs.mkdir(path.dirname(file), { recursive: true })
     await fs.writeFile(file, JSON.stringify(errorDetails, null, 2))
   }
 

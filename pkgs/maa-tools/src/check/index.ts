@@ -23,7 +23,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
   if (!modulePath) {
     return false
   }
-  await loadMaa(modulePath)
+  await loadMaa(modulePath, path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? '.'))
   if (cfg.maaStdoutLevel) {
     maa.Global.stdout_level = cfg.maaStdoutLevel
   }

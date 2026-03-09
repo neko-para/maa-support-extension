@@ -6,7 +6,7 @@ import { makeFakeController, toArrayBuffer } from '../utils'
 import { loadMaa } from '../utils/maa'
 import type { RecoJob, RecoResult } from './types'
 
-await loadMaa(process.env.MAAFW_MODULE_PATH!)
+await loadMaa(process.env.MAAFW_MODULE_PATH!, process.env.MAAFW_LOG_DIR!)
 
 const stdoutLevels = ['Off', 'Fatal', 'Error', 'Warn', 'Info', 'Debug', 'Trace', 'All'] as const
 type MaaStdoutLevel = (typeof stdoutLevels)[number]

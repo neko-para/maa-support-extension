@@ -23,10 +23,10 @@ function buildTree(
   prefix = ''
 ): TreeOption {
   const key = `${prefix}${detail.name}`
-  let childs: TreeOption[]
+  let childs: TreeOption[] | undefined = undefined
   if (Array.isArray(detail.detail)) {
     childs = detail.detail.map(sub => buildTree(sub, leaves, `${prefix}${detail.name}.`))
-  } else {
+  } else if (detail.detail) {
     const makeEntry = (sub: string, entry: maa.RecoDetailEntry) => {
       leaves[`${key}.${sub}`] = {
         name: `${detail.name} ${sub}`,
@@ -39,18 +39,18 @@ function buildTree(
     }
     childs = []
     if (detail.detail.best) {
-      childs.push(makeEntry('best', detail.detail.best))
+      childs.push(makeEntry('best!', detail.detail.best))
     }
     childs.push({
       key: `${key}.all`,
       label: 'all',
-      children: detail.detail.all.map((entry, idx) => makeEntry(`all[${idx}]`, entry))
+      children: detail.detail.all.map((entry, idx) => makeEntry(`all[${idx}]!`, entry))
     })
     if (detail.detail.filtered.length > 0) {
       childs.push({
         key: `${key}.filtered`,
         label: 'filtered',
-        children: detail.detail.filtered.map((entry, idx) => makeEntry(`filtered[${idx}]`, entry))
+        children: detail.detail.filtered.map((entry, idx) => makeEntry(`filtered[${idx}]!`, entry))
       })
     }
   }
@@ -93,7 +93,11 @@ useDrawStep((ctx, vp) => {
   ctx.font = settingsSt.recoFont.eff
 
   for (const key of checked.value) {
-    const { name, entry } = treeData.value.leaves[key]
+    const info = treeData.value.leaves[key]
+    if (!info) {
+      continue
+    }
+    const { name, entry } = info
 
     const box = vp.toView(
       Box.from(Pos.from(entry.box[0], entry.box[1]), Size.from(entry.box[2], entry.box[3]))
@@ -123,7 +127,7 @@ useDrawStep((ctx, vp) => {
     v-model:checked-keys="checked"
     checkable
     check-strategy="child"
-    :check-on-click="node => !node.children || node.children.length === 0"
+    :check-on-click="node => (node.key as string).endsWith('!')"
     cascade
     expand-on-click
     default-expand-all

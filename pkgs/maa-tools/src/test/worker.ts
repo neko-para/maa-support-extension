@@ -6,7 +6,10 @@ import { makeFakeController, toArrayBuffer } from '../utils'
 import { loadMaa } from '../utils/maa'
 import type { RecoJob, RecoResult } from './types'
 
-await loadMaa(process.env.MAAFW_MODULE_PATH!, process.env.MAAFW_LOG_DIR!)
+await loadMaa(
+  process.env.MAAFW_MODULE_PATH!,
+  path.join(process.env.MAAFW_LOG_DIR!, `maa-${process.env.MAATOOLS_POOL_ID!}-${process.pid}`)
+)
 
 const stdoutLevels = ['Off', 'Fatal', 'Error', 'Warn', 'Info', 'Debug', 'Trace', 'All'] as const
 type MaaStdoutLevel = (typeof stdoutLevels)[number]
@@ -73,7 +76,8 @@ async function performReco(job: RecoJob) {
         imagePathRaw: job.imagePathRaw,
         node: node,
         hit: !!detail?.hit,
-        detail
+        detail,
+        pid: process.pid
       })
     }
     resolve()

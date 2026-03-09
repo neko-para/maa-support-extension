@@ -24,6 +24,7 @@ export type RecoResult = {
   node: string
   hit: boolean
   detail: maa.RecoDetail | null
+  pid: number
 }
 
 export type GroupRecoResult = {

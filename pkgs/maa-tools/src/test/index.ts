@@ -119,7 +119,7 @@ export async function runTest(cfg: FullConfig) {
     await bundle.switchActive(testCases.configs.controller, testCases.configs.resource)
     const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
 
-    const newHashKey = `${testCases.configs.controller}:${testCases.configs.resource}`
+    const newHashKey = `${testCases.configs.controller}-${testCases.configs.resource}`
     if (newHashKey !== poolHashKey) {
       await poolCache?.terminate()
       if (poolCache) {
@@ -137,7 +137,8 @@ export async function runTest(cfg: FullConfig) {
             MAAFW_MODULE_PATH: modulePath,
             MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
             MAAFW_LOG_DIR: path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? '.'),
-            MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter)
+            MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter),
+            MAATOOLS_POOL_ID: newHashKey
           }
         }
       })

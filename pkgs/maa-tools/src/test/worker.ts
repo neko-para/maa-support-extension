@@ -7,8 +7,8 @@ import { loadMaa } from '../utils/maa'
 import type { RecoJob, RecoResult } from './types'
 
 await loadMaa(
-  process.env.MAAFW_MODULE_PATH!,
-  path.join(process.env.MAAFW_LOG_DIR!, `maa-${process.env.MAATOOLS_POOL_ID!}-${process.pid}`)
+  process.env.MAAFW_MODULE_PATH,
+  path.join(process.env.MAAFW_LOG_DIR, `maa-${process.env.MAATOOLS_POOL_ID}-${process.pid}`)
 )
 
 const stdoutLevels = ['Off', 'Fatal', 'Error', 'Warn', 'Info', 'Debug', 'Trace', 'All'] as const
@@ -27,7 +27,7 @@ let taskAddResolve: () => void = () => {}
 async function setup() {
   const ctrl = await makeFakeController()
   const res = new maa.Resource()
-  for (const full of process.env.MAAFW_RESOURCE_PATHS!.split(path.delimiter)) {
+  for (const full of process.env.MAAFW_RESOURCE_PATHS.split(path.delimiter)) {
     await res.post_bundle(full).wait()
   }
   inst = new maa.Tasker()

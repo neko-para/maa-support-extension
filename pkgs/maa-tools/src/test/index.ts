@@ -215,15 +215,19 @@ export async function runTest(cfg: FullConfig) {
             return hit.node === res.node
           }
         })
+
+        if (!res.detail) {
+          putError(`  ${testCase.image} ${res.node} missing detail.`)
+          errorDetails.push(res)
+          continue
+        }
+
         if (hitCfg) {
           if (!res.hit) {
             putError(`  ${testCase.image} ${res.node} should hit but missed`)
             errorDetails.push(res)
           } else if (typeof hitCfg !== 'string') {
-            if (!res.detail) {
-              putError(`  ${testCase.image} ${res.node} missing detail.`)
-              errorDetails.push(res)
-            } else if (!checkRect(hitCfg.box, res.detail!.box)) {
+            if (!checkRect(hitCfg.box, res.detail!.box)) {
               putError(
                 `  ${testCase.image} ${res.node} box mismatch. Expect ${JSON.stringify(hitCfg.box)}, hit ${JSON.stringify(res.detail.box)}`
               )

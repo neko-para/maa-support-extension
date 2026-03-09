@@ -1,3 +1,7 @@
+- 1.0.18
+
+Force require details
+
 - 1.0.17
 
 Add extra folder under maa log dir for test
@@ -10,4 +14,5 @@ Add maaLogDir
 
 - 1.0.15
 
-Add test.errorDetailsPath. supports upload error details.
+Add test.errorDetailsPath
+Supports dump error details

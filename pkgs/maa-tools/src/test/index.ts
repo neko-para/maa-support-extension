@@ -45,7 +45,7 @@ export async function runTest(cfg: FullConfig) {
 
   const result: GroupRecoResult[] = []
 
-  const bundle = await loadBundle(path.resolve(cfg.cwd ?? process.cwd(), cfg.test.interfacePath))
+  const bundle = await loadBundle(cfg)
   if (!bundle) {
     return false
   }
@@ -87,13 +87,12 @@ export async function runTest(cfg: FullConfig) {
 
     const allImages = testCases.cases
       .map(c => ({
-        image:
-          path.resolve(
-            cfg.cwd ?? process.cwd(),
-            cfg.test!.casesCwd ?? '.',
-            testCases.configs.imageRoot ?? '.',
-            c.image
-          ) + '.png',
+        image: path.resolve(
+          cfg.cwd ?? process.cwd(),
+          cfg.test!.casesCwd ?? '.',
+          testCases.configs.imageRoot ?? '.',
+          c.image
+        ),
         imageRaw: c.image
       }))
       .filter(({ image, imageRaw }) => {

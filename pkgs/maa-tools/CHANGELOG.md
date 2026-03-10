@@ -1,6 +1,9 @@
 - 1.0.18
 
 Force require details
+Force require .png for image
+Move interfacePath to base config
+Add vscode config
 
 - 1.0.17
 

@@ -32,7 +32,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
 
   const result: Diagnostic[] = []
 
-  const bundle = await loadBundle(path.resolve(cfg.cwd ?? process.cwd(), cfg.check.interfacePath))
+  const bundle = await loadBundle(cfg)
   if (!bundle) {
     return false
   }

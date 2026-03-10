@@ -16,11 +16,11 @@ export type BaseConfig = {
   maaLogDir?: string
 
   // color?: 'auto' | 'enable' | 'disable'
+
+  interfacePath: string
 }
 
 export type CheckConfig = {
-  interfacePath: string
-
   override?: Partial<Record<DiagnosticType, 'ignore' | 'warning' | 'error'>>
 }
 
@@ -44,7 +44,6 @@ export type TestCases = {
 }
 
 export type TestConfig = {
-  interfacePath: string
   casesCwd?: string
   cases: TestCases[] | (() => Promise<TestCases[]>)
   errorDetailsPath?: string
@@ -53,7 +52,12 @@ export type TestConfig = {
   maxNodePerJob?: number
 }
 
+export type VscodeConfig = {
+  agents?: Record<string, string>
+}
+
 export type FullConfig = BaseConfig & {
   check?: CheckConfig
   test?: TestConfig
+  vscode?: VscodeConfig
 }

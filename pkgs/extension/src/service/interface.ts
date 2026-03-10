@@ -374,6 +374,9 @@ export class InterfaceService extends BaseService {
         Object.assign(debugSessionMapper, cfg['agent.debug'])
       }
     }
+    if (rootService.config?.vscode?.agents) {
+      Object.assign(debugSessionMapper, rootService.config.vscode.agents)
+    }
 
     const agents: AgentConfig[] = []
     if (data.agent) {

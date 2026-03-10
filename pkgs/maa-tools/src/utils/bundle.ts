@@ -3,7 +3,11 @@ import * as path from 'node:path'
 
 import { FsContentLoader, FsContentWatcher, InterfaceBundle } from '@nekosu/maa-pipeline-manager'
 
-export async function loadBundle(interfacePath: string) {
+import type { BaseConfig } from '../types/config'
+
+export async function loadBundle(cfg: BaseConfig) {
+  const interfacePath = path.resolve(cfg.cwd ?? process.cwd(), cfg.interfacePath)
+
   if (!existsSync(interfacePath)) {
     console.log(`${interfacePath} not exists`)
     return null

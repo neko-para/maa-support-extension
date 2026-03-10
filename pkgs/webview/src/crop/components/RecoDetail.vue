@@ -2,7 +2,7 @@
 import { default as CheckOutlined } from '@vicons/material/es/CheckOutlined'
 import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
 import { NIcon, NTree, type TreeOption } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useDrawStep } from '../states/canvas'
 import * as settingsSt from '../states/settings'
@@ -85,7 +85,14 @@ const treeData = computed(() => {
   }
 })
 
-const checked = ref<string[]>(Object.keys(treeData.value.leaves))
+const checked = ref<string[]>([])
+
+watch(
+  () => treeData.value.leaves,
+  () => {
+    checked.value = Object.keys(treeData.value.leaves).filter(k => k.endsWith('best!'))
+  }
+)
 
 useDrawStep((ctx, vp) => {
   ctx.fillStyle = settingsSt.recoStroke.eff
@@ -106,7 +113,7 @@ useDrawStep((ctx, vp) => {
     ctx.stroke()
 
     if (!name.startsWith('@mse/')) {
-      ctx.fillText(name, ...box.rt.add(Size.from(5, 0)).flat())
+      ctx.fillText(name.slice(0, -1), ...box.rt.add(Size.from(5, 0)).flat())
     }
     if (entry.score) {
       const text = entry.score.toFixed(2)

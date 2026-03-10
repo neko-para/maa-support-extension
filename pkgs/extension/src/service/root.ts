@@ -46,6 +46,9 @@ export class RootService extends BaseService {
         this.config = await loadConfig(
           vscode.Uri.joinPath(this.activeResource.workspace, 'maatools.config.mts').fsPath
         )
+        if (this.config?.vscode) {
+          logger.info(`Load config ${JSON.stringify(this.config.vscode)}`)
+        }
       }
       this.configChanged.fire()
     })

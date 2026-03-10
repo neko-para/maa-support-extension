@@ -11,7 +11,9 @@ export async function loadConfig(file: string) {
   }
 
   try {
-    const jiti = createJiti(import.meta.url)
+    const jiti = createJiti(import.meta.url, {
+      moduleCache: false
+    })
     return (await jiti.import(file, { default: true })) as FullConfig
   } catch (err) {
     logger.error(`${err}`)

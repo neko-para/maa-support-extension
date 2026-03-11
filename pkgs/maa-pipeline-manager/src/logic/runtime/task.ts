@@ -17,7 +17,9 @@ export function buildTask(
   ctrlRt: ControllerRuntime,
   resRt: ResourceRuntime
 ): unknown[] | string {
-  const overrides: unknown[] = []
+  const taskMeta = data.task?.find(x => x.name === task.name)
+
+  const overrides: unknown[] = [taskMeta?.pipeline_override ?? {}]
 
   const options = buildOption(data, task, ctrlRt, resRt)
   if (typeof options === 'string') {

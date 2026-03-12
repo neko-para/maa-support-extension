@@ -70,7 +70,10 @@ export function buildTask(
                 throw 'input type mismatch!'
               }
               finalType = expectType
-              result = result.replaceAll(`{${subOpt.name}}`, vals[subOpt.name]!)
+              result = result.replaceAll(
+                `{${subOpt.name}}`,
+                vals[subOpt.name] ?? subOpt.default ?? ''
+              )
             }
           }
           switch (finalType) {

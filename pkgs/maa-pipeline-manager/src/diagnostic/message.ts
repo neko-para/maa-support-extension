@@ -57,6 +57,10 @@ export async function buildDiagnosticMessage(
         return t('maa.pipeline.error.conflict-resource', diag.res, await buildPos(diag.previous))
       case 'int-unknown-resource':
         return t('maa.pipeline.error.unknown-resource', diag.res)
+      case 'int-conflict-group':
+        return t('maa.pipeline.error.conflict-group', diag.group, await buildPos(diag.previous))
+      case 'int-unknown-group':
+        return t('maa.pipeline.error.unknown-group', diag.group)
       case 'int-conflict-option':
         return t('maa.pipeline.error.conflict-option', diag.option, await buildPos(diag.previous))
       case 'int-unknown-option':

@@ -40,22 +40,7 @@ export class InterfaceCompletionProvider
       return null
     }
 
-    if (ref.type === 'interface.option') {
-      const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
-        .filter(decl => decl.type === 'interface.option')
-        .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
-    } else if (ref.type === 'interface.controller') {
+    if (ref.type === 'interface.controller') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
 
       const opts = index.decls
@@ -89,6 +74,36 @@ export class InterfaceCompletionProvider
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
 
       const opts = index.decls.filter(decl => decl.type === 'interface.task').map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
+    } else if (ref.type === 'interface.group') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.group')
+        .map(decl => decl.name)
+      return opts.map(name => {
+        const esc = JSON.stringify(name)
+        return {
+          label: name,
+          kind: vscode.CompletionItemKind.Reference,
+          insertText: esc.substring(1, esc.length - 1),
+          range
+        }
+      })
+    } else if (ref.type === 'interface.option') {
+      const range = convertRangeWithDelta(document, ref.location, -1, 1)
+
+      const opts = index.decls
+        .filter(decl => decl.type === 'interface.option')
+        .map(decl => decl.name)
       return opts.map(name => {
         const esc = JSON.stringify(name)
         return {

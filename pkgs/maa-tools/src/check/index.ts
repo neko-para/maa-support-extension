@@ -135,5 +135,5 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return true
   }
 
-  return result.length === 0 || !loadResourceFailed
+  return result.length === 0 && !loadResourceFailed
 }

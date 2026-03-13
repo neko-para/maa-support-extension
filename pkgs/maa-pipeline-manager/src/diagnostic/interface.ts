@@ -86,6 +86,29 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
     }
   }
 
+  const groupDecls = bundle.info.decls.filter(decl => decl.type === 'interface.group')
+  const groups = new Map<string, (typeof groupDecls)[number]>()
+  for (const decl of groupDecls) {
+    if (groups.has(decl.name)) {
+      const prev = groups.get(decl.name)!
+      result.push({
+        level: 'error',
+        file: decl.file,
+        offset: decl.location.offset,
+        length: decl.location.length,
+        type: 'int-conflict-group',
+        group: decl.name,
+        previous: {
+          file: prev.file,
+          offset: prev.location.offset,
+          length: prev.location.length
+        }
+      })
+    } else {
+      groups.set(decl.name, decl)
+    }
+  }
+
   const optDecls = bundle.info.decls.filter(decl => decl.type === 'interface.option')
   const options = new Map<string, (typeof optDecls)[number]>()
   for (const decl of optDecls) {
@@ -225,6 +248,17 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
           length: ref.location.length,
           type: 'int-unknown-resource',
           res: ref.target
+        })
+      }
+    } else if (ref.type === 'interface.group') {
+      if (!groups.has(ref.target)) {
+        result.push({
+          level: 'error',
+          file: ref.file,
+          offset: ref.location.offset,
+          length: ref.location.length,
+          type: 'int-unknown-group',
+          group: ref.target
         })
       }
     } else if (ref.type === 'interface.option') {

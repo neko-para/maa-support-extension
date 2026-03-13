@@ -71,6 +71,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         decl.type === 'interface.controller' ||
         decl.type === 'interface.resource' ||
+        decl.type === 'interface.group' ||
         decl.type === 'interface.task' ||
         decl.type === 'interface.option'
       ) {
@@ -86,6 +87,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         ref.type === 'interface.controller' ||
         ref.type === 'interface.resource' ||
+        ref.type === 'interface.group' ||
         ref.type === 'interface.task' ||
         ref.type === 'interface.option'
       ) {
@@ -106,6 +108,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         decl.type === 'interface.controller' ||
         decl.type === 'interface.resource' ||
+        decl.type === 'interface.group' ||
         decl.type === 'interface.task' ||
         decl.type === 'interface.option'
       ) {
@@ -121,6 +124,7 @@ export class InterfaceLanguageProvider extends BaseService {
       if (
         ref.type === 'interface.controller' ||
         ref.type === 'interface.resource' ||
+        ref.type === 'interface.group' ||
         ref.type === 'interface.task' ||
         ref.type === 'interface.option'
       ) {

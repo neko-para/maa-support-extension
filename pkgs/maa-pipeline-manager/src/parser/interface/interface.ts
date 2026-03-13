@@ -4,6 +4,7 @@ import { LayerInfo } from '../../layer/layer'
 import type { AbsolutePath, TaskName } from '../../utils/types'
 import { isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
+import { parseGroup } from './group'
 import { parseImport } from './import'
 import { locKeys } from './keys'
 import { parseLanguage } from './language'
@@ -125,6 +126,18 @@ function parseTaskSec(node: Node, info: InterfaceInfo, ctx: InterfaceParseContex
           })
         }
         break
+      case 'group':
+        for (const sub of parseArray(obj)) {
+          if (isString(sub)) {
+            info.refs.push({
+              file: ctx.file,
+              location: sub,
+              type: 'interface.group',
+              target: sub.value
+            })
+          }
+        }
+        break
       case 'resource':
         parseResRef(obj, info, ctx)
         break
@@ -214,6 +227,11 @@ export function parseInterface(node: Node, info: InterfaceInfo, ctx: InterfacePa
       case 'resource':
         for (const sub of parseArray(obj)) {
           parseResource(sub, info, ctx)
+        }
+        break
+      case 'group':
+        for (const sub of parseArray(obj)) {
+          parseGroup(sub, info, ctx)
         }
         break
       case 'task':

@@ -78,6 +78,8 @@ export default {
   'maa.pipeline.error.unknown-controller': '未知控制器 {0}',
   'maa.pipeline.error.conflict-resource': '冲突资源 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-resource': '未知资源 {0}',
+  'maa.pipeline.error.conflict-group': '冲突分组 {0}, 上一个定义在 {1}',
+  'maa.pipeline.error.unknown-group': '未知分组 {0}',
   'maa.pipeline.error.conflict-option': '冲突选项 {0}, 上一个定义在 {1}',
   'maa.pipeline.error.unknown-option': '未知选项 {0}',
   'maa.pipeline.error.conflict-case': '选项 {1} 冲突选项值 {0}, 上一个定义在 {2}',

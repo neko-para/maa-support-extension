@@ -86,6 +86,15 @@ export type DiagnosticInterface =
       res: string
     }
   | {
+      type: 'int-conflict-group'
+      group: string
+      previous: DiagnosticPosition
+    }
+  | {
+      type: 'int-unknown-group'
+      group: string
+    }
+  | {
       type: 'int-conflict-option'
       option: string
       previous: DiagnosticPosition

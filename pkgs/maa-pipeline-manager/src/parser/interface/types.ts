@@ -22,6 +22,11 @@ export type IntResDeclInfo = {
   controller?: string[]
 }
 
+export type IntGroupDeclInfo = {
+  type: 'interface.group'
+  name: string
+}
+
 export type IntTaskDeclInfo = {
   type: 'interface.task'
   name: TaskName
@@ -60,6 +65,7 @@ export type InterfaceDeclInfo = {
   | IntLangDeclInfo
   | IntCtrlDeclInfo
   | IntResDeclInfo
+  | IntGroupDeclInfo
   | IntTaskDeclInfo
   | IntOptionDeclInfo
   | IntCaseDeclInfo
@@ -84,6 +90,11 @@ export type IntCtrlRefInfo = {
 
 export type IntResRefInfo = {
   type: 'interface.resource'
+  target: string
+}
+
+export type IntGroupRefInfo = {
+  type: 'interface.group'
   target: string
 }
 
@@ -131,6 +142,7 @@ export type InterfaceRefInfo = {
   | IntResPathRefInfo
   | IntCtrlRefInfo
   | IntResRefInfo
+  | IntGroupRefInfo
   | IntTaskRefInfo
   | IntTaskEntryRefInfo
   | IntOptionRefInfo

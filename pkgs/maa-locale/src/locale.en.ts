@@ -81,6 +81,8 @@ export default {
   'maa.pipeline.error.unknown-controller': 'Unknown controller {0}',
   'maa.pipeline.error.conflict-resource': 'Conflict resource {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-resource': 'Unknown resource {0}',
+  'maa.pipeline.error.conflict-group': 'Conflict group {0}, previous defined in {1}',
+  'maa.pipeline.error.unknown-group': 'Unknown group {0}',
   'maa.pipeline.error.conflict-option': 'Conflict option {0}, previous defined in {1}',
   'maa.pipeline.error.unknown-option': 'Unknown option {0}',
   'maa.pipeline.error.conflict-case': 'Conflict case {0} for option {1}, previous defined in {2}',

@@ -1,3 +1,8 @@
+- 1.0.19
+
+Fix check return code error
+Support interface group
+
 - 1.0.18
 
 Force require details

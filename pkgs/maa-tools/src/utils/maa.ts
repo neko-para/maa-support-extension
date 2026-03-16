@@ -9,7 +9,7 @@ import type { FullConfig } from '../types/config'
 
 export async function setupMaa(cfg: FullConfig) {
   const versionManager = new MaaVersionManager(
-    cfg.maaCache ?? path.join(os.homedir(), '.maa-checker')
+    cfg.maaCache ?? path.join(os.homedir(), '.maa-tools')
   )
   versionManager.registry = MaaVersionManager.registries[cfg.maaMirror ?? 'npm']
 

@@ -16,10 +16,9 @@ hljs.registerLanguage('json', json)
   <template v-if="loaded">
     <n-config-provider :theme="theme" :theme-overrides="themeOverride" :hljs="hljs">
       <div class="launch-root">
-        <launch-control-bar></launch-control-bar>
-        <div class="launch-analyzer">
+        <launch-control-bar>
           <analyzer-frame></analyzer-frame>
-        </div>
+        </launch-control-bar>
       </div>
     </n-config-provider>
   </template>

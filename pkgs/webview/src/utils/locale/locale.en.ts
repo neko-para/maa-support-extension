@@ -99,5 +99,7 @@ export default {
   'maa.launch.add-breakpoint': 'Add Breakpoint',
   'maa.launch.show': 'Show',
   'maa.launch.hide': 'Hide',
-  'maa.launch.reveal': 'Reveal'
+  'maa.launch.reveal': 'Reveal',
+  'maa.launch.analyzer': 'Analyzer',
+  'maa.launch.analyzer-empty': 'Set `maa.launchAnalyzerUrl` to load Maa Log Analyzer iframe.'
 } as const

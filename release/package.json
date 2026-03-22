@@ -108,6 +108,11 @@
           "minimum": -1,
           "default": 30000
         },
+        "maa.launchAnalyzerUrl": {
+          "type": "string",
+          "description": "%maa.setting.launch-analyzer-url%",
+          "default": ""
+        },
         "maa.win32ProcKeep": {
           "type": "boolean",
           "description": "keep win32 admin process conhost alive",

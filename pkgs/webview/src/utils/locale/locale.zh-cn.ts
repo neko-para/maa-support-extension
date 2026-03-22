@@ -99,5 +99,7 @@ export default {
   'maa.launch.add-breakpoint': '添加断点',
   'maa.launch.show': '显示',
   'maa.launch.hide': '隐藏',
-  'maa.launch.reveal': '查看'
+  'maa.launch.reveal': '查看',
+  'maa.launch.analyzer': '分析器',
+  'maa.launch.analyzer-empty': '请配置 `maa.launchAnalyzerUrl` 以加载 Maa Log Analyzer iframe。'
 } as const

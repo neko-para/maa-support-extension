@@ -8,8 +8,16 @@ import { analyzerBridge } from '../states/analyzer'
 
 const iframeEl = ref<HTMLIFrameElement | null>(null)
 const analyzerUrl = computed(() => hostState.value.analyzerUrl?.trim() ?? '')
+const finalAnalyzerUrl = computed(() => {
+  if (!analyzerUrl.value) {
+    return ''
+  }
+  const url = new URL(analyzerUrl.value)
+  url.searchParams.append('embed', 'vscode-panel')
+  return url.toString()
+})
 
-watch(analyzerUrl, () => {
+watch(finalAnalyzerUrl, () => {
   analyzerBridge.setIframe(null)
 })
 watch(iframeEl, iframe => {
@@ -28,8 +36,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <template v-if="analyzerUrl">
-    <iframe ref="iframeEl" :src="analyzerUrl" class="analyzer-iframe" @load="onIframeLoad"></iframe>
+  <template v-if="finalAnalyzerUrl">
+    <iframe
+      ref="iframeEl"
+      :src="finalAnalyzerUrl"
+      class="analyzer-iframe"
+      @load="onIframeLoad"
+    ></iframe>
   </template>
   <n-text v-else depth="3" style="display: block; padding: 16px">
     {{ t('maa.launch.analyzer-empty') }}

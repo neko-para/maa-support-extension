@@ -111,7 +111,7 @@
         "maa.launchAnalyzerUrl": {
           "type": "string",
           "description": "%maa.setting.launch-analyzer-url%",
-          "default": ""
+          "default": "https://mla.maafw.com/"
         },
         "maa.win32ProcKeep": {
           "type": "boolean",

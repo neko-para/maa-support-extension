@@ -84,7 +84,7 @@ export function buildTask(
             case 'bool':
               return result === 'true'
           }
-          return ''
+          return v
         } else {
           return v
         }

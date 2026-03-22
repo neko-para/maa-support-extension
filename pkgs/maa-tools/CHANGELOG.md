@@ -1,3 +1,7 @@
+- 1.0.20
+
+Change cache folder to ~/.maa-tools
+
 - 1.0.19
 
 Fix check return code error

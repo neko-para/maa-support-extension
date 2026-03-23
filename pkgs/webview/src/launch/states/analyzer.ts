@@ -68,7 +68,7 @@ const ERROR_SESSION_NOT_FOUND = -32002
 const ERROR_INVALID_PARAMS = -32004
 const ERROR_INTERNAL = -32005
 
-const PUSH_INTERVAL_MS = 80
+const PUSH_INTERVAL_MS = 20
 const MAX_PUSH_BATCH_SIZE = 200
 
 class ProtocolError extends Error {

@@ -68,9 +68,15 @@ jobs:
       - name: Package extension
         shell: bash
         run: |
+          is_prerelease=${{ startsWith(github.ref, 'refs/tags/p')  }}
+
           npm i -g @vscode/vsce
           cd release
-          vsce package
+          if $is_prerelease; then
+            vsce package --pre-release
+          else
+            vsce package
+          fi
           mkdir vsix
           cp *.vsix vsix/
 

@@ -44,6 +44,22 @@ type SnapshotReplayPlan = {
   maxBatchSize: number
 }
 
+type RecoDetailData = {
+  info: maa.RecoDetailWithoutDraws
+  raw: string
+  draws: string[]
+}
+
+type CachedImageRefs = {
+  raw: number
+  draws: number[]
+}
+
+type CachedImageItem = {
+  dataUrl: string
+  taskId: number | null
+}
+
 const PROTOCOL_VERSION = 1
 const JSON_RPC_VERSION = '2.0' as const
 
@@ -141,6 +157,14 @@ class LaunchAnalyzerBridge {
   private readonly pendingLiveEvents: RealtimeEventItem[] = []
   private readonly historyEvents: RealtimeEventItem[] = []
   private outboundQueue: JsonRpcNotification[] = []
+
+  private nextCachedImageId = 1
+  private readonly cachedImageById = new Map<number, CachedImageItem>()
+  private readonly recoDetailByTaskAndId = new Map<string, RecoDetailData>()
+  private readonly actionDetailByTaskAndId = new Map<string, unknown>()
+  private readonly pendingRecoDetailKeys = new Set<string>()
+  private readonly pendingActionDetailKeys = new Set<string>()
+  private currentTaskId: number | null = null
 
   private readonly handleWindowMessage = (event: MessageEvent) => {
     if (!this.iframeWindow || event.source !== this.iframeWindow) {
@@ -258,6 +282,8 @@ class LaunchAnalyzerBridge {
     this.pendingLiveEvents.length = 0
     this.historyEvents.length = 0
     this.outboundQueue = this.outboundQueue.filter(item => item.method.startsWith('bridge.'))
+    this.clearCachedImages()
+    this.clearDetailCaches()
 
     this.enqueueNotification('realtime.start', params)
     this.drainOutboundQueue()
@@ -300,6 +326,10 @@ class LaunchAnalyzerBridge {
 
     const rawMsg = msg as Record<string, unknown>
     const msgName = typeof rawMsg['msg'] === 'string' ? rawMsg['msg'] : 'unknown'
+    const taskId = this.readIntegerField(rawMsg, 'task_id')
+    if (taskId !== null) {
+      this.currentTaskId = taskId
+    }
 
     const details: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(rawMsg)) {
@@ -317,6 +347,7 @@ class LaunchAnalyzerBridge {
     }
     this.pendingLiveEvents.push(event)
     this.historyEvents.push(event)
+    void this.prefetchDetail(rawMsg, msgName, taskId)
 
     if (!this.flushTimer) {
       this.flushTimer = setTimeout(() => {
@@ -448,27 +479,67 @@ class LaunchAnalyzerBridge {
     const sessionId = this.parseString(params['sessionId'], 'query.detail.sessionId')
     const target = this.parseString(params['target'], 'query.detail.target')
     const id = this.parseInteger(params['id'], 'query.detail.id')
+    const taskId = this.parseQueryDetailTaskId(params)
 
     if (!this.session || this.session.sessionId !== sessionId) {
       throw new ProtocolError(ERROR_SESSION_NOT_FOUND, 'session not found')
     }
 
     if (target === 'reco') {
+      const scopedTaskId = this.requireQueryDetailTaskId(taskId, 'reco')
+      const cachedReco = this.recoDetailByTaskAndId.get(this.detailCacheKey(scopedTaskId, id))
+      if (cachedReco) {
+        const refs = this.cacheRecoImages(cachedReco, scopedTaskId)
+        return {
+          target,
+          id,
+          data: {
+            info: cachedReco.info,
+            cached_image: refs
+          }
+        }
+      }
+      if (this.currentTaskId !== null && scopedTaskId !== this.currentTaskId) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+
       const data = await ipc.call({
         command: 'requestReco',
         reco_id: id
       })
-      if (!data) {
+      const recoData = this.parseRecoDetailData(data)
+      if (!recoData) {
         throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
       }
+      this.recoDetailByTaskAndId.set(this.detailCacheKey(scopedTaskId, id), recoData)
+
+      const cached = this.cacheRecoImages(recoData, scopedTaskId)
       return {
         target,
         id,
-        data
+        data: {
+          info: recoData.info,
+          cached_image: cached
+        }
       }
     }
 
     if (target === 'action') {
+      const scopedTaskId = this.requireQueryDetailTaskId(taskId, 'action')
+      const cachedAction = this.actionDetailByTaskAndId.get(this.detailCacheKey(scopedTaskId, id))
+      if (cachedAction) {
+        return {
+          target,
+          id,
+          data: {
+            info: cachedAction
+          }
+        }
+      }
+      if (this.currentTaskId !== null && scopedTaskId !== this.currentTaskId) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+
       const data = await ipc.call({
         command: 'requestAct',
         action_id: id
@@ -476,15 +547,31 @@ class LaunchAnalyzerBridge {
       if (!data) {
         throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
       }
+      this.actionDetailByTaskAndId.set(this.detailCacheKey(scopedTaskId, id), data)
       return {
         target,
         id,
-        data
+        data: {
+          info: data
+        }
       }
     }
 
     if (target === 'cached_image') {
-      throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      const image = this.cachedImageById.get(id)
+      if (!image) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+      if (taskId !== null && image.taskId !== null && image.taskId !== taskId) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+      return {
+        target,
+        id,
+        data: {
+          dataUrl: image.dataUrl
+        }
+      }
     }
 
     throw new ProtocolError(ERROR_INVALID_PARAMS, 'invalid target')
@@ -567,6 +654,173 @@ class LaunchAnalyzerBridge {
       throw new ProtocolError(ERROR_INVALID_PARAMS, `${key} should be integer`)
     }
     return data
+  }
+
+  private parseOptionalInteger(data: unknown, key: string): number | null {
+    if (data === undefined || data === null) {
+      return null
+    }
+    return this.parseInteger(data, key)
+  }
+
+  private parseQueryDetailTaskId(params: Record<string, unknown>): number | null {
+    const taskIdCamel = this.parseOptionalInteger(params['taskId'], 'query.detail.taskId')
+    const taskIdSnake = this.parseOptionalInteger(params['task_id'], 'query.detail.task_id')
+    if (taskIdCamel !== null && taskIdSnake !== null && taskIdCamel !== taskIdSnake) {
+      throw new ProtocolError(ERROR_INVALID_PARAMS, 'query.detail.taskId and task_id mismatch')
+    }
+
+    return taskIdCamel ?? taskIdSnake
+  }
+
+  private requireQueryDetailTaskId(taskId: number | null, target: 'reco' | 'action'): number {
+    if (taskId === null) {
+      throw new ProtocolError(
+        ERROR_INVALID_PARAMS,
+        `query.detail.taskId or task_id is required for target ${target}`
+      )
+    }
+    return taskId
+  }
+
+  private parseRecoDetailData(data: unknown): RecoDetailData | null {
+    if (!isRecord(data)) {
+      return null
+    }
+
+    const info = data['info']
+    const raw = data['raw']
+    const draws = data['draws']
+    if (
+      !info ||
+      typeof raw !== 'string' ||
+      !Array.isArray(draws) ||
+      draws.some(entry => typeof entry !== 'string')
+    ) {
+      return null
+    }
+
+    return {
+      info: info as maa.RecoDetailWithoutDraws,
+      raw,
+      draws
+    }
+  }
+
+  private clearCachedImages() {
+    this.nextCachedImageId = 1
+    this.cachedImageById.clear()
+  }
+
+  private clearDetailCaches() {
+    this.currentTaskId = null
+    this.recoDetailByTaskAndId.clear()
+    this.actionDetailByTaskAndId.clear()
+    this.pendingRecoDetailKeys.clear()
+    this.pendingActionDetailKeys.clear()
+  }
+
+  private detailCacheKey(taskId: number, id: number) {
+    return `${taskId}:${id}`
+  }
+
+  private readIntegerField(raw: Record<string, unknown>, field: string): number | null {
+    const value = raw[field]
+    if (typeof value !== 'number' || !Number.isInteger(value)) {
+      return null
+    }
+    return value
+  }
+
+  private async prefetchDetail(
+    rawMsg: Record<string, unknown>,
+    msgName: string,
+    taskId: number | null
+  ) {
+    if (taskId === null) {
+      return
+    }
+
+    if (msgName === 'Recognition.Succeeded' || msgName === 'Recognition.Failed') {
+      const recoId = this.readIntegerField(rawMsg, 'reco_id')
+      if (recoId !== null) {
+        await this.prefetchRecoDetail(taskId, recoId)
+      }
+      return
+    }
+
+    if (msgName === 'Action.Succeeded' || msgName === 'Action.Failed') {
+      const actionId = this.readIntegerField(rawMsg, 'action_id')
+      if (actionId !== null) {
+        await this.prefetchActionDetail(taskId, actionId)
+      }
+    }
+  }
+
+  private async prefetchRecoDetail(taskId: number, recoId: number) {
+    const key = this.detailCacheKey(taskId, recoId)
+    if (this.recoDetailByTaskAndId.has(key) || this.pendingRecoDetailKeys.has(key)) {
+      return
+    }
+
+    this.pendingRecoDetailKeys.add(key)
+    try {
+      const data = await ipc.call({
+        command: 'requestReco',
+        reco_id: recoId
+      })
+      const recoData = this.parseRecoDetailData(data)
+      if (recoData) {
+        this.recoDetailByTaskAndId.set(key, recoData)
+      }
+    } finally {
+      this.pendingRecoDetailKeys.delete(key)
+    }
+  }
+
+  private async prefetchActionDetail(taskId: number, actionId: number) {
+    const key = this.detailCacheKey(taskId, actionId)
+    if (this.actionDetailByTaskAndId.has(key) || this.pendingActionDetailKeys.has(key)) {
+      return
+    }
+
+    this.pendingActionDetailKeys.add(key)
+    try {
+      const data = await ipc.call({
+        command: 'requestAct',
+        action_id: actionId
+      })
+      if (data) {
+        this.actionDetailByTaskAndId.set(key, data)
+      }
+    } finally {
+      this.pendingActionDetailKeys.delete(key)
+    }
+  }
+
+  private cacheRecoImages(data: RecoDetailData, taskId: number | null): CachedImageRefs {
+    const rawId = this.nextCachedImageId
+    this.nextCachedImageId += 1
+    this.cachedImageById.set(rawId, {
+      dataUrl: data.raw,
+      taskId
+    })
+
+    const drawIds: number[] = []
+    for (let i = 0; i < data.draws.length; i += 1) {
+      const drawId = this.nextCachedImageId
+      this.nextCachedImageId += 1
+      drawIds.push(drawId)
+      this.cachedImageById.set(drawId, {
+        dataUrl: data.draws[i]!,
+        taskId
+      })
+    }
+
+    return {
+      raw: rawId,
+      draws: drawIds
+    }
   }
 }
 

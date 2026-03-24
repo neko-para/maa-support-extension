@@ -6,8 +6,10 @@ import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
+import { locale } from '@nekosu/maa-locale'
 
-import { rootService, serverService } from '.'
+import { nativeService, rootService, serverService } from '.'
+import pkg from '../../../../release/package.json'
 import { BaseService } from './context'
 
 type AgentInfo =
@@ -42,6 +44,20 @@ export class AgentService extends BaseService {
 
   async init() {}
 
+  wrapEnv(env: Record<string, string>) {
+    return {
+      ...env,
+      PI_INTERFACE_VERSION: 'v2.5.0',
+      PI_CLIENT_NAME: 'VsCode',
+      PI_CLIENT_VERSION: pkg.version,
+      PI_CLIENT_LANGUAGE: locale,
+      PI_CLIENT_MAAFW_VERSION: nativeService.version,
+      PI_VERSION: '',
+      PI_CONTROLLER: '{}',
+      PI_RESOURCE: '{}'
+    }
+  }
+
   async startTask(exec: string, args: string[], cwd: string, env: Record<string, string>) {
     const id = v4()
     const task = new vscode.Task(
@@ -54,7 +70,7 @@ export class AgentService extends BaseService {
       'maa',
       new vscode.ShellExecution(exec, args, {
         cwd,
-        env
+        env: this.wrapEnv(env)
       })
     )
     this.agents[id] = {
@@ -64,7 +80,7 @@ export class AgentService extends BaseService {
     return id
   }
 
-  async startDebugSession(name: string, identifier: string) {
+  async startDebugSession(name: string, identifier: string, env: Record<string, string>) {
     const launchJsonPath = path.join(
       rootService.activeResource!.workspace.fsPath,
       '.vscode',
@@ -95,6 +111,8 @@ export class AgentService extends BaseService {
             return v
           }
         })
+      } else if (typeof val === 'string' && val === '{AGENT_ENV}') {
+        config[key] = this.wrapEnv(env)
       }
     }
     if (!replaced) {

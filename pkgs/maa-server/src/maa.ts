@@ -131,8 +131,15 @@ async function setupAgent(
   logger.info(`AgentClient listening ${identifier}`)
 
   let agent: string | undefined = undefined
+  const env = {
+    VSCODE_MAAFW_AGENT: '1',
+    VSCODE_MAAFW_AGENT_ROOT: runtime.root,
+    VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource.paths
+      .map(p => path.resolve(runtime.root, p))
+      .join(path.delimiter)
+  }
   if (agentConfig.debug_session) {
-    const handle = await ipc.startDebugSession(agentConfig.debug_session, identifier)
+    const handle = await ipc.startDebugSession(agentConfig.debug_session, identifier, env)
     if (!handle) {
       client.destroy()
       return null
@@ -143,13 +150,7 @@ async function setupAgent(
       agentConfig.child_exec,
       (agentConfig.child_args ?? []).concat([identifier]),
       runtime.root,
-      {
-        VSCODE_MAAFW_AGENT: '1',
-        VSCODE_MAAFW_AGENT_ROOT: runtime.root,
-        VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource.paths
-          .map(p => path.resolve(runtime.root, p))
-          .join(path.delimiter)
-      }
+      env
     )
     if (!handle) {
       client.destroy()

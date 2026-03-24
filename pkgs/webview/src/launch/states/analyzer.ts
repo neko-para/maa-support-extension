@@ -160,10 +160,9 @@ class LaunchAnalyzerBridge {
 
   private nextCachedImageId = 1
   private readonly cachedImageById = new Map<number, CachedImageItem>()
+  private readonly recoImageRefsByTaskAndId = new Map<string, CachedImageRefs>()
   private readonly recoDetailByTaskAndId = new Map<string, RecoDetailData>()
   private readonly actionDetailByTaskAndId = new Map<string, unknown>()
-  private readonly pendingRecoDetailKeys = new Set<string>()
-  private readonly pendingActionDetailKeys = new Set<string>()
   private currentTaskId: number | null = null
 
   private readonly handleWindowMessage = (event: MessageEvent) => {
@@ -347,7 +346,6 @@ class LaunchAnalyzerBridge {
     }
     this.pendingLiveEvents.push(event)
     this.historyEvents.push(event)
-    void this.prefetchDetail(rawMsg, msgName, taskId)
 
     if (!this.flushTimer) {
       this.flushTimer = setTimeout(() => {
@@ -487,9 +485,10 @@ class LaunchAnalyzerBridge {
 
     if (target === 'reco') {
       const scopedTaskId = this.requireQueryDetailTaskId(taskId, 'reco')
-      const cachedReco = this.recoDetailByTaskAndId.get(this.detailCacheKey(scopedTaskId, id))
+      const detailKey = this.detailCacheKey(scopedTaskId, id)
+      const cachedReco = this.recoDetailByTaskAndId.get(detailKey)
       if (cachedReco) {
-        const refs = this.cacheRecoImages(cachedReco, scopedTaskId)
+        const refs = this.getOrCreateRecoImageRefs(detailKey, cachedReco, scopedTaskId)
         return {
           target,
           id,
@@ -511,9 +510,9 @@ class LaunchAnalyzerBridge {
       if (!recoData) {
         throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
       }
-      this.recoDetailByTaskAndId.set(this.detailCacheKey(scopedTaskId, id), recoData)
+      this.recoDetailByTaskAndId.set(detailKey, recoData)
 
-      const cached = this.cacheRecoImages(recoData, scopedTaskId)
+      const cached = this.getOrCreateRecoImageRefs(detailKey, recoData, scopedTaskId)
       return {
         target,
         id,
@@ -710,14 +709,13 @@ class LaunchAnalyzerBridge {
   private clearCachedImages() {
     this.nextCachedImageId = 1
     this.cachedImageById.clear()
+    this.recoImageRefsByTaskAndId.clear()
   }
 
   private clearDetailCaches() {
     this.currentTaskId = null
     this.recoDetailByTaskAndId.clear()
     this.actionDetailByTaskAndId.clear()
-    this.pendingRecoDetailKeys.clear()
-    this.pendingActionDetailKeys.clear()
   }
 
   private detailCacheKey(taskId: number, id: number) {
@@ -732,70 +730,19 @@ class LaunchAnalyzerBridge {
     return value
   }
 
-  private async prefetchDetail(
-    rawMsg: Record<string, unknown>,
-    msgName: string,
+  private getOrCreateRecoImageRefs(
+    detailKey: string,
+    data: RecoDetailData,
     taskId: number | null
-  ) {
-    if (taskId === null) {
-      return
+  ): CachedImageRefs {
+    const cached = this.recoImageRefsByTaskAndId.get(detailKey)
+    if (cached) {
+      return cached
     }
 
-    if (msgName === 'Recognition.Succeeded' || msgName === 'Recognition.Failed') {
-      const recoId = this.readIntegerField(rawMsg, 'reco_id')
-      if (recoId !== null) {
-        await this.prefetchRecoDetail(taskId, recoId)
-      }
-      return
-    }
-
-    if (msgName === 'Action.Succeeded' || msgName === 'Action.Failed') {
-      const actionId = this.readIntegerField(rawMsg, 'action_id')
-      if (actionId !== null) {
-        await this.prefetchActionDetail(taskId, actionId)
-      }
-    }
-  }
-
-  private async prefetchRecoDetail(taskId: number, recoId: number) {
-    const key = this.detailCacheKey(taskId, recoId)
-    if (this.recoDetailByTaskAndId.has(key) || this.pendingRecoDetailKeys.has(key)) {
-      return
-    }
-
-    this.pendingRecoDetailKeys.add(key)
-    try {
-      const data = await ipc.call({
-        command: 'requestReco',
-        reco_id: recoId
-      })
-      const recoData = this.parseRecoDetailData(data)
-      if (recoData) {
-        this.recoDetailByTaskAndId.set(key, recoData)
-      }
-    } finally {
-      this.pendingRecoDetailKeys.delete(key)
-    }
-  }
-
-  private async prefetchActionDetail(taskId: number, actionId: number) {
-    const key = this.detailCacheKey(taskId, actionId)
-    if (this.actionDetailByTaskAndId.has(key) || this.pendingActionDetailKeys.has(key)) {
-      return
-    }
-
-    this.pendingActionDetailKeys.add(key)
-    try {
-      const data = await ipc.call({
-        command: 'requestAct',
-        action_id: actionId
-      })
-      if (data) {
-        this.actionDetailByTaskAndId.set(key, data)
-      }
-    } finally {
-      this.pendingActionDetailKeys.delete(key)
-    }
+    const refs = this.cacheRecoImages(data, taskId)
+    this.recoImageRefsByTaskAndId.set(detailKey, refs)
+    return refs
   }
 
   private cacheRecoImages(data: RecoDetailData, taskId: number | null): CachedImageRefs {

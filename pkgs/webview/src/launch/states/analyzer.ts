@@ -498,9 +498,6 @@ class LaunchAnalyzerBridge {
           }
         }
       }
-      if (this.currentTaskId !== null && scopedTaskId !== this.currentTaskId) {
-        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
-      }
 
       const data = await ipc.call({
         command: 'requestReco',
@@ -534,9 +531,6 @@ class LaunchAnalyzerBridge {
             info: cachedAction
           }
         }
-      }
-      if (this.currentTaskId !== null && scopedTaskId !== this.currentTaskId) {
-        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
       }
 
       const data = await ipc.call({

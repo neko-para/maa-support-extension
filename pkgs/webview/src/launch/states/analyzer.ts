@@ -438,6 +438,46 @@ class LaunchAnalyzerBridge {
         return
       }
 
+      if (message.method === 'query.node') {
+        const result = await this.handleQueryNode(message.params)
+        this.postResponse({
+          jsonrpc: JSON_RPC_VERSION,
+          id: message.id,
+          result
+        })
+        return
+      }
+
+      if (message.method === 'query.taskDoc') {
+        const result = await this.handleQueryTaskDoc(message.params)
+        this.postResponse({
+          jsonrpc: JSON_RPC_VERSION,
+          id: message.id,
+          result
+        })
+        return
+      }
+
+      if (message.method === 'command.reveal') {
+        const result = this.handleCommandReveal(message.params)
+        this.postResponse({
+          jsonrpc: JSON_RPC_VERSION,
+          id: message.id,
+          result
+        })
+        return
+      }
+
+      if (message.method === 'command.openCrop') {
+        const result = this.handleCommandOpenCrop(message.params)
+        this.postResponse({
+          jsonrpc: JSON_RPC_VERSION,
+          id: message.id,
+          result
+        })
+        return
+      }
+
       if (message.method === 'realtime.snapshot.request') {
         const plan = this.handleSnapshotRequest(message.params)
         this.postResponse({
@@ -477,11 +517,8 @@ class LaunchAnalyzerBridge {
     const sessionId = this.parseString(params['sessionId'], 'query.detail.sessionId')
     const target = this.parseString(params['target'], 'query.detail.target')
     const id = this.parseInteger(params['id'], 'query.detail.id')
-    const taskId = this.parseQueryDetailTaskId(params)
-
-    if (!this.session || this.session.sessionId !== sessionId) {
-      throw new ProtocolError(ERROR_SESSION_NOT_FOUND, 'session not found')
-    }
+    const taskId = this.parseTaskId(params, 'query.detail')
+    this.ensureSession(sessionId)
 
     if (target === 'reco') {
       const scopedTaskId = this.requireQueryDetailTaskId(taskId, 'reco')
@@ -570,14 +607,124 @@ class LaunchAnalyzerBridge {
     throw new ProtocolError(ERROR_INVALID_PARAMS, 'invalid target')
   }
 
+  private async handleQueryNode(raw: unknown) {
+    const params = this.parseRecord(raw, 'query.node params')
+    const sessionId = this.parseString(params['sessionId'], 'query.node.sessionId')
+    const task = this.parseString(params['task'], 'query.node.task')
+    this.ensureSession(sessionId)
+
+    const data = await ipc.call({
+      command: 'requestNode',
+      node: task
+    })
+
+    return {
+      task,
+      data: typeof data === 'string' ? data : null
+    }
+  }
+
+  private async handleQueryTaskDoc(raw: unknown) {
+    const params = this.parseRecord(raw, 'query.taskDoc params')
+    const sessionId = this.parseString(params['sessionId'], 'query.taskDoc.sessionId')
+    const task = this.parseString(params['task'], 'query.taskDoc.task')
+    this.ensureSession(sessionId)
+
+    const doc = await ipc.call({
+      command: 'taskDoc',
+      task
+    })
+
+    return {
+      task,
+      doc: typeof doc === 'string' ? doc : ''
+    }
+  }
+
+  private handleCommandReveal(raw: unknown) {
+    const params = this.parseRecord(raw, 'command.reveal params')
+    const sessionId = this.parseString(params['sessionId'], 'command.reveal.sessionId')
+    const task = this.parseString(params['task'], 'command.reveal.task')
+    this.ensureSession(sessionId)
+
+    ipc.send({
+      command: 'gotoTask',
+      task
+    })
+
+    return {
+      ok: true
+    }
+  }
+
+  private handleCommandOpenCrop(raw: unknown) {
+    const params = this.parseRecord(raw, 'command.openCrop params')
+    const sessionId = this.parseString(params['sessionId'], 'command.openCrop.sessionId')
+    this.ensureSession(sessionId)
+
+    const taskId = this.parseTaskId(params, 'command.openCrop')
+    const cachedImageId = this.parseDualOptionalInteger(
+      params,
+      'cachedImageId',
+      'cached_image_id',
+      'command.openCrop'
+    )
+    const dataUrl = this.parseDualOptionalString(params, 'dataUrl', 'data_url', 'command.openCrop')
+
+    let image = dataUrl
+    if (cachedImageId !== null) {
+      const cached = this.cachedImageById.get(cachedImageId)
+      if (!cached) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+      if (taskId !== null && cached.taskId !== null && cached.taskId !== taskId) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+      image = cached.dataUrl
+    }
+
+    if (!image) {
+      throw new ProtocolError(
+        ERROR_INVALID_PARAMS,
+        'command.openCrop requires cachedImageId/cached_image_id or dataUrl/data_url'
+      )
+    }
+
+    const recoId = this.parseDualOptionalInteger(params, 'recoId', 'reco_id', 'command.openCrop')
+    let detail: maa.RecoDetailWithoutDraws | undefined = undefined
+    if (recoId !== null) {
+      if (taskId === null) {
+        throw new ProtocolError(
+          ERROR_INVALID_PARAMS,
+          'command.openCrop.taskId or task_id is required when recoId/reco_id is provided'
+        )
+      }
+      const scopedTaskId = taskId
+      const cachedReco = this.recoDetailByTaskAndId.get(this.detailCacheKey(scopedTaskId, recoId))
+      if (!cachedReco) {
+        throw new ProtocolError(ERROR_NOT_FOUND, 'detail not found')
+      }
+      detail = cachedReco.info
+    }
+
+    ipc.send({
+      command: 'openCrop',
+      image,
+      detail
+    })
+
+    return {
+      ok: true,
+      detailAttached: !!detail
+    }
+  }
+
   private handleSnapshotRequest(raw: unknown): SnapshotReplayPlan {
     const params = this.parseRecord(raw, 'realtime.snapshot.request params')
     const sessionId = this.parseString(params['sessionId'], 'realtime.snapshot.request.sessionId')
     const lastSeq = this.parseInteger(params['lastSeq'], 'realtime.snapshot.request.lastSeq')
 
-    if (!this.session || this.session.sessionId !== sessionId) {
-      throw new ProtocolError(ERROR_SESSION_NOT_FOUND, 'session not found')
-    }
+    this.ensureSession(sessionId)
 
     const maxBatchSizeRaw = params['maxBatchSize']
     const maxBatchSize =
@@ -649,6 +796,13 @@ class LaunchAnalyzerBridge {
     return data
   }
 
+  private parseOptionalString(data: unknown, key: string): string | null {
+    if (data === undefined || data === null) {
+      return null
+    }
+    return this.parseString(data, key)
+  }
+
   private parseOptionalInteger(data: unknown, key: string): number | null {
     if (data === undefined || data === null) {
       return null
@@ -656,14 +810,50 @@ class LaunchAnalyzerBridge {
     return this.parseInteger(data, key)
   }
 
-  private parseQueryDetailTaskId(params: Record<string, unknown>): number | null {
-    const taskIdCamel = this.parseOptionalInteger(params['taskId'], 'query.detail.taskId')
-    const taskIdSnake = this.parseOptionalInteger(params['task_id'], 'query.detail.task_id')
-    if (taskIdCamel !== null && taskIdSnake !== null && taskIdCamel !== taskIdSnake) {
-      throw new ProtocolError(ERROR_INVALID_PARAMS, 'query.detail.taskId and task_id mismatch')
+  private parseDualOptionalInteger(
+    params: Record<string, unknown>,
+    camelKey: string,
+    snakeKey: string,
+    method: string
+  ): number | null {
+    const camel = this.parseOptionalInteger(params[camelKey], `${method}.${camelKey}`)
+    const snake = this.parseOptionalInteger(params[snakeKey], `${method}.${snakeKey}`)
+    if (camel !== null && snake !== null && camel !== snake) {
+      throw new ProtocolError(
+        ERROR_INVALID_PARAMS,
+        `${method}.${camelKey} and ${method}.${snakeKey} mismatch`
+      )
     }
 
-    return taskIdCamel ?? taskIdSnake
+    return camel ?? snake
+  }
+
+  private parseDualOptionalString(
+    params: Record<string, unknown>,
+    camelKey: string,
+    snakeKey: string,
+    method: string
+  ): string | null {
+    const camel = this.parseOptionalString(params[camelKey], `${method}.${camelKey}`)
+    const snake = this.parseOptionalString(params[snakeKey], `${method}.${snakeKey}`)
+    if (camel !== null && snake !== null && camel !== snake) {
+      throw new ProtocolError(
+        ERROR_INVALID_PARAMS,
+        `${method}.${camelKey} and ${method}.${snakeKey} mismatch`
+      )
+    }
+
+    return camel ?? snake
+  }
+
+  private parseTaskId(params: Record<string, unknown>, method: string): number | null {
+    return this.parseDualOptionalInteger(params, 'taskId', 'task_id', method)
+  }
+
+  private ensureSession(sessionId: string) {
+    if (!this.session || this.session.sessionId !== sessionId) {
+      throw new ProtocolError(ERROR_SESSION_NOT_FOUND, 'session not found')
+    }
   }
 
   private requireQueryDetailTaskId(taskId: number | null, target: 'reco' | 'action'): number {

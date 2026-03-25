@@ -81,7 +81,7 @@ export class PipelineHoverProvider
       if (task) {
         const hover = await this.getTaskHover(intBundle, intBundle.topLayer, task)
         return new vscode.Hover(hover)
-      } else if (ref.type === 'task.template') {
+      } else if (ref.type === 'task.template' || ref.type === 'task.custom_template') {
         const hover = this.getImageHover(intBundle, intBundle.topLayer, ref.target)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.locale') {

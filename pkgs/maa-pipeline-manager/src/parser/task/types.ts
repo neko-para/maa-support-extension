@@ -100,11 +100,30 @@ export type TaskTemplateRefInfo = {
   target: ImageRelativePath
 }
 
-export type TaskCustomRefInfo = {
-  type: 'task.custom'
-  target: TaskName
-  custom: string
+export type TaskCustomMeta = {
+  customName: string
   customType: 'reco' | 'act'
+  missingPolicy: 'error' | 'warning' | 'ignore'
+}
+
+export type TaskCustomTaskRefInfo = {
+  type: 'task.custom_task'
+  target: TaskName
+  meta: TaskCustomMeta
+}
+
+export type TaskCustomAnchorRefInfo = {
+  type: 'task.custom_anchor'
+  target: string
+  meta: TaskCustomMeta
+
+  attrs: TaskAttrInfo<'Anchor'> // fake
+}
+
+export type TaskCustomTemplateRefInfo = {
+  type: 'task.custom_template'
+  target: ImageRelativePath
+  meta: TaskCustomMeta
 }
 
 export type TaskEntryRefInfo = {
@@ -145,7 +164,9 @@ type MaaFwTaskRefInfo =
   | TaskRoiRefInfo
   | TaskRecoRefInfo
   | TaskTemplateRefInfo
-  | TaskCustomRefInfo
+  | TaskCustomTaskRefInfo
+  | TaskCustomAnchorRefInfo
+  | TaskCustomTemplateRefInfo
   | TaskEntryRefInfo
   | TaskLocaleRefInfo
   | TaskLocaleTextRefInfo

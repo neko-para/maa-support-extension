@@ -88,8 +88,17 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
             offset = ref.location.offset + ref.attrs.offset + 1
             length = ref.location.length - ref.attrs.offset - 2
           }
+
+          let policy: 'warning' | 'error' = 'error'
+          if (ref.type === 'task.custom_task') {
+            if (ref.meta.missingPolicy === 'ignore') {
+              continue
+            }
+            policy = ref.meta.missingPolicy
+          }
+
           result.push({
-            level: 'error',
+            level: policy,
             file: ref.file,
             offset: offset,
             length: length,
@@ -111,7 +120,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
             })
           }
         }
-      } else if (ref.type === 'task.template') {
+      } else if (ref.type === 'task.template' || ref.type === 'task.custom_template') {
         let imagePath = ref.target
         let isFolder = false
         if (!bundle.maa && !imagePath.endsWith('.png')) {
@@ -174,8 +183,15 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
             }
           }
           if (!found) {
+            let policy: 'warning' | 'error' = 'error'
+            if (ref.type === 'task.custom_template') {
+              if (ref.meta.missingPolicy === 'ignore') {
+                continue
+              }
+              policy = ref.meta.missingPolicy
+            }
             result.push({
-              level: 'error',
+              level: policy,
               file: ref.file,
               offset: ref.location.offset,
               length: ref.location.length,
@@ -186,8 +202,15 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
         }
       } else if (isAnchorRef(ref)) {
         if (!anchors.has(ref.target as string as AnchorName)) {
+          let policy: 'warning' | 'error' = 'error'
+          if (ref.type === 'task.custom_anchor') {
+            if (ref.meta.missingPolicy === 'ignore') {
+              continue
+            }
+            policy = ref.meta.missingPolicy
+          }
           result.push({
-            level: 'error',
+            level: policy,
             file: ref.file,
             offset: ref.location.offset + ref.attrs.offset + 1,
             length: ref.location.length - ref.attrs.offset - 2,

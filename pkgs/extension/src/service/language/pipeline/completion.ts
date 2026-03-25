@@ -181,7 +181,7 @@ export class PipelineCompletionProvider
       ref.type === 'task.anchor' ||
       ref.type === 'task.reco' ||
       ref.type === 'task.color_filter' ||
-      ref.type === 'task.custom' ||
+      ref.type === 'task.custom_task' ||
       ref.type === 'task.entry'
     ) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
@@ -201,7 +201,10 @@ export class PipelineCompletionProvider
         }
         result.push(item)
       }
-    } else if (ref.type === 'task.next' && ref.objMode && ref.attrs.attrs.Anchor) {
+    } else if (
+      (ref.type === 'task.next' && ref.objMode && ref.attrs.attrs.Anchor) ||
+      ref.type === 'task.custom_anchor'
+    ) {
       const anchors = layer.getAnchorList().map(([anchor]) => anchor)
       for (const anchor of new Set(anchors)) {
         const item: CustomCompletionItem = {
@@ -283,7 +286,7 @@ export class PipelineCompletionProvider
           result.push(item)
         }
       }
-    } else if (ref.type === 'task.template') {
+    } else if (ref.type === 'task.template' || ref.type === 'task.custom_template') {
       for (const [imageFolder] of layer.getImageFolders()) {
         const item: CustomCompletionItem = {
           label: imageFolder + '/',

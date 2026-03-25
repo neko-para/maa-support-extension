@@ -55,7 +55,7 @@ export class PipelineDocumentLinkProvider
         continue
       }
 
-      if (ref.type !== 'task.template') {
+      if (ref.type !== 'task.template' && ref.type !== 'task.custom_template') {
         continue
       }
       if (!ref.target.endsWith('.png')) {

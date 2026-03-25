@@ -1,9 +1,10 @@
 import type { Node } from 'jsonc-parser'
 
-import type { AbsolutePath, TaskName } from '../../utils/types'
+import type { AbsolutePath, ImageRelativePath, TaskName } from '../../utils/types'
 import {
   type ParserConfig,
   type PropPair,
+  type PropSelectorResult,
   type StringNode,
   isNumber,
   isString,
@@ -104,6 +105,62 @@ function parseMaaReco(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) 
   }
 }
 
+function processCustom(
+  result: PropSelectorResult,
+  customName: string,
+  customType: 'reco' | 'act',
+  info: TaskInfo,
+  ctx: TaskParseContext
+) {
+  switch (result.type) {
+    case 'taskRef':
+      info.refs.push({
+        location: result.node,
+        file: ctx.file,
+        type: 'task.custom_task',
+        target: result.node.value as TaskName,
+        meta: {
+          customName,
+          customType,
+          missingPolicy: result.missingPolicy ?? 'error'
+        }
+      })
+      break
+    case 'anchorRef':
+      info.refs.push({
+        location: result.node,
+        file: ctx.file,
+        type: 'task.custom_anchor',
+        target: result.node.value,
+        meta: {
+          customName,
+          customType,
+          missingPolicy: result.missingPolicy ?? 'error'
+        },
+
+        attrs: {
+          offset: 0,
+          attrs: { Anchor: true },
+          unknown: []
+        }
+      })
+      break
+    case 'template':
+      info.refs.push({
+        location: result.node,
+        file: ctx.file,
+        type: 'task.custom_template',
+        target: result.node.value as ImageRelativePath,
+        meta: {
+          customName,
+          customType,
+          missingPolicy: result.missingPolicy ?? 'error'
+        }
+      })
+      break
+  }
+}
+
 function parseReco(
   props: PropPair[],
   baseProps: PropPair[],
@@ -189,16 +246,9 @@ function parseReco(
     for (const [key, obj] of props) {
       switch (key) {
         case 'custom_recognition_param':
-          const refs = ctx.parser?.customReco?.taskRef?.call(ctx, customReco, obj, parseUtils) ?? []
+          const refs = ctx.parser?.customReco?.call(ctx, customReco, obj, parseUtils) ?? []
           for (const ref of refs) {
-            info.refs.push({
-              location: ref,
-              file: ctx.file,
-              type: 'task.custom',
-              target: ref.value as TaskName,
-              custom: customReco,
-              customType: 'reco'
-            })
+            processCustom(ref, customReco, 'reco', info, ctx)
           }
           break
       }
@@ -228,17 +278,9 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
     for (const [key, obj] of props) {
       switch (key) {
         case 'custom_action_param':
-          const refs =
-            ctx.parser?.customAction?.taskRef?.call(ctx, customAct, obj, parseUtils) ?? []
+          const refs = ctx.parser?.customAction?.call(ctx, customAct, obj, parseUtils) ?? []
           for (const ref of refs) {
-            info.refs.push({
-              location: ref,
-              file: ctx.file,
-              type: 'task.custom',
-              target: ref.value as TaskName,
-              custom: customAct,
-              customType: 'act'
-            })
+            processCustom(ref, customAct, 'act', info, ctx)
           }
           break
       }

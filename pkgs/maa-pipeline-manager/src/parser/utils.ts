@@ -91,18 +91,31 @@ export const parseUtils = {
   isBool
 }
 
+export type PropSelectorResult =
+  | {
+      type: 'taskRef'
+      node: StringNode
+      missingPolicy: 'error' | 'warning' | 'ignore'
+    }
+  | {
+      type: 'anchorRef'
+      node: StringNode
+      missingPolicy: 'error' | 'warning' | 'ignore'
+    }
+  | {
+      type: 'template'
+      node: StringNode
+      missingPolicy: 'error' | 'warning' | 'ignore'
+    }
+
 export type PropSelector = (
   this: TaskParseContext,
   name: string,
   param: Node,
   utils: typeof parseUtils
-) => StringNode[]
+) => PropSelectorResult[]
 
 export type ParserConfig = {
-  customReco?: {
-    taskRef?: PropSelector
-  }
-  customAction?: {
-    taskRef?: PropSelector
-  }
+  customReco?: PropSelector
+  customAction?: PropSelector
 }

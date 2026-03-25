@@ -1,3 +1,7 @@
+- 1.0.22
+
+Allow more precise parsing
+
 - 1.0.21
 
 Add context to prop selector

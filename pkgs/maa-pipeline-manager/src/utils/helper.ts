@@ -34,7 +34,7 @@ export function extractTaskRef(r: TaskRefInfo): TaskName | null {
     r.type === 'task.anchor' ||
     r.type === 'task.reco' ||
     r.type === 'task.color_filter' ||
-    r.type === 'task.custom' ||
+    r.type === 'task.custom_task' ||
     r.type === 'task.entry'
   ) {
     return r.target
@@ -52,11 +52,14 @@ export function extractTaskRef(r: TaskRefInfo): TaskName | null {
 }
 
 export function isAnchorRef(r: TaskRefInfo): r is TaskRefInfo & {
-  type: 'task.next' | 'task.roi' | 'task.target'
+  type: 'task.next' | 'task.roi' | 'task.target' | 'task.custom_anchor'
   attrs: { attrs: { Anchor: true } }
 } {
   return (
-    (r.type === 'task.next' || r.type === 'task.roi' || r.type === 'task.target') &&
+    (r.type === 'task.next' ||
+      r.type === 'task.roi' ||
+      r.type === 'task.target' ||
+      r.type === 'task.custom_anchor') &&
     !!r.attrs.attrs.Anchor
   )
 }

@@ -148,8 +148,8 @@ export class ServerService extends BaseService {
       this.ipc.startTask = async (exec, args, cwd, env) => {
         return await agentService.startTask(exec, args, cwd, env)
       }
-      this.ipc.startDebugSession = async (name, identifier) => {
-        return await agentService.startDebugSession(name, identifier)
+      this.ipc.startDebugSession = async (name, identifier, env) => {
+        return await agentService.startDebugSession(name, identifier, env)
       }
       this.ipc.stopAgent = async id => {
         return await agentService.stopAgent(id)

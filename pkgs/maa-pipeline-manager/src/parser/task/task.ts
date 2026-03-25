@@ -1,7 +1,15 @@
 import type { Node } from 'jsonc-parser'
 
 import type { AbsolutePath, TaskName } from '../../utils/types'
-import { type PropPair, type StringNode, isNumber, isString, parseArray } from '../utils'
+import {
+  type ParserConfig,
+  type PropPair,
+  type StringNode,
+  isNumber,
+  isString,
+  parseArray,
+  parseUtils
+} from '../utils'
 import { parseAnchor } from './anchor'
 import { parseColor } from './color'
 import { parseColorFilter } from './colorFilter'
@@ -30,6 +38,8 @@ export type TaskParseContext = {
   file: AbsolutePath
   task: StringNode
   taskName: TaskName
+
+  parser?: ParserConfig
 }
 
 function parseMaaBase(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
@@ -104,6 +114,7 @@ function parseReco(
 ) {
   let subName: StringNode | null = null
   let colorMatchMethod: 'rgb' | 'hsv' | null = 'rgb'
+  let customReco: string | null = null
   for (const [key, obj] of props) {
     switch (key) {
       case 'roi':
@@ -145,6 +156,11 @@ function parseReco(
           }
         }
         break
+      case 'custom_recognition':
+        if (isString(obj)) {
+          customReco = obj.value
+        }
+        break
     }
   }
   for (const [key, obj] of baseProps) {
@@ -169,9 +185,29 @@ function parseReco(
       }
     }
   }
+  if (customReco) {
+    for (const [key, obj] of props) {
+      switch (key) {
+        case 'custom_recognition_param':
+          const refs = ctx.parser?.customReco?.taskRef?.(customReco, obj, parseUtils) ?? []
+          for (const ref of refs) {
+            info.refs.push({
+              location: ref,
+              file: ctx.file,
+              type: 'task.custom',
+              target: ref.value as TaskName,
+              custom: customReco,
+              customType: 'reco'
+            })
+          }
+          break
+      }
+    }
+  }
 }
 
 function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
+  let customAct: string | null = null
   for (const [key, obj] of props) {
     switch (key) {
       case 'target':
@@ -181,6 +217,30 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
       case 'end':
         parseTarget(obj, info, ctx, true)
         break
+      case 'custom_action':
+        if (isString(obj)) {
+          customAct = obj.value
+        }
+        break
+    }
+  }
+  if (customAct) {
+    for (const [key, obj] of props) {
+      switch (key) {
+        case 'custom_action_param':
+          const refs = ctx.parser?.customAction?.taskRef?.(customAct, obj, parseUtils) ?? []
+          for (const ref of refs) {
+            info.refs.push({
+              location: ref,
+              file: ctx.file,
+              type: 'task.custom',
+              target: ref.value as TaskName,
+              custom: customAct,
+              customType: 'act'
+            })
+          }
+          break
+      }
     }
   }
 }

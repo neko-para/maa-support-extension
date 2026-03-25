@@ -2,7 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import { LayerInfo } from '../../layer/layer'
 import type { AbsolutePath, TaskName } from '../../utils/types'
-import { isString, parseArray, parseObject } from '../utils'
+import { type ParserConfig, isString, parseArray, parseObject } from '../utils'
 import { parseCtrlRef } from './ctrlRef'
 import { parseGroup } from './group'
 import { parseImport } from './import'
@@ -28,6 +28,8 @@ export type InterfaceParseContext = {
   maa: boolean
   file: AbsolutePath
   import: boolean
+
+  parser?: ParserConfig
 }
 
 function parseController(node: Node, info: InterfaceInfo, ctx: InterfaceParseContext) {

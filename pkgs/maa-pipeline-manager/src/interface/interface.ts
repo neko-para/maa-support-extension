@@ -17,6 +17,7 @@ import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
 import type { Interface } from '../logic'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'
+import type { ParserConfig } from '../parser/utils'
 import {
   type AbsolutePath,
   type RelativePath,
@@ -67,6 +68,7 @@ export class InterfaceBundle extends EventEmitter<{
   maa: boolean
   root: AbsolutePath
   file: AbsolutePath
+  parser?: ParserConfig
 
   content: ContentJson<Interface>
 
@@ -93,13 +95,15 @@ export class InterfaceBundle extends EventEmitter<{
     watcher: IContentWatcher,
     maa: boolean,
     root: string,
-    file = 'interface.json'
+    file = 'interface.json',
+    parser?: ParserConfig
   ) {
     super()
 
     this.maa = maa
     this.root = root as AbsolutePath
     this.file = joinPath(this.root, file)
+    this.parser = parser
 
     this.content = new ContentJson(loader, watcher, this.file, () => {
       this.removeFile(this.file)
@@ -213,6 +217,11 @@ export class InterfaceBundle extends EventEmitter<{
     }
   }
 
+  async updateParser(parser?: ParserConfig) {
+    this.parser = parser
+    await this.load()
+  }
+
   switchActive(controller: string, resource: string) {
     this.activeController = controller
     this.activeResource = resource
@@ -275,7 +284,9 @@ export class InterfaceBundle extends EventEmitter<{
           this.content.loader,
           this.content.watcher,
           this.maa,
-          path.join(this.root, dir)
+          path.join(this.root, dir),
+
+          this.parser
         )
       })
     } else {

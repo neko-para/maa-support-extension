@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/maa-tools",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "type": "module",
   "bin": {
     "maa-tools": "bin/maa-tools"
@@ -9,6 +9,10 @@
     ".": {
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.mts"
+    },
+    "./pm": {
+      "import": "./dist/pm.mjs",
+      "types": "./dist/pm.d.mts"
     }
   },
   "repository": {

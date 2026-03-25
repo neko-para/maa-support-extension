@@ -5,7 +5,7 @@ import type { IContentLoader } from '../content/loader'
 import type { IContentWatcher } from '../content/watch'
 import { LayerInfo } from '../layer/layer'
 import { parseTask } from '../parser/task/task'
-import { parseObject } from '../parser/utils'
+import { type ParserConfig, parseObject } from '../parser/utils'
 import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import {
   type AbsolutePath,
@@ -23,6 +23,7 @@ export class Bundle extends EventEmitter<{
 }> {
   maa: boolean
   root: AbsolutePath
+  parser?: ParserConfig
 
   pipelineRoot: AbsolutePath
   imageRoot: AbsolutePath
@@ -42,11 +43,18 @@ export class Bundle extends EventEmitter<{
     return joinPath(this.root, this.defaultPipelineRel)
   }
 
-  constructor(loader: IContentLoader, watcher: IContentWatcher, maa: boolean, root: string) {
+  constructor(
+    loader: IContentLoader,
+    watcher: IContentWatcher,
+    maa: boolean,
+    root: string,
+    parser?: ParserConfig
+  ) {
     super()
 
     this.maa = maa
     this.root = root as AbsolutePath
+    this.parser = parser
 
     this.pipelineRoot = joinPath(this.root, this.maa ? 'tasks' : 'pipeline')
     this.imageRoot = joinPath(this.root, this.maa ? 'template' : 'image')
@@ -174,7 +182,9 @@ export class Bundle extends EventEmitter<{
             maa: this.maa,
             file: full,
             task: prop,
-            taskName
+            taskName,
+
+            parser: this.parser
           }),
           obj: buildTree(obj)
         })

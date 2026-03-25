@@ -79,3 +79,23 @@ export type BoolNode = Omit<Node, 'type' | 'value'> & { type: 'boolean'; value: 
 export function isBool(node?: Node): node is BoolNode {
   return !!node && node.type === 'boolean' && typeof node.value === 'boolean'
 }
+
+export const parseUtils = {
+  parseObject,
+  parseObjectFlex,
+  parseArray,
+  isString,
+  isNumber,
+  isBool
+}
+
+export type PropSelector = (name: string, param: Node, utils: typeof parseUtils) => StringNode[]
+
+export type ParserConfig = {
+  customReco?: {
+    taskRef?: PropSelector
+  }
+  customAction?: {
+    taskRef?: PropSelector
+  }
+}

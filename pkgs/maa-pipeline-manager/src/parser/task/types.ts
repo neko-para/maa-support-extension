@@ -100,6 +100,13 @@ export type TaskTemplateRefInfo = {
   target: ImageRelativePath
 }
 
+export type TaskCustomRefInfo = {
+  type: 'task.custom'
+  target: TaskName
+  custom: string
+  customType: 'reco' | 'act'
+}
+
 export type TaskEntryRefInfo = {
   type: 'task.entry'
   target: TaskName
@@ -138,6 +145,7 @@ type MaaFwTaskRefInfo =
   | TaskRoiRefInfo
   | TaskRecoRefInfo
   | TaskTemplateRefInfo
+  | TaskCustomRefInfo
   | TaskEntryRefInfo
   | TaskLocaleRefInfo
   | TaskLocaleTextRefInfo

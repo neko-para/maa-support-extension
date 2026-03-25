@@ -116,6 +116,10 @@ export class InterfaceService extends BaseService {
       this.loadInterface()
     })
 
+    this.defer = rootService.onConfigChanged(() => {
+      this.interfaceBundle?.updateParser(rootService.config?.parser)
+    })
+
     this.defer = this.onInterfaceChanged(() => {
       this.updateResource()
       diagnosticService.scanner.scheduleFlush()
@@ -150,7 +154,8 @@ export class InterfaceService extends BaseService {
       new VscodeContentWatcher(),
       isMaaAssistantArknights,
       root.dirUri.fsPath,
-      path.basename(root.interfaceUri.fsPath)
+      path.basename(root.interfaceUri.fsPath),
+      rootService.config?.parser
     )
     this.interfaceBundle.evalErrorDelegate = new MaaErrorDelegateImpl()
     this.interfaceBundle.on('interfaceChanged', () => {

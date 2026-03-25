@@ -1,6 +1,8 @@
 - 1.0.20
 
 Change cache folder to ~/.maa-tools
+Export @nekosu/maa-pipeline-manager as ./pm
+Support parser for custom reco & act
 
 - 1.0.19
 

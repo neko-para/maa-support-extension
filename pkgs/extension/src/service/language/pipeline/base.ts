@@ -305,6 +305,7 @@ ${JSON.stringify(final, null, 2)}
           r.type === 'task.anchor' ||
           r.type === 'task.reco' ||
           r.type === 'task.color_filter' ||
+          r.type === 'task.custom' ||
           r.type === 'task.entry'
         ) {
           return r.target === task

@@ -181,6 +181,7 @@ export class PipelineCompletionProvider
       ref.type === 'task.anchor' ||
       ref.type === 'task.reco' ||
       ref.type === 'task.color_filter' ||
+      ref.type === 'task.custom' ||
       ref.type === 'task.entry'
     ) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)

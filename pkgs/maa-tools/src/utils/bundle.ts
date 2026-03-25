@@ -18,7 +18,8 @@ export async function loadBundle(cfg: BaseConfig) {
     new FsContentWatcher(),
     false,
     path.dirname(interfacePath),
-    path.basename(interfacePath)
+    path.basename(interfacePath),
+    cfg.parser
   )
   await bundle.load()
   await bundle.flush(false) // 刷下 imports

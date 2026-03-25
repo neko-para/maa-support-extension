@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import hljs from 'highlight.js/lib/core'
-import json from 'highlight.js/lib/languages/json'
 import { NConfigProvider } from 'naive-ui'
 
 import { useTheme } from '../utils/theme'
@@ -8,13 +6,11 @@ import AnalyzerFrame from './components/AnalyzerFrame.vue'
 import LaunchControlBar from './components/LaunchControlBar.vue'
 
 const { loaded, theme, themeOverride } = useTheme('panel')
-
-hljs.registerLanguage('json', json)
 </script>
 
 <template>
   <template v-if="loaded">
-    <n-config-provider :theme="theme" :theme-overrides="themeOverride" :hljs="hljs">
+    <n-config-provider :theme="theme" :theme-overrides="themeOverride">
       <div class="launch-root">
         <launch-control-bar>
           <analyzer-frame></analyzer-frame>
@@ -30,10 +26,5 @@ hljs.registerLanguage('json', json)
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.launch-analyzer {
-  flex: 1;
-  min-height: 0;
 }
 </style>

@@ -163,7 +163,6 @@ class LaunchAnalyzerBridge {
   private readonly recoImageRefsByTaskAndId = new Map<string, CachedImageRefs>()
   private readonly recoDetailByTaskAndId = new Map<string, RecoDetailData>()
   private readonly actionDetailByTaskAndId = new Map<string, unknown>()
-  private currentTaskId: number | null = null
 
   private readonly handleWindowMessage = (event: MessageEvent) => {
     if (!this.iframeWindow || event.source !== this.iframeWindow) {
@@ -325,10 +324,6 @@ class LaunchAnalyzerBridge {
 
     const rawMsg = msg as Record<string, unknown>
     const msgName = typeof rawMsg['msg'] === 'string' ? rawMsg['msg'] : 'unknown'
-    const taskId = this.readIntegerField(rawMsg, 'task_id')
-    if (taskId !== null) {
-      this.currentTaskId = taskId
-    }
 
     const details: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(rawMsg)) {
@@ -897,21 +892,12 @@ class LaunchAnalyzerBridge {
   }
 
   private clearDetailCaches() {
-    this.currentTaskId = null
     this.recoDetailByTaskAndId.clear()
     this.actionDetailByTaskAndId.clear()
   }
 
   private detailCacheKey(taskId: number, id: number) {
     return `${taskId}:${id}`
-  }
-
-  private readIntegerField(raw: Record<string, unknown>, field: string): number | null {
-    const value = raw[field]
-    if (typeof value !== 'number' || !Number.isInteger(value)) {
-      return null
-    }
-    return value
   }
 
   private getOrCreateRecoImageRefs(

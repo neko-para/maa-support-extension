@@ -1,3 +1,7 @@
+- 1.0.21
+
+Add context to prop selector
+
 - 1.0.20
 
 Change cache folder to ~/.maa-tools

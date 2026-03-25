@@ -1,5 +1,7 @@
 import type { Node } from 'jsonc-parser'
 
+import type { TaskParseContext } from './task/task'
+
 export type PropPair = [prop: string, value: Node, propNode: StringNode]
 export type PropPairFlex = [prop: string, value: Node | null, propNode: StringNode]
 
@@ -89,7 +91,12 @@ export const parseUtils = {
   isBool
 }
 
-export type PropSelector = (name: string, param: Node, utils: typeof parseUtils) => StringNode[]
+export type PropSelector = (
+  this: TaskParseContext,
+  name: string,
+  param: Node,
+  utils: typeof parseUtils
+) => StringNode[]
 
 export type ParserConfig = {
   customReco?: {

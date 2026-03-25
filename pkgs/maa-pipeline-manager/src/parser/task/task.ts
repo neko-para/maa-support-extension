@@ -189,7 +189,7 @@ function parseReco(
     for (const [key, obj] of props) {
       switch (key) {
         case 'custom_recognition_param':
-          const refs = ctx.parser?.customReco?.taskRef?.(customReco, obj, parseUtils) ?? []
+          const refs = ctx.parser?.customReco?.taskRef?.call(ctx, customReco, obj, parseUtils) ?? []
           for (const ref of refs) {
             info.refs.push({
               location: ref,
@@ -228,7 +228,8 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
     for (const [key, obj] of props) {
       switch (key) {
         case 'custom_action_param':
-          const refs = ctx.parser?.customAction?.taskRef?.(customAct, obj, parseUtils) ?? []
+          const refs =
+            ctx.parser?.customAction?.taskRef?.call(ctx, customAct, obj, parseUtils) ?? []
           for (const ref of refs) {
             info.refs.push({
               location: ref,

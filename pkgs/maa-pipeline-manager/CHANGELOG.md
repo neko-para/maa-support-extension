@@ -1,3 +1,7 @@
+- 1.0.9
+
+Add context to prop selector
+
 - 1.0.8
 
 Support parser for custom reco & act

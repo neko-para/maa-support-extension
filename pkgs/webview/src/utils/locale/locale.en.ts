@@ -85,19 +85,10 @@ export default {
   'maa.crop.settings.reco-result-font': 'Reco result font',
 
   'maa.launch.input-space-to-show-tasks': 'Input space to show all tasks',
-  'maa.launch.reco-detail': 'Reco Detail',
-  'maa.launch.act-detail': 'Action Detail',
-  'maa.launch.dbclick-to-open-in-crop': 'Double click image to open in crop tool',
-  'maa.launch.open-in-crop': 'Open In Crop Tool',
-  'maa.launch.task-definition': 'Task Definition',
   'maa.launch.process': 'Process',
   'maa.launch.continue': 'Continue',
   'maa.launch.pause': 'Pause',
-  'maa.launch.follow': 'Follow',
-  'maa.launch.following': 'Following',
   'maa.launch.stop': 'Stop',
   'maa.launch.add-breakpoint': 'Add Breakpoint',
-  'maa.launch.show': 'Show',
-  'maa.launch.hide': 'Hide',
-  'maa.launch.reveal': 'Reveal'
+  'maa.launch.analyzer-empty': 'Set `maa.launchAnalyzerUrl` to load Maa Log Analyzer iframe.'
 } as const

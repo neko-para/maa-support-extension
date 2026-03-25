@@ -1,0 +1,59 @@
+<script setup lang="ts">
+import { NText } from 'naive-ui'
+import { computed, onUnmounted, ref, watch } from 'vue'
+
+import { t } from '../../utils/locale'
+import { hostState } from '../state'
+import { analyzerBridge } from '../states/analyzer'
+
+const iframeEl = ref<HTMLIFrameElement | null>(null)
+const analyzerUrl = computed(() => hostState.value.analyzerUrl?.trim() ?? '')
+const finalAnalyzerUrl = computed(() => {
+  if (!analyzerUrl.value) {
+    return ''
+  }
+  const url = new URL(analyzerUrl.value)
+  url.searchParams.append('embed', 'vscode-panel')
+  return url.toString()
+})
+
+watch(finalAnalyzerUrl, () => {
+  analyzerBridge.setIframe(null)
+})
+watch(iframeEl, iframe => {
+  if (iframe) {
+    analyzerBridge.setIframe(iframe)
+  }
+})
+
+function onIframeLoad() {
+  analyzerBridge.setIframe(iframeEl.value)
+}
+
+onUnmounted(() => {
+  analyzerBridge.setIframe(null)
+})
+</script>
+
+<template>
+  <template v-if="finalAnalyzerUrl">
+    <iframe
+      ref="iframeEl"
+      :src="finalAnalyzerUrl"
+      class="analyzer-iframe"
+      @load="onIframeLoad"
+    ></iframe>
+  </template>
+  <n-text v-else depth="3" style="display: block; padding: 16px">
+    {{ t('maa.launch.analyzer-empty') }}
+  </n-text>
+</template>
+
+<style scoped>
+.analyzer-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  flex: 1;
+}
+</style>

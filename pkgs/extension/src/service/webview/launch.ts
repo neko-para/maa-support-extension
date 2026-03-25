@@ -1,6 +1,12 @@
 import * as vscode from 'vscode'
 
-import type { LaunchHostState, LaunchHostToWeb, LaunchWebToHost, WebToHost } from '@mse/types'
+import type {
+  LaunchHostState,
+  LaunchHostToWeb,
+  LaunchWebToHost,
+  RealtimeEndReason,
+  WebToHost
+} from '@mse/types'
 import { WebviewPanelProvider } from '@mse/utils'
 import { locale } from '@nekosu/maa-locale'
 import type { TaskName } from '@nekosu/maa-pipeline-manager'
@@ -17,6 +23,11 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
   ipc: IpcType
   instance: string
   knownTasks: string[]
+  sessionId: string
+  sessionStartedAt: number
+  sessionStarted: boolean = false
+  sessionEnded: boolean = false
+  configChangedDisposable?: vscode.Disposable
   stopped: boolean = false
 
   paused: boolean = false
@@ -38,6 +49,13 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.ipc = ipc
     this.instance = instance
     this.knownTasks = []
+    this.sessionId = `${instance}-${Date.now()}`
+    this.sessionStartedAt = Date.now()
+    this.configChangedDisposable = vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('maa.launchAnalyzerUrl')) {
+        this.pushState()
+      }
+    })
 
     this.setup()
   }
@@ -48,9 +66,12 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
 
   dispose() {
     console.log('launch panel dispose')
+    this.configChangedDisposable?.dispose()
+    this.configChangedDisposable = undefined
 
-    this.send = () => {}
-    this.stop().then(() => {
+    this.pushRealtimeEnd('disposed')
+    this.stop().finally(() => {
+      this.send = () => {}
       this.ipc.destroyInstance(this.instance)
     })
 
@@ -61,6 +82,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     switch (data.command) {
       case '__init':
         this.pushState()
+        this.pushRealtimeStart()
         break
       case 'requestStop':
         await this.stop()
@@ -147,22 +169,30 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
 
   async stop() {
     if (this.stopped) {
+      this.pushRealtimeEnd('stopped')
       return
     }
     this.stopped = true
     this.cont()
-    await this.ipc.postStop(this.instance)
+    try {
+      await this.ipc.postStop(this.instance)
+    } finally {
+      this.pushRealtimeEnd('stopped')
+    }
   }
 
   finish() {
     if (this.stopped) {
+      this.pushRealtimeEnd('finished')
       return
     }
     this.stopped = true
+    this.pushRealtimeEnd('finished')
     this.pushState()
   }
 
   async pushNotify(msg: maa.TaskerNotify | maa.TaskerContextNotify) {
+    this.pushRealtimeStart()
     this.send({
       command: 'notifyStatus',
       msg
@@ -189,12 +219,51 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       isMAA: isMaaAssistantArknights,
       fwStatus: nativeService.currentVersionInfo,
       locale,
+      analyzerUrl:
+        (vscode.workspace.getConfiguration('maa').get('launchAnalyzerUrl') as string | undefined) ??
+        '',
 
       stopped: this.stopped,
       paused: this.paused,
       knownTasks: this.knownTasks,
       breakTasks: stateService.state.breakTasks
     }
+  }
+
+  pushRealtimeStart() {
+    if (this.sessionStarted || this.sessionEnded) {
+      return
+    }
+    this.sessionStarted = true
+    this.send({
+      command: 'realtimeStart',
+      params: {
+        sessionId: this.sessionId,
+        instanceId: this.instance,
+        source: 'maa-support-extension',
+        supportVersion: (context.extension.packageJSON as { version?: string }).version,
+        maaVersion: nativeService.version,
+        startedAt: this.sessionStartedAt
+      }
+    })
+  }
+
+  pushRealtimeEnd(reason: RealtimeEndReason) {
+    if (this.sessionEnded) {
+      return
+    }
+    if (!this.sessionStarted) {
+      this.pushRealtimeStart()
+    }
+    this.sessionEnded = true
+    this.send({
+      command: 'realtimeEnd',
+      params: {
+        sessionId: this.sessionId,
+        reason,
+        endedAt: Date.now()
+      }
+    })
   }
 
   pushState() {

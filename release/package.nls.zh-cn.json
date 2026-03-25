@@ -10,5 +10,6 @@
   "maa.command.native.select-registry": "Maa: 选择下载源",
   "maa.view.control-panel.title": "Maa 控制面板",
   "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)",
-  "maa.setting.agent-timeout": "Maa Agent启动超时时间 (ms), 使用 -1 来禁用."
+  "maa.setting.agent-timeout": "Maa Agent启动超时时间 (ms), 使用 -1 来禁用.",
+  "maa.setting.launch-analyzer-url": "Maa Launch 面板中 Analyzer iframe 的地址。"
 }

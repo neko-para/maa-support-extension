@@ -85,19 +85,10 @@ export default {
   'maa.crop.settings.reco-result-font': '识别结果字体',
 
   'maa.launch.input-space-to-show-tasks': '输入空格以唤起所有任务',
-  'maa.launch.reco-detail': '识别详情',
-  'maa.launch.act-detail': '操作详情',
-  'maa.launch.dbclick-to-open-in-crop': '双击图片以在截图工具中打开',
-  'maa.launch.open-in-crop': '在截图工具中打开',
-  'maa.launch.task-definition': '任务定义',
   'maa.launch.process': '流程',
   'maa.launch.continue': '继续',
   'maa.launch.pause': '暂停',
-  'maa.launch.follow': '跟随',
-  'maa.launch.following': '跟随中',
   'maa.launch.stop': '停止',
   'maa.launch.add-breakpoint': '添加断点',
-  'maa.launch.show': '显示',
-  'maa.launch.hide': '隐藏',
-  'maa.launch.reveal': '查看'
+  'maa.launch.analyzer-empty': '请配置 `maa.launchAnalyzerUrl` 以加载 Maa Log Analyzer iframe。'
 } as const

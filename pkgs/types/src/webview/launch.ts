@@ -6,12 +6,38 @@ export type LaunchHostState = HostStateBase & {
 
   knownTasks?: string[]
   breakTasks?: string[]
+  analyzerUrl?: string
+}
+
+export type RealtimeEndReason = 'finished' | 'stopped' | 'disposed' | 'error'
+
+export type RealtimeStartParams = {
+  sessionId: string
+  instanceId: string
+  source: 'maa-support-extension'
+  supportVersion?: string
+  maaVersion?: string
+  startedAt: number
+}
+
+export type RealtimeEndParams = {
+  sessionId: string
+  reason: RealtimeEndReason
+  endedAt: number
 }
 
 export type LaunchHostToWeb =
   | {
       command: 'updateState'
       state: LaunchHostState
+    }
+  | {
+      command: 'realtimeStart'
+      params: RealtimeStartParams
+    }
+  | {
+      command: 'realtimeEnd'
+      params: RealtimeEndParams
     }
   | {
       command: 'notifyStatus'

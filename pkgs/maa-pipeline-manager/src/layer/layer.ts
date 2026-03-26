@@ -283,7 +283,11 @@ export class LayerInfo {
         }
       }
       for (const [key, obj] of [...parts.base, ...parts.reco, ...parts.act, ...parts.unknown]) {
-        result[key] = buildTree(obj)
+        if (key === 'attach') {
+          result[key] = Object.assign(result[key] ?? {}, buildTree(obj))
+        } else {
+          result[key] = buildTree(obj)
+        }
       }
     }
 

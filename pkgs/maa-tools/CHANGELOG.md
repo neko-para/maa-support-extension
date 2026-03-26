@@ -1,3 +1,7 @@
+- 1.0.23
+
+Fix attach prop not being merged
+
 - 1.0.22
 
 Allow more precise parsing

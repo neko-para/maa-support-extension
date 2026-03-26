@@ -220,6 +220,10 @@ export class InterfaceBundle extends EventEmitter<{
   async updateParser(parser?: ParserConfig) {
     this.parser = parser
     await this.load()
+    for (const bundle of this.bundles) {
+      bundle.parser = parser
+      await bundle.load()
+    }
   }
 
   switchActive(controller: string, resource: string) {

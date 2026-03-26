@@ -13,6 +13,7 @@ export class RootService extends BaseService {
   resourceRoots: ResourceRoot[] = []
   activeResource: ResourceRoot | null = null
   config: FullConfig | null = null
+  configWatcher: vscode.FileSystemWatcher | null = null
 
   refreshing: boolean = false
 
@@ -40,17 +41,34 @@ export class RootService extends BaseService {
     this.defer = this.configChanged
 
     this.defer = this.onActiveResourceChanged(async () => {
+      this.configWatcher?.dispose()
+      this.configWatcher = null
       if (!this.activeResource) {
         this.config = null
       } else {
-        this.config = await loadConfig(
-          vscode.Uri.joinPath(this.activeResource.workspace, 'maatools.config.mts').fsPath
-        )
-        if (this.config?.vscode) {
-          logger.info(`Load config ${JSON.stringify(this.config.vscode)}`)
+        const configPath = vscode.Uri.joinPath(
+          this.activeResource.workspace,
+          'maatools.config.mts'
+        ).fsPath
+        this.config = await loadConfig(configPath)
+        if (this.config) {
+          logger.info(`maatools.config.mts loaded`)
+          const pattern = new vscode.RelativePattern(
+            this.activeResource.workspace,
+            'maatools.config.mts'
+          )
+          this.configWatcher = vscode.workspace.createFileSystemWatcher(pattern)
+          this.configWatcher.onDidChange(async () => {
+            this.config = await loadConfig(configPath)
+            this.configChanged.fire()
+          })
         }
       }
       this.configChanged.fire()
+    })
+
+    this.defer = this.onConfigChanged(() => {
+      logger.info('config reloaded')
     })
   }
 
@@ -58,6 +76,11 @@ export class RootService extends BaseService {
     console.log('init RootService')
 
     this.refresh()
+  }
+
+  dispose() {
+    super.dispose()
+    this.configWatcher?.dispose()
   }
 
   async refresh() {

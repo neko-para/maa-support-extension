@@ -60,6 +60,16 @@ type CachedImageItem = {
   taskId: number | null
 }
 
+type BridgeKeydownParams = {
+  key: string
+  code: string
+  altKey: boolean
+  ctrlKey: boolean
+  shiftKey: boolean
+  metaKey: boolean
+  repeat: boolean
+}
+
 const PROTOCOL_VERSION = 1
 const JSON_RPC_VERSION = '2.0' as const
 
@@ -178,6 +188,15 @@ class LaunchAnalyzerBridge {
       return
     }
 
+    if (message.method === 'bridge.keydown') {
+      try {
+        this.forwardBridgeKeydown(message.params)
+      } catch {
+        // Ignore malformed keydown payload from iframe.
+      }
+      return
+    }
+
     if (message.method === 'bridge.ready') {
       this.ready = true
       this.sendBridgeHello()
@@ -185,22 +204,6 @@ class LaunchAnalyzerBridge {
       this.flushLiveNow()
       this.drainOutboundQueue()
     }
-  }
-
-  private readonly handleWindowKeydown = (event: KeyboardEvent) => {
-    if (!this.iframeWindow) {
-      return
-    }
-    this.enqueueNotification('bridge.keydown', {
-      key: event.key,
-      code: event.code,
-      altKey: event.altKey,
-      ctrlKey: event.ctrlKey,
-      shiftKey: event.shiftKey,
-      metaKey: event.metaKey,
-      repeat: event.repeat
-    })
-    this.drainOutboundQueue()
   }
 
   private readonly htmlObserver = new MutationObserver(mutations => {
@@ -226,7 +229,6 @@ class LaunchAnalyzerBridge {
     this.started = true
 
     window.addEventListener('message', this.handleWindowMessage)
-    window.addEventListener('keydown', this.handleWindowKeydown, true)
 
     this.htmlObserver.observe(document.documentElement, { attributes: true })
     this.bodyObserver.observe(document.body, { attributes: true })
@@ -240,7 +242,6 @@ class LaunchAnalyzerBridge {
     this.started = false
 
     window.removeEventListener('message', this.handleWindowMessage)
-    window.removeEventListener('keydown', this.handleWindowKeydown, true)
 
     this.htmlObserver.disconnect()
     this.bodyObserver.disconnect()
@@ -770,6 +771,35 @@ class LaunchAnalyzerBridge {
     this.drainOutboundQueue()
   }
 
+  private forwardBridgeKeydown(raw: unknown) {
+    const params = this.parseBridgeKeydownParams(raw)
+    const keyboardEvent = new KeyboardEvent('keydown', {
+      key: params.key,
+      code: params.code,
+      altKey: params.altKey,
+      ctrlKey: params.ctrlKey,
+      shiftKey: params.shiftKey,
+      metaKey: params.metaKey,
+      repeat: params.repeat,
+      bubbles: true,
+      cancelable: true
+    })
+    document.dispatchEvent(keyboardEvent)
+  }
+
+  private parseBridgeKeydownParams(raw: unknown): BridgeKeydownParams {
+    const params = this.parseRecord(raw, 'bridge.keydown params')
+    return {
+      key: this.parseString(params['key'], 'bridge.keydown.key'),
+      code: this.parseString(params['code'], 'bridge.keydown.code'),
+      altKey: this.parseBoolean(params['altKey'], 'bridge.keydown.altKey'),
+      ctrlKey: this.parseBoolean(params['ctrlKey'], 'bridge.keydown.ctrlKey'),
+      shiftKey: this.parseBoolean(params['shiftKey'], 'bridge.keydown.shiftKey'),
+      metaKey: this.parseBoolean(params['metaKey'], 'bridge.keydown.metaKey'),
+      repeat: this.parseBoolean(params['repeat'], 'bridge.keydown.repeat')
+    }
+  }
+
   private parseRecord(data: unknown, key: string): Record<string, unknown> {
     if (!isRecord(data)) {
       throw new ProtocolError(ERROR_INVALID_PARAMS, `${key} should be object`)
@@ -787,6 +817,13 @@ class LaunchAnalyzerBridge {
   private parseInteger(data: unknown, key: string): number {
     if (typeof data !== 'number' || !Number.isInteger(data)) {
       throw new ProtocolError(ERROR_INVALID_PARAMS, `${key} should be integer`)
+    }
+    return data
+  }
+
+  private parseBoolean(data: unknown, key: string): boolean {
+    if (typeof data !== 'boolean') {
+      throw new ProtocolError(ERROR_INVALID_PARAMS, `${key} should be boolean`)
     }
     return data
   }

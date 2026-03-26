@@ -1,6 +1,7 @@
 - 1.0.23
 
 Fix attach prop not being merged
+Fix incorrect config template
 
 - 1.0.22
 

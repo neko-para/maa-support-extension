@@ -13,9 +13,8 @@ const defaultConfig = `import type { FullConfig } from '${pkg.name}'
 
 const config: FullConfig = {
   cwd: import.meta.dirname,
-  check: {
-    interfacePath: 'assets/interface.json'
-  }
+  interfacePath: 'assets/interface.json',
+  check: {},
 }
 
 export default config

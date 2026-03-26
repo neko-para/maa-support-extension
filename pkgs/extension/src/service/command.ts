@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
 import { t } from '@nekosu/maa-locale'
-import { type TaskDeclInfo } from '@nekosu/maa-pipeline-manager'
+import { type TaskDeclInfo, extractTaskRef } from '@nekosu/maa-pipeline-manager'
 import {
   type MaaTaskExpr,
   TaskExprProps,
@@ -14,7 +14,7 @@ import { interfaceService, launchService, rootService, serverService, stateServi
 import { commands } from '../command'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
-import { convertRange } from './language/utils'
+import { autoConvertRangeLocation, convertRange } from './language/utils'
 import { WebviewCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
@@ -61,6 +61,25 @@ export class CommandService extends BaseService {
       })
       return true
     })
+
+    this.defer = vscode.commands.registerCommand(
+      commands.FindTaskRef,
+      async (task?: string, uri?: vscode.Uri, pos?: vscode.Position) => {
+        if (!task || !uri || !pos) {
+          return false
+        }
+
+        const refs =
+          interfaceService.interfaceBundle?.topLayer.mergedAllRefs.filter(
+            ref => extractTaskRef(ref) === task
+          ) ?? []
+        const locs = await Promise.all(refs.map(autoConvertRangeLocation))
+
+        await vscode.commands.executeCommand('editor.action.showReferences', uri, pos, locs)
+
+        return true
+      }
+    )
 
     this.defer = vscode.commands.registerCommand(commands.PISwitchResource, resource => {
       interfaceService.reduceConfig({

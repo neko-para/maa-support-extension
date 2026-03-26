@@ -48,6 +48,7 @@ export default {
   'maa.debug.task-failed': '任务失败 {0} - {1}',
 
   'maa.pipeline.codelens.launch': '执行',
+  'maa.pipeline.codelens.refs': '{0} 引用',
   'maa.pipeline.codelens.eval-task': '计算任务',
   'maa.pipeline.codelens.eval-expr': '计算 {0}',
   'maa.pipeline.codelens.resource-switch': '切换',

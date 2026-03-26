@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
-import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
+import { type AbsolutePath, extractTaskRef } from '@nekosu/maa-pipeline-manager'
 
 import { interfaceService } from '../..'
 import { commands } from '../../../command'
@@ -59,6 +59,14 @@ export class PipelineCodeLensProvider
       return []
     }
 
+    const taskRefs = intBundle.topLayer.mergedAllRefs
+      .map(ref => extractTaskRef(ref))
+      .filter(ref => ref !== null)
+    const taskRefCounts = new Map<string, number>()
+    for (const task of taskRefs) {
+      taskRefCounts.set(task, (taskRefCounts.get(task) ?? 0) + 1)
+    }
+
     const result: vscode.CodeLens[] = []
     for (const [name, taskInfos] of Object.entries(layer.tasks)) {
       for (const taskInfo of taskInfos) {
@@ -81,6 +89,13 @@ export class PipelineCodeLensProvider
               title: t('maa.pipeline.codelens.launch'),
               command: commands.LaunchTask,
               arguments: [name]
+            })
+          )
+          result.push(
+            new vscode.CodeLens(range, {
+              title: t('maa.pipeline.codelens.refs', `${taskRefCounts.get(name) ?? 0}`),
+              command: commands.FindTaskRef,
+              arguments: [name, document.uri, document.positionAt(taskInfo.prop.offset)]
             })
           )
         }

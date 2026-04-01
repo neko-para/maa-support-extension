@@ -1,6 +1,6 @@
 # Maa Support
 
-## 针对 MaaFramework/MaaAssistantArknights 项目, 提供下列功能:
+## 针对 MaaFramework/MaaAssistantArknights 项目, 提供下列功能
 
 > 控制面板在左侧类似设置图标的面板中
 >
@@ -24,7 +24,7 @@
 - 截取图片 (依赖控制器提供截图能力)
 - 裁剪图片
 
-## For MaaFramework/MaaAssistantArknights project, providing following features:
+## For MaaFramework/MaaAssistantArknights project, providing following features
 
 > Control Panel stays at left, with an icon similar to settings.
 >
@@ -71,6 +71,53 @@
 - Maa: 选择下载源
   - 选择下载插件自身使用的 MaaFramework 的镜像源.
 
+## 配置文件 (maatools.config.mts)
+
+在项目根目录创建 `maatools.config.mts` 配置文件来自定义行为:
+
+```typescript
+import type { FullConfig } from '@nekosu/maa-tools'
+
+const config: FullConfig = {
+  cwd: import.meta.dirname,
+  repo: 'https://github.com/MaaAssistantArknights/MaaAssistantArknights',
+  locale: 'zh-cn',
+  maaVersion: 'v5.2.0',
+  interfacePath: './interface.json',
+  parser: {
+    // 解析器配置
+  },
+  check: {
+    override: {
+      // 诊断类型覆盖
+    }
+  }
+}
+
+export default config
+```
+
+### 配置项说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `cwd` | `string` | 工作目录 |
+| `mode` | `'stdio' \| 'github' \| 'json'` | 运行模式 |
+| `repo` | `string` | MAA 仓库地址 |
+| `locale` | `'zh-cn' \| 'en'` | 语言设置 |
+| `maaVersion` | `string` | MAA 版本 |
+| `maaCache` | `string` | MAA 缓存路径 |
+| `maaMirror` | `string` | NPM 镜像源 |
+| `maaStdoutLevel` | `'Off' \| 'Fatal' \| 'Error' \| 'Warn' \| 'Info' \| 'Debug' \| 'Trace' \| 'All'` | 日志级别 |
+| `maaLogDir` | `string` | 日志目录 |
+| `interfacePath` | `string` | 接口配置文件路径 |
+| `parser` | `ParserConfig` | 解析器配置 |
+| `check` | `CheckConfig` | 检查配置 |
+| `test` | `TestConfig` | 测试配置 |
+| `vscode` | `VscodeConfig` | VSCode 配置 |
+
+> VSCode 扩展会自动检测并加载配置文件, 支持热重载.
+
 ## Provided vscode commands
 
 Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
@@ -93,3 +140,50 @@ Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
   - Download and change the version of MaaFramework used by extension.
 - Maa: select fetch registry
   - Select the mirrors to download MaaFramework used by extension.
+
+## Configuration File (maatools.config.mts)
+
+Create `maatools.config.mts` in your project root to customize behavior:
+
+```typescript
+import type { FullConfig } from '@nekosu/maa-tools'
+
+const config: FullConfig = {
+  cwd: import.meta.dirname,
+  repo: 'https://github.com/MaaAssistantArknights/MaaAssistantArknights',
+  locale: 'zh-cn',
+  maaVersion: 'v5.2.0',
+  interfacePath: './interface.json',
+  parser: {
+    // parser config
+  },
+  check: {
+    override: {
+      // diagnostic type override
+    }
+  }
+}
+
+export default config
+```
+
+### Config Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `cwd` | `string` | Working directory |
+| `mode` | `'stdio' \| 'github' \| 'json'` | Run mode |
+| `repo` | `string` | MAA repository URL |
+| `locale` | `'zh-cn' \| 'en'` | Language setting |
+| `maaVersion` | `string` | MAA version |
+| `maaCache` | `string` | MAA cache path |
+| `maaMirror` | `string` | NPM mirror |
+| `maaStdoutLevel` | `'Off' \| 'Fatal' \| 'Error' \| 'Warn' \| 'Info' \| 'Debug' \| 'Trace' \| 'All'` | Log level |
+| `maaLogDir` | `string` | Log directory |
+| `interfacePath` | `string` | Interface config path |
+| `parser` | `ParserConfig` | Parser config |
+| `check` | `CheckConfig` | Check config |
+| `test` | `TestConfig` | Test config |
+| `vscode` | `VscodeConfig` | VSCode config |
+
+> VSCode extension will automatically detect and load the config file with hot-reload support.

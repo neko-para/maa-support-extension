@@ -180,32 +180,15 @@ export class ServerService extends BaseService {
 
   async fetchConstants() {
     if (globalThis.maa) {
-      logger.info(
-        `constants fetched, ${JSON.stringify([
-          maa.AdbScreencapMethod,
-          maa.AdbInputMethod,
-          maa.Win32ScreencapMethod,
-          maa.Win32InputMethod
-        ])}`
-      )
       return true
     }
 
     const ipc = await this.ensureServer()
     if (ipc) {
       globalThis.maa = await ipc.fetchConstants()
-      logger.info(
-        `constants fetched, ${JSON.stringify([
-          maa.AdbScreencapMethod,
-          maa.AdbInputMethod,
-          maa.Win32ScreencapMethod,
-          maa.Win32InputMethod
-        ])}`
-      )
       nativeService.versionChanged.fire()
       return true
     } else {
-      logger.info(`constants fetch failed, no server`)
       return false
     }
   }

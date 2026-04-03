@@ -1,3 +1,7 @@
+- 1.0.11
+
+Fix watchers leak
+
 - 1.0.10
 
 Allow more precise parsing

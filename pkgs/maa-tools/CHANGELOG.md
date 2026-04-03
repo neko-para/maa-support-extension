@@ -2,6 +2,7 @@
 
 Fix attach prop not being merged
 Fix incorrect config template
+Fix watchers leak
 
 - 1.0.22
 

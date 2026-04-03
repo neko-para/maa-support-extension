@@ -13,6 +13,7 @@ const defaultConfig = `import type { FullConfig } from '${pkg.name}'
 
 const config: FullConfig = {
   cwd: import.meta.dirname,
+  maaVersion: 'latest',
   interfacePath: 'assets/interface.json',
   check: {},
 }

@@ -282,6 +282,9 @@ export class InterfaceBundle extends EventEmitter<{
       for (const content of this.imports) {
         content.stop()
       }
+      for (const bundle of this.bundles) {
+        bundle.stop()
+      }
       this.paths = finalPaths
       this.bundles = this.paths.map(dir => {
         return new Bundle(

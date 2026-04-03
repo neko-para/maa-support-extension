@@ -137,7 +137,7 @@ export class Bundle extends EventEmitter<{
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      const imageFile = file.replaceAll(path.sep, '/').replace('image/', '') as ImageRelativePath
+      const imageFile = file.replaceAll(path.sep, '/').replace(this.maa ? 'template/' : 'image/', '') as ImageRelativePath
       if (this.layer.images.delete(imageFile)) {
         this.dispatchImageChanged()
       }

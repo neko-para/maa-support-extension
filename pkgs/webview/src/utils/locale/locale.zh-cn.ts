@@ -21,6 +21,7 @@ export default {
   'maa.control.controller.select-controller': '选择控制器',
   'maa.control.controller.device-list': '设备列表',
   'maa.control.controller.window-list': '窗口列表',
+  'maa.control.controller.compositor-list': '合成器列表',
   'maa.control.task.task': '任务',
   'maa.control.task.use-preset': '使用预设',
   'maa.control.task.add-task': '添加',

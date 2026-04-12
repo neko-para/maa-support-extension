@@ -124,6 +124,12 @@ const currDeviceGamepad = computed(() => {
     info => info[0] === hostState.value.interfaceConfigJson?.gamepad?.hwnd
   )
 })
+const currDeviceWlRoots = computed(() => {
+  return desktopDevices.value.find(
+    info => info[0] === hostState.value.interfaceConfigJson?.wlroots?.socket_path
+  )
+})
+
 
 const refreshingDesktop = ref(false)
 const selectingDesktop = ref(false)
@@ -175,7 +181,15 @@ function configDesktop(type: 'win32' | 'gamepad', index: number) {
   })
 }
 
-async function nativeSelectDesktop(type: 'win32' | 'gamepad') {
+function configDesktopWlRoots(index: number) {
+  const opt = desktopDevices.value[index]!
+  ipc.send({
+    command: 'configDesktopWlRoots',
+    socket_path: opt[2]
+  })
+}
+
+async function nativeSelectDesktop(type: 'win32' | 'gamepad' | 'wlroots') {
   selectingDesktop.value = true
   const choice = (await ipc.call({
     command: 'showSelect',
@@ -345,6 +359,46 @@ function uploadImage() {
         <template v-if="currDeviceGamepad">
           <span> {{ currDeviceGamepad[1] }} </span>
           <span> {{ currDeviceGamepad[2] }} </span>
+        </template>
+      </n-flex>
+    </n-card>
+  </template>
+  <template v-if="currentType === 'WlRoots'">
+    <n-card title="WlRoots" size="small">
+      <template #header-extra>
+        <n-flex>
+          <n-button
+            :loading="refreshingDesktop"
+            :disabled="refreshingDesktop || selectingDesktop"
+            @click="refreshDesktop"
+            size="small"
+          >
+            {{ t('maa.control.scan') }}
+          </n-button>
+          <n-popselect
+            :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+            trigger="hover"
+            :options="desktopOptions"
+            @update:value="v => configDesktopWlRoots(v)"
+            size="small"
+            scrollable
+          >
+            <n-button
+              :loading="selectingDesktop"
+              :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+              size="small"
+              @click="nativeSelectDesktop('wlroots')"
+            >
+              {{ t('maa.control.controller.compositor-list') }}
+            </n-button>
+          </n-popselect>
+        </n-flex>
+      </template>
+      <n-flex v-if="hostState.interfaceConfigJson?.wlroots" vertical>
+        <span> {{ hostState.interfaceConfigJson.wlroots.socket_path }} </span>
+        <template v-if="currDeviceWlRoots">
+          <span> {{ currDeviceWlRoots[1] }} </span>
+          <span> {{ currDeviceWlRoots[2] }} </span>
         </template>
       </n-flex>
     </n-card>

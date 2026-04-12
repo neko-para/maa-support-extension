@@ -135,6 +135,23 @@ export function buildControllerRuntime(
 
       ...baseOption
     }
+  } else if (ctrlInfo.type === 'WlRoots') {
+    if (!config.wlroots) {
+      return t('maa.pi.error.cannot-find-wlroots-for-controller', config.controller ?? '<unknown>')
+    }
+
+    if (!config.wlroots.socket_path) {
+      return t('maa.pi.error.cannot-find-socket-for-controller', config.controller ?? '<unknown>')
+    }
+
+    return {
+      type: 'wlroots',
+      args: [
+        config.wlroots.socket_path,
+      ],
+
+      ...baseOption
+    }
   }
 
   return `Unknown controller type ${(ctrlInfo as { type?: string })?.type}`

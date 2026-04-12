@@ -18,6 +18,10 @@ export type GamepadConfig = {
   hwnd?: maa.DesktopHandle | null
 }
 
+export type WlRootsConfig = {
+  socket_path?: string
+}
+
 export type VscFixedConfig = {
   image?: string
 }
@@ -43,6 +47,7 @@ export type InterfaceConfig = {
   win32?: Win32Config
   playcover?: PlayCoverConfig
   gamepad?: GamepadConfig
+  wlroots?: WlRootsConfig
   vscFixed?: VscFixedConfig
 
   resource?: string

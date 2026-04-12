@@ -38,6 +38,10 @@ export type ControllerRuntimeVariant =
       args: [hwnd: maa.DesktopHandle, screencap: maa.ScreencapOrInputMethods, gamepad: maa.Uint64]
     }
   | {
+      type: 'wlroots'
+      args: [socket_path: string]
+    }
+  | {
       type: 'vscFixed'
       args: [image: string]
     }

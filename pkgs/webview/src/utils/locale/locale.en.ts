@@ -21,6 +21,7 @@ export default {
   'maa.control.controller.select-controller': 'Select controller',
   'maa.control.controller.device-list': 'Device list',
   'maa.control.controller.window-list': 'Window list',
+  'maa.control.controller.compositor-list': 'Compositor list',
   'maa.control.task.task': 'Task',
   'maa.control.task.use-preset': 'Use Preset',
   'maa.control.task.add-task': 'Add',

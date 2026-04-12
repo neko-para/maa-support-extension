@@ -140,6 +140,13 @@ export class WebviewControlService extends BaseService {
             }
           })
           break
+        case 'configDesktopWlRoots':
+          interfaceService.reduceConfig({
+            wlroots: {
+              socket_path: data.socket_path
+            }
+          })
+          break
         case 'configPlayCover':
           interfaceService.reduceConfig({
             playcover: {

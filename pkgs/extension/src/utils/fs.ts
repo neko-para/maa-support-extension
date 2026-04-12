@@ -26,16 +26,16 @@ async function locateResourceRootImpl(root: vscode.Uri) {
       if (['node_modules', 'MaaUtils', 'MaaDeps'].includes(name) || name.startsWith('.')) {
         continue
       }
-      if (name === 'interface.json' && type === vscode.FileType.File) {
+      if (
+        (name === 'interface.json' || name === 'interface.jsonc') &&
+        type === vscode.FileType.File
+      ) {
         result.push({
           workspace: root,
           dirUri: current,
           dirRelative: current.fsPath.replace(root.fsPath, ''),
-          interfaceUri: vscode.Uri.joinPath(current, 'interface.json'),
-          interfaceRelative: vscode.Uri.joinPath(current, 'interface.json').fsPath.replace(
-            root.fsPath,
-            ''
-          ),
+          interfaceUri: vscode.Uri.joinPath(current, name),
+          interfaceRelative: vscode.Uri.joinPath(current, name).fsPath.replace(root.fsPath, ''),
           configUri: vscode.Uri.joinPath(current, 'config/maa_pi_config.json')
         })
       }

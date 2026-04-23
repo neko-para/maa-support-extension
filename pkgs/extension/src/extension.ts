@@ -58,13 +58,22 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand(commands.OpenMaaLog, async () => {
-      const maaLogFile = vscode.Uri.joinPath(logPath, 'maa.log')
-      try {
-        const doc = await vscode.workspace.openTextDocument(maaLogFile)
-        await vscode.window.showTextDocument(doc)
-      } catch {
-        vscode.window.showErrorMessage(t('maa.core.cannot-find-log', maaLogFile.fsPath))
+      const maaLogCandidates = ['maafw.log', 'maa.log'].map(name =>
+        vscode.Uri.joinPath(logPath, name)
+      )
+      for (const maaLogFile of maaLogCandidates) {
+        try {
+          const doc = await vscode.workspace.openTextDocument(maaLogFile)
+          await vscode.window.showTextDocument(doc)
+          return
+        } catch {
+          // Continue trying the next candidate.
+        }
       }
+
+      vscode.window.showErrorMessage(
+        t('maa.core.cannot-find-log', maaLogCandidates.map(candidate => candidate.fsPath).join(', '))
+      )
     })
   )
 }

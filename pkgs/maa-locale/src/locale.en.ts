@@ -29,6 +29,10 @@ export default {
     'Cannot find address in playcover config for controller {0}, please reconfigure the controller',
   'maa.pi.error.cannot-find-gamepad-for-controller':
     'Cannot find gamepad config for controller {0}',
+  'maa.pi.error.cannot-find-wlroots-for-controller':
+    'Cannot find wlroots config for controller {0}',
+  'maa.pi.error.cannot-find-socket-for-controller':
+    'Cannot find socket in wlroots config for controller {0}, please reconfigure the controller',
   'maa.pi.error.cannot-find-resource': 'Cannot find resource {0}',
   'maa.pi.error.cannot-find-task': 'Cannot find task {0}',
   'maa.pi.error.cannot-find-option': 'Cannot find option {0}',

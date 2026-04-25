@@ -73,6 +73,8 @@ export async function updateCtrl(runtime: ControllerRuntime) {
     controller = new maa.PlayCoverController(...runtime.args)
   } else if (runtime.type === 'gamepad') {
     controller = new maa.GamepadController(...runtime.args)
+  } else if (runtime.type === 'wlroots') {
+    controller = new maa.WlRootsController(...runtime.args)
   } else if (runtime.type === 'vscFixed') {
     if (!existsSync(runtime.args[0])) {
       return false

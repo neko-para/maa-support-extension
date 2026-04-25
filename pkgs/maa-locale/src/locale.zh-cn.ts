@@ -27,6 +27,8 @@ export default {
   'maa.pi.error.cannot-find-address-for-controller':
     '无法找到控制器 {0} 的 PlayCover 配置的 address, 请重新配置控制器',
   'maa.pi.error.cannot-find-gamepad-for-controller': '无法找到控制器 {0} 的 Gamepad 配置',
+  'maa.pi.error.cannot-find-wlroots-for-controller': '无法找到控制器 {0} 的 WlRoots 配置',
+  'maa.pi.error.cannot-find-socket-for-controller': '无法找到控制器 {0} 的 Socket 配置的套接字路径, 请重新配置控制器',
   'maa.pi.error.cannot-find-resource': '无法找到资源 {0}',
   'maa.pi.error.cannot-find-task': '无法找到任务 {0}',
   'maa.pi.error.cannot-find-option': '无法找到选项组 {0}',

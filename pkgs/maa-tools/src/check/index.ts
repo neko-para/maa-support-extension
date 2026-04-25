@@ -135,5 +135,6 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return true
   }
 
-  return result.length === 0 && !loadResourceFailed
+  const hasError = result.some(diag => diag.level === 'error')
+  return !hasError && !loadResourceFailed
 }

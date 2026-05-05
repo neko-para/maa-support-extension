@@ -3,6 +3,7 @@ export let option: {
   port: number
   module: string
   maaLog: string
+  debugMode: boolean
 }
 
 export function initOptions() {

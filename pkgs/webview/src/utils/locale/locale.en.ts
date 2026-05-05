@@ -13,6 +13,7 @@ export default {
   'maa.control.toolkit.open-crop-tool': 'Open Crop Tool',
   'maa.control.toolkit.switch-maa-version': 'Switch Maa Version',
   'maa.control.toolkit.toggle-admin-mode': 'Toggle Admin Mode',
+  'maa.control.toolkit.toggle-debug-mode': 'Toggle Debug Mode',
   'maa.control.interface.interface': 'Interface',
   'maa.control.interface.select-interface': 'Select interface',
   'maa.control.resource.resource': 'Resource',

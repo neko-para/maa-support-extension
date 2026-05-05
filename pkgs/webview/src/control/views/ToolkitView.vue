@@ -67,6 +67,17 @@ async function jump(target: ToolkitJumpTarget) {
         >
           {{ t('maa.control.toolkit.toggle-admin-mode') }}
         </n-button>
+        <n-button
+          v-if="hostState.debugMode !== undefined"
+          :disabled="!!loading"
+          :loading="loading === 'switch-debug-mode'"
+          @click="jump('switch-debug-mode')"
+          size="small"
+          :type="hostState.debugMode ? 'warning' : 'default'"
+          :ghost="hostState.debugMode"
+        >
+          {{ t('maa.control.toolkit.toggle-debug-mode') }}
+        </n-button>
       </n-flex>
       <n-text v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
         {{ info }}

@@ -27,6 +27,7 @@ export class ServerService extends BaseService {
   rpc: RpcManager
   ipc: IpcType | null
   status: boolean
+  debugMode: boolean
 
   instMap: Record<string, WebviewLaunchPanel>
 
@@ -44,6 +45,7 @@ export class ServerService extends BaseService {
     )
     this.ipc = null
     this.status = false
+    this.debugMode = stateService.state.debugMode ?? true
 
     this.instMap = {}
 
@@ -88,13 +90,30 @@ export class ServerService extends BaseService {
     }
   }
 
+  switchDebugMode(debugMode?: boolean) {
+    if (debugMode === undefined) {
+      debugMode = !this.debugMode
+    }
+    if (debugMode !== this.debugMode) {
+      this.kill()
+      this.debugMode = debugMode
+
+      stateService.reduce({
+        debugMode
+      })
+      this.pushStatus(false)
+      statusBarService.showServerStatus('close')
+    }
+  }
+
   async setupServer() {
     statusBarService.showServerStatus('loading~spin')
     if (
       (await nativeService.load()) &&
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
-        maaLog: (context.storageUri ?? context.globalStorageUri).fsPath
+        maaLog: (context.storageUri ?? context.globalStorageUri).fsPath,
+        debugMode: this.debugMode
       })) &&
       this.rpc.conn
     ) {

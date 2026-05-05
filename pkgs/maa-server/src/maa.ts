@@ -22,7 +22,7 @@ export async function initMaa() {
   await import(url.pathToFileURL(importTarget).toString())
 
   logger.info(maa.Global.version)
-  maa.Global.debug_mode = true
+  maa.Global.debug_mode = option.debugMode
   maa.Global.log_dir = option.maaLog
 }
 

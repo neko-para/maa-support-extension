@@ -85,6 +85,10 @@ export class WebviewControlService extends BaseService {
               serverService.switchAdmin()
               this.pushState()
               break
+            case 'switch-debug-mode':
+              serverService.switchDebugMode()
+              this.pushState()
+              break
           }
           this.provider?.response(data.seq, null)
           break
@@ -393,6 +397,7 @@ export class WebviewControlService extends BaseService {
       locale,
 
       admin: process.platform === 'win32' ? serverService.rpc.admin : undefined,
+      debugMode: serverService.debugMode,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),
       activeInterface: rootService.activeResource?.interfaceRelative,

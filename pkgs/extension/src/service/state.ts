@@ -4,6 +4,7 @@ import { BaseService, context } from './context'
 
 export type State = {
   admin?: boolean
+  debugMode?: boolean
 
   activeWorkspace?: string
   activeInterface?: string

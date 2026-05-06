@@ -34,7 +34,7 @@ function buildTree(
       }
       return {
         key: `${key}.${sub}`,
-        label: `[${entry.box.join(',')}] ${(entry.score ?? 0).toFixed(4)}`
+        label: `[${entry.box.join(',')}] ${(entry.score ?? 0).toFixed(4)}${entry.text ? ` "${entry.text}"` : ''}`
       } satisfies TreeOption
     }
     childs = []

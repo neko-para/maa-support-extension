@@ -59,19 +59,20 @@ function buildTree(
     label: `${detail.algorithm} ${detail.name}`,
     children: childs,
     prefix: () => {
-      if (detail.hit) {
+      if (detail.hit === true) {
         return (
           <NIcon>
             <CheckOutlined></CheckOutlined>
           </NIcon>
         )
-      } else {
+      } else if (detail.hit === false) {
         return (
           <NIcon>
             <CloseOutlined></CloseOutlined>
           </NIcon>
         )
       }
+      return undefined
     }
   }
 }

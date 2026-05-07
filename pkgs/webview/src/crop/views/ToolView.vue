@@ -63,30 +63,95 @@ function applyGreenMask() {
   <n-flex vertical>
     <n-card :title="t('maa.crop.tools.pick-color')" size="small">
       <template #header-extra>
-        <n-button v-if="!pickSt.picking.value" size="small" @click="pickSt.start()">
-          {{ t('maa.control.start') }}
-        </n-button>
-        <n-button v-else size="small" @click="pickSt.picking.value = false">
-          {{ t('maa.control.stop') }}
-        </n-button>
+        <n-flex>
+          <n-button v-if="!pickSt.picking.value" size="small" @click="pickSt.start()">
+            {{ t('maa.crop.tools.pick-point') }}
+          </n-button>
+          <n-button v-else size="small" @click="pickSt.picking.value = false">
+            {{ t('maa.control.stop') }}
+          </n-button>
+          <n-button v-if="!pickSt.selecting.value" size="small" @click="pickSt.startSelect()">
+            {{ t('maa.crop.tools.pick-rect') }}
+          </n-button>
+          <n-button v-else size="small" @click="pickSt.selecting.value = false">
+            {{ t('maa.control.stop') }}
+          </n-button>
+        </n-flex>
       </template>
 
       <template v-if="pickSt.color.value">
-        <n-flex>
+        <n-flex align="center">
           <color-box :color="`rgb(${pickSt.color.value.join(',')})`"></color-box>
           <n-button size="small" @click="pickSt.copyCss()">
-            {{ pickSt.cssText() }}
+            HEX: {{ pickSt.cssText() }}
           </n-button>
-          <n-button size="small" @click="pickSt.copyArray(0)">
-            rgb: {{ pickSt.arrayText(0) }}
+          <n-button size="small" @click="pickSt.copyArray(0, 4)">
+            RGB: {{ pickSt.arrayText(0, 4) }}
           </n-button>
-          <n-button size="small" @click="pickSt.copyHsv()"> hsv: {{ pickSt.hsvText() }} </n-button>
-          <n-button size="small" @click="pickSt.copyArray(hostState.pickColorThreshold ?? 10)">
-            upper: {{ pickSt.arrayText(hostState.pickColorThreshold ?? 10) }}
-          </n-button>
-          <n-button size="small" @click="pickSt.copyArray(-(hostState.pickColorThreshold ?? 10))">
-            lower: {{ pickSt.arrayText(-(hostState.pickColorThreshold ?? 10)) }}
-          </n-button>
+          <n-button size="small" @click="pickSt.copyHsv()"> HSV: {{ pickSt.hsvText() }} </n-button>
+          <n-button size="small" @click="pickSt.copyArray(0, 6)"> Gray: {{ pickSt.arrayText(0, 6) }} </n-button>
+        </n-flex>
+      </template>
+
+      <template v-if="pickSt.samplePoints.value.length > 0">
+        <n-flex vertical style="margin-top: 8px">
+          <n-text strong>{{ t('maa.crop.tools.recommended-range') }}</n-text>
+          <n-flex>
+            <n-select
+              v-model:value="pickSt.colorMethod.value"
+              :options="[
+                { label: 'RGB', value: 4 },
+                { label: 'HSV', value: 40 },
+                { label: 'Gray', value: 6 }
+              ]"
+              size="small"
+              style="width: 80px"
+            />
+            <n-select
+              v-model:value="pickSt.recommendMethod.value"
+              :options="[
+                { label: 'Min / Max', value: 'minmax' },
+                { label: 'Mean ± Std', value: 'meanstd' }
+              ]"
+              size="small"
+              style="width: 130px"
+            />
+            <n-button size="small" @click="pickSt.clearSamplePoints()">
+              {{ t('maa.crop.tools.clear-samples') }}
+            </n-button>
+          </n-flex>
+          <template v-if="pickSt.recommendedColors.value">
+            <n-flex>
+              <n-button size="small" @click="pickSt.copyRecommendedLower()">
+                lower: {{ pickSt.recommendedLowerText() }}
+              </n-button>
+              <n-button size="small" @click="pickSt.copyRecommendedUpper()">
+                upper: {{ pickSt.recommendedUpperText() }}
+              </n-button>
+            </n-flex>
+            <n-flex>
+              <n-button size="small" @click="pickSt.copyRecommendedLower(hostState.pickColorThreshold ?? 10)">
+                lower -{{ hostState.pickColorThreshold ?? 10 }}: {{ pickSt.recommendedLowerText(hostState.pickColorThreshold ?? 10) }}
+              </n-button>
+              <n-button size="small" @click="pickSt.copyRecommendedUpper(hostState.pickColorThreshold ?? 10)">
+                upper +{{ hostState.pickColorThreshold ?? 10 }}: {{ pickSt.recommendedUpperText(hostState.pickColorThreshold ?? 10) }}
+              </n-button>
+            </n-flex>
+          </template>
+
+          <n-text>{{ t('maa.crop.tools.sample-points') }} ({{ pickSt.samplePoints.value.length }})</n-text>
+          <n-flex wrap>
+            <n-flex
+              v-for="point in pickSt.samplePoints.value"
+              :key="point.id"
+              align="center"
+              style="border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px"
+            >
+              <color-box :color="`rgb(${point.color.join(',')})`"></color-box>
+              <n-text style="font-size: 12px">[{{ point.color.join(', ') }}]</n-text>
+              <n-button size="tiny" @click="pickSt.removeSamplePoint(point.id)">✕</n-button>
+            </n-flex>
+          </n-flex>
         </n-flex>
       </template>
     </n-card>

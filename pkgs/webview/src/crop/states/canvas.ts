@@ -74,12 +74,6 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ctx.restore()
     }
 
-    if (pickSt.picking.value) {
-      const pos = controlSt.current.value.round()
-      const clr = ctx.getImageData(pos.x, pos.y, 1, 1).data
-      pickSt.color.value = [clr[0]!, clr[1]!, clr[2]!]
-    }
-
     for (const [st, stroke, font] of [
       [matchSt, settingsSt.ocrStroke.eff, settingsSt.ocrFont.eff]
     ] as const) {
@@ -146,6 +140,33 @@ export function draw(ctx: CanvasRenderingContext2D) {
     for (const step of drawSteps) {
       ctx.save()
       step(ctx, controlSt.viewport.value)
+      ctx.restore()
+    }
+
+    if (pickSt.picking.value || pickSt.samplePoints.value.length > 0) {
+      ctx.save()
+      for (const point of pickSt.samplePoints.value) {
+        const viewPos = controlSt.viewport.value.toView(Pos.from(point.pos[0] + 0.5, point.pos[1] + 0.5))
+        const s = Math.max(2, 1 / controlSt.viewport.value.scale)
+        const x = viewPos.x - s / 2
+        const y = viewPos.y - s / 2
+        ctx.fillStyle = `rgb(${point.color.join(',')})`
+        ctx.fillRect(x, y, s, s)
+        const lum = 0.299 * point.color[0] + 0.587 * point.color[1] + 0.114 * point.color[2]
+        ctx.strokeStyle = lum > 128 ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(x, y, s, s)
+      }
+      ctx.restore()
+    }
+
+    if (pickSt.selecting.value && pickSt.selectBox.value) {
+      ctx.save()
+      ctx.strokeStyle = 'red'
+      ctx.lineWidth = 2
+      ctx.setLineDash([4, 4])
+      const box = controlSt.viewport.value.toView(pickSt.selectBox.value)
+      ctx.strokeRect(...box.flat())
       ctx.restore()
     }
   }

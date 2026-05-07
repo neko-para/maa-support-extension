@@ -4,6 +4,7 @@ import { ipc } from '../ipc'
 import { Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
+import * as pickSt from './pick'
 
 export const loadingCounter = ref<number>(0)
 export const loading = computed(() => {
@@ -32,6 +33,7 @@ export async function set(url: string) {
     element.value = img
     greenMaskSt.drawing.value = false
     greenMaskSt.clear()
+    pickSt.clearSamplePoints()
   } catch (_err) {
     data.value = null
     element.value = null

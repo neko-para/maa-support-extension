@@ -48,6 +48,8 @@ const cornerDrag = ref<DragHandler>(new DragHandler())
 const cornerDragTarget = ref<CornerType | EdgeType>('lt')
 const cornerDragInitialBox = ref<Box>(new Box())
 
+const selectDrag = ref<DragHandler>(new DragHandler())
+
 export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     cropBox.value = new Box()
@@ -75,13 +77,38 @@ export function onPointerDown(event: PointerEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
 
-  pickSt.picking.value = false
-
   if (greenMaskSt.drawing.value && event.button === 0) {
     const pos = viewport.value.fromView(mp)
     greenMaskSt.drawAt(pos.x, pos.y)
     greenMaskPointerDown.value = true
     ;(event.target as Element).setPointerCapture(event.pointerId)
+    return
+  }
+
+  if (pickSt.picking.value && event.button === 0) {
+    const img = imageSt.element.value
+    if (img) {
+      const modelPos = viewport.value.fromView(mp)
+      const mx = Math.floor(modelPos.x)
+      const my = Math.floor(modelPos.y)
+      if (mx >= 0 && mx < img.width && my >= 0 && my < img.height) {
+        const tempCanvas = document.createElement('canvas')
+        tempCanvas.width = 1
+        tempCanvas.height = 1
+        const tempCtx = tempCanvas.getContext('2d')!
+        tempCtx.imageSmoothingEnabled = false
+        tempCtx.drawImage(img, mx, my, 1, 1, 0, 0, 1, 1)
+        const clr = tempCtx.getImageData(0, 0, 1, 1).data
+        pickSt.color.value = [clr[0]!, clr[1]!, clr[2]!]
+        pickSt.addSamplePoint([mx, my])
+      }
+    }
+    return
+  }
+
+  if (pickSt.selecting.value && event.button === 0) {
+    selectDrag.value.down(mp, mp, event, viewport.value)
+    cursor.value = 'crosshair'
     return
   }
 
@@ -140,6 +167,12 @@ export function onPointerMove(event: PointerEvent) {
     return
   }
 
+  if (selectDrag.value.state) {
+    selectDrag.value.move(mp)
+    pickSt.selectBox.value = selectDrag.value.box
+    return
+  }
+
   if (viewportDrag.value.state) {
     viewportDrag.value.move(mp)
     viewport.value.offset = viewportDrag.value.current
@@ -179,9 +212,31 @@ export function onPointerMove(event: PointerEvent) {
     cropBoxMoveDrag.value.move(mp)
     cropBox.value = cropBox.value.copy().setOrigin(cropBoxMoveDrag.value.current)
   } else {
-    const corner = detectCorner(cropBoxInView.value, mp)
-    const edge = detectEdge(cropBoxInView.value, mp)
-    cursor.value = resizeCursor[corner ?? edge ?? 'def']
+    if (pickSt.picking.value && (event.buttons & 1) === 0) {
+      const img = imageSt.element.value
+      if (img) {
+        const modelPos = viewport.value.fromView(mp)
+        const mx = Math.floor(modelPos.x)
+        const my = Math.floor(modelPos.y)
+        if (mx >= 0 && mx < img.width && my >= 0 && my < img.height) {
+          const tempCanvas = document.createElement('canvas')
+          tempCanvas.width = 1
+          tempCanvas.height = 1
+          const tempCtx = tempCanvas.getContext('2d')!
+          tempCtx.imageSmoothingEnabled = false
+          tempCtx.drawImage(img, mx, my, 1, 1, 0, 0, 1, 1)
+          const clr = tempCtx.getImageData(0, 0, 1, 1).data
+          pickSt.color.value = [clr[0]!, clr[1]!, clr[2]!]
+        }
+      }
+    }
+    if (pickSt.picking.value || pickSt.selecting.value) {
+      cursor.value = 'crosshair'
+    } else {
+      const corner = detectCorner(cropBoxInView.value, mp)
+      const edge = detectEdge(cropBoxInView.value, mp)
+      cursor.value = resizeCursor[corner ?? edge ?? 'def']
+    }
   }
 }
 
@@ -193,6 +248,35 @@ export function onPointerUp(event: PointerEvent) {
     greenMaskSt.endStroke()
     greenMaskPointerDown.value = false
     ;(event.target as Element).releasePointerCapture(event.pointerId)
+    return
+  }
+
+  if (selectDrag.value.state) {
+    selectDrag.value.up(event)
+    cursor.value = 'default'
+
+    if (pickSt.selectBox.value) {
+      const img = imageSt.element.value
+      if (img) {
+        const imageBounds = Box.from(new Pos(), imageSt.size.value)
+        const box = pickSt.selectBox.value.intersect(imageBounds)
+        const w = Math.round(box.size.w)
+        const h = Math.round(box.size.h)
+        if (w > 0 && h > 0) {
+          const tempCanvas = document.createElement('canvas')
+          tempCanvas.width = w
+          tempCanvas.height = h
+          const tempCtx = tempCanvas.getContext('2d')!
+          tempCtx.imageSmoothingEnabled = false
+          tempCtx.drawImage(img, box.origin.x, box.origin.y, w, h, 0, 0, w, h)
+          const imageData = tempCtx.getImageData(0, 0, w, h)
+          pickSt.addSelectSamplePoints(imageData, box)
+          return
+        }
+      }
+    }
+    pickSt.selecting.value = false
+    pickSt.selectBox.value = null
     return
   }
 

@@ -43,7 +43,15 @@ function revealConfig() {
 
 <template>
   <n-card :title="t('maa.control.interface.interface')" size="small">
-    <template #header-extra>
+    <n-flex vertical>
+      <n-select
+        :options="interfaceOptions"
+        :value="hostState.activeInterface"
+        :disabled="hostState.refreshingInterface"
+        @update:value="switchInterface"
+        :placeholder="t('maa.control.interface.select-interface')"
+        size="small"
+      ></n-select>
       <n-flex>
         <n-button :disabled="!hostState.activeInterface" @click="revealInterface" size="small">
           {{ t('maa.control.reveal') }}
@@ -60,14 +68,6 @@ function revealConfig() {
           {{ t('maa.control.scan') }}
         </n-button>
       </n-flex>
-    </template>
-    <n-select
-      :options="interfaceOptions"
-      :value="hostState.activeInterface"
-      :disabled="hostState.refreshingInterface"
-      @update:value="switchInterface"
-      :placeholder="t('maa.control.interface.select-interface')"
-      size="small"
-    ></n-select>
+    </n-flex>
   </n-card>
 </template>

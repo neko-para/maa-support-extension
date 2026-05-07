@@ -10,6 +10,7 @@ import {
   edgeSide,
   resizeCursor
 } from '../utils/detect'
+import * as greenMaskSt from './greenMask'
 import * as imageSt from './image'
 import * as pickSt from './pick'
 import * as settingsSt from './settings'
@@ -19,6 +20,7 @@ export const current = ref<Pos>(new Pos())
 export const currentInView = computed(() => {
   return viewport.value.fromView(current.value).round()
 })
+const greenMaskPointerDown = ref(false)
 
 export const viewport = ref(new Viewport())
 const viewportDrag = ref<DragHandler>(new DragHandler())
@@ -75,6 +77,14 @@ export function onPointerDown(event: PointerEvent) {
 
   pickSt.picking.value = false
 
+  if (greenMaskSt.drawing.value && event.button === 0) {
+    const pos = viewport.value.fromView(mp)
+    greenMaskSt.drawAt(pos.x, pos.y)
+    greenMaskPointerDown.value = true
+    ;(event.target as Element).setPointerCapture(event.pointerId)
+    return
+  }
+
   if (event.button === 1) {
     viewportDrag.value.down(mp, viewport.value.offset, event)
     cursor.value = 'grab'
@@ -117,6 +127,18 @@ export function onPointerDown(event: PointerEvent) {
 export function onPointerMove(event: PointerEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
+
+  if (greenMaskSt.drawing.value && greenMaskPointerDown.value) {
+    if ((event.buttons & 1) === 0) {
+      greenMaskSt.endStroke()
+      greenMaskPointerDown.value = false
+      ;(event.target as Element).releasePointerCapture(event.pointerId)
+      return
+    }
+    const pos = viewport.value.fromView(mp)
+    greenMaskSt.drawAt(pos.x, pos.y)
+    return
+  }
 
   if (viewportDrag.value.state) {
     viewportDrag.value.move(mp)
@@ -166,6 +188,13 @@ export function onPointerMove(event: PointerEvent) {
 export function onPointerUp(event: PointerEvent) {
   const mp = Pos.fromEvent(event)
   current.value = mp
+
+  if (greenMaskPointerDown.value) {
+    greenMaskSt.endStroke()
+    greenMaskPointerDown.value = false
+    ;(event.target as Element).releasePointerCapture(event.pointerId)
+    return
+  }
 
   for (const drag of [viewportDrag, cropBoxDrag, cornerDrag, cropBoxMoveDrag]) {
     if (drag.value.state) {

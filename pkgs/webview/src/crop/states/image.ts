@@ -3,6 +3,7 @@ import { computed, ref, shallowRef } from 'vue'
 import { ipc } from '../ipc'
 import { Size } from '../utils/2d'
 import * as controlSt from './control'
+import * as greenMaskSt from './greenMask'
 
 export const loadingCounter = ref<number>(0)
 export const loading = computed(() => {
@@ -29,6 +30,8 @@ export async function set(url: string) {
     })
     data.value = url
     element.value = img
+    greenMaskSt.drawing.value = false
+    greenMaskSt.clear()
   } catch (_err) {
     data.value = null
     element.value = null

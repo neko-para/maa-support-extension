@@ -8,6 +8,8 @@ import ColorBox from '../components/ColorBox.vue'
 import RecoDetail from '../components/RecoDetail.vue'
 import RoiEdit from '../components/RoiEdit.vue'
 import { hostState } from '../state'
+import * as greenMaskSt from '../states/greenMask'
+import * as imageSt from '../states/image'
 import * as pickSt from '../states/pick'
 import * as matchSt from '../states/quickMatch'
 import * as recoSt from '../states/reco'
@@ -40,6 +42,21 @@ const roiRectMove = computed(() => {
   }
   return undefined
 })
+
+function startGreenMask() {
+  if (imageSt.element.value) {
+    greenMaskSt.init(imageSt.element.value.width, imageSt.element.value.height)
+  }
+  greenMaskSt.drawing.value = true
+}
+
+function applyGreenMask() {
+  const newData = greenMaskSt.applyMask()
+  if (newData) {
+    imageSt.set(newData)
+    greenMaskSt.drawing.value = false
+  }
+}
 </script>
 
 <template>
@@ -72,6 +89,46 @@ const roiRectMove = computed(() => {
           </n-button>
         </n-flex>
       </template>
+    </n-card>
+
+    <n-card :title="t('maa.crop.tools.green-mask')" size="small">
+      <template #header-extra>
+        <n-flex>
+          <n-button v-if="!greenMaskSt.drawing.value" size="small" @click="startGreenMask()">
+            {{ t('maa.control.start') }}
+          </n-button>
+          <n-button v-else size="small" @click="greenMaskSt.drawing.value = false">
+            {{ t('maa.control.stop') }}
+          </n-button>
+        </n-flex>
+      </template>
+
+      <n-flex vertical>
+        <n-flex align="center">
+          <n-text>{{ t('maa.crop.tools.brush-size') }}</n-text>
+          <n-input-number
+            v-model:value="greenMaskSt.brushSize.value"
+            :min="1"
+            :max="100"
+            :step="1"
+            size="small"
+            style="width: 100px"
+          />
+          <n-switch v-model:value="greenMaskSt.isEraser.value" />
+          <n-text>{{ t('maa.crop.tools.eraser') }}</n-text>
+        </n-flex>
+        <n-flex>
+          <n-button size="small" @click="greenMaskSt.undo()">
+            {{ t('maa.crop.tools.undo') }}
+          </n-button>
+          <n-button size="small" @click="greenMaskSt.clear()">
+            {{ t('maa.crop.tools.clear') }}
+          </n-button>
+          <n-button size="small" type="primary" @click="applyGreenMask()">
+            {{ t('maa.crop.tools.apply') }}
+          </n-button>
+        </n-flex>
+      </n-flex>
     </n-card>
 
     <n-card :title="t('maa.crop.tools.roi-offset')" size="small">

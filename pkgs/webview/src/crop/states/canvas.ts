@@ -2,6 +2,7 @@ import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref, watch } 
 
 import { Box, Pos, Size, Viewport } from '../utils/2d'
 import * as controlSt from './control'
+import * as greenMaskSt from './greenMask'
 import * as imageSt from './image'
 import * as pickSt from './pick'
 import * as matchSt from './quickMatch'
@@ -49,6 +50,29 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ...imageSt.size.value.flat(),
       ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
     )
+
+    const maskCanvas = greenMaskSt.getMaskCanvas()
+    if (maskCanvas) {
+      ctx.save()
+      ctx.globalAlpha = 0.5
+      ctx.globalCompositeOperation = 'source-over'
+      const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = maskCanvas.width
+      tempCanvas.height = maskCanvas.height
+      const tempCtx = tempCanvas.getContext('2d')!
+      tempCtx.drawImage(maskCanvas, 0, 0)
+      tempCtx.globalCompositeOperation = 'source-in'
+      tempCtx.fillStyle = 'rgb(0, 255, 0)'
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height)
+      ctx.drawImage(
+        tempCanvas,
+        0,
+        0,
+        ...imageSt.size.value.flat(),
+        ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+      )
+      ctx.restore()
+    }
 
     if (pickSt.picking.value) {
       const pos = controlSt.current.value.round()

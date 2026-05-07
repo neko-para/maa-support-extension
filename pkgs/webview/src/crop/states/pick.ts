@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 
 import { ipc } from '../ipc'
-import { Box, Pos } from '../utils/2d'
+import { Box } from '../utils/2d'
 
 export const picking = ref(false)
 export const selecting = ref(false)

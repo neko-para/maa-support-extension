@@ -94,7 +94,7 @@ export function drawAt(x: number, y: number) {
   }
 }
 
-let isDrawingStroke = ref(false)
+const isDrawingStroke = ref(false)
 
 export function endStroke() {
   isDrawingStroke.value = false

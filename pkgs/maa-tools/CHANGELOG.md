@@ -1,3 +1,7 @@
+- 1.0.24
+
+Fix check fail only on error diagnostics instead of any diagnostics
+
 - 1.0.23
 
 Fix attach prop not being merged

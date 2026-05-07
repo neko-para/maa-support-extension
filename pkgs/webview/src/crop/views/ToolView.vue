@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'
@@ -64,32 +64,62 @@ function applyGreenMask() {
     <n-card :title="t('maa.crop.tools.pick-color')" size="small">
       <template #header-extra>
         <n-flex>
-          <n-button v-if="!pickSt.picking.value" size="small" @click="pickSt.start()">
-            {{ t('maa.crop.tools.pick-point') }}
-          </n-button>
-          <n-button v-else size="small" @click="pickSt.picking.value = false">
-            {{ t('maa.control.stop') }}
-          </n-button>
-          <n-button v-if="!pickSt.selecting.value" size="small" @click="pickSt.startSelect()">
-            {{ t('maa.crop.tools.pick-rect') }}
-          </n-button>
-          <n-button v-else size="small" @click="pickSt.selecting.value = false">
-            {{ t('maa.control.stop') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button v-if="!pickSt.picking.value" size="small" @click="pickSt.start()">
+                {{ t('maa.crop.tools.pick-point') }}
+              </n-button>
+              <n-button v-else size="small" @click="pickSt.picking.value = false">
+                {{ t('maa.control.stop') }}
+              </n-button>
+            </template>
+            {{ pickSt.picking.value ? t('maa.crop.tooltip.stop-pick') : t('maa.crop.tooltip.pick-point') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button v-if="!pickSt.selecting.value" size="small" @click="pickSt.startSelect()">
+                {{ t('maa.crop.tools.pick-rect') }}
+              </n-button>
+              <n-button v-else size="small" @click="pickSt.selecting.value = false">
+                {{ t('maa.control.stop') }}
+              </n-button>
+            </template>
+            {{ pickSt.selecting.value ? t('maa.crop.tooltip.stop-rect') : t('maa.crop.tooltip.pick-rect') }}
+          </n-tooltip>
         </n-flex>
       </template>
 
       <template v-if="pickSt.color.value">
         <n-flex align="center">
           <color-box :color="`rgb(${pickSt.color.value.join(',')})`"></color-box>
-          <n-button size="small" @click="pickSt.copyCss()">
-            HEX: {{ pickSt.cssText() }}
-          </n-button>
-          <n-button size="small" @click="pickSt.copyArray(0, 4)">
-            RGB: {{ pickSt.arrayText(0, 4) }}
-          </n-button>
-          <n-button size="small" @click="pickSt.copyHsv()"> HSV: {{ pickSt.hsvText() }} </n-button>
-          <n-button size="small" @click="pickSt.copyArray(0, 6)"> Gray: {{ pickSt.arrayText(0, 6) }} </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" @click="pickSt.copyCss()">
+                HEX: {{ pickSt.cssText() }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.copy-hex') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" @click="pickSt.copyArray(0, 4)">
+                RGB: {{ pickSt.arrayText(0, 4) }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.copy-rgb') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" @click="pickSt.copyHsv()"> HSV: {{ pickSt.hsvText() }} </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.copy-hsv') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" @click="pickSt.copyArray(0, 6)"> Gray: {{ pickSt.arrayText(0, 6) }} </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.copy-gray') }}
+          </n-tooltip>
         </n-flex>
       </template>
 
@@ -97,45 +127,80 @@ function applyGreenMask() {
         <n-flex vertical style="margin-top: 8px">
           <n-text strong>{{ t('maa.crop.tools.recommended-range') }}</n-text>
           <n-flex>
-            <n-select
-              v-model:value="pickSt.colorMethod.value"
-              :options="[
-                { label: 'RGB', value: 4 },
-                { label: 'HSV', value: 40 },
-                { label: 'Gray', value: 6 }
-              ]"
-              size="small"
-              style="width: 80px"
-            />
-            <n-select
-              v-model:value="pickSt.recommendMethod.value"
-              :options="[
-                { label: 'Min / Max', value: 'minmax' },
-                { label: 'Mean ± Std', value: 'meanstd' }
-              ]"
-              size="small"
-              style="width: 130px"
-            />
-            <n-button size="small" @click="pickSt.clearSamplePoints()">
-              {{ t('maa.crop.tools.clear-samples') }}
-            </n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-select
+                  v-model:value="pickSt.colorMethod.value"
+                  :options="[
+                    { label: 'RGB', value: 4 },
+                    { label: 'HSV', value: 40 },
+                    { label: 'Gray', value: 6 }
+                  ]"
+                  size="small"
+                  style="width: 80px"
+                />
+              </template>
+              {{ t('maa.crop.tooltip.color-method') }}
+            </n-tooltip>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-select
+                  v-model:value="pickSt.recommendMethod.value"
+                  :options="[
+                    { label: 'Min / Max', value: 'minmax' },
+                    { label: 'Mean ± Std', value: 'meanstd' }
+                  ]"
+                  size="small"
+                  style="width: 130px"
+                />
+              </template>
+              {{ t('maa.crop.tooltip.recommend-method') }}
+            </n-tooltip>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button size="small" @click="pickSt.clearSamplePoints()">
+                  {{ t('maa.crop.tools.clear-samples') }}
+                </n-button>
+              </template>
+              {{ t('maa.crop.tooltip.clear-samples') }}
+            </n-tooltip>
           </n-flex>
           <template v-if="pickSt.recommendedColors.value">
             <n-flex>
-              <n-button size="small" @click="pickSt.copyRecommendedLower()">
-                lower: {{ pickSt.recommendedLowerText() }}
-              </n-button>
-              <n-button size="small" @click="pickSt.copyRecommendedUpper()">
-                upper: {{ pickSt.recommendedUpperText() }}
-              </n-button>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" @click="pickSt.copyRecommendedLower()">
+                    lower: {{ pickSt.recommendedLowerText() }}
+                  </n-button>
+                </template>
+                {{ t('maa.crop.tooltip.copy-lower') }}
+              </n-tooltip>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" @click="pickSt.copyRecommendedUpper()">
+                    upper: {{ pickSt.recommendedUpperText() }}
+                  </n-button>
+                </template>
+                {{ t('maa.crop.tooltip.copy-upper') }}
+              </n-tooltip>
             </n-flex>
             <n-flex>
-              <n-button size="small" @click="pickSt.copyRecommendedLower(hostState.pickColorThreshold ?? 10)">
-                lower -{{ hostState.pickColorThreshold ?? 10 }}: {{ pickSt.recommendedLowerText(hostState.pickColorThreshold ?? 10) }}
-              </n-button>
-              <n-button size="small" @click="pickSt.copyRecommendedUpper(hostState.pickColorThreshold ?? 10)">
-                upper +{{ hostState.pickColorThreshold ?? 10 }}: {{ pickSt.recommendedUpperText(hostState.pickColorThreshold ?? 10) }}
-              </n-button>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" @click="pickSt.copyRecommendedLower(hostState.pickColorThreshold ?? 10)">
+                    lower -{{ hostState.pickColorThreshold ?? 10 }}: {{ pickSt.recommendedLowerText(hostState.pickColorThreshold ?? 10) }}
+                  </n-button>
+                </template>
+                {{ t('maa.crop.tooltip.copy-lower-expanded') }}
+              </n-tooltip>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" @click="pickSt.copyRecommendedUpper(hostState.pickColorThreshold ?? 10)">
+                    upper +{{ hostState.pickColorThreshold ?? 10 }}: {{ pickSt.recommendedUpperText(hostState.pickColorThreshold ?? 10) }}
+                  </n-button>
+                </template>
+                {{ t('maa.crop.tooltip.copy-upper-expanded') }}
+              </n-tooltip>
             </n-flex>
           </template>
 
@@ -149,7 +214,12 @@ function applyGreenMask() {
             >
               <color-box :color="`rgb(${point.color.join(',')})`"></color-box>
               <n-text style="font-size: 12px">[{{ point.color.join(', ') }}]</n-text>
-              <n-button size="tiny" @click="pickSt.removeSamplePoint(point.id)">✕</n-button>
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="tiny" @click="pickSt.removeSamplePoint(point.id)">✕</n-button>
+                </template>
+                {{ t('maa.crop.tooltip.remove-sample') }}
+              </n-tooltip>
             </n-flex>
           </n-flex>
         </n-flex>
@@ -159,12 +229,17 @@ function applyGreenMask() {
     <n-card :title="t('maa.crop.tools.green-mask')" size="small">
       <template #header-extra>
         <n-flex>
-          <n-button v-if="!greenMaskSt.drawing.value" size="small" @click="startGreenMask()">
-            {{ t('maa.control.start') }}
-          </n-button>
-          <n-button v-else size="small" @click="greenMaskSt.drawing.value = false">
-            {{ t('maa.control.stop') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button v-if="!greenMaskSt.drawing.value" size="small" @click="startGreenMask()">
+                {{ t('maa.control.start') }}
+              </n-button>
+              <n-button v-else size="small" @click="greenMaskSt.drawing.value = false">
+                {{ t('maa.control.stop') }}
+              </n-button>
+            </template>
+            {{ greenMaskSt.drawing.value ? t('maa.crop.tooltip.stop-mask') : t('maa.crop.tooltip.start-mask') }}
+          </n-tooltip>
         </n-flex>
       </template>
 
@@ -183,15 +258,30 @@ function applyGreenMask() {
           <n-text>{{ t('maa.crop.tools.eraser') }}</n-text>
         </n-flex>
         <n-flex>
-          <n-button size="small" @click="greenMaskSt.undo()">
-            {{ t('maa.crop.tools.undo') }}
-          </n-button>
-          <n-button size="small" @click="greenMaskSt.clear()">
-            {{ t('maa.crop.tools.clear') }}
-          </n-button>
-          <n-button size="small" type="primary" @click="applyGreenMask()">
-            {{ t('maa.crop.tools.apply') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" @click="greenMaskSt.undo()">
+                {{ t('maa.crop.tools.undo') }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.undo-mask') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" @click="greenMaskSt.clear()">
+                {{ t('maa.crop.tools.clear') }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.clear-mask') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button size="small" type="primary" @click="applyGreenMask()">
+                {{ t('maa.crop.tools.apply') }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.apply-mask') }}
+          </n-tooltip>
         </n-flex>
       </n-flex>
     </n-card>
@@ -224,20 +314,30 @@ function applyGreenMask() {
     <n-card :title="t('maa.crop.tools.quick-match')" size="small">
       <template #header-extra>
         <n-flex>
-          <n-button
-            size="small"
-            :loading="matchSt.loading.value"
-            @click="matchSt.perform('requestOCR')"
-          >
-            {{ t('maa.crop.tools.quick-match-ocr') }}
-          </n-button>
-          <n-button
-            size="small"
-            :loading="matchSt.loading.value"
-            @click="matchSt.perform('requestTemplateMatch')"
-          >
-            {{ t('maa.crop.tools.quick-match-tmpl') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                size="small"
+                :loading="matchSt.loading.value"
+                @click="matchSt.perform('requestOCR')"
+              >
+                {{ t('maa.crop.tools.quick-match-ocr') }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.quick-ocr') }}
+          </n-tooltip>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                size="small"
+                :loading="matchSt.loading.value"
+                @click="matchSt.perform('requestTemplateMatch')"
+              >
+                {{ t('maa.crop.tools.quick-match-tmpl') }}
+              </n-button>
+            </template>
+            {{ t('maa.crop.tooltip.quick-template') }}
+          </n-tooltip>
           <n-input-number
             :value="settingsSt.templateMatchThreshold.eff"
             @update:value="
@@ -297,9 +397,14 @@ function applyGreenMask() {
 
     <n-card v-if="!hostState.isMAA" :title="t('maa.crop.tools.quick-reco')" size="small">
       <template #header-extra>
-        <n-button size="small" :loading="recoSt.loading.value" @click="recoSt.perform()">
-          {{ t('maa.control.launch') }}
-        </n-button>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button size="small" :loading="recoSt.loading.value" @click="recoSt.perform()">
+              {{ t('maa.control.launch') }}
+            </n-button>
+          </template>
+          {{ t('maa.crop.tooltip.quick-reco') }}
+        </n-tooltip>
       </template>
 
       <template v-if="recoSt.result">

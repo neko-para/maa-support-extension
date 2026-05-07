@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NInput, NSwitch } from 'naive-ui'
+import { NButton, NCard, NFlex, NInput, NSwitch, NTooltip } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -87,12 +87,22 @@ function updateStripList(stripList: boolean) {
         </span>
       </n-flex>
       <n-flex>
-        <n-button :disabled="!isTaskValid" @click="evalTask" size="small">
-          {{ t('maa.control.eval-task') }}
-        </n-button>
-        <n-button :disabled="!isTaskValid || !isExprValid" @click="evalExpr" size="small">
-          {{ t('maa.control.eval-list') }}
-        </n-button>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button :disabled="!isTaskValid" @click="evalTask" size="small">
+              {{ t('maa.control.eval-task') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.eval-task') }}
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button :disabled="!isTaskValid || !isExprValid" @click="evalExpr" size="small">
+              {{ t('maa.control.eval-list') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.eval-list') }}
+        </n-tooltip>
       </n-flex>
     </n-flex>
   </n-card>

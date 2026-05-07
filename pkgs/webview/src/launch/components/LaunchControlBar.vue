@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDynamicTags, NFlex, NText } from 'naive-ui'
+import { NButton, NCard, NDynamicTags, NFlex, NText, NTooltip } from 'naive-ui'
 import { ref } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -47,20 +47,35 @@ function updateBreak(tasks: string[]) {
   >
     <template #header-extra>
       <n-flex>
-        <n-button @click="showTool = !showTool" size="small">
-          {{ t('maa.crop.tools') }}
-        </n-button>
-        <n-button
-          :loading="pauseLoading"
-          :disabled="pauseLoading || hostState.stopped"
-          @click="togglePause"
-          size="small"
-        >
-          {{ hostState.paused ? t('maa.launch.continue') : t('maa.launch.pause') }}
-        </n-button>
-        <n-button :disabled="hostState.stopped" @click="requestStop" size="small">
-          {{ t('maa.launch.stop') }}
-        </n-button>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button @click="showTool = !showTool" size="small">
+              {{ t('maa.crop.tools') }}
+            </n-button>
+          </template>
+          {{ t('maa.launch.tooltip.tools') }}
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button
+              :loading="pauseLoading"
+              :disabled="pauseLoading || hostState.stopped"
+              @click="togglePause"
+              size="small"
+            >
+              {{ hostState.paused ? t('maa.launch.continue') : t('maa.launch.pause') }}
+            </n-button>
+          </template>
+          {{ hostState.paused ? t('maa.launch.tooltip.continue') : t('maa.launch.tooltip.pause') }}
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button :disabled="hostState.stopped" @click="requestStop" size="small">
+              {{ t('maa.launch.stop') }}
+            </n-button>
+          </template>
+          {{ t('maa.launch.tooltip.stop') }}
+        </n-tooltip>
       </n-flex>
     </template>
 

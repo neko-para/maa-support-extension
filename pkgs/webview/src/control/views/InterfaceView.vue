@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
+import { NButton, NCard, NFlex, NSelect, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -53,20 +53,35 @@ function revealConfig() {
         size="small"
       ></n-select>
       <n-flex>
-        <n-button :disabled="!hostState.activeInterface" @click="revealInterface" size="small">
-          {{ t('maa.control.reveal') }}
-        </n-button>
-        <n-button :disabled="!hostState.activeInterface" @click="revealConfig" size="small">
-          {{ t('maa.control.reveal-config') }}
-        </n-button>
-        <n-button
-          :loading="hostState.refreshingInterface"
-          :disabled="hostState.refreshingInterface"
-          @click="refreshInterface"
-          size="small"
-        >
-          {{ t('maa.control.scan') }}
-        </n-button>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button :disabled="!hostState.activeInterface" @click="revealInterface" size="small">
+              {{ t('maa.control.reveal') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.reveal-interface') }}
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button :disabled="!hostState.activeInterface" @click="revealConfig" size="small">
+              {{ t('maa.control.reveal-config') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.reveal-config') }}
+        </n-tooltip>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button
+              :loading="hostState.refreshingInterface"
+              :disabled="hostState.refreshingInterface"
+              @click="refreshInterface"
+              size="small"
+            >
+              {{ t('maa.control.scan') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.scan-interface') }}
+        </n-tooltip>
       </n-flex>
     </n-flex>
   </n-card>

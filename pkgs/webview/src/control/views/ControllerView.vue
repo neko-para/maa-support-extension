@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect } from 'naive-ui'
+import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect, NTooltip } from 'naive-ui'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
@@ -222,14 +222,19 @@ function uploadImage() {
     <n-card title="ADB" size="small">
       <template #header-extra>
         <n-flex>
-          <n-button
-            :loading="refreshingAdb"
-            :disabled="refreshingAdb || selectingAdb"
-            @click="refreshAdb"
-            size="small"
-          >
-            {{ t('maa.control.scan') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                :loading="refreshingAdb"
+                :disabled="refreshingAdb || selectingAdb"
+                @click="refreshAdb"
+                size="small"
+              >
+                {{ t('maa.control.scan') }}
+              </n-button>
+            </template>
+            {{ t('maa.control.tooltip.scan-adb') }}
+          </n-tooltip>
           <n-dropdown
             :disabled="refreshingAdb || selectingAdb || adbOptions.length === 0"
             trigger="hover"
@@ -237,14 +242,19 @@ function uploadImage() {
             @select="configAdb"
             size="small"
           >
-            <n-button
-              :loading="selectingAdb"
-              :disabled="refreshingAdb || selectingAdb || adbOptions.length === 0"
-              size="small"
-              @click="nativeSelectAdb"
-            >
-              {{ t('maa.control.controller.device-list') }}
-            </n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  :loading="selectingAdb"
+                  :disabled="refreshingAdb || selectingAdb || adbOptions.length === 0"
+                  size="small"
+                  @click="nativeSelectAdb"
+                >
+                  {{ t('maa.control.controller.device-list') }}
+                </n-button>
+              </template>
+              {{ t('maa.control.tooltip.device-list-adb') }}
+            </n-tooltip>
           </n-dropdown>
         </n-flex>
       </template>
@@ -261,14 +271,19 @@ function uploadImage() {
     <n-card title="Win32" size="small">
       <template #header-extra>
         <n-flex>
-          <n-button
-            :loading="refreshingDesktop"
-            :disabled="refreshingDesktop || selectingDesktop"
-            @click="refreshDesktop"
-            size="small"
-          >
-            {{ t('maa.control.scan') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                :loading="refreshingDesktop"
+                :disabled="refreshingDesktop || selectingDesktop"
+                @click="refreshDesktop"
+                size="small"
+              >
+                {{ t('maa.control.scan') }}
+              </n-button>
+            </template>
+            {{ t('maa.control.tooltip.scan-desktop') }}
+          </n-tooltip>
           <n-popselect
             :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
             trigger="hover"
@@ -277,14 +292,19 @@ function uploadImage() {
             size="small"
             scrollable
           >
-            <n-button
-              :loading="selectingDesktop"
-              :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
-              size="small"
-              @click="nativeSelectDesktop('win32')"
-            >
-              {{ t('maa.control.controller.window-list') }}
-            </n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  :loading="selectingDesktop"
+                  :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+                  size="small"
+                  @click="nativeSelectDesktop('win32')"
+                >
+                  {{ t('maa.control.controller.window-list') }}
+                </n-button>
+              </template>
+              {{ t('maa.control.tooltip.window-list-win32') }}
+            </n-tooltip>
           </n-popselect>
         </n-flex>
       </template>
@@ -313,14 +333,19 @@ function uploadImage() {
     <n-card title="Gamepad" size="small">
       <template #header-extra>
         <n-flex>
-          <n-button
-            :loading="refreshingDesktop"
-            :disabled="refreshingDesktop || selectingDesktop"
-            @click="refreshDesktop"
-            size="small"
-          >
-            {{ t('maa.control.scan') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                :loading="refreshingDesktop"
+                :disabled="refreshingDesktop || selectingDesktop"
+                @click="refreshDesktop"
+                size="small"
+              >
+                {{ t('maa.control.scan') }}
+              </n-button>
+            </template>
+            {{ t('maa.control.tooltip.scan-desktop') }}
+          </n-tooltip>
           <n-popselect
             :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
             trigger="hover"
@@ -329,14 +354,19 @@ function uploadImage() {
             size="small"
             scrollable
           >
-            <n-button
-              :loading="selectingDesktop"
-              :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
-              size="small"
-              @click="nativeSelectDesktop('gamepad')"
-            >
-              {{ t('maa.control.controller.window-list') }}
-            </n-button>
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  :loading="selectingDesktop"
+                  :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
+                  size="small"
+                  @click="nativeSelectDesktop('gamepad')"
+                >
+                  {{ t('maa.control.controller.window-list') }}
+                </n-button>
+              </template>
+              {{ t('maa.control.tooltip.window-list-gamepad') }}
+            </n-tooltip>
           </n-popselect>
         </n-flex>
       </template>
@@ -352,9 +382,14 @@ function uploadImage() {
   <template v-if="currentType === 'Fixed'">
     <n-card title="VscFixed" size="small">
       <template #header-extra>
-        <n-button @click="uploadImage" size="small">
-          {{ t('maa.control.upload') }}
-        </n-button>
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button @click="uploadImage" size="small">
+              {{ t('maa.control.upload') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.upload-fixed') }}
+        </n-tooltip>
       </template>
       <n-flex v-if="hostState.interfaceConfigJson?.vscFixed" vertical>
         <span> {{ hostState.interfaceConfigJson.vscFixed.image }} </span>

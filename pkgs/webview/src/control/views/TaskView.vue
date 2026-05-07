@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NPopselect } from 'naive-ui'
+import { NButton, NCard, NFlex, NPopselect, NTooltip } from 'naive-ui'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
@@ -151,14 +151,19 @@ async function nativeSelectTask() {
           size="small"
           scrollable
         >
-          <n-button
-            :loading="selecting"
-            :disabled="selecting"
-            size="small"
-            @click="nativeUsePreset"
-          >
-            {{ t('maa.control.task.use-preset') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                :loading="selecting"
+                :disabled="selecting"
+                size="small"
+                @click="nativeUsePreset"
+              >
+                {{ t('maa.control.task.use-preset') }}
+              </n-button>
+            </template>
+            {{ t('maa.control.tooltip.use-preset') }}
+          </n-tooltip>
         </n-popselect>
         <n-popselect
           :disabled="selecting"
@@ -168,14 +173,19 @@ async function nativeSelectTask() {
           size="small"
           scrollable
         >
-          <n-button
-            :loading="selecting"
-            :disabled="selecting"
-            size="small"
-            @click="nativeSelectTask"
-          >
-            {{ t('maa.control.task.add-task') }}
-          </n-button>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                :loading="selecting"
+                :disabled="selecting"
+                size="small"
+                @click="nativeSelectTask"
+              >
+                {{ t('maa.control.task.add-task') }}
+              </n-button>
+            </template>
+            {{ t('maa.control.tooltip.add-task') }}
+          </n-tooltip>
         </n-popselect>
       </n-flex>
     </template>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NButton, NCard, NDynamicTags, NFlex, NText, NTooltip } from 'naive-ui'
+import { NButton, NCard, NDynamicTags, NFlex, NText } from 'naive-ui'
 import { ref } from 'vue'
 
+import Tooltip from '../../components/Tooltip.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
@@ -47,15 +48,15 @@ function updateBreak(tasks: string[]) {
   >
     <template #header-extra>
       <n-flex>
-        <n-tooltip trigger="hover">
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button @click="showTool = !showTool" size="small">
               {{ t('maa.crop.tools') }}
             </n-button>
           </template>
           {{ t('maa.launch.tooltip.tools') }}
-        </n-tooltip>
-        <n-tooltip trigger="hover">
+        </Tooltip>
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button
               :loading="pauseLoading"
@@ -67,15 +68,15 @@ function updateBreak(tasks: string[]) {
             </n-button>
           </template>
           {{ hostState.paused ? t('maa.launch.tooltip.continue') : t('maa.launch.tooltip.pause') }}
-        </n-tooltip>
-        <n-tooltip trigger="hover">
+        </Tooltip>
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button :disabled="hostState.stopped" @click="requestStop" size="small">
               {{ t('maa.launch.stop') }}
             </n-button>
           </template>
           {{ t('maa.launch.tooltip.stop') }}
-        </n-tooltip>
+        </Tooltip>
       </n-flex>
     </template>
 

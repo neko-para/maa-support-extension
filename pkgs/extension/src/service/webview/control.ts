@@ -23,6 +23,7 @@ import {
 } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
+import { getTooltipDisabled } from '../../utils/settings'
 import { BaseService, context } from '../context'
 import { convertRange } from '../language/utils'
 import { isCtrlDev } from './dev'
@@ -301,6 +302,12 @@ export class WebviewControlService extends BaseService {
     this.defer = nativeService.onVersionChanged(() => {
       this.pushState()
     })
+
+    this.defer = vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('maa.webviewTooltipDisabled')) {
+        this.pushState()
+      }
+    })
   }
 
   async revealInterface(dest?: InterfaceRevealOption) {
@@ -405,7 +412,8 @@ export class WebviewControlService extends BaseService {
 
       interfaceConfigJson: interfaceService.interfaceConfigJson,
 
-      evalTaskConfig: stateService.state.evalTaskConfig
+      evalTaskConfig: stateService.state.evalTaskConfig,
+      tooltipDisabled: getTooltipDisabled()
     }
   }
 

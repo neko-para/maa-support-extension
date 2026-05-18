@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NText, NTooltip } from 'naive-ui'
+import { NButton, NCard, NFlex, NText } from 'naive-ui'
 import { ref } from 'vue'
 
 import type { ToolkitJumpTarget } from '@mse/types'
 
+import Tooltip from '../../components/Tooltip.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'
@@ -52,7 +53,7 @@ async function jump(target: ToolkitJumpTarget) {
     <n-flex vertical>
       <n-flex wrap>
         <template v-for="info in jumpTargets" :key="info.target">
-          <n-tooltip trigger="hover">
+          <Tooltip trigger="hover">
             <template #trigger>
               <n-button
                 :disabled="!!loading"
@@ -64,9 +65,9 @@ async function jump(target: ToolkitJumpTarget) {
               </n-button>
             </template>
             {{ info.tooltip() }}
-          </n-tooltip>
+          </Tooltip>
         </template>
-        <n-tooltip v-if="hostState.admin !== undefined" trigger="hover">
+        <Tooltip v-if="hostState.admin !== undefined" trigger="hover">
           <template #trigger>
             <n-button
               :disabled="!!loading"
@@ -80,8 +81,8 @@ async function jump(target: ToolkitJumpTarget) {
             </n-button>
           </template>
           {{ t('maa.control.tooltip.toggle-admin') }}
-        </n-tooltip>
-        <n-tooltip v-if="hostState.debugMode !== undefined" trigger="hover">
+        </Tooltip>
+        <Tooltip v-if="hostState.debugMode !== undefined" trigger="hover">
           <template #trigger>
             <n-button
               :disabled="!!loading"
@@ -95,7 +96,7 @@ async function jump(target: ToolkitJumpTarget) {
             </n-button>
           </template>
           {{ t('maa.control.tooltip.toggle-debug') }}
-        </n-tooltip>
+        </Tooltip>
       </n-flex>
       <n-text v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
         {{ info }}

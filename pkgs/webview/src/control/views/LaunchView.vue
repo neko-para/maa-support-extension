@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NTooltip } from 'naive-ui'
+import { NButton, NCard } from 'naive-ui'
+import Tooltip from '../../components/Tooltip.vue'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
@@ -14,13 +15,13 @@ function launch() {
 
 <template>
   <n-card :title="t('maa.control.launch.launch')" size="small">
-    <n-tooltip trigger="hover">
+    <Tooltip trigger="hover">
       <template #trigger>
         <n-button :disabled="!canLaunch" @click="launch" size="small">
           {{ t('maa.control.launch.start') }}
         </n-button>
       </template>
       {{ t('maa.control.tooltip.launch') }}
-    </n-tooltip>
+    </Tooltip>
   </n-card>
 </template>

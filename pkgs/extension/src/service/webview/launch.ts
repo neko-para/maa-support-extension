@@ -14,6 +14,7 @@ import type { TaskName } from '@nekosu/maa-pipeline-manager'
 import { interfaceService, nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
+import { getTooltipDisabled } from '../../utils/settings'
 import { context } from '../context'
 import type { IpcType } from '../server'
 import { WebviewCropPanel } from './crop'
@@ -52,7 +53,10 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.sessionId = `${instance}-${Date.now()}`
     this.sessionStartedAt = Date.now()
     this.configChangedDisposable = vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration('maa.launchAnalyzerUrl')) {
+      if (
+        event.affectsConfiguration('maa.launchAnalyzerUrl') ||
+        event.affectsConfiguration('maa.webviewTooltipDisabled')
+      ) {
         this.pushState()
       }
     })
@@ -222,6 +226,7 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       analyzerUrl:
         (vscode.workspace.getConfiguration('maa').get('launchAnalyzerUrl') as string | undefined) ??
         '',
+      tooltipDisabled: getTooltipDisabled(),
 
       stopped: this.stopped,
       paused: this.paused,

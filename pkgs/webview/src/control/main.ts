@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 
 import '../utils/base.css'
 import { vscodeLocale } from '../utils/locale'
+import { syncTooltipFromState } from '../utils/tooltip'
 import App from './App.vue'
 import { ipc } from './ipc'
 import { hostState, interfaceJson } from './state'
@@ -13,11 +14,17 @@ ipc.recv.value = data => {
     case 'updateState':
       hostState.value = data.state
       vscodeLocale.value = data.state.locale ?? 'zh'
+      syncTooltipFromState(data.state)
       break
     case 'updateInterface':
       interfaceJson.value = data.interfaceJson
       break
   }
 }
+
+ipc.send({
+  command: '__init',
+  builtin: true
+})
 
 console.log('CONTROL: loaded')

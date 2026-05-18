@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect, NTooltip } from 'naive-ui'
+import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect } from 'naive-ui'
+import Tooltip from '../../components/Tooltip.vue'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
@@ -222,7 +223,7 @@ function uploadImage() {
     <n-card title="ADB" size="small">
       <template #header-extra>
         <n-flex>
-          <n-tooltip trigger="hover">
+          <Tooltip trigger="hover">
             <template #trigger>
               <n-button
                 :loading="refreshingAdb"
@@ -234,7 +235,7 @@ function uploadImage() {
               </n-button>
             </template>
             {{ t('maa.control.tooltip.scan-adb') }}
-          </n-tooltip>
+          </Tooltip>
           <n-dropdown
             :disabled="refreshingAdb || selectingAdb || adbOptions.length === 0"
             trigger="hover"
@@ -242,7 +243,7 @@ function uploadImage() {
             @select="configAdb"
             size="small"
           >
-            <n-tooltip trigger="hover">
+            <Tooltip trigger="hover">
               <template #trigger>
                 <n-button
                   :loading="selectingAdb"
@@ -254,7 +255,7 @@ function uploadImage() {
                 </n-button>
               </template>
               {{ t('maa.control.tooltip.device-list-adb') }}
-            </n-tooltip>
+            </Tooltip>
           </n-dropdown>
         </n-flex>
       </template>
@@ -271,7 +272,7 @@ function uploadImage() {
     <n-card title="Win32" size="small">
       <template #header-extra>
         <n-flex>
-          <n-tooltip trigger="hover">
+          <Tooltip trigger="hover">
             <template #trigger>
               <n-button
                 :loading="refreshingDesktop"
@@ -283,7 +284,7 @@ function uploadImage() {
               </n-button>
             </template>
             {{ t('maa.control.tooltip.scan-desktop') }}
-          </n-tooltip>
+          </Tooltip>
           <n-popselect
             :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
             trigger="hover"
@@ -292,7 +293,7 @@ function uploadImage() {
             size="small"
             scrollable
           >
-            <n-tooltip trigger="hover">
+            <Tooltip trigger="hover">
               <template #trigger>
                 <n-button
                   :loading="selectingDesktop"
@@ -304,7 +305,7 @@ function uploadImage() {
                 </n-button>
               </template>
               {{ t('maa.control.tooltip.window-list-win32') }}
-            </n-tooltip>
+            </Tooltip>
           </n-popselect>
         </n-flex>
       </template>
@@ -333,7 +334,7 @@ function uploadImage() {
     <n-card title="Gamepad" size="small">
       <template #header-extra>
         <n-flex>
-          <n-tooltip trigger="hover">
+          <Tooltip trigger="hover">
             <template #trigger>
               <n-button
                 :loading="refreshingDesktop"
@@ -345,7 +346,7 @@ function uploadImage() {
               </n-button>
             </template>
             {{ t('maa.control.tooltip.scan-desktop') }}
-          </n-tooltip>
+          </Tooltip>
           <n-popselect
             :disabled="refreshingDesktop || selectingDesktop || desktopOptions.length === 0"
             trigger="hover"
@@ -354,7 +355,7 @@ function uploadImage() {
             size="small"
             scrollable
           >
-            <n-tooltip trigger="hover">
+            <Tooltip trigger="hover">
               <template #trigger>
                 <n-button
                   :loading="selectingDesktop"
@@ -366,7 +367,7 @@ function uploadImage() {
                 </n-button>
               </template>
               {{ t('maa.control.tooltip.window-list-gamepad') }}
-            </n-tooltip>
+            </Tooltip>
           </n-popselect>
         </n-flex>
       </template>
@@ -382,14 +383,14 @@ function uploadImage() {
   <template v-if="currentType === 'Fixed'">
     <n-card title="VscFixed" size="small">
       <template #header-extra>
-        <n-tooltip trigger="hover">
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button @click="uploadImage" size="small">
               {{ t('maa.control.upload') }}
             </n-button>
           </template>
           {{ t('maa.control.tooltip.upload-fixed') }}
-        </n-tooltip>
+        </Tooltip>
       </template>
       <n-flex v-if="hostState.interfaceConfigJson?.vscFixed" vertical>
         <span> {{ hostState.interfaceConfigJson.vscFixed.image }} </span>

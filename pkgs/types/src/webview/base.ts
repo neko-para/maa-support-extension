@@ -47,4 +47,5 @@ export type HostStateBase = {
   isMAA?: boolean
   fwStatus?: string[]
   locale?: 'zh' | 'en'
+  tooltipDisabled?: boolean
 }

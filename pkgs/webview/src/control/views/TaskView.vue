@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NPopselect, NTooltip } from 'naive-ui'
+import { NButton, NCard, NFlex, NPopselect } from 'naive-ui'
+import Tooltip from '../../components/Tooltip.vue'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
@@ -151,7 +152,7 @@ async function nativeSelectTask() {
           size="small"
           scrollable
         >
-          <n-tooltip trigger="hover">
+          <Tooltip trigger="hover">
             <template #trigger>
               <n-button
                 :loading="selecting"
@@ -163,7 +164,7 @@ async function nativeSelectTask() {
               </n-button>
             </template>
             {{ t('maa.control.tooltip.use-preset') }}
-          </n-tooltip>
+          </Tooltip>
         </n-popselect>
         <n-popselect
           :disabled="selecting"
@@ -173,7 +174,7 @@ async function nativeSelectTask() {
           size="small"
           scrollable
         >
-          <n-tooltip trigger="hover">
+          <Tooltip trigger="hover">
             <template #trigger>
               <n-button
                 :loading="selecting"
@@ -185,7 +186,7 @@ async function nativeSelectTask() {
               </n-button>
             </template>
             {{ t('maa.control.tooltip.add-task') }}
-          </n-tooltip>
+          </Tooltip>
         </n-popselect>
       </n-flex>
     </template>

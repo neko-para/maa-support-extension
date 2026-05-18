@@ -9,6 +9,7 @@ import { locale, t } from '@nekosu/maa-locale'
 import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
 import { imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
+import { getTooltipDisabled } from '../../utils/settings'
 import { context } from '../context'
 import type { IpcType } from '../server'
 import { toPngDataUrl } from '../utils/png'
@@ -16,6 +17,7 @@ import { isCropDev } from './dev'
 
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
   ipc: IpcType
+  private configChangedDisposable: vscode.Disposable
 
   constructor(ipc: IpcType, title: string, viewColumn?: vscode.ViewColumn) {
     super({
@@ -31,9 +33,15 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
     })
 
     this.ipc = ipc
+    this.configChangedDisposable = vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration('maa.webviewTooltipDisabled')) {
+        this.pushState()
+      }
+    })
   }
 
   dispose() {
+    this.configChangedDisposable.dispose()
     console.log('crop panel dispose')
   }
 
@@ -248,7 +256,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       fwStatus: nativeService.currentVersionInfo,
       locale,
 
-      ...stateService.state.cropSettings
+      ...stateService.state.cropSettings,
+      tooltipDisabled: getTooltipDisabled()
     }
   }
 

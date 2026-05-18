@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect, NTooltip } from 'naive-ui'
+import { NButton, NCard, NFlex, NSelect } from 'naive-ui'
+import Tooltip from '../../components/Tooltip.vue'
 import { computed } from 'vue'
 
 import { t } from '../../utils/locale'
@@ -53,23 +54,23 @@ function revealConfig() {
         size="small"
       ></n-select>
       <n-flex>
-        <n-tooltip trigger="hover">
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button :disabled="!hostState.activeInterface" @click="revealInterface" size="small">
               {{ t('maa.control.reveal') }}
             </n-button>
           </template>
           {{ t('maa.control.tooltip.reveal-interface') }}
-        </n-tooltip>
-        <n-tooltip trigger="hover">
+        </Tooltip>
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button :disabled="!hostState.activeInterface" @click="revealConfig" size="small">
               {{ t('maa.control.reveal-config') }}
             </n-button>
           </template>
           {{ t('maa.control.tooltip.reveal-config') }}
-        </n-tooltip>
-        <n-tooltip trigger="hover">
+        </Tooltip>
+        <Tooltip trigger="hover">
           <template #trigger>
             <n-button
               :loading="hostState.refreshingInterface"
@@ -81,7 +82,7 @@ function revealConfig() {
             </n-button>
           </template>
           {{ t('maa.control.tooltip.scan-interface') }}
-        </n-tooltip>
+        </Tooltip>
       </n-flex>
     </n-flex>
   </n-card>

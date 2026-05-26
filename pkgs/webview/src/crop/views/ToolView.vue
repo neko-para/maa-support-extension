@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
-import Tooltip from '../../components/Tooltip.vue'
+import Tooltip from '../../components/AppTooltip.vue'
 import { computed, ref } from 'vue'
 
 import JsonCode from '../../components/JsonCode.vue'

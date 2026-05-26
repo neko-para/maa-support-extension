@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NFlex } from 'naive-ui'
-import Tooltip from '../../components/Tooltip.vue'
+import Tooltip from '../../components/AppTooltip.vue'
 
 import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'

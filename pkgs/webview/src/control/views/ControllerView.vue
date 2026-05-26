@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect } from 'naive-ui'
-import Tooltip from '../../components/Tooltip.vue'
+import Tooltip from '../../components/AppTooltip.vue'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'

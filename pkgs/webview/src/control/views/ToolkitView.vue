@@ -4,7 +4,7 @@ import { ref } from 'vue'
 
 import type { ToolkitJumpTarget } from '@mse/types'
 
-import Tooltip from '../../components/Tooltip.vue'
+import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'

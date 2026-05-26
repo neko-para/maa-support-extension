@@ -2,7 +2,7 @@
 import { NButton, NCard, NDynamicTags, NFlex, NText } from 'naive-ui'
 import { ref } from 'vue'
 
-import Tooltip from '../../components/Tooltip.vue'
+import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { hostState } from '../state'

@@ -126,7 +126,6 @@ function applyGreenMask() {
 
       <template v-if="pickSt.samplePoints.value.length > 0">
         <n-flex vertical style="margin-top: 8px">
-          <n-text strong>{{ t('maa.crop.tools.recommended-range') }}</n-text>
           <n-flex>
             <Tooltip trigger="hover">
               <template #trigger>
@@ -166,6 +165,7 @@ function applyGreenMask() {
               {{ t('maa.crop.tooltip.clear-samples') }}
             </Tooltip>
           </n-flex>
+          <n-text strong>{{ t('maa.crop.tools.recommended-range') }}</n-text>
           <template v-if="pickSt.recommendedColors.value">
             <n-flex>
               <Tooltip trigger="hover">
@@ -214,7 +214,7 @@ function applyGreenMask() {
               style="border: 1px solid #ccc; padding: 2px 4px; border-radius: 4px"
             >
               <color-box :color="`rgb(${point.color.join(',')})`"></color-box>
-              <n-text style="font-size: 12px">[{{ point.color.join(', ') }}]</n-text>
+              <n-text style="font-size: 12px">[{{ pickSt.formatColorText(point.color, pickSt.colorMethod.value) }}]</n-text>
               <Tooltip trigger="hover">
                 <template #trigger>
                   <n-button size="tiny" @click="pickSt.removeSamplePoint(point.id)">✕</n-button>

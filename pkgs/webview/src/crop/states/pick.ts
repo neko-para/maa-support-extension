@@ -85,7 +85,7 @@ export type ColorMethod = 4 | 40 | 6
 
 export const colorMethod = ref<ColorMethod>(4)
 
-function convertColor(clr: [number, number, number], method: ColorMethod): number[] {
+export function convertColor(clr: [number, number, number], method: ColorMethod): number[] {
   switch (method) {
     case 4:
       return [...clr]
@@ -94,6 +94,10 @@ function convertColor(clr: [number, number, number], method: ColorMethod): numbe
     case 6:
       return [rgbToGray(clr[0], clr[1], clr[2])]
   }
+}
+
+export function formatColorText(clr: [number, number, number], method: ColorMethod) {
+  return convertColor(clr, method).join(', ')
 }
 
 function channelMax(channelIndex: number, method: ColorMethod): number {

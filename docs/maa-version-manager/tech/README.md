@@ -2,6 +2,8 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
+本包遵循 [通用技术约定](../extra/common-tech.md)。零工作区依赖。
+
 ## 模块架构
 
 单文件包，所有逻辑在 `src/index.ts`：
@@ -42,15 +44,11 @@ root/
 
 ## 依赖关系
 
-### 外部依赖
-
 | 包 | 用途 |
 |---|---|
-| `pacote` | npm registry 客户端 (`packument()`, `extract()`) |
+| `pacote` | npm registry 客户端 |
 | `proper-lockfile` | 跨进程文件锁 |
 | `semver` | 版本号比较 |
-
-零工作区依赖。
 
 ## 技术选型
 

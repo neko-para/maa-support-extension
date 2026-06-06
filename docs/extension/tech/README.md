@@ -2,6 +2,8 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
+本包遵循 [通用技术约定](../extra/common-tech.md)。
+
 ## 模块架构
 
 ```
@@ -120,18 +122,17 @@ DisposableHelper
 
 | 选择 | 理由 |
 |---|---|
-| `tsdown` 构建 | 基于 esbuild 的 TypeScript 库打包工具，生成单文件 ESM 输出 |
 | `vscode-jsonrpc` over TCP | 子进程需要独立运行（可能提权），TCP 不受 stdio 限制 |
 | `jiti` 配置加载 | 允许用户编写 TypeScript 配置，运行时直接加载 |
 | Proxy 模式 IPC | 类型安全的双向 RPC，无需手动序列化 |
 | 自定义 Debug Adapter | 复用 VSCode 调试 UI 控制任务执行 |
 | Jimp 精简版 | 仅包含 PNG + crop 插件，最小化依赖 |
-| 两套 Language Provider | 反映 MaaFramework 的两层结构：interface 文件和 pipeline 文件 |
+| 两套 Language Provider | 反映两层结构：interface 文件和 pipeline 文件 |
 
 ## 构建
 
-- **构建工具**: `tsdown` (配置于 [tsdown.config.mts](../../../pkgs/extension/tsdown.config.mts))
-- **输出**: ESM (`.mjs` + `.d.mts`) → `release/out/extension.mjs`
+- **配置**: [tsdown.config.mts](../../../pkgs/extension/tsdown.config.mts)
+- **输出**: `release/out/extension.mjs`
 - **Server 进程**: 单独构建 → `release/server/index.mjs`
 - **Webview 前端**: Vite 构建 → `release/webview/`
 - **开发模式**: Vite HMR 通过 `forward.html` iframe 代理

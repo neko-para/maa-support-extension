@@ -13,4 +13,5 @@
 | [locale-system.md](locale-system.md) | 国际化文案体系 |
 | [pipeline-syntax.md](pipeline-syntax.md) | Pipeline 语法双轨制 |
 | [common-specs.md](common-specs.md) | 通用代码规范（所有包共享） |
+| [common-tech.md](common-tech.md) | 通用技术约定（所有包共享） |
 | [build-and-publish.md](build-and-publish.md) | 构建与发布流程 |

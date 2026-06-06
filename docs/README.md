@@ -59,6 +59,7 @@ VSCode 插件 + CLI 工具的 pnpm monorepo，服务于 MaaFramework 和 MaaAssi
 | 文档 | 说明 |
 |---|---|
 | [common-specs.md](extra/common-specs.md) | **通用代码规范**（所有包共享的 Prettier/ESLint/TS/命名约定） |
+| [common-tech.md](extra/common-tech.md) | **通用技术约定**（模块系统、构建工具、依赖管理、包结构） |
 | [dependency-graph.md](extra/dependency-graph.md) | 包依赖关系图 |
 | [ipc-architecture.md](extra/ipc-architecture.md) | IPC 通信架构 |
 | [locale-system.md](extra/locale-system.md) | 国际化文案体系 |

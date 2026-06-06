@@ -2,6 +2,8 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
+本包遵循 [通用技术约定](../extra/common-tech.md)。
+
 ## 模块架构
 
 ```
@@ -62,22 +64,15 @@ Task 中 baseTask: "BaseTask"
 
 ## 依赖关系
 
-### 工作区依赖
-
 | 包 | 角色 |
 |---|---|
 | `@nekosu/simple-parser` | 表达式词法和语法解析 |
-
-### 外部依赖
-
-无运行时依赖。仅 `devDependencies` 中的 TypeScript 和 Node 类型。
 
 ## 技术选型
 
 | 选择 | 理由 |
 |---|---|
 | 零原生依赖 | 可纯静态分析，无需 MaaFramework 运行时 |
-| `@nekosu/simple-parser` | monorepo 内部解析库，轻量级 PEG 风格 |
 | Trace-based merging | 下游诊断可追溯 "哪个文件定义了这个属性" |
 | 委托模式 | 解耦数据源，支持文件系统/数据库/测试 mock |
 | 循环检测 | evalTask 和 evalExpr 均有 visited set 防护 |

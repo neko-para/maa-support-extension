@@ -1,5 +1,7 @@
 # Pipeline 语法双轨制
 
+> ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
+
 ## 概述
 
 MaaFramework 和 MaaAssistantArknights 使用两套不同的 pipeline 语法，`@nekosu/maa-pipeline-manager` 同时支持两者。

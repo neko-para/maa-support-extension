@@ -1,5 +1,7 @@
 # Prettier Plugin Maafw Sort — 代码风格与约束
 
+> ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
+
 本包遵循 [通用代码规范](../extra/common-specs.md)，以下为 plugin 特有的补充。
 
 ## 环境

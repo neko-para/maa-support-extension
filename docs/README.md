@@ -1,5 +1,7 @@
 # Maa Support Extension — 文档索引
 
+> ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
+
 VSCode 插件 + CLI 工具的 pnpm monorepo，服务于 MaaFramework 和 MaaAssistantArknights 的 pipeline 开发。
 
 - **通用规范**: [extra/common-specs.md](extra/common-specs.md)

@@ -11,6 +11,7 @@
 - [ ] **所有依赖列为 devDependencies**: 由于 `tsdown` 打包，所有包的依赖都在 `devDependencies`。对于不打包的包（`@mse/types`、`@mse/utils`），依赖应放在 `dependencies` 还是 `peerDependencies`？是否会导致 `pnpm` hoisting 异常？
 - [ ] **缺失测试基础设施**: 整个 monorepo 无测试目录、无测试脚本、无测试框架。需要确定测试策略、优先测试的包以及统一测试框架。
 - [ ] **Webview locale 与 @nekosu/maa-locale 代码重复**: Webview 有独立的 locale 系统（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。已确认是历史遗留问题。
+- [ ] **基础包版本更新时依赖包需手动升版**: 发布流程未自动传递版本变更。当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动逐个更新。属于历史设计问题。
 
 ## @mse/extension
 

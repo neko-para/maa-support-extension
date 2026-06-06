@@ -9,31 +9,27 @@
 ## 通道一览
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  VSCode 插件层 (同一进程)                                                 │
-│                                                                         │
-│  ┌──────────┐    postMessage     ┌──────────────────┐                   │
-│  │ extension │◄─────────────────►│    webview        │                   │
-│  │  (Host)   │  @mse/types        │  (Vue App)       │                   │
-│  │           │   协议类型           │                  │                   │
-│  └─────┬─────┘                    └──────────────────┘                   │
-│        │                                                                 │
-│        │ TCP JSON-RPC                                                    │
-│        │ vscode-jsonrpc                                                  │
-│        │                                                                 │
-│  ┌─────▼─────┐                    ┌──────────────────┐                   │
-│  │ extension │◄──────────────────►│   maa-server      │  (独立进程)      │
-│  │  (Host)   │  @mse/maa-server-  │   (Sub process)   │  (可提权)        │
-│  │           │    proto 协议类型   │                   │                  │
-│  └───────────┘                    └────────┬──────────┘                   │
-│                                            │                             │
-└────────────────────────────────────────────┼─────────────────────────────┘
-                                             │
-                                    ┌────────▼──────────┐
-                                    │   sub process      │  Agent 子进程
-                                    │   (maa-launch)     │  (独立进程)
-                                    │   (debug session)  │  (可调试)
-                                    └───────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  VSCode 插件进程                                                              │
+│                                                                              │
+│  ┌──────────┐    postMessage     ┌──────────────────┐                        │
+│  │ extension │◄─────────────────►│    webview        │                        │
+│  │  (Host)   │  @mse/types        │  (Vue App)       │                        │
+│  └─────┬─────┘                    └──────────────────┘                        │
+│        │                                                                      │
+│        ├──────────────────────────────────────────┐                           │
+│        │ TCP JSON-RPC (vscode-jsonrpc)             │ child_process.spawn       │
+│        │ @mse/maa-server-proto                     │ (PI_* 环境变量)            │
+│        │                                          │                            │
+│  ┌─────▼─────┐                              ┌─────▼──────────┐                │
+│  │ maa-server│  (独立进程, 可提权)             │  Agent 子进程    │                │
+│  │ (Sub)     │                              │  (maa-launch /   │                │
+│  │           │                              │   debug session) │                │
+│  └───────────┘                              └────────────────┘                │
+│                                                                              │
+│  Server 通过 subToHostReq (startTask/startDebugSession) 回调 extension,       │
+│  由 extension 启动和管理 Agent 子进程。Server 反向依赖 extension。              │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Channel 1: Extension ↔ Webview (postMessage)
@@ -85,11 +81,13 @@ ipc.quickPick(items)            // 自动转换为 subToHostReq JSON-RPC 调用
 ipc.$ = { postTask: handler }   // 注册 hostToSubReq 处理器
 ```
 
-## Channel 3: Server → Agent (子进程)
+## Channel 3: Extension → Agent (子进程)
 
-- **传输层**: 进程启动 (`child_process.spawn`)
+- **触发方式**: Server 通过 `subToHostReq`（`startTask` / `startDebugSession`）回调 extension
+- **传输层**: extension 通过 `child_process.spawn` 启动
 - **协议**: 环境变量 `PI_*` + stdio/stdout
 - **调试模式**: VSCode Debug Adapter Protocol (`maa-launch` type)
+- **管理方**: extension 全权管理 agent 生命周期
 
 ## 设计理由
 

@@ -37,7 +37,17 @@ npm run build
 
 ## 包发布
 
-### 发布到 npm 的包（`@nekosu/*` 作用域）
+发布流程由 [.github/workflows/release.yml](../../.github/workflows/release.yml) 驱动。
+
+### 发布 npm 包（`@nekosu/*` 作用域）
+
+**方法**: 手动更新对应包的 `package.json` 中的 `version` 字段，提交到 `main` 分支。CI 检测到新版本号（npm registry 中不存在）后自动执行 `pnpm publish`。
+
+发布顺序由 CI 脚本硬编码（按依赖顺序）：
+
+```
+simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipeline-manager → maa-tools → prettier-plugin-maafw-sort
+```
 
 | 包 | npm 名 |
 |---|---|
@@ -48,6 +58,19 @@ npm run build
 | `maa-version-manager` | `@nekosu/maa-version-manager` |
 | `simple-parser` | `@nekosu/simple-parser` |
 | `prettier-plugin-maafw-sort` | `@nekosu/prettier-plugin-maafw-sort` |
+
+> **历史设计问题**: 当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动更新。发布流程未自动传递版本变更。
+
+### 发布 VSCode 插件
+
+**方法**: 推送格式为 `v*` 的 git tag（正式版）或 `p*` 的 tag（预发布版）。CI 触发后：
+
+1. 从 tag 名提取版本号（去 `v`/`p` 前缀）
+2. 写入 `release/package.json` 的 `version`
+3. `vsce package` 打包为 `.vsix`
+4. `vsce publish` 发布到 VSCode Marketplace
+
+非 tag 推送（分支提交）仅构建和 lint，不发布。
 
 ### 内部包（`@mse/*` 作用域）
 

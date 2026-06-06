@@ -1,20 +1,21 @@
-# Pipeline 语法双轨制
+# Pipeline 语法
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
 ## 概述
 
-MaaFramework 和 MaaAssistantArknights 使用两套不同的 pipeline 语法，`@nekosu/maa-pipeline-manager` 同时支持两者。
+本项目涉及**两套独立**的 pipeline 语法系统，结构和风格相似但彼此无关：
 
-## MaaFramework v1 语法（Framework 模式）
+| 系统 | 说明 |
+|---|---|
+| **MaaFramework** | 通用自动化框架的 pipeline 语法。V1（平铺属性）和 V2（`recognition`/`action` 嵌套对象）均为官方支持的语法，可同时存在于同一 pipeline 中。 |
+| **MaaAssistantArknights** | 明日方舟专有项目的 pipeline 语法。引入 `baseTask` 继承机制和 `@` 表达式语法。与 MaaFramework 语法无依赖关系。 |
 
-### 特征
+## MaaFramework 语法
 
-- 任务属性平铺在一个 JSON 对象中
-- 识别和动作属性混合（如 `template`、`text`、`action_type`）
-- 任务引用格式: `"TaskName"` 或 `"TaskName[Anchor]"`
+### V1（平铺格式）
 
-### 示例
+任务属性平铺在一个 JSON 对象中，识别和动作相关属性直接写在顶层：
 
 ```jsonc
 {
@@ -26,41 +27,56 @@ MaaFramework 和 MaaAssistantArknights 使用两套不同的 pipeline 语法，`
 }
 ```
 
-## MaaAssistantArknights v2 语法（MAA 模式）
+### V2（嵌套格式）
 
-### 特征
-
-- `recognition` 和 `action` 作为嵌套对象，包含 `type` + `param`
-- `baseTask` 继承机制
-- 表达式语法: `TaskA@TaskB#next`
-- 特殊 task reference 后缀 `@TaskN` 表示继承链
-- 属性名多使用 snake_case
-
-### 示例
+识别和动作分别封装为 `recognition` 和 `action` 对象，内部使用 `type` + `param` 结构：
 
 ```jsonc
 {
   "Start": {
-    "baseTask": "BaseStart",
-    "algorithm": "MatchTemplate",
-    "template": "start_button.png",
-    "action": "ClickSelf",
-    "next": ["TaskA@TaskB#next", "(TaskC+TaskD)@BaseTask#sub"]
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": { "template": "start_button.png" }
+    },
+    "action": {
+      "type": "ClickSelf"
+    },
+    "next": ["MainTask"]
   }
 }
 ```
 
-## 属性键名差异
+### V1 与 V2 的关系
 
-| Framework v1 | MAA v2 |
-|---|---|
-| `algorithm` | `algorithm` 或 `recognition.type` |
-| `action_type` | `action` 或 `action.type` |
-| `next` | `next` (string 数组) |
-| `template` | `recognition.param.template` |
-| (无) | `baseTask`、`exceededNext`、`onErrorNext`、`reduceOtherTimes` |
+- 均为 MaaFramework 官方支持的语法，**无依赖关系**
+- 同一 pipeline 文件中 V1 和 V2 格式可**同时存在**（不同任务可使用不同格式）
+- `maa-pipeline-manager` 通过 `splitNode()` 自动识别两种格式
 
-## 表达式语法（MAA 独有）
+## MaaAssistantArknights 语法
+
+MaaAssistantArknights 是独立项目，拥有自己的 pipeline 语法，引入 `baseTask` 继承机制和 `@` 表达式：
+
+### `baseTask` 继承
+
+```jsonc
+{
+  "MyTask": {
+    "baseTask": "BaseStart",
+    "template": "custom_button.png"
+    // 其他属性从 BaseStart 继承
+  }
+}
+```
+
+### `@` 表达式
+
+在任务引用中使用 DSL 表达式：
+
+```jsonc
+{
+  "next": ["TaskA@TaskB#next", "(TaskC+TaskD)@BaseTask#sub"]
+}
+```
 
 | 操作符 | 含义 | 示例 |
 |---|---|---|
@@ -71,14 +87,29 @@ MaaFramework 和 MaaAssistantArknights 使用两套不同的 pipeline 语法，`
 | `^` | 差集 | `TaskA^TaskB` |
 | `()` | 分组 | `(TaskA+TaskB)@Base` |
 
+## 三者的关系
+
+三套语法彼此独立。MaaFramework V1 和 V2 可在同一 pipeline 中共存；MaaAssistantArknights 是独立项目，结构与 MaaFramework 相似但无依赖关系。
+
+```
+MaaFramework V1          MaaFramework V2          MaaAssistantArknights
+(平铺属性)               (recognition/action)     (baseTask + @ 表达式)
+     │                         │                         │
+     └── 可共存 ────────────────┘                         │
+           │                                              │
+           │           独立系统，结构相似                    │
+           └──────────────────────────────────────────────┘
+```
+
 ## 代码中的实现
 
 ### 属性分割: `splitNode()`
 
-[maa-pipeline-manager/src/parser/task/split.ts](../../pkgs/maa-pipeline-manager/src/parser/task/split.ts) 根据 `maa: boolean` 标志使用不同的键名列表：
+[maa-pipeline-manager/src/parser/task/split.ts](../../pkgs/maa-pipeline-manager/src/parser/task/split.ts) 使用两套键名列表识别不同格式：
 
-- Framework: `nodeKeys`、`recoKeys`、`actKeys`
-- MAA: `maaNodeKeys`、`maaRecoKeys`、`maaActKeys`
+- Framework V1 平铺: `nodeKeys`、`recoKeys`、`actKeys`
+- Framework V2 嵌套: `recognition` / `action` 对象（通过结构检测）
+- MAA 独立语法: `maaNodeKeys`、`maaRecoKeys`、`maaActKeys`（新增 `baseTask` 等）
 
 ### MAA 表达式: `parseMaaExpr()`
 

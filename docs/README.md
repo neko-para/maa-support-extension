@@ -63,5 +63,6 @@ VSCode 插件 + CLI 工具的 pnpm monorepo，服务于 MaaFramework 和 MaaAssi
 | [dependency-graph.md](extra/dependency-graph.md) | 包依赖关系图 |
 | [ipc-architecture.md](extra/ipc-architecture.md) | IPC 通信架构 |
 | [locale-system.md](extra/locale-system.md) | 国际化文案体系 |
+| [lsp-strategy/](extra/lsp-strategy/) | LSP 能力实现策略 |
 | [pipeline-syntax.md](extra/pipeline-syntax.md) | Pipeline 语法双轨制 |
 | [build-and-publish.md](extra/build-and-publish.md) | 构建与发布流程 |

@@ -14,7 +14,7 @@
 | 修改模块架构、依赖关系、技术选型 | `docs/{pkg}/tech/README.md` |
 | 改变命名约定、代码模式、编码规范 | `docs/{pkg}/specs/README.md`（通用规范变更则更新 `docs/extra/common-specs.md`） |
 | 新增跨包机制或共享约定 | `docs/extra/` 中对应主题文档 |
-| 修复了 [docs/TODO.md](docs/TODO.md) 中记录的问题 | 从 TODO.md 中移除对应条目 |
+| 修复了 [docs/TODO.md](docs/TODO.md) 中记录的问题 | 标记为 `[x]`，记录结论，**不删除条目** |
 
 PR 和 code review 时应将文档同步作为检查项。
 

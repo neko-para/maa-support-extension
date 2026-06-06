@@ -24,8 +24,17 @@
 ## 依赖管理
 
 - **workspace 依赖**: 使用 `workspace:*` 协议
-- **外部依赖位置**: 因 tsdown 会打包所有依赖，所有依赖列为 `devDependencies`
-- **例外**: `@mse/types` 和 `@mse/utils` 不打包，依赖应正常分类
+- **`@nekosu/*`（发布包）**: 运行时依赖放在 `dependencies`，构建工具和类型放在 `devDependencies`
+- **`@mse/*`（内部包）**: 全部列为 `devDependencies`。这些包不构建也不发布，由最终消费者的 bundler 直接链接 TypeScript 源码，无需区分运行时/开发依赖
+
+### 包作用域
+
+| 作用域 | 用途 | 发布 |
+|---|---|---|
+| `@nekosu/*` | 对外发布 | npm |
+| `@mse/*` | 内部专用 | 不对外发布 |
+
+**约束**: 对外发布到 npm 的 `@nekosu/*` 包不得依赖 `@mse/*` 包。
 
 ## 包结构约定
 

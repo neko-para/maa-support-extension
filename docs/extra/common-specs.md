@@ -11,6 +11,10 @@
 - **类型导入**: 使用 `import type` 进行类型专用导入
 - **未使用变量**: `_` 前缀忽略（`argsIgnorePattern: '^_'`、`caughtErrorsIgnorePattern: '^_'`、`varsIgnorePattern: '^_'`）
 - **构建工具**: `tsdown`（输出 ESM `.mjs` + `.d.mts`）
+- **注释原则**: 仅当代码不符合常规逻辑（hack、tradeoff、workaround）时添加注释，解释为何如此。符合直觉的代码不加注释。
+- **访问修饰符**: 仅当类型的消费者在本仓库之外（如发布到 npm 的 `@nekosu/*` 包）时，才使用 `readonly`、`private` 等修饰符保护公共 API。仓库内部使用的类型和类成员不加限制。
+- **返回类型标注**: 仅在需要收窄类型或明确类型时标注函数的返回类型，其余情况交由 TypeScript 自动推断。
+- **分支语句**: 所有 `if`/`else`/`for`/`while` 等分支和循环体必须使用 `{}`，即使只有单行语句。
 
 例外：
 - `@mse/types`、`@mse/utils`：不构建，由消费方 bundler 直接链接 TypeScript 源码（这两个包不对外发布）

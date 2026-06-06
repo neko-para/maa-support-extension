@@ -63,6 +63,8 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 ### 发布 VSCode 插件
 
+**构建产物目录**: `release/` — 插件打包根目录。`package.json`、`README.md`、`images/`、`out/`（编译后的扩展代码）、`webview/`（Vite 构建产物）、`server/`（maa-server）等均位于此目录。修改插件的 `contributes`（命令、配置项、视图等）或 `engines` 等清单字段时，应修改 `release/package.json`，而非源码 `pkgs/extension/package.json`。
+
 **方法**: 推送格式为 `v*` 的 git tag（正式版）或 `p*` 的 tag（预发布版）。CI 触发后：
 
 1. 从 tag 名提取版本号（去 `v`/`p` 前缀）

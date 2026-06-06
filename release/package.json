@@ -122,6 +122,11 @@
           "type": "boolean",
           "description": "%maa.setting.webview-tooltip%",
           "default": false
+        },
+        "maa.pipelineCompletionV2": {
+          "type": "boolean",
+          "description": "Use refactored pipeline completion provider (experimental)",
+          "default": false
         }
       }
     },

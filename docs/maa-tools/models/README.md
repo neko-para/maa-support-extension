@@ -1,0 +1,71 @@
+# Maa Tools — 产品定义
+
+## 包标识
+
+- **npm 包名**: `@nekosu/maa-tools`
+- **类型**: CLI 检查器和测试工具
+- **版本**: 1.0.24
+
+## 目标用户
+
+MAA pipeline 开发者和 CI/CD 流水线。
+
+## 核心能力
+
+### 1. Pipeline 检查 (`check`)
+
+验证 pipeline 文件的完整性：
+
+```bash
+npx @nekosu/maa-tools check [config-path]
+```
+
+- 加载 interface bundle
+- 遍历所有 controller/resource 组合
+- 运行 [@nekosu/maa-pipeline-manager](../maa-pipeline-manager/models/) 诊断引擎
+- 应用用户配置的严重级别覆盖
+
+支持三种输出模式：
+
+| 模式 | 说明 |
+|---|---|
+| `stdio` | 人类可读的终端输出（默认） |
+| `github` | GitHub Actions workflow 注解 |
+| `json` | 机器可读 JSON |
+
+### 2. 识别测试 (`test`)
+
+运行图像识别测试：
+
+```bash
+npx @nekosu/maa-tools test [config-path]
+```
+
+- 加载 pipeline bundle
+- 执行用户定义的测试用例（controller/resource/图像/期望节点）
+- 使用 `workerpool` 并行执行
+- 验证识别命中（可选 bounding box 约束）
+- 输出成功/失败统计
+
+### 3. 项目初始化 (`init`)
+
+生成 `maatools.config.mts` 脚手架配置：
+
+```bash
+npx @nekosu/maa-tools init
+```
+
+### 4. Pipeline Manager 转导出
+
+通过 `@nekosu/maa-tools/pm` 子路径导出 `@nekosu/maa-pipeline-manager` 的完整 API。
+
+> 此导出主要服务于自定义 custom reco/action 的 parser 配置。详情参见配置文档。
+
+### 5. TypeScript 配置
+
+`maatools.config.mts` 是 TypeScript 文件，通过 `jiti` 运行时加载，提供 IDE 类型检查和自动补全。
+
+## 抽象边界
+
+- CLI 不依赖 VSCode
+- 配置通过 TypeScript 文件表达，支持条件类型和辅助函数

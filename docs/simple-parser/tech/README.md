@@ -1,0 +1,42 @@
+# Simple Parser — 技术架构
+
+## 模块架构
+
+```
+src/
+├── impl.js          # 核心运行时: SimpleParser 类 (纯 JS)
+├── impl.d.ts        # 手写运行时类型声明
+└── index.ts         # TypeScript facade:
+                     #   makeParser()、declExpr()、
+                     #   条件类型 EDSL
+```
+
+## 核心实现
+
+### 词法分析
+
+`SimpleParser` 类实现：
+- 正则 token 匹配
+- `ignore` 模式过滤空白/注释
+- Token 流提供 `read()`/`peek()` 接口
+
+### 语法分析
+
+LL\* 解析策略：
+- 基于文法规则的递归下降
+- `withloop()` 支持左递归处理列表
+- `sameas()` 引用已有规则
+
+## 依赖关系
+
+零依赖。仅 `devDependencies` 中的 TypeScript。
+
+## 技术选型
+
+| 选择 | 理由 |
+|---|---|
+| 纯 JS 核心 | 源自独立项目。由于 JS 中 hack 较多，JS 和 TS 有意隔离 |
+| 手写 `.d.ts` + 类型体操 | TS facade 层通过条件类型提供精确的类型提示 |
+| 条件类型 EDSL | 编译期验证文法正确性 |
+| PEG 风格 | 声明式文法定义，无歧义 |
+| 零依赖 | 最底层库，不引入任何外部依赖 |

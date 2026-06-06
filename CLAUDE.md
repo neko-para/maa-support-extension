@@ -1,0 +1,19 @@
+# CLAUDE.md
+
+## 文档
+
+项目文档位于 [docs/](docs/)。入口：[docs/README.md](docs/README.md) — 包含项目概述、文档结构说明和所有包的导航索引。
+
+## 修改代码时同步更新文档
+
+修改任何包的代码时，需同步更新对应文档：
+
+| 代码变更类型 | 需更新的文档 |
+|---|---|
+| 新增/删除功能、改变对外行为 | `docs/{pkg}/models/README.md` |
+| 修改模块架构、依赖关系、技术选型 | `docs/{pkg}/tech/README.md` |
+| 改变命名约定、代码模式、编码规范 | `docs/{pkg}/specs/README.md`（通用规范变更则更新 `docs/extra/common-specs.md`） |
+| 新增跨包机制或共享约定 | `docs/extra/` 中对应主题文档 |
+| 修复了 [docs/TODO.md](docs/TODO.md) 中记录的问题 | 从 TODO.md 中移除对应条目 |
+
+PR 和 code review 时应将文档同步作为检查项。

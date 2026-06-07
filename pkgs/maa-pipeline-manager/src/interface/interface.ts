@@ -11,9 +11,9 @@ import {
 } from '@nekosu/maa-tasker'
 
 import { Bundle } from '../bundle/bundle'
-import { ContentJson } from '../content/json'
-import type { IContentLoader } from '../content/loader'
-import type { IContentWatcher } from '../content/watch'
+import { ContentJson } from '../io/json'
+import type { IContentLoader } from '../io/loader'
+import type { IContentWatcher } from '../io/watch'
 import { LayerInfo } from '../layer/layer'
 import type { Interface } from '../logic'
 import { type InterfaceInfo, parseInterface } from '../parser/interface/interface'

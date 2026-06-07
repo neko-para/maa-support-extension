@@ -32,7 +32,7 @@ MAA 结构分离
 ### 1.2 core 目录创建
 
 - [x] 创建 `src/core/matching/` 目录
-- [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path` — 推迟到 Phase 2（与 io/ 子路径一起处理）
+- [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path` — 推迟到 Phase 3（依赖 `loadProject` 完成后的路径重整）
 
 ### 1.3 Parser 迁移
 
@@ -88,27 +88,27 @@ MAA 结构分离
 
 ### 2.1 io 子路径
 
-- [ ] 创建 `src/io/` 目录
-- [ ] 移入 `content/loader.ts`、`content/watch.ts`、`content/json.ts`
-- [ ] `ContentJson` 中的 `process.nextTick` 替换为可注入的调度函数
-- [ ] 子路径入口：`@nekosu/maa-pipeline-manager/io`
+- [x] 创建 `src/io/` 目录
+- [x] 移入 `content/loader.ts`、`content/watch.ts`、`content/json.ts` → `io/`
+- [x] `content/` 保留为 re-export 兼容层
+- [x] `ContentJson` 中的 `process.nextTick` 替换为 `queueMicrotask`（标准 API）
+- [x] 子路径入口：`@nekosu/maa-pipeline-manager/io`（`package.json` exports 已配置）
 
 ### 2.2 同步加载 API
 
-- [ ] 实现 `loadAndParse(root, file)` — 封装"读取 → 解析 → 返回符号图"
-- [ ] 实现 `loadProject(root)` — 一次性加载完整的 interface.json + imports + pipeline
-- [ ] 返回 `ProjectState`（纯数据结构），不创建 watcher
+- [x] `StaticContentJson` — 无 watcher 的一次性 JSON 加载器
+- [x] `loadAndParse(loader, file)` — 封装"读取 → 解析 → 返回 `{ node, object }`"
+- [ ] `loadProject(root)` — 一次性加载完整的 interface.json + imports + pipeline — 推迟到 Phase 3（需要复制 InterfaceBundle 的递归加载逻辑）
 
 ### 2.3 checker 迁移
 
-- [ ] maa-tools 的 checker 从"创建 InterfaceBundle + 等待事件"切换到 `loadAndParse()` + `performDiagnostic(state)`
-- [ ] 消除 checker 侧手动管理 watcher 生命周期
+- [ ] maa-tools 的 checker 从 `InterfaceBundle` + watcher 切换到 `StaticContentJson` + `performDiagnostic(state)` — 推迟到 Phase 3（依赖 `loadProject`）
 
 ### Phase 2 验证
 
-- [ ] checker 在无文件监视的环境下正常运行
-- [ ] checker 结果与 Phase 1 完全一致
-- [ ] Extension 侧继续使用旧路径，不受影响
+- [ ] checker 在无文件监视的环境下正常运行 — 推迟到 Phase 3
+- [x] Extension 侧继续使用旧路径，不受影响
+- [x] TypeScript 编译零错误（pipeline-manager + extension + maa-tools）
 
 ---
 

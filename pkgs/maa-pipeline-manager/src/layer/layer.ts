@@ -1,9 +1,9 @@
 import type { Node } from 'jsonc-parser'
 import * as path from 'node:path'
 
-import type { IContentLoader } from '../content/loader'
 import { evalTask as evalTaskImpl } from '../core/eval/eval-task'
 import { TaskStore } from '../core/model/task-store'
+import type { IContentLoader } from '../io/loader'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
 import type { StringNode } from '../parser/utils'
 import { buildTree } from '../utils/json'

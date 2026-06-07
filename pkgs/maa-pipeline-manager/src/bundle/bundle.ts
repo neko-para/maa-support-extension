@@ -1,8 +1,8 @@
 import EventEmitter from 'node:events'
 import * as path from 'node:path'
 
-import type { IContentLoader } from '../content/loader'
-import type { IContentWatcher } from '../content/watch'
+import type { IContentLoader } from '../io/loader'
+import type { IContentWatcher } from '../io/watch'
 import { LayerInfo } from '../layer/layer'
 import { parseTask } from '../parser/task/task'
 import { type ParserConfig, parseObject } from '../parser/utils'
@@ -137,7 +137,9 @@ export class Bundle extends EventEmitter<{
         this.emit('taskChanged', [...new Set(changed)])
       }
     } else if (file.endsWith('.png')) {
-      const imageFile = file.replaceAll(path.sep, '/').replace(this.maa ? 'template/' : 'image/', '') as ImageRelativePath
+      const imageFile = file
+        .replaceAll(path.sep, '/')
+        .replace(this.maa ? 'template/' : 'image/', '') as ImageRelativePath
       if (this.layer.images.delete(imageFile)) {
         this.dispatchImageChanged()
       }

@@ -1,5 +1,5 @@
-import type { IContentLoader } from '../content/loader'
-import type { IContentWatcher, IContentWatcherController } from '../content/watch'
+import type { IContentLoader } from '../io/loader'
+import type { IContentWatcher, IContentWatcherController } from '../io/watch'
 import { type AbsolutePath, type RelativePath, relativePath } from '../utils/types'
 
 export interface IBundleManagerDelegate {

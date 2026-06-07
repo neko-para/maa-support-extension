@@ -1,8 +1,8 @@
 import EventEmitter from 'node:events'
 
-import { ContentJson } from '../content/json'
-import type { IContentLoader } from '../content/loader'
-import type { IContentWatcher } from '../content/watch'
+import { ContentJson } from '../io/json'
+import type { IContentLoader } from '../io/loader'
+import type { IContentWatcher } from '../io/watch'
 import type { TaskDeclInfo, TaskRefInfo } from '../parser/task/task'
 import { type StringNode, isString, parseObject } from '../parser/utils'
 import { type AbsolutePath, type RelativePath, joinPath } from '../utils/types'

@@ -20,7 +20,9 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@nekosu/maa-locale": "workspace:*",
@@ -32,6 +34,7 @@
     "@maaxyz/maa-node": "5.9.0-alpha.4",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.5",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
   }
 }

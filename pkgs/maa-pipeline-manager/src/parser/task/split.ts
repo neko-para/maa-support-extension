@@ -1,7 +1,8 @@
 import type { Node } from 'jsonc-parser'
 
 import { type PropPair, type StringNode, isString, parseObject } from '../utils'
-import { actKeys, maaActKeys, maaNodeKeys, maaRecoKeys, nodeKeys, recoKeys } from './keys'
+import { actKeys, nodeKeys, recoKeys } from './fw/keys'
+import { actKeys as maaActKeys, nodeKeys as maaNodeKeys, recoKeys as maaRecoKeys } from './maa/keys'
 
 export type TaskParts = {
   node: Node
@@ -14,6 +15,14 @@ export type TaskParts = {
 }
 
 export function splitNode(node: Node, maa: boolean) {
+  if (maa) {
+    return splitNodeSimple(node, 'algorithm', maaNodeKeys, maaRecoKeys, maaActKeys)
+  }
+  return splitNodeWithV2(node, nodeKeys, recoKeys, actKeys)
+}
+
+// MaaFramework: detects V1 (string) and V2 (object) recognition/action formats
+function splitNodeWithV2(node: Node, nKeys: string[], rKeys: string[], aKeys: string[]) {
   const result: TaskParts = {
     node,
     base: [],
@@ -21,67 +30,86 @@ export function splitNode(node: Node, maa: boolean) {
     act: [],
     unknown: []
   }
-  if (maa) {
-    for (const pair of parseObject(node)) {
-      const [key, obj] = pair
-      if (key === 'algorithm' && isString(obj)) {
-        result.recoType = obj
-      } else if (key === 'action' && isString(obj)) {
-        result.actType = obj
-      } else if (maaNodeKeys.includes(key)) {
-        result.base.push(pair)
-      } else if (maaRecoKeys.includes(key)) {
-        result.reco.push(pair)
-      } else if (maaActKeys.includes(key)) {
-        result.act.push(pair)
-      } else {
-        result.unknown.push(pair)
-      }
-    }
-    return result
-  }
   for (const pair of parseObject(node)) {
     const [key, obj] = pair
-    if (nodeKeys.includes(key)) {
-      result.base.push(pair)
-    } else if (recoKeys.includes(key)) {
-      result.reco.push(pair)
-    } else if (actKeys.includes(key)) {
-      result.act.push(pair)
-    } else if (key === 'recognition') {
+    if (key === 'recognition') {
       if (isString(obj)) {
         result.recoType = obj
       } else if (obj.type === 'object') {
         const type = obj.children?.find(
-          node => node.children?.[0].value === 'type' && isString(node.children?.[1])
+          n => n.children?.[0].value === 'type' && isString(n.children?.[1])
         )
-        const param = obj.children?.find(node => node.children?.[0].value === 'param')
+        const param = obj.children?.find(n => n.children?.[0].value === 'param')
         if (type) {
           result.recoType = type.children![1] as StringNode
         }
-        for (const pair of parseObject(param?.children?.[1])) {
-          if (recoKeys.includes(pair[0])) {
-            result.reco.push(pair)
+        for (const p of parseObject(param?.children?.[1])) {
+          if (rKeys.includes(p[0])) {
+            result.reco.push(p)
           }
         }
       }
-    } else if (key === 'action') {
+      continue
+    }
+    if (key === 'action') {
       if (isString(obj)) {
         result.actType = obj
       } else if (obj.type === 'object') {
         const type = obj.children?.find(
-          node => node.children?.[0].value === 'type' && isString(node.children?.[1])
+          n => n.children?.[0].value === 'type' && isString(n.children?.[1])
         )
-        const param = obj.children?.find(node => node.children?.[0].value === 'param')
+        const param = obj.children?.find(n => n.children?.[0].value === 'param')
         if (type) {
           result.actType = type.children![1] as StringNode
         }
-        for (const pair of parseObject(param?.children?.[1])) {
-          if (actKeys.includes(pair[0])) {
-            result.act.push(pair)
+        for (const p of parseObject(param?.children?.[1])) {
+          if (aKeys.includes(p[0])) {
+            result.act.push(p)
           }
         }
       }
+      continue
+    }
+    if (nKeys.includes(key)) {
+      result.base.push(pair)
+    } else if (rKeys.includes(key)) {
+      result.reco.push(pair)
+    } else if (aKeys.includes(key)) {
+      result.act.push(pair)
+    } else {
+      result.unknown.push(pair)
+    }
+  }
+  return result
+}
+
+// MAA: flat key-based classification, algorithm/action for type
+function splitNodeSimple(
+  node: Node,
+  algoField: string,
+  nKeys: string[],
+  rKeys: string[],
+  aKeys: string[]
+) {
+  const result: TaskParts = {
+    node,
+    base: [],
+    reco: [],
+    act: [],
+    unknown: []
+  }
+  for (const pair of parseObject(node)) {
+    const [key, obj] = pair
+    if (key === algoField && isString(obj)) {
+      result.recoType = obj
+    } else if (key === 'action' && isString(obj)) {
+      result.actType = obj
+    } else if (nKeys.includes(key)) {
+      result.base.push(pair)
+    } else if (rKeys.includes(key)) {
+      result.reco.push(pair)
+    } else if (aKeys.includes(key)) {
+      result.act.push(pair)
     } else {
       result.unknown.push(pair)
     }

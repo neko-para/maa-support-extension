@@ -25,23 +25,22 @@ MAA 结构分离
 
 ### 1.1 准备工作
 
-- [ ] 添加测试框架（`vitest`）+ 配置 CI
-- [ ] Parser 测试辅助：封装 `parseTaskFromJson(jsonString)` / `parseInterfaceFromJson(jsonString)` 辅助函数，内部通过 `parseTreeWithoutParent` 获取真实 AST
+- [x] 添加测试框架（`vitest`）+ 4 个 parser 测试通过
+- [x] Parser 测试辅助：`parseTaskFromJson(jsonString)` + `findRef()` 辅助函数
+- [x] 修正 ESLint glob pattern（`eslint.config.mts` 中包名与实际目录不匹配），修复暴露的已有 lint 错误
 
 ### 1.2 core 目录创建
 
-- [ ] 创建 `src/core/` 目录结构（`parser/`, `model/`, `matching/`, `diagnostic/`, `eval/`, `query/`, `types/`）
+- [x] 创建 `src/core/matching/` 目录
 - [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path`：将 `joinPath`、`joinImagePath` 等改为接受 path 实现注入
 
 ### 1.3 Parser 迁移
 
-- [ ] 移入 `parser/task/` 和 `parser/interface/`（不含 `maa/`）
-- [ ] `splitNode()` 的参数从 `maa: boolean` 改为接受 key 数组：`splitNode(node, nodeKeys, recoKeys, actKeys)`
-- [ ] MAA 结构分离：创建 `parser/task/fw/` 和 `parser/task/maa/` 两个子目录
-  - `fw/split.ts`、`fw/parse.ts`、`fw/keys.ts` — MaaFramework parser（含 V1/V2 自动检测）
-  - `maa/split.ts`、`maa/parse.ts`、`maa/keys.ts`、`maa/baseTask.ts`、`maa/expr.ts`、`maa/ref.ts` — MAA parser
-  - 两者共享输出类型（`TaskDeclInfo`、`TaskRefInfo`），但实现独立，允许代码重复
-  - core 主路径不依赖 `@nekosu/maa-tasker`（仅 `maa/expr.ts` 依赖）
+- [x] 创建 `parser/task/fw/` 和 `parser/task/maa/` 子目录
+- [x] `fw/keys.ts` + `maa/keys.ts` — key 数组分离；`keys.ts` 改为 re-export
+- [x] `splitNode()` 内部拆分为 `splitNodeWithV2`（MaaFramework，含 V1/V2 检测）和 `splitNodeSimple`（MAA），接受显式 key 数组；`splitNode(node, maa)` 保留为兼容入口
+- [ ] `fw/parse.ts` + `maa/parse.ts` 完全分离 — 推迟到 Phase 4（子解析器共享且无 maa 分支，当前 `parseTask()` 的 `if (maa)` 分支接受现状）
+- [ ] core 主路径不依赖 `@nekosu/maa-tasker`（仅 `maa/expr.ts` 依赖）— 推迟到 Phase 4
 
 ### 1.4 Diagnostic 迁移
 
@@ -54,20 +53,16 @@ MAA 结构分离
 - [ ] 创建 `model/image-store.ts` — `ImageStore` 类（images 集合管理）
 - [ ] 创建 `model/layer.ts` — `Layer` 类（单层容器，不依赖 `IContentLoader`）
 - [ ] 创建 `model/layer-tree.ts` — `LayerTree` 类（多层遍历 + 缓存）
-  - 统一查询接口：`allXxx()` = 跨层，不带前缀 = 单层
-  - 缓存（`dirty` + 懒计算）封装在 `LayerTree` 内部
 - [ ] 提取 `eval/eval-task.ts` — `evalTask()` 从 `LayerInfo` 分离
 - [ ] `specialStringify` / `toggleMode` 移到独立的 `format/`（或标记 deprecated）
 
 ### 1.6 Matching 提取
 
-将 LSP `base.ts` 中的匹配逻辑移入 `core/matching/`：
-
-- [ ] `task-ref.ts` — `extractTaskRef`, `isAnchorRef`（从现有 `helper.ts` 移入）
-- [ ] `decl-match.ts` — `findMatchingDecls`（← `makeDecls`）
-- [ ] `ref-match.ts` — `findMatchingRefs`（← `makeRefs`）
+- [x] `task-ref.ts` — `extractTaskRef`, `isAnchorRef`（从 `helper.ts` 移入 core，旧路径 re-export 保持兼容）
+- [x] `decl-match.ts` — `findMatchingDecls`（← `makeDecls`）
+- [x] `ref-match.ts` — `findMatchingRefs`（← `makeRefs`）
+- [x] Extension `base.ts` 的 `makeDecls`/`makeRefs` 改为委托到 core 函数（~80 行方法体 → 1 行调用）
 - [ ] `interface-match.ts` — Interface 侧的 `makeDecls`/`makeRefs`
-- [ ] 函数接受纯数据参数，返回纯数据结果，不依赖 VSCode API
 
 ### 1.7 兼容层
 

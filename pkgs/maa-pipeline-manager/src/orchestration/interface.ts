@@ -384,6 +384,12 @@ export class InterfaceBundle extends EventEmitter<{
     return layers
   }
 
+  get decls() {
+    return this.info.decls
+  }
+  get refs() {
+    return this.info.refs
+  }
   get topLayer() {
     return this.info.layer
   }

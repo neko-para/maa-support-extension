@@ -1,15 +1,8 @@
-import type { LayerInfo } from '../layer/layer'
-import type { InterfaceDeclInfo, InterfaceRefInfo } from '../parser/interface/interface'
 import { isString } from '../parser/utils'
+import type { DiagnosticContext } from './diagnostic'
 import type { Diagnostic } from './types'
 
-export interface InterfaceDiagContext {
-  topLayer: LayerInfo
-  decls: InterfaceDeclInfo[]
-  refs: InterfaceRefInfo[]
-}
-
-export function checkInterface(ctx: InterfaceDiagContext): Diagnostic[] {
+export function checkInterface(ctx: DiagnosticContext): Diagnostic[] {
   const result: Diagnostic[] = []
 
   const layer = ctx.topLayer

@@ -14,11 +14,13 @@ export class ContentJson<T = any> {
   node?: Node
   object?: T
 
-  dirty: boolean
-  watcherCtrl?: IContentWatcherController
-  duringFlush: boolean
-  flushResolve: (() => void)[]
-  needFlush: boolean
+  private dirty = true
+  private watcherCtrl?: IContentWatcherController
+  private flushing = false
+  private queued = false
+  private timer?: ReturnType<typeof setTimeout>
+  private flushComplete?: Promise<void>
+  private flushResolve?: () => void
 
   constructor(
     loader: IContentLoader,
@@ -31,11 +33,6 @@ export class ContentJson<T = any> {
     this.file = file
     this.changed = changed
 
-    this.dirty = true
-    this.duringFlush = false
-    this.flushResolve = []
-    this.needFlush = false
-
     this.load()
   }
 
@@ -44,9 +41,7 @@ export class ContentJson<T = any> {
     this.dirty = true
 
     this.watcherCtrl = await this.watcher.watch(this.file, true, {
-      filter: (_file, _isdir) => {
-        return true
-      },
+      filter: (_file, _isdir) => true,
       fileAdded: _file => {
         this.dirty = true
         this.dispatchFlush()
@@ -68,57 +63,46 @@ export class ContentJson<T = any> {
   }
 
   async flush() {
-    if (this.duringFlush) {
-      return new Promise<void>(resolve => {
-        this.flushResolve.push(resolve)
-      })
+    if (this.flushing) {
+      this.queued = true
+      return this.flushComplete
     }
-
-    this.duringFlush = true
-    this.needFlush = false
-
-    if (this.dirty) {
-      const content = await this.loader.get(this.file)
-      if (typeof content === 'string') {
-        this.node = parseTreeWithoutParent(content)
-      } else {
-        this.node = undefined
-      }
-      if (this.node) {
-        this.object = buildTree(this.node) as T
-      } else {
-        this.object = undefined
-      }
-
-      await this.changed(this.node, this.object)
-
-      this.dirty = false
-    }
-
-    const resolves = this.flushResolve
-    this.flushResolve = []
-
-    this.duringFlush = false
-
-    queueMicrotask(() => {
-      for (const func of resolves) {
-        func()
-      }
+    this.flushing = true
+    this.flushComplete = new Promise(resolve => {
+      this.flushResolve = resolve
     })
 
-    if (this.needFlush) {
-      setTimeout(() => {
-        this.flush()
-      }, 100)
-    }
+    do {
+      this.queued = false
+      if (this.dirty) {
+        const content = await this.loader.get(this.file)
+        if (typeof content === 'string') {
+          this.node = parseTreeWithoutParent(content)
+        } else {
+          this.node = undefined
+        }
+        if (this.node) {
+          this.object = buildTree(this.node) as T
+        } else {
+          this.object = undefined
+        }
+
+        await this.changed(this.node, this.object)
+
+        this.dirty = false
+      }
+    } while (this.queued)
+
+    this.flushing = false
+    this.flushResolve?.()
   }
 
-  dispatchFlush(timeout = 100) {
-    if (this.needFlush) {
+  private dispatchFlush(timeout = 100) {
+    if (this.timer) {
       return
     }
-    this.needFlush = true
-    setTimeout(() => {
+    this.timer = setTimeout(() => {
+      this.timer = undefined
       this.flush()
     }, timeout)
   }

@@ -1,6 +1,7 @@
 export * from './bundle/bundle'
 export * from './bundle/manager'
 export * from './io/loader'
+export * from './io/sync'
 export * from './io/watch'
 export * from './core/matching'
 export * from './core/model'

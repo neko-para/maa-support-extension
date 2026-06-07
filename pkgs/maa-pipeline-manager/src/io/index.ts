@@ -6,4 +6,7 @@ export {
   type IContentWatcherDelegate
 } from './watch'
 export { ContentJson } from './json'
-export { loadAndParse, StaticContentJson } from './sync'
+export { type LanguageFileData, type LanguageFileEntry, loadLanguageFile } from './load-language'
+export { loadInterface } from './load-interface'
+export { type PipelineFileEntry, loadPipelineFile } from './load-pipeline'
+export { loadAndParse, loadProject } from './sync'

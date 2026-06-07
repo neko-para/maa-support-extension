@@ -22,7 +22,7 @@ export async function loadBundle(cfg: BaseConfig) {
     cfg.parser
   )
   await bundle.load()
-  await bundle.flush(false) // 刷下 imports
+  await bundle.flush(false)
 
   return bundle
 }

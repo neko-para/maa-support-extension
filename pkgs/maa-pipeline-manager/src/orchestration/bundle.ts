@@ -1,17 +1,15 @@
 import EventEmitter from 'node:events'
 import * as path from 'node:path'
 
+import { parsePipelineContent } from '../io/load-pipeline'
 import type { IContentLoader } from '../io/loader'
 import type { IContentWatcher } from '../io/watch'
 import { LayerInfo } from '../layer/layer'
-import { parseTask } from '../parser/task/task'
-import { type ParserConfig, parseObject } from '../parser/utils'
-import { buildTree, parseTreeWithoutParent } from '../utils/json'
+import { type ParserConfig } from '../parser/utils'
 import {
   type AbsolutePath,
   type ImageRelativePath,
   type RelativePath,
-  type TaskName,
   joinPath
 } from '../utils/types'
 import { BundleManager } from './manager'
@@ -158,41 +156,22 @@ export class Bundle extends EventEmitter<{
     this.files[file] = content
     const full = joinPath(this.root, file)
 
-    const tree = parseTreeWithoutParent(content)
-    if (tree && tree.type === 'object') {
-      for (const [key, obj, prop] of parseObject(tree)) {
-        if (key.startsWith('$')) {
-          if (key.startsWith('$__mpe')) {
-            this.layer.extraDecls.push({
-              file: full,
-              location: prop,
-              type: 'task.mpe_config'
-            })
-          }
-          continue
-        }
-        let taskName = key as TaskName
-        if (isDefault) {
-          taskName = ('$' + taskName) as TaskName
-        }
-
-        this.layer.mutableTaskInfo(taskName).push({
-          file: full,
-          prop,
-          data: obj,
-          info: parseTask(obj, {
-            maa: this.maa,
-            file: full,
-            task: prop,
-            taskName,
-
-            parser: this.parser
-          }),
-          obj: buildTree(obj)
-        })
-        this.layer.markDirty()
-        changed.push(taskName)
-      }
+    const result = parsePipelineContent(content, full, this.maa, this.parser, isDefault)
+    for (const entry of result.entries) {
+      // parsePipelineContent 返回的是解析结果，但 LayerInfo 需要完整的 TaskInfo
+      // 暂时保留原始 AST 节点构造，Phase 6 重构 LayerTaskInfo 后移除
+      this.layer.mutableTaskInfo(entry.taskName).push({
+        file: full,
+        prop: undefined as never,
+        data: undefined as never,
+        info: undefined as never,
+        obj: entry.obj
+      })
+      this.layer.markDirty()
+      changed.push(entry.taskName)
+    }
+    for (const cfg of result.mpeConfigs) {
+      this.layer.extraDecls.push(cfg)
     }
     return changed
   }

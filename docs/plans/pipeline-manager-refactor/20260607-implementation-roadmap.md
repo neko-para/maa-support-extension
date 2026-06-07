@@ -7,16 +7,11 @@
 ## 总览
 
 ```
-Phase 1               Phase 2               Phase 3               Phase 4
-提取纯逻辑             IO 分离               编排可选化             清理 + LSP 迁移
+Phase 1        Phase 2        Phase 3        Phase 4        Phase 5
+提取纯逻辑      IO 分离        编排可选化      加载器 API      Parser 完成
 
-core/ 创建        →   io/ 子路径        →   orchestration/    →   删除兼容层
-parser 移入           同步 API              子路径                  LSP Provider 减薄
-diagnostic 移入       checker 迁移          Extension 迁移          diagnostic 消息移出
-Layer 拆分                                  事件驱动独立
-matching 提取
-MAA 结构分离
-测试基础设施
+Phase 6        Phase 7        Phase 8
+Layer 完成     LSP 迁移       清理 + 构建
 ```
 
 ## Phase 1：提取纯逻辑
@@ -32,30 +27,30 @@ MAA 结构分离
 ### 1.2 core 目录创建
 
 - [x] 创建 `src/core/matching/` 目录
-- [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path` — 推迟到 Phase 3（依赖 `loadProject` 完成后的路径重整）
+- [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path` — 推迟到 Phase 4.3
 
 ### 1.3 Parser 迁移
 
 - [x] 创建 `parser/task/fw/` 和 `parser/task/maa/` 子目录
 - [x] `fw/keys.ts` + `maa/keys.ts` — key 数组分离；`keys.ts` 改为 re-export
 - [x] `splitNode()` 内部拆分为 `splitNodeWithV2`（MaaFramework，含 V1/V2 检测）和 `splitNodeSimple`（MAA），接受显式 key 数组；`splitNode(node, maa)` 保留为兼容入口
-- [ ] `fw/parse.ts` + `maa/parse.ts` 完全分离 — 推迟到 Phase 4（子解析器共享且无 maa 分支，当前 `parseTask()` 的 `if (maa)` 分支接受现状）
-- [ ] core 主路径不依赖 `@nekosu/maa-tasker`（仅 `maa/expr.ts` 依赖）— 推迟到 Phase 4
+- [ ] `fw/parse.ts` + `maa/parse.ts` 完全分离 — 推迟到 Phase 5
+- [ ] core 主路径不依赖 `@nekosu/maa-tasker` — 推迟到 Phase 5
 
 ### 1.4 Diagnostic 迁移
 
 - [x] `checkTask()` 改为接受 `TaskDiagContext`（`{ allLayers, maa, langBundle }`）替代 `InterfaceBundle`
 - [x] `checkInterface()` 改为接受 `InterfaceDiagContext`（`{ topLayer, decls, refs }`）替代 `InterfaceBundle`
-- [ ] `buildDiagnosticMessage()` 暂留原位，标记为待迁移（Phase 4）
+- [ ] `buildDiagnosticMessage()` 暂留原位，标记为待迁移（Phase 7）
 
 ### 1.5 Layer 拆分
 
 - [x] 创建 `model/task-store.ts` — `TaskStore` 类（tasks 增删查、`removeFile`、`collectDecls`/`collectRefs`），`LayerInfo` 通过 getter/setter 委托到 `TaskStore`
 - [x] images 保留为 `Set<ImageRelativePath>` 直接操作（无封装价值）
-- [ ] 创建 `model/layer.ts` — `Layer` 类（单层容器，不依赖 `IContentLoader`）— 推迟到 Phase 4
-- [ ] 创建 `model/layer-tree.ts` — `LayerTree` 类（多层遍历 + 缓存）— 推迟到 Phase 4
+- [ ] 创建 `model/layer.ts` — 推迟到 Phase 6
+- [ ] 创建 `model/layer-tree.ts` — 推迟到 Phase 6
 - [x] 提取 `eval/eval-task.ts` — `evalTask()` 纯函数，`LayerInfo.evalTask` 委托到 core
-- [ ] `specialStringify` / `toggleMode` 移到独立的 `format/`（或标记 deprecated）— 推迟到 Phase 4
+- [ ] `specialStringify` / `toggleMode` 移到 `format/` — 推迟到 Phase 6
 
 ### 1.6 Matching 提取
 
@@ -96,17 +91,16 @@ MAA 结构分离
 
 ### 2.2 同步加载 API
 
-- [x] `StaticContentJson` — 无 watcher 的一次性 JSON 加载器
-- [x] `loadAndParse(loader, file)` — 封装"读取 → 解析 → 返回 `{ node, object }`"
-- [ ] `loadProject(root)` — 一次性加载完整的 interface.json + imports + pipeline — 推迟到 Phase 3（需要复制 InterfaceBundle 的递归加载逻辑）
+- [x] `loadAndParse(loader, file)` — 封装"读取 → 解析 → 返回 `{ node, object }`"（纯函数，无需类）
+- [ ] `loadProject(root)` — 推迟到 Phase 4.1
 
 ### 2.3 checker 迁移
 
-- [ ] maa-tools 的 checker 从 `InterfaceBundle` + watcher 切换到 `StaticContentJson` + `performDiagnostic(state)` — 推迟到 Phase 3（依赖 `loadProject`）
+- [ ] maa-tools 的 checker 切换到 `loadProject()` + `performDiagnostic(state)` — 推迟到 Phase 4.2
 
 ### Phase 2 验证
 
-- [ ] checker 在无文件监视的环境下正常运行 — 推迟到 Phase 3
+- [ ] checker 在无文件监视的环境下正常运行 — 推迟到 Phase 4
 - [x] Extension 侧继续使用旧路径，不受影响
 - [x] TypeScript 编译零错误（pipeline-manager + extension + maa-tools）
 
@@ -131,8 +125,8 @@ MAA 结构分离
 
 ### 3.3 配置处理迁移
 
-- [ ] 创建 `logic/config/` — 推迟到 Phase 4（`switchActive`/`updatePaths` 仍在 InterfaceBundle 中，深度耦合事件系统）
-- [ ] `switchActive()` / `updatePaths()` 迁移 — 推迟到 Phase 4
+- [ ] 创建 `logic/config/` — 推迟到 Phase 8.3
+- [ ] `switchActive()` / `updatePaths()` 迁移 — 推迟到 Phase 8.3
 
 ### 3.4 Extension 迁移
 
@@ -147,41 +141,155 @@ MAA 结构分离
 
 ---
 
-## Phase 4：清理 + LSP 逻辑最终迁移
+## Phase 4：加载器 API + checker 迁移
 
-**目标**：移除兼容层，完成 LSP 侧逻辑迁移，清理 deprecated 模块。
+**目标**：实现 `loadProject()` 完整加载流程，消除 checker 侧事件驱动强制。
 
-### 4.1 清理
+### 4.1 DiagnosticContext
 
-- [ ] 移除 `LayerInfo` 的 delegating wrapper
-- [ ] 移除旧的 parser export 路径
-- [ ] 移除 `maa: boolean` 残留引用
+- [x] 定义 `DiagnosticContext` 接口（`allLayers`/`maa`/`langBundle`/`topLayer`/`decls`/`refs`）
+- [x] `performDiagnostic()` 改为接受 `DiagnosticContext`（`InterfaceBundle` 通过 `decls`/`refs` getter 兼容）
+- [x] `InterfaceBundle` 新增 `decls`/`refs` 访问器
 
-### 4.2 LSP Provider 减薄
+### 4.2 loadProject
 
-- [ ] `CompletionSpec`、`resolveCompletionSpec`、`buildCompletionItems` 移入 `core/completion/`
-  - `buildCompletionItems` 改为接受 hooks 注入（`getTaskBrief`、`getLocaleHover`）
-- [ ] `getTaskBrief`、`getTaskRecoAct` 移入 `core/query/task-info.ts`
-- [ ] `getImageInfo`（纯数据部分）移入 `core/query/image-info.ts`
-- [ ] LSP Provider 侧仅保留 VSCode API 适配（Range/Location/Hover 渲染）
+- [x] 实现 `loadProject(root, file)` — 一次性加载 interface.json + imports + language files + pipeline bundles
+  - 全部使用 `FsContentLoader`（无 watcher）
+  - 手动读取 pipeline 目录（`fs.readdir`）
+  - 返回 `DiagnosticContext` 兼容对象
+- [x] `loadProject` 通过 `index.ts` 导出（可被 checker 使用）
 
-### 4.3 Diagnostic 消息分离
+### 4.3 checker 迁移
 
-- [ ] `buildDiagnosticMessage()` 从 pipeline-manager 移到 extension
-- [ ] `@nekosu/maa-locale` 的国际化文案与 extension 侧的新消息函数对接
-- [ ] pipeline-manager 的 `diagnostic/` 仅输出结构化 `Diagnostic` 数据，不含文案
+- [ ] checker 从 `InterfaceBundle` + watcher 切换到 `loadProject()` — 推迟（checker 需要 `switchActive` 迭代 controller/resource 对，`loadProject` 目前加载第一组）
 
-### 4.4 文档 + 外部通知
+### 4.4 路径工具解耦
 
-- [ ] 更新 `docs/maa-pipeline-manager/` 下的 models / tech / specs 文档
-- [ ] 更新 `README.md` 中的 API 使用示例
-- [ ] 通知外部使用者（`@nekosu/maa-tools/pm` 子路径消费者）关于导入路径变更
-- [ ] 更新 `CLAUDE.md` 中的项目结构说明
+- [ ] `utils/types.ts` path 工具解耦 `node:path` — 推迟到 Phase 8（与构建配置一起处理）
 
 ### Phase 4 验证
 
+- [x] TypeScript 编译零错误（全部包）
+- [x] ESLint 零错误
+- [x] 12 个现有测试全通过
+- [ ] checker 无 watcher 环境验证 — 推迟
+
+---
+
+## Phase 5：Parser 完成
+
+**目标**：`fw/parse.ts` + `maa/parse.ts` 完全分离，消除 `maa: boolean` 标志。
+
+### 5.1 fw/parse.ts
+
+- [ ] 提取 MaaFramework `parseTask` 为独立入口（当前 `if (!maa)` 分支）
+- [ ] 内部调用 `splitNodeWithV2` + `parseBase` + `parseReco` + `parseAct` + `parseUnknown`
+
+### 5.2 maa/parse.ts
+
+- [ ] 提取 MAA `parseTask` 为独立入口（当前 `if (maa)` 分支）
+- [ ] 内部调用 `splitNodeSimple` + `parseMaaBase` + `parseMaaReco`
+- [ ] `buildTaskRef` 移入 `maa/ref.ts`
+
+### 5.3 依赖清理
+
+- [ ] core 主路径不依赖 `@nekosu/maa-tasker`（仅 `maa/expr.ts` 依赖）
+- [ ] 旧 `parseTask(node, ctx)` 保留为兼容入口，根据 `ctx.maa` 委托到 fw 或 maa
+
+### Phase 5 验证
+
+- [ ] fw parseTask 输出与当前 `maa=false` 一致
+- [ ] maa parseTask 输出与当前 `maa=true` 一致
+- [ ] 12 个现有测试全通过
+
+---
+
+## Phase 6：Layer 完成
+
+**目标**：`Layer` 类解耦 `IContentLoader`，提取 `LayerTree` 查询层。
+
+### 6.1 Layer 类
+
+- [ ] 创建 `core/model/layer.ts` — `Layer` 类（`root` + `taskStore` + `images` + `parent`），不依赖 `IContentLoader`
+- [ ] `LayerInfo` 改为继承或组合 `Layer`（保持 API 兼容）
+
+### 6.2 LayerTree
+
+- [ ] 创建 `core/model/layer-tree.ts` — `LayerTree` 类
+  - `mergedDecls`/`mergedRefs` 缓存
+  - `getTaskList`/`getAnchorList`/`getImageList`
+  - `getTask`/`getImage`/`getTaskBriefInfo`/`getTaskDoc`
+  - `evalTask`（委托到 `core/eval/`）
+
+### 6.3 格式工具
+
+- [ ] `specialStringify` 移到 `core/format/`（或保留在 Layer）
+- [ ] `toggleMode` 标记 deprecated（实验性功能，官方不推荐）
+
+### Phase 6 验证
+
+- [ ] `LayerTree` 单测覆盖查询方法和缓存逻辑
+- [ ] 现有 consumers 行为不变
+
+---
+
+## Phase 7：LSP 逻辑迁移
+
+**目标**：将 LSP Provider 中的核心策略移入 `core/`，Provider 变为 VSCode 适配层。
+
+### 7.1 Completion 迁移
+
+- [ ] `CompletionSpec`、`resolveCompletionSpec`、`buildCompletionItems` 移入 `core/completion/`
+- [ ] `buildCompletionItems` 改为接受 hooks 注入（`getTaskBrief`、`getLocaleHover`）
+
+### 7.2 查询函数迁移
+
+- [ ] `getTaskBrief`、`getTaskRecoAct` 移入 `core/query/task-info.ts`
+- [ ] `getImageInfo`（纯数据部分）移入 `core/query/image-info.ts`
+
+### 7.3 Diagnostic 消息分离
+
+- [ ] `buildDiagnosticMessage()` 从 pipeline-manager 移到 extension
+- [ ] pipeline-manager 的 `diagnostic/` 仅输出结构化 `Diagnostic` 数据
+
+### Phase 7 验证
+
 - [ ] LSP Provider 代码量减少 ~350 行
-- [ ] core 单测覆盖 matching / completion / query / diagnostic
+- [ ] core 单测覆盖 completion / query / diagnostic
+
+---
+
+## Phase 8：清理 + 构建
+
+**目标**：移除兼容层，完成构建配置，更新文档。
+
+### 8.1 兼容层清理
+
+- [ ] 移除 `content/`、`bundle/`、`interface/` 的 re-export 文件
+- [ ] 移除 `parser/task/keys.ts` 的 re-export（改为直接从 `fw/keys` 或 `maa/keys` 导入）
+- [ ] 移除 `helper.ts` 的 re-export（改为直接从 `core/matching` 导入）
+- [ ] 移除 `LayerInfo` 的 delegating wrapper（如果有）
+- [ ] 移除 `splitNode(node, maa)` 兼容入口
+
+### 8.2 构建配置
+
+- [ ] tsdown 配置多入口（`./io`、`./live` 子路径）
+- [ ] 验证 `@nekosu/maa-pipeline-manager/io` 和 `/live` 子路径在构建后可解析
+
+### 8.3 配置处理迁移
+
+- [ ] 创建 `logic/config/`（从 InterfaceBundle 分离配置逻辑）
+- [ ] `switchActive()` / `updatePaths()` 移入 `logic/config/`
+
+### 8.4 文档
+
+- [ ] 更新 `docs/maa-pipeline-manager/` 下的 models / tech / specs 文档
+- [ ] 更新 `CLAUDE.md` 中的项目结构说明
+- [ ] 通知外部使用者关于导入路径变更
+
+### Phase 8 验证
+
+- [ ] 全部子路径可正常导入
 - [ ] CLI checker 功能正常
 - [ ] Extension 所有 LSP 功能正常
 
@@ -189,17 +297,14 @@ MAA 结构分离
 
 ## 远期目标（非本次重构关键项）
 
-以下目标在本次重构中仅做架构准备，不实施完整功能：
-
 ### LSP 独立进程
 
-- **本次准备**：`ProjectState` 设计为可序列化；`CompletionSpec`/hooks 模式使 core 逻辑无 VSCode 依赖；运行时状态（activeController/activeResource）与持久数据（decls/refs/layer）明确分离
+- **本次准备**：`ProjectState` 设计为可序列化；`CompletionSpec`/hooks 模式使 core 逻辑无 VSCode 依赖
 - **后续实施**：进程间 IPC 传输 `ProjectState` + LSP 协议集成
 
 ### TODO-23（罕见文件删除 Bug）
 
 - 重构中保持 `FsContentWatcher` 的 chokidar 配置不变
-- 如替换 watcher 实现需进行并发压力测试
 
 ### TODO-26（格式切换）
 
@@ -210,19 +315,15 @@ MAA 结构分离
 ## 依赖关系
 
 ```
-Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4
-  │            │            │            │
-  │  测试基础设施  │  checker    │  extension  │  清理
-  │  core/ 目录   │  同步 API    │  编排层     │  LSP 减薄
-  │  parser       │             │  配置迁移   │  消息分离
-  │  diagnostic   │             │            │
-  │  Layer 拆分   │             │            │
-  │  MAA 分离    │             │            │
-  │  matching     │             │            │
-  └──────────────┴─────────────┴────────────┴──────────
+Phase 1 ──→ Phase 2 ──→ Phase 3 ──→ Phase 4 ──→ Phase 5
+ 提取纯逻辑    IO 分离     编排可选化    加载器 API    Parser 完成
+    │            │            │            │            │
+    ▼            ▼            ▼            ▼            ▼
+Phase 6 ──→ Phase 7 ──→ Phase 8
+ Layer 完成   LSP 迁移    清理 + 构建
 
-Phase 1 是最关键阶段——建立 core/ 的基础结构后，后续 Phase 是渐进式迁移。
-Phase 1-2 对 checker 收益最大（消除事件驱动强制）。
-Phase 3 对 extension 架构改善最大（编排可选化）。
-Phase 4 是清理收尾。
+Phase 1-3 已完成：core/ 基础结构 + io/ 子路径 + orchestration/ 子路径 + ProjectState
+Phase 4-5 解决 TODO-#22/#24：checker 同步加载 + MAA/FW 完全分离
+Phase 6-7 解决可测试性 + LSP 减薄
+Phase 8 收尾清理
 ```

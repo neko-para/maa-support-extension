@@ -1,4 +1,3 @@
-import type { LayerInfo } from '../layer/layer'
 import type { TaskRefInfo } from '../parser/task/task'
 import { extractTaskRef, isAnchorRef } from '../utils/helper'
 import {
@@ -7,18 +6,10 @@ import {
   type TaskName,
   normalizeImageFolder
 } from '../utils/types'
+import type { DiagnosticContext } from './diagnostic'
 import type { Diagnostic } from './types'
 
-export interface TaskDiagContext {
-  allLayers: LayerInfo[]
-  maa: boolean
-  langBundle: {
-    queryKey(key: string): ({ key: string; value: string } | null)[]
-    langs: { name: string }[]
-  }
-}
-
-export function checkTask(ctx: TaskDiagContext): Diagnostic[] {
+export function checkTask(ctx: DiagnosticContext): Diagnostic[] {
   const result: Diagnostic[] = []
 
   for (const layer of ctx.allLayers) {

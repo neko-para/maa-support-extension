@@ -20,9 +20,12 @@ export class BundleManager {
   changed: Set<AbsolutePath>
   removed: Set<AbsolutePath>
   watcherCtrl?: IContentWatcherController
-  duringFlush: boolean
-  flushResolve: (() => void)[]
-  needFlush: boolean
+
+  private flushing = false
+  private queued = false
+  private timer?: ReturnType<typeof setTimeout>
+  private flushComplete?: Promise<void>
+  private flushResolve?: () => void
 
   constructor(
     loader: IContentLoader,
@@ -37,9 +40,6 @@ export class BundleManager {
 
     this.changed = new Set()
     this.removed = new Set()
-    this.duringFlush = false
-    this.flushResolve = []
-    this.needFlush = false
   }
 
   async load() {
@@ -55,19 +55,16 @@ export class BundleManager {
       fileAdded: (file: string) => {
         this.changed.add(file as AbsolutePath)
         this.removed.delete(file as AbsolutePath)
-
         this.dispatchFlush()
       },
       fileChanged: (file: string) => {
         this.changed.add(file as AbsolutePath)
         this.removed.delete(file as AbsolutePath)
-
         this.dispatchFlush()
       },
       fileDeleted: (file: string) => {
         this.removed.add(file as AbsolutePath)
         this.changed.delete(file as AbsolutePath)
-
         this.dispatchFlush()
       }
     })
@@ -79,62 +76,50 @@ export class BundleManager {
   }
 
   async flush() {
-    if (this.duringFlush) {
-      return new Promise<void>(resolve => {
-        this.flushResolve.push(resolve)
-      })
+    if (this.flushing) {
+      this.queued = true
+      return this.flushComplete
     }
+    this.flushing = true
+    this.flushComplete = new Promise(resolve => {
+      this.flushResolve = resolve
+    })
 
-    this.duringFlush = true
-    this.needFlush = false
+    do {
+      this.queued = false
+      const changed = this.changed
+      const removed = this.removed
+      this.changed = new Set()
+      this.removed = new Set()
 
-    const changed = this.changed
-    const removed = this.removed
-
-    this.changed = new Set()
-    this.removed = new Set()
-
-    for (const file of removed) {
-      await this.delegate.deleteFile(relativePath(this.root, file), file)
-    }
-
-    for (const file of changed) {
-      if (this.delegate.needContent(file)) {
-        const content = await this.loader.get(file)
-        if (typeof content === 'string') {
-          await this.delegate.loadFile(relativePath(this.root, file), file, content)
-        } else {
-          await this.delegate.deleteFile(relativePath(this.root, file), file)
-        }
-      } else {
-        await this.delegate.loadFile(relativePath(this.root, file), file)
+      for (const file of removed) {
+        await this.delegate.deleteFile(relativePath(this.root, file), file)
       }
-    }
 
-    this.duringFlush = false
-
-    if (this.needFlush) {
-      setTimeout(() => {
-        this.flush()
-      }, 100)
-    } else {
-      const resolves = this.flushResolve
-      this.flushResolve = []
-
-      process.nextTick(() => {
-        for (const func of resolves) {
-          func()
+      for (const file of changed) {
+        if (this.delegate.needContent(file)) {
+          const content = await this.loader.get(file)
+          if (typeof content === 'string') {
+            await this.delegate.loadFile(relativePath(this.root, file), file, content)
+          } else {
+            await this.delegate.deleteFile(relativePath(this.root, file), file)
+          }
+        } else {
+          await this.delegate.loadFile(relativePath(this.root, file), file)
         }
-      })
-    }
+      }
+    } while (this.queued)
+
+    this.flushing = false
+    this.flushResolve?.()
   }
 
-  dispatchFlush(timeout = 100) {
-    if (this.needFlush) {
+  private dispatchFlush(timeout = 100) {
+    if (this.timer) {
       return
     }
-    this.needFlush = true
-    setTimeout(() => {
+    this.timer = setTimeout(() => {
+      this.timer = undefined
       this.flush()
     }, timeout)
   }

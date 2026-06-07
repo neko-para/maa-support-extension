@@ -14,6 +14,10 @@
     "./io": {
       "import": "./dist/io/index.mjs",
       "types": "./dist/io/index.d.mts"
+    },
+    "./live": {
+      "import": "./dist/orchestration/index.mjs",
+      "types": "./dist/orchestration/index.d.mts"
     }
   },
   "repository": {

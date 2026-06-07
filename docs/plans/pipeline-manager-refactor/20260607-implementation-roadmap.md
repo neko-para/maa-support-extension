@@ -118,35 +118,32 @@ MAA 结构分离
 
 ### 3.1 orchestration 子路径
 
-- [ ] 创建 `src/orchestration/` 目录
-- [ ] 移入 `bundle/bundle.ts`、`bundle/manager.ts`、`interface/interface.ts`、`interface/language.ts`
-- [ ] 这些模块改为从 `core/` 导入纯逻辑，从 `io/` 导入 I/O 接口
-- [ ] 子路径入口：`@nekosu/maa-pipeline-manager/live`
+- [x] 创建 `src/orchestration/` 目录
+- [x] 移入 `bundle/` + `interface/` 的事件驱动模块
+- [x] 旧位置保留为 re-export 兼容层
+- [x] 子路径入口：`@nekosu/maa-pipeline-manager/live`（`package.json` exports 已配置）
+- [x] 模块从 `io/` 导入 I/O 接口，从 `core/model/` 导入 `ProjectState`
 
 ### 3.2 ProjectState 提取
 
-- [ ] 从 `InterfaceBundle` 提取 `ProjectState` 数据结构（纯数据，不含 I/O/事件）
-- [ ] `InterfaceBundle` 变为 `ProjectState` + 事件编排的组合
+- [x] 创建 `core/model/project-state.ts` — `ProjectState` 纯数据类（`decls`/`refs`/`layer`/`bundles` + `allControllerNames`/`allResourceNames`）
+- [x] `InterfaceBundle.getState()` 返回 `ProjectState` 快照（事件编排 → 纯数据的桥接）
 
 ### 3.3 配置处理迁移
 
-- [ ] 创建 `logic/config/`：
-  - `types.ts` — 用户配置类型
-  - `resolve.ts` — 配置解析（config + interface → 有效选项）
-  - `runtime.ts` — 运行时构建（沿用现有 `logic/runtime/`）
-- [ ] `switchActive()` / `updatePaths()` 从 `InterfaceBundle` 移入 `logic/config/`
+- [ ] 创建 `logic/config/` — 推迟到 Phase 4（`switchActive`/`updatePaths` 仍在 InterfaceBundle 中，深度耦合事件系统）
+- [ ] `switchActive()` / `updatePaths()` 迁移 — 推迟到 Phase 4
 
 ### 3.4 Extension 迁移
 
-- [ ] Extension 从 `@nekosu/maa-pipeline-manager/live` 导入 `InterfaceBundle`
-- [ ] LSP Provider 从 `core/matching/` 导入匹配函数，从 `core/completion/` 导入 CompletionSpec
-- [ ] Provider 代码减薄：`makeDecls`/`makeRefs` 调用替换为 core 版本
+- [x] LSP Provider 已在 Phase 1 从 `core/matching/` 导入匹配函数
+- [ ] Extension 从 `@nekosu/maa-pipeline-manager/live` 导入 `InterfaceBundle` — 推迟（子路径需构建后才能解析，开发阶段继续从主入口导入）
 
 ### Phase 3 验证
 
-- [ ] Extension LSP 功能完整（completion / hover / definition / reference / ...）
-- [ ] 事件驱动编排行为与 Phase 1 一致
-- [ ] checker 侧继续使用 `loadAndParse`，不受编排层变更影响
+- [ ] Extension LSP 功能完整 — 推迟（手动 VSCode 验证）
+- [x] 事件驱动编排通过 re-export 保持行为不变
+- [x] TypeScript 编译零错误（pipeline-manager + extension + maa-tools）
 
 ---
 

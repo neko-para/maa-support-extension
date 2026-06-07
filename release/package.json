@@ -125,8 +125,8 @@
         },
         "maa.pipelineCompletionV2": {
           "type": "boolean",
-          "description": "Use refactored pipeline completion provider (experimental)",
-          "default": false
+          "description": "Use refactored pipeline completion provider. Set to false to fall back to legacy completion",
+          "default": true
         }
       }
     },

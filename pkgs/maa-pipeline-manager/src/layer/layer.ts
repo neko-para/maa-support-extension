@@ -2,8 +2,8 @@ import type { Node } from 'jsonc-parser'
 import * as path from 'node:path'
 
 import type { IContentLoader } from '../content/loader'
+import { evalTask as evalTaskImpl } from '../core/eval/eval-task'
 import { TaskStore } from '../core/model/task-store'
-import { actKeys, recoKeys } from '../parser/task/keys'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
 import type { StringNode } from '../parser/utils'
 import { buildTree } from '../utils/json'
@@ -234,56 +234,19 @@ export class LayerInfo {
 
   evalTask(task: TaskName): Record<string, unknown> {
     const upper = this.parent?.evalTask(task)
-    const result = upper ?? {}
-
     const info = this.tasks[task]?.[0]
-    if (info) {
-      const parts = info.info.parts
-
-      if (!upper) {
-        // 覆盖任务时忽略默认值
-        const reco = ('$' + (parts.recoType?.value ?? 'DirectHit')) as TaskName
-        const act = ('$' + (parts.actType?.value ?? 'DoNothing')) as TaskName
-
-        Object.assign(result, this.tasks['$Default' as TaskName]?.[0].obj ?? {})
-        Object.assign(result, this.tasks[reco]?.[0].obj ?? {})
-        Object.assign(result, this.tasks[act]?.[0].obj ?? {})
-      }
-
-      let recoChanged = false
-      let actChanged = false
-      if (parts.recoType) {
-        const oldReco = (result.recognition as maa.RecognitionType) ?? 'DirectHit'
-        const newReco = parts.recoType.value as maa.RecognitionType
-        recoChanged = newReco !== oldReco
-        result['recognition'] = parts.recoType.value
-      }
-      if (parts.actType) {
-        const oldAct = (result.action as maa.ActionType) ?? 'DoNothing'
-        const newAct = parts.actType.value as maa.ActionType
-        actChanged = newAct !== oldAct
-        result['action'] = parts.actType.value
-      }
-      if (recoChanged) {
-        for (const key of recoKeys) {
-          delete result[key]
-        }
-      }
-      if (actChanged) {
-        for (const key of actKeys) {
-          delete result[key]
-        }
-      }
-      for (const [key, obj] of [...parts.base, ...parts.reco, ...parts.act, ...parts.unknown]) {
-        if (key === 'attach') {
-          result[key] = Object.assign(result[key] ?? {}, buildTree(obj))
-        } else {
-          result[key] = buildTree(obj)
-        }
-      }
-    }
-
-    return result
+    const parts = info?.info.parts
+    const defaultObj =
+      (this.tasks['$Default' as TaskName]?.[0].obj as Record<string, unknown>) ?? {}
+    const reco = ('$' + (parts?.recoType?.value ?? 'DirectHit')) as TaskName
+    const act = ('$' + (parts?.actType?.value ?? 'DoNothing')) as TaskName
+    return evalTaskImpl(
+      info,
+      upper,
+      defaultObj,
+      (this.tasks[reco]?.[0].obj as Record<string, unknown>) ?? {},
+      (this.tasks[act]?.[0].obj as Record<string, unknown>) ?? {}
+    )
   }
 
   getImage(

@@ -32,7 +32,7 @@ MAA 结构分离
 ### 1.2 core 目录创建
 
 - [x] 创建 `src/core/matching/` 目录
-- [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path`：将 `joinPath`、`joinImagePath` 等改为接受 path 实现注入
+- [ ] 移入 `utils/types.ts`（品牌化类型），解耦 `node:path` — 推迟到 Phase 2（与 io/ 子路径一起处理）
 
 ### 1.3 Parser 迁移
 
@@ -52,10 +52,10 @@ MAA 结构分离
 
 - [x] 创建 `model/task-store.ts` — `TaskStore` 类（tasks 增删查、`removeFile`、`collectDecls`/`collectRefs`），`LayerInfo` 通过 getter/setter 委托到 `TaskStore`
 - [x] images 保留为 `Set<ImageRelativePath>` 直接操作（无封装价值）
-- [ ] 创建 `model/layer.ts` — `Layer` 类（单层容器，不依赖 `IContentLoader`）
-- [ ] 创建 `model/layer-tree.ts` — `LayerTree` 类（多层遍历 + 缓存）
-- [ ] 提取 `eval/eval-task.ts` — `evalTask()` 从 `LayerInfo` 分离
-- [ ] `specialStringify` / `toggleMode` 移到独立的 `format/`（或标记 deprecated）
+- [ ] 创建 `model/layer.ts` — `Layer` 类（单层容器，不依赖 `IContentLoader`）— 推迟到 Phase 4
+- [ ] 创建 `model/layer-tree.ts` — `LayerTree` 类（多层遍历 + 缓存）— 推迟到 Phase 4
+- [x] 提取 `eval/eval-task.ts` — `evalTask()` 纯函数，`LayerInfo.evalTask` 委托到 core
+- [ ] `specialStringify` / `toggleMode` 移到独立的 `format/`（或标记 deprecated）— 推迟到 Phase 4
 
 ### 1.6 Matching 提取
 
@@ -75,8 +75,8 @@ MAA 结构分离
 
 ### Phase 1 验证
 
-- [x] `core/` 模块 9 个单测通过（4 parser + 5 TaskStore）
-- [ ] 现有 consumers 行为不变（extension LSP 功能、maa-tools checker 输出）
+- [x] `core/` 模块 12 个单测通过（4 parser + 5 TaskStore + 3 evalTask）
+- [ ] 现有 consumers 行为不变（extension LSP 功能、maa-tools checker 输出）— 需手动在 VSCode 中验证
 - [x] TypeScript 编译零错误（pipeline-manager + extension）
 - [x] ESLint 零错误（全项目）
 

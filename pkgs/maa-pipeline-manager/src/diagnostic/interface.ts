@@ -1,11 +1,18 @@
-import type { InterfaceBundle } from '../interface/interface'
+import type { LayerInfo } from '../layer/layer'
+import type { InterfaceDeclInfo, InterfaceRefInfo } from '../parser/interface/interface'
 import { isString } from '../parser/utils'
 import type { Diagnostic } from './types'
 
-export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
+export interface InterfaceDiagContext {
+  topLayer: LayerInfo
+  decls: InterfaceDeclInfo[]
+  refs: InterfaceRefInfo[]
+}
+
+export function checkInterface(ctx: InterfaceDiagContext): Diagnostic[] {
   const result: Diagnostic[] = []
 
-  const layer = bundle.topLayer
+  const layer = ctx.topLayer
   if (layer.type === 'interface') {
     const realTasks = new Set(layer.parent?.getTaskListNotUnique() ?? [])
 
@@ -40,7 +47,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
     }
   }
 
-  const ctrlDecls = bundle.info.decls.filter(decl => decl.type === 'interface.controller')
+  const ctrlDecls = ctx.decls.filter(decl => decl.type === 'interface.controller')
   const ctrls = new Map<string, (typeof ctrlDecls)[number]>()
   for (const decl of ctrlDecls) {
     if (ctrls.has(decl.name)) {
@@ -63,7 +70,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
     }
   }
 
-  const resDecls = bundle.info.decls.filter(decl => decl.type === 'interface.resource')
+  const resDecls = ctx.decls.filter(decl => decl.type === 'interface.resource')
   const ress = new Map<string, (typeof resDecls)[number]>()
   for (const decl of resDecls) {
     if (ress.has(decl.name)) {
@@ -86,7 +93,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
     }
   }
 
-  const groupDecls = bundle.info.decls.filter(decl => decl.type === 'interface.group')
+  const groupDecls = ctx.decls.filter(decl => decl.type === 'interface.group')
   const groups = new Map<string, (typeof groupDecls)[number]>()
   for (const decl of groupDecls) {
     if (groups.has(decl.name)) {
@@ -109,7 +116,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
     }
   }
 
-  const optDecls = bundle.info.decls.filter(decl => decl.type === 'interface.option')
+  const optDecls = ctx.decls.filter(decl => decl.type === 'interface.option')
   const options = new Map<string, (typeof optDecls)[number]>()
   for (const decl of optDecls) {
     if (options.has(decl.name)) {
@@ -131,7 +138,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
       options.set(decl.name, decl)
 
       if (!decl.optionType || decl.optionType === 'select' || decl.optionType === 'switch') {
-        const caseDecls = bundle.info.decls.filter(
+        const caseDecls = ctx.decls.filter(
           decl2 => decl2.type === 'interface.case' && decl2.option === decl.name
         )
         const cases = new Map<string, (typeof caseDecls)[number]>()
@@ -157,7 +164,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
           }
         }
 
-        const caseRefs = bundle.info.refs
+        const caseRefs = ctx.refs
           .filter(ref => ref.type === 'interface.case')
           .filter(ref => ref.option === decl.name)
         for (const ref of caseRefs) {
@@ -227,7 +234,7 @@ export function checkInterface(bundle: InterfaceBundle): Diagnostic[] {
     }
   }
 
-  for (const ref of bundle.info.refs) {
+  for (const ref of ctx.refs) {
     if (ref.type === 'interface.controller') {
       if (!ctrls.has(ref.target)) {
         result.push({

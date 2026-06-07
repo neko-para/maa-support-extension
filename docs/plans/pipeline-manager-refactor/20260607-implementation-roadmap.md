@@ -45,7 +45,7 @@ MAA 结构分离
 ### 1.4 Diagnostic 迁移
 
 - [x] `checkTask()` 改为接受 `TaskDiagContext`（`{ allLayers, maa, langBundle }`）替代 `InterfaceBundle`
-- [ ] `checkInterface()` 改为接受纯数据参数
+- [x] `checkInterface()` 改为接受 `InterfaceDiagContext`（`{ topLayer, decls, refs }`）替代 `InterfaceBundle`
 - [ ] `buildDiagnosticMessage()` 暂留原位，标记为待迁移（Phase 4）
 
 ### 1.5 Layer 拆分
@@ -63,7 +63,7 @@ MAA 结构分离
 - [x] `decl-match.ts` — `findMatchingDecls`（← `makeDecls`）
 - [x] `ref-match.ts` — `findMatchingRefs`（← `makeRefs`）
 - [x] Extension `base.ts` 的 `makeDecls`/`makeRefs` 改为委托到 core 函数（~80 行方法体 → 1 行调用）
-- [ ] `interface-match.ts` — Interface 侧的 `makeDecls`/`makeRefs`
+- [x] `interface-match.ts` — Interface 侧的 `findInterfaceMatchingDecls`/`findInterfaceMatchingRefs`（← `makeDecls`/`makeRefs`）
 
 ### 1.7 兼容层
 
@@ -71,7 +71,7 @@ MAA 结构分离
 - [x] `helper.ts` 通过 re-export 保持旧导入路径兼容
 - [x] `keys.ts` 通过 re-export 保持旧导入路径兼容
 - [x] `splitNode(node, maa)` 保留为兼容入口
-- [x] 现有 consumers（extension、maa-tools）不做任何改动
+- [x] Extension `interface/base.ts` 的 `makeDecls`/`makeRefs` 改为委托到 core 函数（~80 行方法体 + 2 个 helper → 2 行调用）
 
 ### Phase 1 验证
 

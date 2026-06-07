@@ -15,7 +15,13 @@ export function performDiagnostic(bundle: InterfaceBundle, option: DiagnosticOpt
       langBundle: bundle.langBundle
     })
   )
-  result.push(...checkInterface(bundle))
+  result.push(
+    ...checkInterface({
+      topLayer: bundle.topLayer,
+      decls: bundle.info.decls,
+      refs: bundle.info.refs
+    })
+  )
 
   return result
     .filter(diag => !option.ignoreTypes?.includes(diag.type))

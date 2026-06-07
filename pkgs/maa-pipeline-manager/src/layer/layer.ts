@@ -2,6 +2,7 @@ import type { Node } from 'jsonc-parser'
 import * as path from 'node:path'
 
 import type { IContentLoader } from '../content/loader'
+import { TaskStore } from '../core/model/task-store'
 import { actKeys, recoKeys } from '../parser/task/keys'
 import type { TaskAnchorDeclInfo, TaskDeclInfo, TaskInfo, TaskRefInfo } from '../parser/task/task'
 import type { StringNode } from '../parser/utils'
@@ -63,10 +64,27 @@ export class LayerInfo {
 
   type: 'interface' | 'resource'
 
-  tasks: Record<TaskName, LayerTaskInfo[]>
+  taskStore: TaskStore
   images: Set<ImageRelativePath>
-  extraDecls: TaskDeclInfo[]
-  extraRefs: TaskRefInfo[]
+
+  get tasks() {
+    return this.taskStore.tasks
+  }
+  set tasks(v: Record<TaskName, LayerTaskInfo[]>) {
+    this.taskStore.tasks = v
+  }
+  get extraDecls() {
+    return this.taskStore.extraDecls
+  }
+  set extraDecls(v: TaskDeclInfo[]) {
+    this.taskStore.extraDecls = v
+  }
+  get extraRefs() {
+    return this.taskStore.extraRefs
+  }
+  set extraRefs(v: TaskRefInfo[]) {
+    this.taskStore.extraRefs = v
+  }
 
   dirty: boolean
   mergedDeclsCache: TaskDeclInfo[]
@@ -83,10 +101,8 @@ export class LayerInfo {
     this.root = root
     this.type = type
 
-    this.tasks = {}
+    this.taskStore = new TaskStore()
     this.images = new Set()
-    this.extraDecls = []
-    this.extraRefs = []
 
     this.dirty = true
     this.mergedDeclsCache = []
@@ -94,10 +110,8 @@ export class LayerInfo {
   }
 
   reset() {
-    this.tasks = {}
+    this.taskStore.reset()
     this.images = new Set()
-    this.extraDecls = []
-    this.extraRefs = []
 
     this.dirty = true
     this.mergedDeclsCache = []
@@ -105,25 +119,11 @@ export class LayerInfo {
   }
 
   mutableTaskInfo(name: TaskName) {
-    this.tasks[name] = this.tasks[name] ?? []
-    return this.tasks[name]
+    return this.taskStore.mutableInfo(name)
   }
 
   removeFile(file: AbsolutePath) {
-    const changed: string[] = []
-    for (const [task, infos] of Object.entries(this.tasks)) {
-      const newInfos = infos.filter(info => info.file !== file)
-      if (infos.length !== newInfos.length) {
-        if (newInfos.length === 0) {
-          delete this.tasks[task as TaskName]
-        } else {
-          infos.splice(0, infos.length, ...newInfos)
-        }
-        changed.push(task)
-      }
-    }
-    this.extraDecls = this.extraDecls.filter(decl => decl.file !== file)
-    this.extraRefs = this.extraRefs.filter(ref => ref.file !== file)
+    const changed = this.taskStore.removeFile(file)
     this.markDirty()
     return changed
   }
@@ -157,22 +157,14 @@ export class LayerInfo {
       return
     }
 
-    this.mergedDeclsCache = []
-    this.mergedRefsCache = []
-    for (const taskInfos of Object.values(this.tasks)) {
-      for (const taskInfo of taskInfos) {
-        this.mergedDeclsCache.push(...taskInfo.info.decls)
-        this.mergedRefsCache.push(...taskInfo.info.refs)
-      }
-    }
-    this.mergedDeclsCache.push(...this.extraDecls)
-    this.mergedRefsCache.push(...this.extraRefs)
+    this.mergedDeclsCache = this.taskStore.collectDecls()
+    this.mergedRefsCache = this.taskStore.collectRefs()
     this.dirty = false
   }
 
   getTaskListNotUnique(): TaskName[] {
     const tasks = this.parent?.getTaskList() ?? []
-    return tasks.concat(Object.keys(this.tasks).filter(task => !task.startsWith('$')) as TaskName[])
+    return tasks.concat(this.taskStore.list())
   }
 
   getTaskList(): TaskName[] {

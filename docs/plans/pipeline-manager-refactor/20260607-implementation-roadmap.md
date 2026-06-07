@@ -44,13 +44,14 @@ MAA 结构分离
 
 ### 1.4 Diagnostic 迁移
 
-- [ ] 移入 `diagnostic/` — `checkTask()` 和 `checkInterface()` 改为接受纯数据参数（`ProjectState` 或 `decls[] + refs[]`）而非 `InterfaceBundle`
+- [x] `checkTask()` 改为接受 `TaskDiagContext`（`{ allLayers, maa, langBundle }`）替代 `InterfaceBundle`
+- [ ] `checkInterface()` 改为接受纯数据参数
 - [ ] `buildDiagnosticMessage()` 暂留原位，标记为待迁移（Phase 4）
 
 ### 1.5 Layer 拆分
 
-- [ ] 创建 `model/task-store.ts` — `TaskStore` 类（tasks 增删查）
-- [ ] 创建 `model/image-store.ts` — `ImageStore` 类（images 集合管理）
+- [x] 创建 `model/task-store.ts` — `TaskStore` 类（tasks 增删查、`removeFile`、`collectDecls`/`collectRefs`），`LayerInfo` 通过 getter/setter 委托到 `TaskStore`
+- [x] images 保留为 `Set<ImageRelativePath>` 直接操作（无封装价值）
 - [ ] 创建 `model/layer.ts` — `Layer` 类（单层容器，不依赖 `IContentLoader`）
 - [ ] 创建 `model/layer-tree.ts` — `LayerTree` 类（多层遍历 + 缓存）
 - [ ] 提取 `eval/eval-task.ts` — `evalTask()` 从 `LayerInfo` 分离
@@ -66,15 +67,18 @@ MAA 结构分离
 
 ### 1.7 兼容层
 
-- [ ] 旧 `LayerInfo` 通过 delegating wrapper 保持可用
-- [ ] 旧 parser 入口保持可用（re-export）
-- [ ] 现有 consumers（extension、maa-tools）不做任何改动
+- [x] `LayerInfo` 通过 getter/setter 委托到 `TaskStore`，外部 API 不变
+- [x] `helper.ts` 通过 re-export 保持旧导入路径兼容
+- [x] `keys.ts` 通过 re-export 保持旧导入路径兼容
+- [x] `splitNode(node, maa)` 保留为兼容入口
+- [x] 现有 consumers（extension、maa-tools）不做任何改动
 
 ### Phase 1 验证
 
-- [ ] 所有 `core/` 模块的单测通过
+- [x] `core/` 模块 9 个单测通过（4 parser + 5 TaskStore）
 - [ ] 现有 consumers 行为不变（extension LSP 功能、maa-tools checker 输出）
-- [ ] TypeScript 编译零错误
+- [x] TypeScript 编译零错误（pipeline-manager + extension）
+- [x] ESLint 零错误（全项目）
 
 ---
 

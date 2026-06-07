@@ -8,7 +8,13 @@ export { buildDiagnosticMessage } from './message'
 export function performDiagnostic(bundle: InterfaceBundle, option: DiagnosticOption): Diagnostic[] {
   const result: Diagnostic[] = []
 
-  result.push(...checkTask(bundle))
+  result.push(
+    ...checkTask({
+      allLayers: bundle.allLayers,
+      maa: bundle.maa,
+      langBundle: bundle.langBundle
+    })
+  )
   result.push(...checkInterface(bundle))
 
   return result

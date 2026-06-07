@@ -1,4 +1,4 @@
-import type { InterfaceBundle } from '../interface/interface'
+import type { LayerInfo } from '../layer/layer'
 import type { TaskRefInfo } from '../parser/task/task'
 import { extractTaskRef, isAnchorRef } from '../utils/helper'
 import {
@@ -9,10 +9,19 @@ import {
 } from '../utils/types'
 import type { Diagnostic } from './types'
 
-export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
+export interface TaskDiagContext {
+  allLayers: LayerInfo[]
+  maa: boolean
+  langBundle: {
+    queryKey(key: string): ({ key: string; value: string } | null)[]
+    langs: { name: string }[]
+  }
+}
+
+export function checkTask(ctx: TaskDiagContext): Diagnostic[] {
   const result: Diagnostic[] = []
 
-  for (const layer of bundle.allLayers) {
+  for (const layer of ctx.allLayers) {
     for (const [name, taskInfos] of Object.entries(layer.tasks)) {
       if (taskInfos.length > 0 && layer.type !== 'interface') {
         for (const taskInfo of taskInfos.slice(1)) {
@@ -33,7 +42,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
         }
       }
 
-      if (!bundle.maa) {
+      if (!ctx.maa) {
         for (const taskInfo of taskInfos) {
           const existsNext = new Set<TaskName>()
           const refs = taskInfo.info.refs.filter(
@@ -123,7 +132,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
       } else if (ref.type === 'task.template' || ref.type === 'task.custom_template') {
         let imagePath = ref.target
         let isFolder = false
-        if (!bundle.maa && !imagePath.endsWith('.png')) {
+        if (!ctx.maa && !imagePath.endsWith('.png')) {
           const norm = normalizeImageFolder(imagePath)
           if (imageFolders.has(norm)) {
             isFolder = true
@@ -158,7 +167,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
           })
           imagePath = imagePath.replace('./', '') as ImageRelativePath
         }
-        if (bundle.maa && !imagePath.endsWith('.png')) {
+        if (ctx.maa && !imagePath.endsWith('.png')) {
           result.push({
             level: 'warning',
             file: ref.file,
@@ -173,7 +182,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
         }
         if (!images.has(imagePath)) {
           let found = false
-          if (bundle.maa) {
+          if (ctx.maa) {
             const suffix = '/' + imagePath
             for (const image of images) {
               if (image.endsWith(suffix)) {
@@ -219,7 +228,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
           })
         }
       } else if (ref.type === 'task.locale') {
-        const infos = bundle.langBundle.queryKey(ref.target)
+        const infos = ctx.langBundle.queryKey(ref.target)
         if (!infos.find(info => !!info)) {
           result.push({
             level: 'error',
@@ -233,7 +242,7 @@ export function checkTask(bundle: InterfaceBundle): Diagnostic[] {
           const missingLangs: string[] = []
           for (const [idx, info] of infos.entries()) {
             if (!info) {
-              missingLangs.push(bundle.langBundle.langs[idx].name)
+              missingLangs.push(ctx.langBundle.langs[idx].name)
             }
           }
           if (missingLangs.length > 0) {

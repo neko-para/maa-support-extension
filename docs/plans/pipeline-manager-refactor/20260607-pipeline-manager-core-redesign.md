@@ -79,7 +79,6 @@ Parser、Diagnostic、Layer（数据模型部分）、Logic 不得依赖 `node:*
 ```
 model/
 ├── task-store.ts      # TaskStore: tasks 增删查，不含求值
-├── image-store.ts     # ImageStore: images 集合管理
 ├── layer.ts           # Layer: 单层数据容器 (store + parent)
 ├── layer-tree.ts      # LayerTree: 多层遍历 (mergedDecls, getTask)
 ├── decl-ref.ts        # DeclInfo / RefInfo 类型 (从 parser 移入)
@@ -104,7 +103,7 @@ class TaskStore {
 class Layer {
   root: AbsolutePath
   tasks: TaskStore
-  images: ImageStore
+  images: Set<ImageRelativePath>
   parent?: Layer
 }
 ```
@@ -202,20 +201,20 @@ async function loadAndParse(
 
 ## LayerInfo 拆分对照
 
-| 当前 LayerInfo                                         | 重构后归属                  |
-| ------------------------------------------------------ | --------------------------- |
-| `tasks` 存储 + 增删                                    | `model/TaskStore`           |
-| `images` 集合                                          | `model/ImageStore`          |
-| `parent` 链                                            | `model/Layer`               |
-| `mergedDecls` / `mergedRefs` (缓存)                    | `model/LayerTree`           |
-| `getTaskList()` / `getAnchorList()` / `getImageList()` | `model/LayerTree`           |
-| `getTask()` (含 MAA trace)                             | `model/LayerTree`           |
-| `evalTask()`                                           | `eval/eval-task.ts`         |
-| `getTaskBriefInfo()`                                   | `query/task-info.ts`        |
-| `getTaskDoc()`                                         | `query/task-info.ts`        |
-| `toggleMode()`                                         | 独立 `format/` 或保留在原位 |
-| `maaFindTaskDecl()`                                    | `model/LayerTree`           |
-| `getImage()` / `getImageFolders()`                     | `query/image-info.ts`       |
+| 当前 LayerInfo                                         | 重构后归属                                              |
+| ------------------------------------------------------ | ------------------------------------------------------- |
+| `tasks` 存储 + 增删                                    | `model/TaskStore`                                       |
+| `images` 集合                                          | 保留为 `Set<ImageRelativePath>`（直接操作，无封装价值） |
+| `parent` 链                                            | `model/Layer`                                           |
+| `mergedDecls` / `mergedRefs` (缓存)                    | `model/LayerTree`                                       |
+| `getTaskList()` / `getAnchorList()` / `getImageList()` | `model/LayerTree`                                       |
+| `getTask()` (含 MAA trace)                             | `model/LayerTree`                                       |
+| `evalTask()`                                           | `eval/eval-task.ts`                                     |
+| `getTaskBriefInfo()`                                   | `query/task-info.ts`                                    |
+| `getTaskDoc()`                                         | `query/task-info.ts`                                    |
+| `toggleMode()`                                         | 独立 `format/` 或保留在原位                             |
+| `maaFindTaskDecl()`                                    | `model/LayerTree`                                       |
+| `getImage()` / `getImageFolders()`                     | `query/image-info.ts`                                   |
 
 ## InterfaceBundle 拆分
 
@@ -359,7 +358,7 @@ class LayerTree implements LayerQuery {
 1. 创建 `core/` 目录结构
 2. 将 `parser/`、`utils/helper.ts`、`utils/types.ts` 移入 core（解耦 `path` 依赖）
 3. 将 `diagnostic/` 移入 core
-4. 拆分 `LayerInfo` → `TaskStore` + `ImageStore` + `Layer` + `LayerTree`
+4. 拆分 `LayerInfo` → `TaskStore` + `Layer` + `LayerTree`（images 保留为 `Set`）
 5. 提取 `evalTask` 为独立函数
 6. 从 `base.ts` 提取 `makeDecls`/`makeRefs`/`extractTaskRef` 到 `core/matching/`
 7. 旧模块保持兼容（通过 re-export 或 delegating wrapper）
@@ -391,11 +390,11 @@ class LayerTree implements LayerQuery {
 
 ### 需要拆分的模块
 
-| 当前文件                 | 行数 | 问题                                                                       | 拆分方向                                                                                                                       |
-| ------------------------ | ---- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `interface/interface.ts` | 417  | God Object：事件编排 + 数据容器 + 配置管理 + 查询                          | → `orchestration/interface-bundle.ts`（编排）+ `core/model/project-state.ts`（数据）+ `core/config/`（配置）                   |
-| `layer/layer.ts`         | 397  | 数据模型 + 求值 + 格式转换混在一起                                         | → `core/model/task-store.ts` + `core/model/image-store.ts` + `core/model/layer.ts` + `core/model/layer-tree.ts` + `core/eval/` |
-| `parser/task/task.ts`    | 351  | `parseTask()` 入口 + `buildTaskRef()` + `processCustom()` 各属于不同关注点 | → `parser/task/parse.ts`（入口）+ `parser/task/maa-ref.ts`（`buildTaskRef`）+ `parser/task/custom.ts`（自定义解析器）          |
+| 当前文件                 | 行数 | 问题                                                                       | 拆分方向                                                                                                              |
+| ------------------------ | ---- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `interface/interface.ts` | 417  | God Object：事件编排 + 数据容器 + 配置管理 + 查询                          | → `orchestration/interface-bundle.ts`（编排）+ `core/model/project-state.ts`（数据）+ `core/config/`（配置）          |
+| `layer/layer.ts`         | 397  | 数据模型 + 求值 + 格式转换混在一起                                         | → `core/model/task-store.ts` + `core/model/layer.ts` + `core/model/layer-tree.ts` + `core/eval/`                      |
+| `parser/task/task.ts`    | 351  | `parseTask()` 入口 + `buildTaskRef()` + `processCustom()` 各属于不同关注点 | → `parser/task/parse.ts`（入口）+ `parser/task/maa-ref.ts`（`buildTaskRef`）+ `parser/task/custom.ts`（自定义解析器） |
 
 ### 可拆但不急的模块
 

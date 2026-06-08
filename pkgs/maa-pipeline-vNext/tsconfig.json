@@ -1,0 +1,10 @@
+{
+  "extends": ["@tsconfig/node24/tsconfig.json"],
+  "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

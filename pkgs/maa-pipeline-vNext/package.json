@@ -1,0 +1,39 @@
+{
+  "name": "@nekosu/maa-pipeline-manager-vnext",
+  "version": "2.0.0-alpha.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    },
+    "./logic": {
+      "import": "./dist/logic/index.mjs",
+      "types": "./dist/logic/index.d.mts"
+    }
+  },
+  "repository": {
+    "type": "github",
+    "url": "git+https://github.com/neko-para/maa-support-extension.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -p . --noEmit"
+  },
+  "dependencies": {
+    "@nekosu/maa-locale": "workspace:*",
+    "@nekosu/maa-tasker": "workspace:*",
+    "jsonc-parser": "^3.3.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^25.3.5",
+    "chokidar": "^5.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

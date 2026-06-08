@@ -1,4 +1,4 @@
-import { parseTree, type Node } from 'jsonc-parser'
+import { type Node, parseTree } from 'jsonc-parser'
 
 import { parseArray, parseObject } from './parse'
 
@@ -25,9 +25,7 @@ export function buildTree(node: Node): unknown {
     case 'boolean':
       return node.value ?? null
     case 'object':
-      return Object.fromEntries(
-        [...parseObject(node)].map(([key, obj]) => [key, buildTree(obj)])
-      )
+      return Object.fromEntries([...parseObject(node)].map(([key, obj]) => [key, buildTree(obj)]))
     case 'array':
       return [...parseArray(node)].map(buildTree)
     case 'property':

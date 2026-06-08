@@ -1,0 +1,20 @@
+{
+  "T001Start": {
+    "pre_delay": 0,
+    "post_delay": 0,
+    "next": ["[JumpBack]T001SubA", "T001End"]
+  },
+  "T001SubA": {
+    "desc": "sub task with JumpBack",
+    "recognition": "TemplateMatch",
+    "roi": [100, 200, 300, 400],
+    "template": "ui/button.png",
+    "action": "Click",
+    "post_wait_freezes": 300
+  },
+  "T001End": {
+    "recognition": "OCR",
+    "expected": ["Complete", "Done"],
+    "next": []
+  }
+}

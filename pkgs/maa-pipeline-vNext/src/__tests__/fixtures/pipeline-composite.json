@@ -1,0 +1,41 @@
+{
+  "T004And": {
+    "recognition": "And",
+    "all_of": [
+      {
+        "sub_name": "icon",
+        "recognition": "TemplateMatch",
+        "template": "ui/icon_a.png",
+        "threshold": 0.7
+      },
+      {
+        "recognition": "OCR",
+        "roi": "icon",
+        "roi_offset": [0, 0, 100, 100],
+        "expected": "OK"
+      }
+    ],
+    "box_index": 0,
+    "action": "Click"
+  },
+  "T004Or": {
+    "recognition": "Or",
+    "any_of": [
+      "T004RefA",
+      {
+        "recognition": "OCR",
+        "expected": ["Yes", "No"]
+      }
+    ]
+  },
+  "T004RefA": {
+    "recognition": "TemplateMatch",
+    "template": "ui/ref_a.png"
+  },
+  "T004Color": {
+    "recognition": "ColorMatch",
+    "method": 40,
+    "lower": [0, 0, 200],
+    "upper": [30, 30, 255]
+  }
+}

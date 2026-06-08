@@ -1,0 +1,27 @@
+{
+  "T003Entry": {
+    "next": ["T003SetAnchor", "[Anchor]T003AnchorA"]
+  },
+  "T003SetAnchor": {
+    "anchor": "T003AnchorA",
+    "recognition": "TemplateMatch",
+    "template": "ui/icon.png",
+    "action": "Click",
+    "next": ["T003Entry"]
+  },
+  "T003MultiAnchor": {
+    "anchor": ["T003AnchorB", "T003AnchorC"],
+    "recognition": "OCR",
+    "expected": "OK"
+  },
+  "T003ObjAnchor": {
+    "anchor": {
+      "T003AnchorX": "T003Target",
+      "T003AnchorY": ""
+    },
+    "next": ["T003Target"]
+  },
+  "T003Target": {
+    "recognition": "DirectHit"
+  }
+}

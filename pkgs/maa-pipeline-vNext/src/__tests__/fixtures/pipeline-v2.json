@@ -1,0 +1,26 @@
+{
+  "T002Main": {
+    "recognition": {
+      "type": "TemplateMatch",
+      "param": {
+        "template": "ui/main.png",
+        "roi": [0, 0, 720, 1280],
+        "threshold": 0.8
+      }
+    },
+    "action": {
+      "type": "Click",
+      "param": {
+        "target": "T002Target"
+      }
+    },
+    "next": ["T002Target"]
+  },
+  "T002Target": {
+    "recognition": "DirectHit",
+    "action": "Swipe",
+    "begin": [100, 200, 300, 400],
+    "end": [100, 500, 300, 400],
+    "duration": 500
+  }
+}

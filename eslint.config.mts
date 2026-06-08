@@ -10,7 +10,7 @@ export default defineConfig([
   },
   {
     files: [
-      'pkgs/{extension,locale,maa-checker,maa-server,maa-server-proto,maa-tasker,maa-version-manager,pipeline-manager,simple-parser,utils}/**/*.{js,mjs,cjs,ts,mts,cts}'
+      'pkgs/{extension,maa-locale,maa-pipeline-manager,maa-pipeline-vNext,maa-server,maa-server-proto,maa-tasker,maa-tools,maa-version-manager,prettier-plugin-maafw-sort,simple-parser,types,utils}/**/*.{js,mjs,cjs,ts,mts,cts}'
     ],
     plugins: { js },
     extends: ['js/recommended'],

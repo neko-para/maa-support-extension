@@ -1,7 +1,7 @@
 import { type Node, parseTree } from 'jsonc-parser'
 
 import type { ImageRelativePath } from '../types'
-import { type StringNode, isString, parseArray, parseObject as parseObj } from '../utils/parse'
+import { type StringNode, eachOrOne, isString, parseObject as parseObj } from '../utils/parse'
 import { actKeys, maaActKeys, maaNodeKeys, maaRecoKeys, nodeKeys, recoKeys } from './keys'
 import type { TaskParts, TaskRefInfo } from './types'
 
@@ -114,16 +114,6 @@ export function parseTreeWithoutParent(content: string): Node | undefined {
     shrink(node)
   }
   return node
-}
-
-export function eachOrOne(node: Node, fn: (n: Node) => void) {
-  if (node.type === 'array') {
-    for (const obj of parseArray(node)) {
-      fn(obj)
-    }
-  } else {
-    fn(node)
-  }
 }
 
 export function parseTemplate(node: Node, refs: TaskRefInfo[]) {

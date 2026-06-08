@@ -1,0 +1,42 @@
+{
+  "name": "ImportFile",
+  "version": "1.0.0",
+  "controller": [
+    { "name": "ShouldBeIgnored", "type": "Adb" }
+  ],
+  "resource": [
+    { "name": "ShouldBeIgnored", "path": "ignored" }
+  ],
+  "task": [
+    {
+      "name": "ImportedTask",
+      "entry": "T099Import",
+      "label": "导入的任务",
+      "group": ["extra_tasks"]
+    }
+  ],
+  "option": {
+    "imported_option": {
+      "type": "checkbox",
+      "label": "导入的选项",
+      "cases": [
+        {
+          "name": "enabled",
+          "label": "启用"
+        }
+      ]
+    }
+  },
+  "preset": [
+    {
+      "name": "imported_preset",
+      "label": "导入的预设",
+      "task": [
+        {
+          "name": "ImportedTask",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}

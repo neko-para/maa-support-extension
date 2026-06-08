@@ -1,3 +1,4 @@
+import * as nodePath from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import type { IPathUtils } from '../path/interface'
@@ -10,11 +11,11 @@ describe('IPathUtils — NodePathUtils', () => {
   const p: IPathUtils = nodePathUtils
 
   it('join', () => {
-    expect(p.join('/a', 'b', 'c')).toBe('/a/b/c')
+    expect(p.join('/a', 'b', 'c')).toBe(nodePath.join('/a', 'b', 'c'))
   })
 
   it('relative', () => {
-    expect(p.relative('/a/b/c', '/a/b/d')).toBe('../d')
+    expect(p.relative('/a/b/c', '/a/b/d')).toBe(nodePath.relative('/a/b/c', '/a/b/d'))
   })
 
   it('basename', () => {

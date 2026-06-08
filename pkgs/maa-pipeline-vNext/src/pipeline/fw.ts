@@ -3,6 +3,7 @@ import type { Node } from 'jsonc-parser'
 import type { AnchorName, ImageRelativePath, TaskName } from '../types'
 import {
   type StringNode,
+  eachOrOne,
   isBool,
   isNumber,
   isString,
@@ -12,7 +13,7 @@ import {
 } from '../utils/parse'
 import { parseAttr } from './attr'
 import { parseMaaTaskNode } from './maa'
-import { eachOrOne, parseTemplate, parseTreeWithoutParent, splitNode } from './parser'
+import { parseTemplate, parseTreeWithoutParent, splitNode } from './parser'
 import type {
   ParserConfig,
   PropSelectorResult,

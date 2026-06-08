@@ -1,0 +1,254 @@
+{
+  "name": "TestProject",
+  "version": "1.0.0",
+  "github": "https://github.com/test/project",
+  "contact": "test@example.com",
+  "license": "MIT",
+  "welcome": "Welcome to Test Project",
+
+  "languages": {
+    "zh": "locale/zh.json",
+    "en": "locale/en.json"
+  },
+
+  "agent": {
+    "child_exec": "test_agent.exe"
+  },
+
+  "controller": [
+    {
+      "name": "Win32Controller",
+      "type": "Win32",
+      "label": "Windows 窗口",
+      "win32": {
+        "class_regex": ".*",
+        "window_regex": "TestWindow",
+        "screencap": "PrintWindow",
+        "mouse": "Seize",
+        "keyboard": "Seize"
+      },
+      "option": ["resolution"]
+    },
+    {
+      "name": "AdbController",
+      "type": "Adb",
+      "label": "Android ADB",
+      "display_short_side": 720,
+      "attach_resource_path": ["resource/base"],
+      "option": ["adb_resolution"]
+    },
+    {
+      "name": "PlayCoverController",
+      "type": "PlayCover",
+      "playcover": {
+        "uuid": "test-uuid"
+      }
+    },
+    {
+      "name": "GamepadController",
+      "type": "Gamepad",
+      "gamepad": {
+        "class_regex": ".*",
+        "window_regex": "GameWindow",
+        "screencap": "PrintWindow",
+        "gamepad_type": "Xbox"
+      }
+    }
+  ],
+
+  "resource": [
+    {
+      "name": "official",
+      "path": ["resource/base", "resource/official"],
+      "controller": ["AdbController"],
+      "option": ["resolution", "language"]
+    },
+    {
+      "name": "custom",
+      "path": "resource/custom",
+      "controller": ["Win32Controller", "AdbController"]
+    }
+  ],
+
+  "group": [
+    {
+      "name": "core_tasks",
+      "label": "核心任务",
+      "icon": "star.png"
+    },
+    {
+      "name": "extra_tasks",
+      "label": "额外任务"
+    }
+  ],
+
+  "task": [
+    {
+      "name": "StartUp",
+      "entry": "T001Start",
+      "resource": ["official"],
+      "controller": ["AdbController"],
+      "group": ["core_tasks"],
+      "label": "启动",
+      "icon": "start.png"
+    },
+    {
+      "name": "Fight",
+      "entry": "T002Main",
+      "resource": ["official", "custom"],
+      "controller": ["AdbController", "Win32Controller"],
+      "group": ["core_tasks"],
+      "label": "战斗",
+      "option": ["difficulty"],
+      "pipeline_override": {
+        "T002Main": {
+          "next": ["T002Target"]
+        }
+      }
+    },
+    {
+      "name": "Farm",
+      "entry": "T003Entry",
+      "resource": ["official"],
+      "group": ["extra_tasks"],
+      "label": "刷图",
+      "default_check": true
+    }
+  ],
+
+  "option": {
+    "resolution": {
+      "type": "select",
+      "label": "分辨率",
+      "cases": [
+        {
+          "name": "720p",
+          "label": "720P",
+          "pipeline_override": {
+            "T001Start": {
+              "roi": [0, 0, 720, 1280]
+            }
+          }
+        },
+        {
+          "name": "1080p",
+          "label": "1080P",
+          "pipeline_override": {
+            "T001Start": {
+              "roi": [0, 0, 1080, 1920]
+            }
+          }
+        }
+      ],
+      "default_case": "1080p"
+    },
+    "language": {
+      "type": "select",
+      "label": "语言",
+      "cases": [
+        {
+          "name": "zh",
+          "label": "中文"
+        },
+        {
+          "name": "en",
+          "label": "English"
+        }
+      ],
+      "default_case": "zh"
+    },
+    "difficulty": {
+      "type": "switch",
+      "label": "困难模式",
+      "controller": ["AdbController"],
+      "cases": [
+        {
+          "name": "hard",
+          "label": "困难",
+          "pipeline_override": {
+            "T002Main": {
+              "timeout": 60000
+            }
+          }
+        }
+      ]
+    },
+    "debug_mode": {
+      "type": "checkbox",
+      "label": "调试选项",
+      "cases": [
+        {
+          "name": "verbose",
+          "label": "详细日志",
+          "pipeline_override": {
+            "$__mpe_custom": true
+          }
+        },
+        {
+          "name": "screenshot",
+          "label": "截图保存"
+        }
+      ],
+      "default_case": ["verbose"]
+    },
+    "custom_input": {
+      "type": "input",
+      "label": "自定义参数",
+      "inputs": [
+        {
+          "name": "threshold",
+          "default": "0.8",
+          "pipeline_type": "string"
+        },
+        {
+          "name": "count",
+          "default": "3",
+          "pipeline_type": "int"
+        }
+      ],
+      "pipeline_override": {
+        "T001Start": {
+          "threshold": "{threshold}",
+          "count": "{count}"
+        }
+      }
+    }
+  },
+
+  "global_option": ["resolution", "language"],
+
+  "preset": [
+    {
+      "name": "default",
+      "label": "默认预设",
+      "task": [
+        {
+          "name": "StartUp",
+          "enabled": true,
+          "option": {
+            "resolution": "1080p",
+            "language": "zh"
+          }
+        },
+        {
+          "name": "Fight",
+          "option": {
+            "difficulty": "hard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "farm_mode",
+      "label": "刷图模式",
+      "task": [
+        {
+          "name": "Farm",
+          "enabled": true
+        }
+      ]
+    }
+  ],
+
+  "import": ["import/extra_tasks.json"]
+}

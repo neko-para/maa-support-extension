@@ -88,3 +88,14 @@ export function* parseArray(node: Node | undefined | null) {
     yield obj
   }
 }
+
+/** 归一化 "单值或数组"：对每个元素调用 fn，无论 node 是单值还是数组。 */
+export function eachOrOne(node: Node, fn: (n: Node) => void) {
+  if (node.type === 'array') {
+    for (const obj of parseArray(node)) {
+      fn(obj)
+    }
+  } else {
+    fn(node)
+  }
+}

@@ -444,9 +444,17 @@ interface IPathUtils {
 | 任务 | 说明 |
 |------|------|
 | 定义 Interface 类型（`Controller`, `Resource`, `Task`, `Option` 等） | 基于 ProjectInterface V2 协议 |
-| `parseInterface(json) → ParsedInterface` | 解析 interface.json |
-| `mergeInterfaces(base, ...imports) → ParsedInterface` | Import 合并逻辑 |
-| 编写单元测试 | 覆盖 v2 各字段、import 合并、preset 等 |
+| 定义 `InterfaceDeclInfo` / `InterfaceRefInfo` 类型 | 声明和引用的 tagged union，含 AST 位置 |
+| `parseInterface(node) → InterfaceParseResult` | 解析 AST → `{ data, decls, refs }` |
+| `mergeInterfaces(base, ...imports) → InterfaceParseResult` | Import 合并 data + decls + refs（仅 task/option/preset） |
+| 编写单元测试 | 覆盖 v2 各字段、decl/ref 提取、import 合并、preset 等 |
+
+**设计决策**：
+
+- `data` 中 `controller`/`resource`/`task`/`preset`/`group` 使用 `Record<string, T>` 而非 `T[]`——consumer 全部按 name 做单点查找，O(1) 替代 O(n) `.find()`
+- Record 插入序 = JSON 数组序 = UI 展示序，经 `JSON.stringify` → IPC → `JSON.parse` 后保留（ES2015+ 规范保证）
+- `parseInterface` 接收 jsonc-parser `Node`（非 raw string），与 `parseTaskNode` 对等
+- decl/ref 不含 `file` 字段——由调用方（Snapshot / Phase 4）添加
 
 ### Phase 4：数据模型（Snapshot 三层视图）
 

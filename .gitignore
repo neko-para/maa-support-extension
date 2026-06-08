@@ -13,3 +13,6 @@ azure.token
 dist
 
 QUESTION.md
+
+.claude
+.vscode/settings.json

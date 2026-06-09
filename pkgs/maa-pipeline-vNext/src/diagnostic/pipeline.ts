@@ -1,13 +1,6 @@
 import { Snapshot } from '../snapshot/snapshot'
 import type { Diagnostic } from './types'
-import { imageRefTarget, taskRefTarget } from './utils'
-
-function pos(
-  loc: { offset: number; length: number },
-  file: string
-): { offset: number; length: number; file: string } {
-  return { file, offset: loc.offset, length: loc.length }
-}
+import { adjustForAttrPrefix, diagPos, imageRefTarget, taskRefTarget } from './utils'
 
 export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0]): Diagnostic[] {
   const result: Diagnostic[] = []
@@ -39,10 +32,10 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
       for (const dup of rest) {
         result.push({
           level: 'error',
-          ...pos(dup.location, ''),
+          ...diagPos(dup.location, dup.file),
           type: 'conflict-task',
           task: dup.task,
-          previous: pos(first.location, '')
+          previous: diagPos(first.location, first.file)
         })
       }
     }
@@ -53,7 +46,7 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
     if (d.type === 'task.mpe_config') {
       result.push({
         level: 'warning',
-        ...pos(d.location, ''),
+        ...diagPos(d.location, d.file),
         type: 'mpe-config'
       })
     }
@@ -61,8 +54,8 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
 
   // Walk refs
   for (const ref of refs) {
-    const file = ''
-    const loc = pos(ref.location, file)
+    const file = ref.file
+    const loc = diagPos(ref.location, file)
 
     // duplicate-next
     const taskRef = taskRefTarget(ref)
@@ -70,11 +63,7 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
       if (!taskList.has(taskRef) && taskRef !== '') {
         let detailLoc = loc
         if (ref.type === 'task.next' && ref.attrs.offset > 0) {
-          detailLoc = {
-            ...loc,
-            offset: loc.offset + ref.attrs.offset + 1,
-            length: loc.length - ref.attrs.offset - 2
-          }
+          detailLoc = { ...loc, ...adjustForAttrPrefix(loc, ref.attrs) }
         }
         result.push({
           level:
@@ -155,8 +144,7 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
             level: policy,
             ...{
               ...loc,
-              offset: loc.offset + ref.attrs.offset + 1,
-              length: loc.length - ref.attrs.offset - 2
+              ...adjustForAttrPrefix(loc, ref.attrs)
             },
             type: 'unknown-anchor',
             anchor: anchorRef

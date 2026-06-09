@@ -2,7 +2,7 @@ import type { Node } from 'jsonc-parser'
 
 import type { MaaTaskExpr } from '@nekosu/maa-tasker'
 
-import type { AnchorName, ImageRelativePath, TaskName } from '../types'
+import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../types'
 import type { StringNode } from '../utils/parse'
 import type { TaskAttrInfo } from './attr'
 
@@ -27,7 +27,7 @@ export type TaskDeclVariant =
   | { type: 'task.mpe_config'; location: Node }
 
 export type TaskDeclInfo = TaskDeclVariant
-export type TaskDeclInFile = TaskDeclInfo & { file: string }
+export type TaskDeclInFile = TaskDeclInfo & { file: AbsolutePath }
 
 export type TaskMaaTaskRef = {
   task: TaskName
@@ -182,7 +182,7 @@ export type TaskMaaExprRefInfo = {
 type MaaTaskRefVariant = TaskMaaBaseTaskRefInfo | TaskMaaExprRefInfo
 
 export type TaskRefInfo = MaaFwTaskRefVariant | MaaTaskRefVariant
-export type TaskRefInFile = TaskRefInfo & { file: string }
+export type TaskRefInFile = TaskRefInfo & { file: AbsolutePath }
 
 // ── Parsed Task ──
 
@@ -190,6 +190,15 @@ export type TaskInfo = {
   parts: TaskParts
   decls: TaskDeclInfo[]
   refs: TaskRefInfo[]
+}
+
+/** Parser 原始输出的 TaskInfo，不含 file。仅用于 parsePipelineFile 返回值。 */
+export type RawTaskInfo = TaskInfo
+
+/** FileView 存储的任务信息——所有 decl/ref 已标注所属文件 */
+export type TaskInfoInFile = Omit<TaskInfo, 'decls' | 'refs'> & {
+  decls: TaskDeclInFile[]
+  refs: TaskRefInFile[]
 }
 
 // ── Parser Config ──

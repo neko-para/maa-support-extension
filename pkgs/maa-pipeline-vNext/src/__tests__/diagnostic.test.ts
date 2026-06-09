@@ -2,18 +2,44 @@ import { describe, expect, it } from 'vitest'
 
 import { checkInterface, checkPipeline, performDiagnostic } from '../diagnostic'
 import { parseInterface } from '../interface/parser'
+import type { InterfaceDeclInFile, InterfaceParseResult, InterfaceRefInFile } from '../interface/types'
 import { parsePipelineFile } from '../pipeline/fw'
+import type { TaskDeclInFile, TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
+import type { AbsolutePath, TaskName } from '../types'
+
+function annotateInterface(raw: ReturnType<typeof parseInterface>, file: AbsolutePath): InterfaceParseResult {
+  return {
+    data: raw!.data,
+    decls: raw!.decls.map(d => ({ ...d, file }) as InterfaceDeclInFile),
+    refs: raw!.refs.map(r => ({ ...r, file }) as InterfaceRefInFile)
+  }
+}
+
+function makeAnnotated(
+  path: AbsolutePath,
+  parsed: ReturnType<typeof parsePipelineFile>
+): { path: AbsolutePath; tasks: Map<TaskName, TaskInfoInFile>; fileDecls: TaskDeclInFile[] } {
+  const tasks = new Map<TaskName, TaskInfoInFile>()
+  for (const [name, info] of parsed.tasks) {
+    tasks.set(name, {
+      parts: info.parts,
+      decls: info.decls.map(d => ({ ...d, file: path })),
+      refs: info.refs.map(r => ({ ...r, file: path }))
+    })
+  }
+  return { path, tasks, fileDecls: parsed.fileDecls.map(d => ({ ...d, file: path })) }
+}
 
 describe('checkPipeline', () => {
   it('produces mpe-config warning', () => {
     const json = '{"$__mpe_meta": 1, "T": {"action": "Click"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -24,12 +50,12 @@ describe('checkPipeline', () => {
 
   it('detects unknown-task', () => {
     const json = '{"T1": {"next": ["T2", "T3"]}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -43,12 +69,12 @@ describe('checkPipeline', () => {
 
   it('does not flag self-references', () => {
     const json = '{"T1": {"action": "Click"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -59,12 +85,12 @@ describe('checkPipeline', () => {
 
   it('detects unknown-image', () => {
     const json = '{"T1": {"recognition": "TemplateMatch", "template": "missing.png"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -75,12 +101,12 @@ describe('checkPipeline', () => {
 
   it('accepts valid template', () => {
     const json = '{"T1": {"recognition": "TemplateMatch", "template": "img/icon.png"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set(['img/icon.png']) as Set<never>
         })
       ]
@@ -91,12 +117,12 @@ describe('checkPipeline', () => {
 
   it('detects image-path backslash', () => {
     const json = '{"T1": {"recognition": "TemplateMatch", "template": "img\\\\icon.png"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -107,12 +133,12 @@ describe('checkPipeline', () => {
 
   it('detects unknown-anchor', () => {
     const json = '{"T1": {"next": ["[Anchor]MissingAnchor"]}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -123,12 +149,12 @@ describe('checkPipeline', () => {
 
   it('detects unknown-attr', () => {
     const json = '{"T1": {"next": ["[Unknown]T2"]}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -140,23 +166,23 @@ describe('checkPipeline', () => {
 
 describe('checkInterface', () => {
   it('detects duplicate controllers', () => {
-    const iface = parseInterface('{"controller": [{"name": "C1"}, {"name": "C1"}]}')!
+    const iface = annotateInterface(parseInterface('{"controller": [{"name": "C1"}, {"name": "C1"}]}'), '/fake/interface.json' as AbsolutePath)
     const snap = createSnapshot({ bundles: [], interface: iface })
     const diags = checkInterface(snap)
     expect(diags.some(d => d.type === 'int-conflict-controller')).toBe(true)
   })
 
   it('detects unknown controller ref', () => {
-    const iface = parseInterface(
+    const iface = annotateInterface(parseInterface(
       '{"task": [{"name": "T1", "entry": "Start", "controller": ["UnknownCtrl"]}]}'
-    )!
+    ), '/fake/interface.json' as AbsolutePath)
     const snap = createSnapshot({ bundles: [], interface: iface })
     const diags = checkInterface(snap)
     expect(diags.some(d => d.type === 'int-unknown-controller')).toBe(true)
   })
 
   it('detects switch missing', () => {
-    const iface = parseInterface('{"option": {"sw": {"type": "switch"}}}')!
+    const iface = annotateInterface(parseInterface('{"option": {"sw": {"type": "switch"}}}'), '/fake/interface.json' as AbsolutePath)
     const snap = createSnapshot({ bundles: [], interface: iface })
     const diags = checkInterface(snap)
     expect(diags.some(d => d.type === 'int-switch-missing')).toBe(true)
@@ -166,12 +192,12 @@ describe('checkInterface', () => {
 describe('performDiagnostic', () => {
   it('filters by ignoreTypes', () => {
     const json = '{"$__mpe_meta": 1, "T1": {"action": "Click"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]
@@ -184,12 +210,12 @@ describe('performDiagnostic', () => {
 
   it('upgrades level via errorTypes', () => {
     const json = '{"$__mpe_meta": 1, "T1": {"action": "Click"}}'
-    const { tasks, fileDecls } = parsePipelineFile(json, { maa: false })
+    const fv = makeAnnotated('/fake/f.json' as AbsolutePath, parsePipelineFile(json, { maa: false }))
     const snap = createSnapshot({
       bundles: [
         createBundleView({
-          root: '/fake',
-          files: new Map([['f.json', { path: '/fake/f.json', tasks, fileDecls }]]),
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json', fv]]),
           images: new Set()
         })
       ]

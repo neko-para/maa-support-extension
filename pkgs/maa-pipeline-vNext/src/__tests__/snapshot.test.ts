@@ -3,8 +3,9 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { parsePipelineFile } from '../pipeline/fw'
+import type { TaskInfoInFile } from '../pipeline/types'
 import { BundleView, FileView, Snapshot, createBundleView, createSnapshot } from '../snapshot'
-import type { ImageRelativePath, TaskName } from '../types'
+import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
 
 function loadPipeline(name: string) {
   const path = join(__dirname, 'fixtures', name)
@@ -13,8 +14,17 @@ function loadPipeline(name: string) {
 }
 
 function makeFileView(fixtureName: string) {
-  const { tasks, fileDecls } = loadPipeline(fixtureName)
-  return { path: '/fake/' + fixtureName, tasks, fileDecls }
+  const filePath = ('/fake/' + fixtureName) as AbsolutePath
+  const { tasks: rawTasks, fileDecls: rawFileDecls } = loadPipeline(fixtureName)
+  const tasks = new Map<TaskName, TaskInfoInFile>()
+  for (const [name, info] of rawTasks) {
+    tasks.set(name, {
+      parts: info.parts,
+      decls: info.decls.map(d => ({ ...d, file: filePath })),
+      refs: info.refs.map(r => ({ ...r, file: filePath }))
+    })
+  }
+  return { path: filePath, tasks, fileDecls: rawFileDecls.map(d => ({ ...d, file: filePath })) }
 }
 
 describe('FileView', () => {
@@ -48,7 +58,7 @@ describe('FileView', () => {
 describe('BundleView', () => {
   it('aggregates multiple files', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map([
         ['a.json', makeFileView('pipeline-v1.json')],
         ['b.json', makeFileView('pipeline-v2.json')]
@@ -62,7 +72,7 @@ describe('BundleView', () => {
 
   it('findTask locates task in files', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map([['a.json', makeFileView('pipeline-v1.json')]]),
       images: new Set()
     })
@@ -73,7 +83,7 @@ describe('BundleView', () => {
 
   it('findTask returns null for missing', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map([['a.json', makeFileView('pipeline-v1.json')]]),
       images: new Set()
     })
@@ -82,7 +92,7 @@ describe('BundleView', () => {
 
   it('allDecls/allRefs merge across files', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map([
         ['a.json', makeFileView('pipeline-v1.json')],
         ['b.json', makeFileView('pipeline-v2.json')]
@@ -95,7 +105,7 @@ describe('BundleView', () => {
 
   it('getAnchorList', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map([['a.json', makeFileView('pipeline-anchor.json')]]),
       images: new Set()
     })
@@ -104,7 +114,7 @@ describe('BundleView', () => {
 
   it('getImageFolders groups by directory', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map(),
       images: new Set(['a/b/c.png', 'a/d.png'] as ImageRelativePath[])
     })
@@ -117,12 +127,12 @@ describe('BundleView', () => {
 describe('ResourceSnapshot', () => {
   function makeSnapshot() {
     const b1 = createBundleView({
-      root: '/fake/base',
+      root: '/fake/base' as AbsolutePath,
       files: new Map([['base.json', makeFileView('pipeline-v1.json')]]),
       images: new Set(['base/img.png'] as ImageRelativePath[])
     })
     const b2 = createBundleView({
-      root: '/fake/overlay',
+      root: '/fake/overlay' as AbsolutePath,
       files: new Map([['overlay.json', makeFileView('pipeline-v2.json')]]),
       images: new Set(['overlay/img.png'] as ImageRelativePath[])
     })
@@ -164,7 +174,7 @@ describe('ResourceSnapshot', () => {
   it('withBundle returns new immutable snapshot', () => {
     const snap = makeSnapshot()
     const newBundle = createBundleView({
-      root: '/fake/base',
+      root: '/fake/base' as AbsolutePath,
       files: new Map(),
       images: new Set()
     })
@@ -180,7 +190,7 @@ describe('ResourceSnapshot', () => {
 
   it('getAnchorList merges across bundles', () => {
     const bv = createBundleView({
-      root: '/fake',
+      root: '/fake' as AbsolutePath,
       files: new Map([['a.json', makeFileView('pipeline-anchor.json')]]),
       images: new Set()
     })
@@ -189,8 +199,8 @@ describe('ResourceSnapshot', () => {
   })
 
   it('getImageFolders merges across bundles', () => {
-    const b1 = createBundleView({ root: '/a', files: new Map(), images: new Set(['ui/btn.png'] as ImageRelativePath[]) })
-    const b2 = createBundleView({ root: '/b', files: new Map(), images: new Set(['ui/icon.png'] as ImageRelativePath[]) })
+    const b1 = createBundleView({ root: '/a' as AbsolutePath, files: new Map(), images: new Set(['ui/btn.png'] as ImageRelativePath[]) })
+    const b2 = createBundleView({ root: '/b' as AbsolutePath, files: new Map(), images: new Set(['ui/icon.png'] as ImageRelativePath[]) })
     const snap = createSnapshot({ bundles: [b1, b2] })
     expect(Snapshot.getImageFolders(snap).get('ui' as ImageRelativePath)?.length).toBe(2)
   })

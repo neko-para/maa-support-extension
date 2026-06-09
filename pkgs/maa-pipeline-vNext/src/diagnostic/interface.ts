@@ -1,10 +1,7 @@
 import { Snapshot } from '../snapshot/snapshot'
 import { isString } from '../utils/parse'
 import type { Diagnostic } from './types'
-
-function pos(loc: { offset: number; length: number }, file: string) {
-  return { file, offset: loc.offset, length: loc.length }
-}
+import { diagPos } from './utils'
 
 export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]): Diagnostic[] {
   const result: Diagnostic[] = []
@@ -13,14 +10,14 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
     return result
   }
 
+  const interfaceFile = snapshot.interfaceFile
   const decls = iface.decls
   const refs = iface.refs
 
-  // duplicate detection helpers
-  function findDuplicates<T extends { name: string; location: { offset: number; length: number } }>(
-    items: readonly T[],
-    typeName: string
-  ) {
+  // duplicate detection helpers — each item carries its own .file
+  function findDuplicates<
+    T extends { name: string; file: string; location: { offset: number; length: number } }
+  >(items: readonly T[], typeName: string) {
     const seen = new Map<string, T>()
     for (const item of items) {
       const prev = seen.get(item.name)
@@ -28,8 +25,8 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
         const diagBase = {
           type: typeName,
           level: 'error' as const,
-          ...pos(item.location, ''),
-          previous: pos(prev.location, '')
+          ...diagPos(item.location, item.file),
+          previous: diagPos(prev.location, prev.file)
         }
         if (typeName === 'int-conflict-controller') {
           result.push({ ...diagBase, ctrl: item.name } as Diagnostic)
@@ -83,7 +80,7 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
         if (!caseNames.has(cr.target)) {
           result.push({
             level: 'error',
-            ...pos(cr.location, ''),
+            ...diagPos(cr.location, cr.file),
             type: 'int-unknown-case',
             option: opt.name,
             case: cr.target
@@ -103,20 +100,20 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
             missingYes = false
             result.push({
               level: 'warning',
-              ...pos(c.location, ''),
+              ...diagPos(c.location, c.file),
               type: 'int-switch-should-fixed'
             })
           } else if (c.name.toLowerCase() === 'no') {
             missingNo = false
             result.push({
               level: 'warning',
-              ...pos(c.location, ''),
+              ...diagPos(c.location, c.file),
               type: 'int-switch-should-fixed'
             })
           } else {
             result.push({
               level: 'error',
-              ...pos(c.location, ''),
+              ...diagPos(c.location, c.file),
               type: 'int-switch-name-invalid'
             })
           }
@@ -124,7 +121,7 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
         if (missingYes || missingNo) {
           result.push({
             level: 'error',
-            ...pos(opt.location, ''),
+            ...diagPos(opt.location, opt.file),
             type: 'int-switch-missing',
             option: opt.name,
             missingYes,
@@ -142,7 +139,7 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
   const optNames = new Set(optDecls.map(d => d.name))
 
   for (const ref of refs) {
-    const loc = pos(ref.location, '')
+    const loc = diagPos(ref.location, ref.file)
     if (ref.type === 'interface.controller' && !ctrlNames.has(ref.target)) {
       result.push({ level: 'error', ...loc, type: 'int-unknown-controller', ctrl: ref.target })
     }
@@ -158,11 +155,12 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
         const optDecl = optDecls.find(d => d.name === ref.target)
         if (optDecl) {
           const ot = optDecl.optionType ?? 'select'
+          // presetValue 是 raw value（来自 jsonc-parser Node），使用 interfaceFile 作为 fallback
           if (ot === 'select' || ot === 'switch') {
             if (!isString(ref.presetValue as never)) {
               result.push({
                 level: 'error',
-                ...pos(ref.presetValue as never, ''),
+                ...diagPos(ref.presetValue as never, interfaceFile),
                 type: 'int-preset-type-error',
                 option: ref.target,
                 expected: 'string'
@@ -172,7 +170,7 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
             if (!Array.isArray(ref.presetValue)) {
               result.push({
                 level: 'error',
-                ...pos(ref.presetValue as never, ''),
+                ...diagPos(ref.presetValue as never, interfaceFile),
                 type: 'int-preset-type-error',
                 option: ref.target,
                 expected: 'array'
@@ -186,7 +184,7 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
             ) {
               result.push({
                 level: 'error',
-                ...pos(ref.presetValue as never, ''),
+                ...diagPos(ref.presetValue as never, interfaceFile),
                 type: 'int-preset-type-error',
                 option: ref.target,
                 expected: 'object'
@@ -205,7 +203,7 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
       if (!taskList.has(ref.target as never)) {
         result.push({
           level: 'error',
-          ...pos(ref.location, ''),
+          ...diagPos(ref.location, ref.file),
           type: 'int-unknown-entry-task',
           task: ref.target
         })

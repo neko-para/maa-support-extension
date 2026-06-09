@@ -1,11 +1,12 @@
-import type { TaskInfo } from '../pipeline/types'
-import type { AnchorName, ImageRelativePath, TaskName } from '../types'
+import type { TaskDeclInFile, TaskInfoInFile, TaskRefInFile } from '../pipeline/types'
+import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../types'
 import { FileView } from './file-view'
 
-export type DefaultConfig = ReadonlyMap<TaskName, TaskInfo>
+/** default_pipeline.json 的解析结果——已标注文件路径 */
+export type DefaultConfig = ReadonlyMap<TaskName, TaskInfoInFile>
 
 export type BundleView = {
-  readonly root: string
+  readonly root: AbsolutePath
   readonly files: ReadonlyMap<string, FileView>
   readonly images: ReadonlySet<ImageRelativePath>
   readonly defaultConfig: DefaultConfig | null
@@ -13,7 +14,7 @@ export type BundleView = {
 }
 
 export function createBundleView(opts: {
-  root: string
+  root: AbsolutePath
   files: ReadonlyMap<string, FileView>
   images: ReadonlySet<ImageRelativePath>
   defaultConfig?: DefaultConfig | null
@@ -28,10 +29,25 @@ export function createBundleView(opts: {
   })
 }
 
+/** 按文件名字母序排序——匹配 MaaFramework 按字母序加载 pipeline 文件的行为 */
+function sortedFiles(bundle: BundleView): FileView[] {
+  return [...bundle.files.keys()]
+    .sort()
+    .map(k => bundle.files.get(k)!)
+}
+
 export const BundleView = {
-  findTask(bundle: BundleView, name: TaskName): TaskInfo | null {
-    let found: TaskInfo | null = null
-    for (const file of bundle.files.values()) {
+  /**
+   * 在 Bundle 内查找任务定义。
+   *
+   * 文件按字母序遍历，同文件内 Map 保留 JSON key 顺序（后出现覆盖先出现）。
+   * 多个文件中出现同名任务时，字母序靠后的文件覆盖靠前的。
+   *
+   * 这是纯查找——不合并 defaultConfig。defaultConfig 继承由 `resolveTask()` 处理（未来 phase）。
+   */
+  findTask(bundle: BundleView, name: TaskName): TaskInfoInFile | null {
+    let found: TaskInfoInFile | null = null
+    for (const file of sortedFiles(bundle)) {
       const info = file.tasks.get(name)
       if (info) {
         found = info
@@ -42,7 +58,7 @@ export const BundleView = {
 
   listTasks(bundle: BundleView): TaskName[] {
     const all = new Set<TaskName>()
-    for (const file of bundle.files.values()) {
+    for (const file of sortedFiles(bundle)) {
       for (const name of file.tasks.keys()) {
         all.add(name)
       }
@@ -50,17 +66,17 @@ export const BundleView = {
     return [...all]
   },
 
-  allDecls(bundle: BundleView) {
-    const result: TaskInfo['decls'] = []
-    for (const file of bundle.files.values()) {
+  allDecls(bundle: BundleView): TaskDeclInFile[] {
+    const result: TaskDeclInFile[] = []
+    for (const file of sortedFiles(bundle)) {
       result.push(...FileView.allDecls(file))
     }
     return result
   },
 
-  allRefs(bundle: BundleView) {
-    const result: TaskInfo['refs'] = []
-    for (const file of bundle.files.values()) {
+  allRefs(bundle: BundleView): TaskRefInFile[] {
+    const result: TaskRefInFile[] = []
+    for (const file of sortedFiles(bundle)) {
       result.push(...FileView.allRefs(file))
     }
     return result

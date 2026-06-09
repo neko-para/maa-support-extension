@@ -3,19 +3,26 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { mergeInterfaces, parseInterface } from '../interface'
-import type { InterfaceParseResult } from '../interface/types'
-import type { RelativePath } from '../types'
+import type { InterfaceDeclInFile, InterfaceParseResult, InterfaceRefInFile } from '../interface/types'
+import type { AbsolutePath, RelativePath } from '../types'
+
+function annotate(raw: ReturnType<typeof parseInterface>, file: AbsolutePath): InterfaceParseResult {
+  expect(raw).not.toBeNull()
+  return {
+    data: raw!.data,
+    decls: raw!.decls.map(d => ({ ...d, file }) as InterfaceDeclInFile),
+    refs: raw!.refs.map(r => ({ ...r, file }) as InterfaceRefInFile)
+  }
+}
 
 function parse(json: string): InterfaceParseResult {
-  const result = parseInterface(json)
-  expect(result).not.toBeNull()
-  return result!
+  return annotate(parseInterface(json), '/fake/interface.json' as AbsolutePath)
 }
 
 function loadFixture(name: string): InterfaceParseResult {
-  const path = join(__dirname, 'fixtures', name)
+  const path = join(__dirname, 'fixtures', name) as AbsolutePath
   const json = readFileSync(path, 'utf8')
-  return parse(json)
+  return annotate(parseInterface(json), path)
 }
 
 describe('parseInterface', () => {
@@ -200,12 +207,20 @@ function makeBase(): InterfaceParseResult {
       group: {},
       import: ['import/file.json' as RelativePath]
     },
-    decls: [{ type: 'interface.task' as const, name: 'TaskA', location: {} as never }],
+    decls: [
+      {
+        type: 'interface.task' as const,
+        name: 'TaskA',
+        location: {} as never,
+        file: '/fake/base.json' as AbsolutePath
+      }
+    ],
     refs: [
       {
         type: 'interface.import_path' as const,
         target: 'import/file.json' as RelativePath,
-        location: {} as never
+        location: {} as never,
+        file: '/fake/base.json' as AbsolutePath
       }
     ]
   }
@@ -224,12 +239,20 @@ function makeImport(): InterfaceParseResult {
       preset: { preset2: {} },
       group: {}
     },
-    decls: [{ type: 'interface.task' as const, name: 'TaskC', location: {} as never }],
+    decls: [
+      {
+        type: 'interface.task' as const,
+        name: 'TaskC',
+        location: {} as never,
+        file: '/fake/import.json' as AbsolutePath
+      }
+    ],
     refs: [
       {
         type: 'interface.import_path' as const,
         target: 'extra_import.json' as RelativePath,
-        location: {} as never
+        location: {} as never,
+        file: '/fake/import.json' as AbsolutePath
       }
     ]
   }

@@ -1,6 +1,7 @@
 import type { IContentLoader, IContentWatcher, IContentWatcherController } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import type { ResourceSnapshot } from '../snapshot/snapshot'
+import type { AbsolutePath } from '../types'
 import { Project } from './project'
 
 /**
@@ -60,7 +61,7 @@ export class WatchedProject extends Project {
   }
 
   private _onFileChange(action: 'added' | 'changed' | 'deleted', file: string): void {
-    this.handleFileChange(file, action)
+    this.handleFileChange(file as AbsolutePath, action)
       .then(() => {
         if (this.snapshot && this.onChange) {
           this.onChange(this.snapshot)

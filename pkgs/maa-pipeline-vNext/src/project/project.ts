@@ -1,19 +1,31 @@
 import { mergeInterfaces } from '../interface/merge'
 import { parseInterface } from '../interface/parser'
-import type { InterfaceParseResult } from '../interface/types'
+import type { InterfaceDeclInFile, InterfaceParseResult, InterfaceRefInFile, RawInterfaceParseResult } from '../interface/types'
 import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
 import { parsePipelineFile } from '../pipeline/fw'
-import type { ParserConfig, TaskInfo } from '../pipeline/types'
+import type { ParserConfig, TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
 import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
 import type { FileView } from '../snapshot/file-view'
-import type { ResourceSnapshot } from '../snapshot/snapshot'
-import type { ImageRelativePath, TaskName } from '../types'
+import type { LanguageInfo, ResourceSnapshot } from '../snapshot/snapshot'
+import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
 
 const PIPELINE_EXTENSIONS = new Set(['.json', '.jsonc'])
 const IMAGE_EXTENSIONS = new Set(['.png'])
+
+/** 将 parser 原始输出标注为带文件的解析结果 */
+function annotateInterfaceParseResult(
+  raw: RawInterfaceParseResult,
+  file: AbsolutePath
+): InterfaceParseResult {
+  return {
+    data: raw.data,
+    decls: raw.decls.map(d => ({ ...d, file }) as InterfaceDeclInFile),
+    refs: raw.refs.map(r => ({ ...r, file }) as InterfaceRefInFile)
+  }
+}
 
 export class Project {
   readonly loader: IContentLoader
@@ -21,10 +33,11 @@ export class Project {
   readonly maa: boolean
   readonly parser: ParserConfig | undefined
 
-  /** 项目根目录（interface.json 所在目录） */
-  readonly root: string
+  /** 项目根目录（interface.json 所在目录）——始终为绝对路径 */
+  readonly root: AbsolutePath
 
   private _bundles: readonly BundleView[] = []
+  private _languages: readonly LanguageInfo[] = []
   private _parsedInterface: InterfaceParseResult | null = null
   private _snapshot: ResourceSnapshot | null = null
   private _activeController: string | null = null
@@ -60,7 +73,7 @@ export class Project {
     this.loader = loader
     this.pathUtils = pathUtils
     this.maa = maa
-    this.root = root
+    this.root = root as AbsolutePath
     this.parser = parser
   }
 
@@ -72,10 +85,11 @@ export class Project {
       throw new Error(`Cannot read interface file: ${filePath}`)
     }
 
-    const base = parseInterface(content)
-    if (!base) {
+    const rawBase = parseInterface(content)
+    if (!rawBase) {
       throw new Error(`Failed to parse interface file: ${filePath}`)
     }
+    const base = annotateInterfaceParseResult(rawBase, filePath)
 
     const imports = base.data.import ?? []
     const importResults: InterfaceParseResult[] = []
@@ -83,19 +97,57 @@ export class Project {
       const impPath = this.pathUtils.join(this.root, imp as string)
       const impContent = await this.loader.get(impPath)
       if (impContent) {
-        const parsed = parseInterface(impContent)
-        if (parsed) {
-          importResults.push(parsed)
+        const rawImp = parseInterface(impContent)
+        if (rawImp) {
+          importResults.push(annotateInterfaceParseResult(rawImp, impPath))
         }
       }
     }
 
     this._parsedInterface =
       importResults.length > 0 ? mergeInterfaces(base, ...importResults) : base
+
+    await this._loadLanguages()
+  }
+
+  private async _loadLanguages(): Promise<void> {
+    const iface = this._parsedInterface
+    if (!iface) {
+      this._languages = []
+      return
+    }
+
+    const langMap = iface.data.languages
+    if (!langMap) {
+      this._languages = []
+      return
+    }
+
+    const langs: LanguageInfo[] = []
+    for (const [name, relPath] of Object.entries(langMap)) {
+      if (!relPath) {
+        continue
+      }
+      const absPath = this.pathUtils.join(this.root, relPath as string)
+      const content = await this.loader.get(absPath)
+      if (!content) {
+        continue
+      }
+      try {
+        const raw = JSON.parse(content)
+        const entries = new Map<string, string>(
+          Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, String(v)])
+        )
+        langs.push(Object.freeze({ name, file: absPath, entries }))
+      } catch {
+        // 语言文件解析失败时跳过，不影响其他文件加载
+      }
+    }
+    this._languages = langs
   }
 
   /** 加载一个资源目录为 BundleView */
-  async loadBundle(bundlePath: string): Promise<BundleView> {
+  async loadBundle(bundlePath: AbsolutePath): Promise<BundleView> {
     const pipelineDir = this._pipelineDir
     const imageDir = this._imageDir
     const pipelineRoot = this.pathUtils.join(bundlePath, pipelineDir)
@@ -163,7 +215,7 @@ export class Project {
   }
 
   /** 根据绝对路径查找所属 Bundle 的索引，-1 表示不属于任何 Bundle */
-  findBundleIndex(absPath: string): number {
+  findBundleIndex(absPath: AbsolutePath): number {
     for (let i = 0; i < this._bundles.length; i++) {
       const rel = this.pathUtils.relative(this._bundles[i].root, absPath)
       if (!rel.startsWith('..') && rel !== '') {
@@ -178,7 +230,7 @@ export class Project {
    * interface / import 文件变更会触发全量重载；
    * pipeline / 图像文件变更仅重建所属 Bundle。
    */
-  async handleFileChange(absPath: string, action: 'added' | 'changed' | 'deleted'): Promise<void> {
+  async handleFileChange(absPath: AbsolutePath, action: 'added' | 'changed' | 'deleted'): Promise<void> {
     const rel = this.pathUtils.relative(this.root, absPath)
 
     if (rel === 'interface.json' || this._isImportFile(rel)) {
@@ -242,7 +294,9 @@ export class Project {
   private _buildSnapshot(): void {
     this._snapshot = createSnapshot({
       bundles: this._bundles,
-      interface: this._parsedInterface ?? undefined
+      interface: this._parsedInterface ?? undefined,
+      interfaceFile: this.pathUtils.join(this.root, 'interface.json'),
+      languages: this._languages
     })
   }
 
@@ -254,27 +308,47 @@ export class Project {
     return this.maa ? 'template' : 'image'
   }
 
-  private async _loadPipelineFile(absPath: string): Promise<FileView | null> {
+  private async _loadPipelineFile(absPath: AbsolutePath): Promise<FileView | null> {
     const content = await this.loader.get(absPath)
     if (content === null) {
       return null
     }
     const parsed = parsePipelineFile(content, { maa: this.maa, parser: this.parser })
+
+    // 将 parser 原始输出（不含 file）标注为 FileView 存储格式（含 file）
+    const annotatedTasks = new Map<TaskName, TaskInfoInFile>()
+    for (const [name, info] of parsed.tasks) {
+      annotatedTasks.set(name, {
+        parts: info.parts,
+        decls: info.decls.map(d => ({ ...d, file: absPath })),
+        refs: info.refs.map(r => ({ ...r, file: absPath }))
+      })
+    }
+    const annotatedFileDecls = parsed.fileDecls.map(d => ({ ...d, file: absPath }))
+
     return Object.freeze({
       path: absPath,
-      tasks: parsed.tasks as ReadonlyMap<TaskName, TaskInfo>,
-      fileDecls: parsed.fileDecls
+      tasks: annotatedTasks,
+      fileDecls: annotatedFileDecls
     } satisfies FileView)
   }
 
-  private async _loadDefaultConfig(bundlePath: string): Promise<DefaultConfig | null> {
+  private async _loadDefaultConfig(bundlePath: AbsolutePath): Promise<DefaultConfig | null> {
     const defaultPath = this.pathUtils.join(bundlePath, 'default_pipeline.json')
     const content = await this.loader.get(defaultPath)
     if (content === null) {
       return null
     }
     const parsed = parsePipelineFile(content, { maa: this.maa, isDefault: true, parser: this.parser })
-    return parsed.tasks as DefaultConfig
+    const annotated = new Map<TaskName, TaskInfoInFile>()
+    for (const [name, info] of parsed.tasks) {
+      annotated.set(name, {
+        parts: info.parts,
+        decls: info.decls.map(d => ({ ...d, file: defaultPath })),
+        refs: info.refs.map(r => ({ ...r, file: defaultPath }))
+      })
+    }
+    return annotated
   }
 
   private _isImportFile(rel: string): boolean {

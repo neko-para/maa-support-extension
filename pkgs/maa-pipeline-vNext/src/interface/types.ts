@@ -5,7 +5,7 @@
  */
 import type { Node } from 'jsonc-parser'
 
-import type { RelativePath } from '../types'
+import type { AbsolutePath, RelativePath } from '../types'
 
 // ═══ Data types（runtime 消费） ═══
 
@@ -272,11 +272,11 @@ export type InterfaceDeclVariant =
   | IntGroupDeclInfo
   | IntLangDeclInfo
 
-/** 解析器输出——不含 file。由调用方添加。 */
+/** 解析器输出——不含 file，仅用于 parseInterface 返回值。 */
 export type InterfaceDeclInfo = InterfaceDeclVariant
 
-/** 完整声明——含 file。用于 Snapshot / Diagnostic。 */
-export type InterfaceDeclInFile = InterfaceDeclInfo & { file: string }
+/** 完整声明——含 file。Snapshot / Diagnostic 层使用。 */
+export type InterfaceDeclInFile = InterfaceDeclInfo & { file: AbsolutePath }
 
 // ── References ──
 
@@ -370,16 +370,24 @@ export type InterfaceRefVariant =
   | IntInputRefInfo
   | IntGroupRefInfo
 
-/** 解析器输出——不含 file。由调用方添加。 */
+/** 解析器输出——不含 file，仅用于 parseInterface 返回值。 */
 export type InterfaceRefInfo = InterfaceRefVariant
 
-/** 完整引用——含 file。用于 Snapshot / Diagnostic。 */
-export type InterfaceRefInFile = InterfaceRefInfo & { file: string }
+/** 完整引用——含 file。Snapshot / Diagnostic 层使用。 */
+export type InterfaceRefInFile = InterfaceRefInfo & { file: AbsolutePath }
 
 // ═══ Parse result ═══
 
-export type InterfaceParseResult = {
+/** Parser 原始输出——不含 file。仅用于 parseInterface 返回值。 */
+export type RawInterfaceParseResult = {
   readonly data: ParsedInterface
   readonly decls: readonly InterfaceDeclInfo[]
   readonly refs: readonly InterfaceRefInfo[]
+}
+
+/** 完整解析结果——所有 decl/ref 已标注所属文件。Snapshot / Diagnostic 层使用。 */
+export type InterfaceParseResult = {
+  readonly data: ParsedInterface
+  readonly decls: readonly InterfaceDeclInFile[]
+  readonly refs: readonly InterfaceRefInFile[]
 }

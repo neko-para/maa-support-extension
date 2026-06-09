@@ -4,12 +4,12 @@ import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import { eachOrOne, isString, parseArray, parseObject, parseObjectFlex } from '../utils/parse'
 import type {
   InterfaceDeclVariant,
-  InterfaceParseResult,
   InterfaceRefVariant,
-  ParsedInterface
+  ParsedInterface,
+  RawInterfaceParseResult
 } from './types'
 
-export function parseInterface(content: string): InterfaceParseResult | null {
+export function parseInterface(content: string): RawInterfaceParseResult | null {
   const node = parseTreeWithoutParent(content)
   if (!node || node.type !== 'object') {
     return null

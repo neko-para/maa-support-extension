@@ -1,6 +1,6 @@
 import type { InterfaceParseResult } from '../interface/types'
-import type { TaskDeclInfo, TaskRefInfo } from '../pipeline/types'
-import type { ImageRelativePath, TaskName } from '../types'
+import type { TaskDeclInFile, TaskRefInFile } from '../pipeline/types'
+import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
 import { BundleView, type BundleView as BundleViewType } from './bundle-view'
 
 export type { BundleView as BundleViewType, DefaultConfig } from './bundle-view'
@@ -8,16 +8,17 @@ export type { FileView } from './file-view'
 
 export type LanguageInfo = {
   readonly name: string
-  readonly file: string
+  readonly file: AbsolutePath
   readonly entries: ReadonlyMap<string, string>
 }
 
-export type DeclWithBundle = TaskDeclInfo & { bundleIndex: number }
-export type RefWithBundle = TaskRefInfo & { bundleIndex: number }
+export type DeclWithBundle = TaskDeclInFile & { bundleIndex: number }
+export type RefWithBundle = TaskRefInFile & { bundleIndex: number }
 
 export type ResourceSnapshot = {
   readonly bundles: readonly BundleViewType[]
   readonly interface: InterfaceParseResult | null
+  readonly interfaceFile: AbsolutePath
   readonly languages: readonly LanguageInfo[]
   readonly activeController: string
   readonly activeResource: string
@@ -26,6 +27,7 @@ export type ResourceSnapshot = {
 export function createSnapshot(opts: {
   bundles: readonly BundleViewType[]
   interface?: InterfaceParseResult | null
+  interfaceFile?: AbsolutePath
   languages?: readonly LanguageInfo[]
   activeController?: string
   activeResource?: string
@@ -33,6 +35,7 @@ export function createSnapshot(opts: {
   return Object.freeze({
     bundles: Object.freeze([...opts.bundles]),
     interface: opts.interface ?? null,
+    interfaceFile: opts.interfaceFile ?? ('' as AbsolutePath),
     languages: Object.freeze([...opts.languages ?? []]),
     activeController: opts.activeController ?? '',
     activeResource: opts.activeResource ?? ''
@@ -51,6 +54,15 @@ export const Snapshot = {
     return null
   },
 
+  /**
+   * 跨 Bundle 查找任务定义。
+   *
+   * 按 `resource[].path` 顺序从后向前遍历 Bundle（后加载覆盖先加载）。
+   * Bundle 内部按文件名字母序查找（见 BundleView.findTask）。
+   *
+   * 这是纯查找——仅返回最高优先级的任务定义，不合并 defaultConfig。
+   * defaultConfig 继承 + 属性合并由 `resolveTask()` 处理（未来 phase）。
+   */
   findTask(snapshot: ResourceSnapshot, name: TaskName) {
     for (let i = snapshot.bundles.length - 1; i >= 0; i--) {
       const info = BundleView.findTask(snapshot.bundles[i], name)

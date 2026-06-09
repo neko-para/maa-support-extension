@@ -1,4 +1,7 @@
 export * from './types'
 export * from './path'
 export * from './utils'
+export * from './pipeline'
+export * from './interface'
+export * from './snapshot'
 export * from './interface'

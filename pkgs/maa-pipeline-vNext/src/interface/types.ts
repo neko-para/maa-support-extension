@@ -379,7 +379,7 @@ export type InterfaceRefInFile = InterfaceRefInfo & { file: string }
 // ═══ Parse result ═══
 
 export type InterfaceParseResult = {
-  data: ParsedInterface
-  decls: InterfaceDeclInfo[]
-  refs: InterfaceRefInfo[]
+  readonly data: ParsedInterface
+  readonly decls: readonly InterfaceDeclInfo[]
+  readonly refs: readonly InterfaceRefInfo[]
 }

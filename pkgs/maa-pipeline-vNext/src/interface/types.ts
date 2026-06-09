@@ -333,7 +333,7 @@ export type IntOptionRefInfo = {
   target: string
   trace: OptionTrace
   location: Node
-  presetValue?: unknown
+  presetValue?: Node
 }
 
 export type IntCaseRefInfo = {

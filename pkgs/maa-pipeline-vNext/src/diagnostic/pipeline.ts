@@ -1,14 +1,15 @@
+import type { ResourceSnapshot } from '../snapshot/snapshot'
 import { Snapshot } from '../snapshot/snapshot'
 import type { Diagnostic } from './types'
 import { adjustForAttrPrefix, diagPos, imageRefTarget, taskRefTarget } from './utils'
 
-export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0]): Diagnostic[] {
+export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
   const result: Diagnostic[] = []
 
   const decls = Snapshot.allDecls(snapshot)
   const refs = Snapshot.allRefs(snapshot)
   const taskList = new Set(Snapshot.listTasks(snapshot))
-  const anchors = new Set(Snapshot.getAnchorList(snapshot).map(([name]) => name))
+  const anchors = new Set<string>(Snapshot.getAnchorList(snapshot).map(([name]) => name))
   const images = new Set<string>(Snapshot.listImages(snapshot))
   const imageFolders = new Set<string>()
   for (const img of images) {
@@ -49,6 +50,28 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
         ...diagPos(d.location, d.file),
         type: 'mpe-config'
       })
+    }
+  }
+
+  // duplicate-next: 同一任务中 next 数组出现重复引用
+  for (const taskName of taskList) {
+    const taskInfo = Snapshot.findTask(snapshot, taskName)
+    if (!taskInfo) continue
+    const nextRefs = taskInfo.refs
+      .filter(r => r.type === 'task.next' && !r.attrs.attrs.Anchor)
+      .sort((a, b) => a.location.offset - b.location.offset)
+    const seen = new Set<string>()
+    for (const _ref of nextRefs) {
+      const ref = _ref as typeof _ref & { target: string }
+      if (seen.has(ref.target)) {
+        result.push({
+          level: 'error',
+          ...diagPos(ref.location, ref.file),
+          type: 'duplicate-next',
+          task: ref.target
+        })
+      }
+      seen.add(ref.target)
     }
   }
 
@@ -97,10 +120,18 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
     // image refs
     const imageRef = imageRefTarget(ref)
     if (imageRef !== null) {
+      const maa = snapshot.bundles[ref.bundleIndex]?.maa ?? false
       let imagePath = imageRef
       let isFolder = false
-      if (imageFolders.has(imagePath)) {
-        isFolder = true
+
+      // dynamic-image: 非 MAA 模式下，路径不以 .png 结尾且不是已知文件夹 → 可能是动态路径
+      if (!maa && !imagePath.endsWith('.png')) {
+        if (imageFolders.has(imagePath as string)) {
+          isFolder = true
+        } else {
+          result.push({ level: 'warning', ...loc, type: 'dynamic-image' })
+          continue
+        }
       }
       if (imagePath.includes('\\')) {
         result.push({ level: 'warning', ...loc, type: 'image-path-back-slash' })
@@ -109,6 +140,12 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
       if (imagePath.startsWith('./')) {
         result.push({ level: 'warning', ...loc, type: 'image-path-dot-slash' })
         imagePath = imagePath.replace('./', '') as typeof imageRef
+      }
+
+      // image-path-missing-png: MAA 模式下，路径不以 .png 结尾 → 建议补全
+      if (maa && !imagePath.endsWith('.png')) {
+        result.push({ level: 'warning', ...loc, type: 'image-path-missing-png' })
+        imagePath = (imagePath + '.png') as typeof imageRef
       }
       if (isFolder) {
         continue
@@ -135,7 +172,7 @@ export function checkPipeline(snapshot: Parameters<typeof Snapshot.allDecls>[0])
     ) {
       if (ref.attrs.attrs.Anchor) {
         const anchorRef = ref.target
-        if (!anchors.has(anchorRef as never)) {
+        if (!anchors.has(anchorRef)) {
           let policy: 'warning' | 'error' = 'error'
           if (ref.type === 'task.custom_anchor' && ref.meta.missingPolicy === 'ignore') {
             policy = 'warning'

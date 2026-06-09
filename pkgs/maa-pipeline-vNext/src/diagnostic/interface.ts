@@ -1,9 +1,10 @@
+import type { ResourceSnapshot } from '../snapshot/snapshot'
 import { Snapshot } from '../snapshot/snapshot'
-import { isString } from '../utils/parse'
+import type { TaskName } from '../types'
 import type { Diagnostic } from './types'
 import { diagPos } from './utils'
 
-export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]): Diagnostic[] {
+export function checkInterface(snapshot: ResourceSnapshot): Diagnostic[] {
   const result: Diagnostic[] = []
 
   // 惰性合并——各 interface 文件保持独立存储，查询时拼接
@@ -156,36 +157,31 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
         const optDecl = optDecls.find(d => d.name === ref.target)
         if (optDecl) {
           const ot = optDecl.optionType ?? 'select'
-          // presetValue 是 raw value（来自 jsonc-parser Node），使用 interfaceFile 作为 fallback
           if (ot === 'select' || ot === 'switch') {
-            if (!isString(ref.presetValue as never)) {
+            if (ref.presetValue.type !== 'string') {
               result.push({
                 level: 'error',
-                ...diagPos(ref.presetValue as never, interfaceFile),
+                ...diagPos(ref.presetValue, interfaceFile),
                 type: 'int-preset-type-error',
                 option: ref.target,
                 expected: 'string'
               })
             }
           } else if (ot === 'checkbox') {
-            if (!Array.isArray(ref.presetValue)) {
+            if (ref.presetValue.type !== 'array') {
               result.push({
                 level: 'error',
-                ...diagPos(ref.presetValue as never, interfaceFile),
+                ...diagPos(ref.presetValue, interfaceFile),
                 type: 'int-preset-type-error',
                 option: ref.target,
                 expected: 'array'
               })
             }
           } else if (ot === 'input') {
-            if (
-              typeof ref.presetValue !== 'object' ||
-              ref.presetValue === null ||
-              Array.isArray(ref.presetValue)
-            ) {
+            if (ref.presetValue.type !== 'object') {
               result.push({
                 level: 'error',
-                ...diagPos(ref.presetValue as never, interfaceFile),
+                ...diagPos(ref.presetValue, interfaceFile),
                 type: 'int-preset-type-error',
                 option: ref.target,
                 expected: 'object'
@@ -197,11 +193,11 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
     }
   }
 
-  // int-unknown-entry-task, int-override-unknown-task
-  const taskList = new Set(Snapshot.listTasks(snapshot))
+  // int-unknown-entry-task: interface task entry 引用了不存在的 pipeline 任务
+  const pipelineTaskList = new Set(Snapshot.listTasks(snapshot))
   for (const ref of refs) {
     if (ref.type === 'interface.task_entry') {
-      if (!taskList.has(ref.target as never)) {
+      if (!pipelineTaskList.has(ref.target as TaskName)) {
         result.push({
           level: 'error',
           ...diagPos(ref.location, ref.file),
@@ -209,6 +205,22 @@ export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]
           task: ref.target
         })
       }
+    }
+  }
+
+  // int-override-unknown-task: pipeline 任务未被任何 interface task 的 entry 引用
+  const realTasks = new Set(
+    refs.filter(r => r.type === 'interface.task_entry').map(r => r.target)
+  )
+  const pipelineDecls = Snapshot.allDecls(snapshot)
+  for (const decl of pipelineDecls) {
+    if (decl.type === 'task.decl' && !realTasks.has(decl.task)) {
+      result.push({
+        level: 'error',
+        ...diagPos(decl.location, decl.file),
+        type: 'int-override-unknown-task',
+        task: decl.task
+      })
     }
   }
 

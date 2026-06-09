@@ -1,5 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
+import type { RelativePath } from '../types'
 import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import { eachOrOne, isString, parseArray, parseObject, parseObjectFlex } from '../utils/parse'
 import type {
@@ -170,7 +171,7 @@ function parseResources(
 function parseResourcePaths(node: Node, refs: InterfaceRefVariant[]) {
   eachOrOne(node, n => {
     if (isString(n)) {
-      refs.push({ type: 'interface.resource_path', target: n.value as never, location: n })
+      refs.push({ type: 'interface.resource_path', target: n.value as RelativePath, location: n })
     }
   })
 }
@@ -556,7 +557,7 @@ function parsePresetOptions(
       target: optName,
       trace: { from: 'preset', origin: presetName },
       location: propNode,
-      presetValue: optVal ? buildTree(optVal) : undefined
+      presetValue: optVal ?? undefined
     })
     if (!optVal) {
       optRaw[optName] = null
@@ -626,7 +627,7 @@ function parseImports(node: Node, refs: InterfaceRefVariant[], raw: Record<strin
   for (const obj of parseArray(node)) {
     if (isString(obj)) {
       arr.push(obj.value)
-      refs.push({ type: 'interface.import_path', target: obj.value as never, location: obj })
+      refs.push({ type: 'interface.import_path', target: obj.value as RelativePath, location: obj })
     }
   }
 }

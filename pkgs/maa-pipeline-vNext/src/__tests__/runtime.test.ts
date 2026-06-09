@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ParsedInterface } from '../interface/types'
+import type { RelativePath } from '../types'
 import {
   buildControllerRuntime,
   buildOption,
@@ -162,7 +163,7 @@ describe('validateControllerConfig', () => {
 
   it('returns error for unknown controller type', () => {
     const data = makeInterface({
-      controller: { UnknownCtrl: { type: 'CustomType' as never } }
+      controller: { UnknownCtrl: { type: 'CustomType' } as never }
     })
     const config = makeConfig({ controller: 'UnknownCtrl' })
     const errors = validateControllerConfig(data, config)
@@ -333,7 +334,7 @@ describe('buildControllerRuntime', () => {
 describe('buildResourceRuntime', () => {
   it('builds resource with single path', () => {
     const data = makeInterface({
-      resource: { Res1: { path: 'bundle1' as never, option: ['optA'] } }
+      resource: { Res1: { path: 'bundle1' as RelativePath, option: ['optA'] } }
     })
     const config = makeConfig({ resource: 'Res1' })
     const rt = buildResourceRuntime(data, config)
@@ -347,7 +348,7 @@ describe('buildResourceRuntime', () => {
 
   it('builds resource with array path', () => {
     const data = makeInterface({
-      resource: { Res1: { path: ['bundle1', 'bundle2'] as never[], option: [] } }
+      resource: { Res1: { path: ['bundle1', 'bundle2'] as RelativePath[], option: [] } }
     })
     const config = makeConfig({ resource: 'Res1' })
     const rt = buildResourceRuntime(data, config)
@@ -359,7 +360,7 @@ describe('buildResourceRuntime', () => {
 
   it('replaces {PROJECT_DIR} in paths', () => {
     const data = makeInterface({
-      resource: { Res1: { path: '{PROJECT_DIR}/assets' as never } }
+      resource: { Res1: { path: '{PROJECT_DIR}/assets' as RelativePath } }
     })
     const config = makeConfig({ resource: 'Res1' })
     const rt = buildResourceRuntime(data, config)
@@ -512,7 +513,7 @@ describe('buildOption', () => {
         }
       },
       resource: {
-        TestRes: { path: '' as never, option: ['optRes'] }
+        TestRes: { path: '' as RelativePath, option: ['optRes'] }
       },
       task: {
         TestTask: { entry: 'Start', option: ['optTask'] }

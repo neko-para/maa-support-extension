@@ -1,3 +1,4 @@
+import type { Node } from 'jsonc-parser'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -211,7 +212,7 @@ function makeBase(): InterfaceParseResult {
       {
         type: 'interface.task' as const,
         name: 'TaskA',
-        location: {} as never,
+        location: {} as unknown as Node,
         file: '/fake/base.json' as AbsolutePath
       }
     ],
@@ -219,7 +220,7 @@ function makeBase(): InterfaceParseResult {
       {
         type: 'interface.import_path' as const,
         target: 'import/file.json' as RelativePath,
-        location: {} as never,
+        location: {} as unknown as Node,
         file: '/fake/base.json' as AbsolutePath
       }
     ]
@@ -243,7 +244,7 @@ function makeImport(): InterfaceParseResult {
       {
         type: 'interface.task' as const,
         name: 'TaskC',
-        location: {} as never,
+        location: {} as unknown as Node,
         file: '/fake/import.json' as AbsolutePath
       }
     ],
@@ -251,7 +252,7 @@ function makeImport(): InterfaceParseResult {
       {
         type: 'interface.import_path' as const,
         target: 'extra_import.json' as RelativePath,
-        location: {} as never,
+        location: {} as unknown as Node,
         file: '/fake/import.json' as AbsolutePath
       }
     ]

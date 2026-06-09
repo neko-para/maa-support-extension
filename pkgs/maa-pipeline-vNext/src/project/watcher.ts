@@ -1,5 +1,6 @@
 import type { IContentLoader, IContentWatcher, IContentWatcherController } from '../io/types'
 import type { IPathUtils } from '../path/interface'
+import type { ParserConfig } from '../pipeline/types'
 import type { ResourceSnapshot } from '../snapshot/snapshot'
 import type { AbsolutePath } from '../types'
 import { Project } from './project'
@@ -26,9 +27,10 @@ export class WatchedProject extends Project {
     watcher: IContentWatcher,
     pathUtils: IPathUtils,
     maa: boolean,
-    root: string
+    root: string,
+    parser?: ParserConfig
   ) {
-    super(loader, pathUtils, maa, root)
+    super(loader, pathUtils, maa, root, parser)
     this.watcher = watcher
   }
 

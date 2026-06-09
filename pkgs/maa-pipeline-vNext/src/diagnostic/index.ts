@@ -1,3 +1,4 @@
+import type { ResourceSnapshot } from '../snapshot/snapshot'
 import { checkInterface } from './interface'
 import { checkPipeline } from './pipeline'
 import type { Diagnostic, DiagnosticOption } from './types'
@@ -8,7 +9,7 @@ export { checkInterface } from './interface'
 export { buildDiagnosticMessage } from './message'
 
 export function performDiagnostic(
-  snapshot: Parameters<typeof checkPipeline>[0],
+  snapshot: ResourceSnapshot,
   option: DiagnosticOption = {}
 ): Diagnostic[] {
   const result: Diagnostic[] = []

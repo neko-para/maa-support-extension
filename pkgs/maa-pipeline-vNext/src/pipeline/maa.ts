@@ -74,7 +74,7 @@ function parseMaaExprTask(ast: MaaTaskExprAst, tasks: TaskMaaTaskRef[]) {
 }
 
 export function parseMaaTaskNode(
-  node: Parameters<typeof splitNode>[0],
+  node: Node,
   taskName: TaskName,
   taskKey: Node
 ): Omit<TaskInfo, 'parts'> & { parts: TaskInfo['parts'] } {
@@ -126,7 +126,7 @@ export function parseMaaTaskNode(
   }
 
   for (const [_key, obj] of parts.reco) {
-    parseTemplate(obj, refs as Parameters<typeof parseTemplate>[1])
+    parseTemplate(obj, refs)
   }
 
   return { parts, decls, refs }

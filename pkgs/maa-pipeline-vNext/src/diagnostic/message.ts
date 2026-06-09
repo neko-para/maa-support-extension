@@ -1,91 +1,118 @@
 import { t } from '@nekosu/maa-locale'
 
+import type { IPathUtils } from '../path/interface'
+import type { AbsolutePath } from '../types'
 import type { Diagnostic } from './types'
 
 type Position = [line: number, column: number]
 
+type PosLoc = { file: string; offset: number }
+
 export async function buildDiagnosticMessage(
-  _root: string,
+  root: AbsolutePath,
   diag: Diagnostic,
-  evalPos: (file: string, offset: number) => Promise<Position>
+  evalPos: (file: string, offset: number) => Promise<Position>,
+  pathUtils: IPathUtils
 ): Promise<[start: Position, end: Position, brief: string]> {
   const start = await evalPos(diag.file, diag.offset)
   const end = await evalPos(diag.file, diag.offset + diag.length)
 
-  const brief = buildBrief(diag)
-  return [start, end, brief]
-}
-
-function buildBrief(diag: Diagnostic): string {
-  switch (diag.type) {
-    case 'conflict-task':
-      return t('maa.pipeline.error.conflict-task', diag.task, formatPos(diag.previous))
-    case 'duplicate-next':
-      return t('maa.pipeline.error.duplicate-next', diag.task)
-    case 'unknown-task':
-      return t('maa.pipeline.error.unknown-task', diag.task)
-    case 'color-filter-invalid':
-      return t('maa.pipeline.error.color-filter-invalid', diag.task, diag.reco)
-    case 'dynamic-image':
-      return t('maa.pipeline.warning.image-path-dynamic')
-    case 'image-path-back-slash':
-      return t('maa.pipeline.warning.image-path-backslash')
-    case 'image-path-dot-slash':
-      return t('maa.pipeline.warning.image-path-dot-slash')
-    case 'image-path-missing-png':
-      return t('maa.pipeline.warning.image-path-missing-png')
-    case 'unknown-image':
-      return t('maa.pipeline.error.unknown-image', diag.image)
-    case 'unknown-anchor':
-      return t('maa.pipeline.error.unknown-anchor', diag.anchor)
-    case 'unknown-attr':
-      return t('maa.pipeline.error.unknown-attr', diag.attr)
-    case 'unknown-locale':
-      return t('maa.pipeline.error.unknown-locale', diag.locale)
-    case 'missing-locale':
-      return t('maa.pipeline.error.missing-locale', diag.locale, diag.langs.join(', '))
-    case 'mpe-config':
-      return t('maa.pipeline.warning.mpe-config')
-    case 'int-conflict-controller':
-      return t('maa.pipeline.error.conflict-controller', diag.ctrl, formatPos(diag.previous))
-    case 'int-unknown-controller':
-      return t('maa.pipeline.error.unknown-controller', diag.ctrl)
-    case 'int-conflict-resource':
-      return t('maa.pipeline.error.conflict-resource', diag.res, formatPos(diag.previous))
-    case 'int-unknown-resource':
-      return t('maa.pipeline.error.unknown-resource', diag.res)
-    case 'int-conflict-group':
-      return t('maa.pipeline.error.conflict-group', diag.group, formatPos(diag.previous))
-    case 'int-unknown-group':
-      return t('maa.pipeline.error.unknown-group', diag.group)
-    case 'int-conflict-option':
-      return t('maa.pipeline.error.conflict-option', diag.option, formatPos(diag.previous))
-    case 'int-unknown-option':
-      return t('maa.pipeline.error.unknown-option', diag.option)
-    case 'int-conflict-case':
-      return t('maa.pipeline.error.conflict-case', diag.case, diag.option, formatPos(diag.previous))
-    case 'int-unknown-case':
-      return t('maa.pipeline.error.unknown-case', diag.case, diag.option)
-    case 'int-switch-name-invalid':
-      return t('maa.pipeline.error.switch-name-invalid')
-    case 'int-switch-missing':
-      if (diag.missingYes && diag.missingNo) {
-        return t('maa.pipeline.error.switch-missing-all')
-      } else if (diag.missingYes) {
-        return t('maa.pipeline.error.switch-missing-yes')
-      }
-      return t('maa.pipeline.error.switch-missing-no')
-    case 'int-switch-should-fixed':
-      return t('maa.pipeline.warning.switch-name-should-fixed')
-    case 'int-preset-type-error':
-      return t('maa.pipeline.error.preset-type-error', diag.option, diag.expected)
-    case 'int-unknown-entry-task':
-      return t('maa.pipeline.error.unknown-entry-task', diag.task)
-    case 'int-override-unknown-task':
-      return t('maa.pipeline.error.override-unknown-task', diag.task)
+  const buildPos = async (loc: PosLoc) => {
+    const [line, column] = await evalPos(loc.file, loc.offset)
+    const rel = pathUtils.relative(root, loc.file)
+    return `${rel}:${line}:${column}`
   }
-}
 
-function formatPos(pos: { file: string; offset: number }): string {
-  return `${pos.file}:${pos.offset}`
+  const buildBrief = async (): Promise<string> => {
+    switch (diag.type) {
+      case 'conflict-task':
+        return t('maa.pipeline.error.conflict-task', diag.task, await buildPos(diag.previous))
+      case 'duplicate-next':
+        return t('maa.pipeline.error.duplicate-next', diag.task)
+      case 'unknown-task':
+        return t('maa.pipeline.error.unknown-task', diag.task)
+      case 'color-filter-invalid':
+        return t('maa.pipeline.error.color-filter-invalid', diag.task, diag.reco)
+      case 'dynamic-image':
+        return t('maa.pipeline.warning.image-path-dynamic')
+      case 'image-path-back-slash':
+        return t('maa.pipeline.warning.image-path-backslash')
+      case 'image-path-dot-slash':
+        return t('maa.pipeline.warning.image-path-dot-slash')
+      case 'image-path-missing-png':
+        return t('maa.pipeline.warning.image-path-missing-png')
+      case 'unknown-image':
+        return t('maa.pipeline.error.unknown-image', diag.image)
+      case 'unknown-anchor':
+        return t('maa.pipeline.error.unknown-anchor', diag.anchor)
+      case 'unknown-attr':
+        return t('maa.pipeline.error.unknown-attr', diag.attr)
+      case 'unknown-locale':
+        return t('maa.pipeline.error.unknown-locale', diag.locale)
+      case 'missing-locale':
+        return t('maa.pipeline.error.missing-locale', diag.locale, diag.langs.join(', '))
+      case 'mpe-config':
+        return t('maa.pipeline.warning.mpe-config')
+      case 'int-conflict-controller':
+        return t(
+          'maa.pipeline.error.conflict-controller',
+          diag.ctrl,
+          await buildPos(diag.previous)
+        )
+      case 'int-unknown-controller':
+        return t('maa.pipeline.error.unknown-controller', diag.ctrl)
+      case 'int-conflict-resource':
+        return t(
+          'maa.pipeline.error.conflict-resource',
+          diag.res,
+          await buildPos(diag.previous)
+        )
+      case 'int-unknown-resource':
+        return t('maa.pipeline.error.unknown-resource', diag.res)
+      case 'int-conflict-group':
+        return t(
+          'maa.pipeline.error.conflict-group',
+          diag.group,
+          await buildPos(diag.previous)
+        )
+      case 'int-unknown-group':
+        return t('maa.pipeline.error.unknown-group', diag.group)
+      case 'int-conflict-option':
+        return t(
+          'maa.pipeline.error.conflict-option',
+          diag.option,
+          await buildPos(diag.previous)
+        )
+      case 'int-unknown-option':
+        return t('maa.pipeline.error.unknown-option', diag.option)
+      case 'int-conflict-case':
+        return t(
+          'maa.pipeline.error.conflict-case',
+          diag.case,
+          diag.option,
+          await buildPos(diag.previous)
+        )
+      case 'int-unknown-case':
+        return t('maa.pipeline.error.unknown-case', diag.case, diag.option)
+      case 'int-switch-name-invalid':
+        return t('maa.pipeline.error.switch-name-invalid')
+      case 'int-switch-missing':
+        if (diag.missingYes && diag.missingNo) {
+          return t('maa.pipeline.error.switch-missing-all')
+        } else if (diag.missingYes) {
+          return t('maa.pipeline.error.switch-missing-yes')
+        }
+        return t('maa.pipeline.error.switch-missing-no')
+      case 'int-switch-should-fixed':
+        return t('maa.pipeline.warning.switch-name-should-fixed')
+      case 'int-preset-type-error':
+        return t('maa.pipeline.error.preset-type-error', diag.option, diag.expected)
+      case 'int-unknown-entry-task':
+        return t('maa.pipeline.error.unknown-entry-task', diag.task)
+      case 'int-override-unknown-task':
+        return t('maa.pipeline.error.override-unknown-task', diag.task)
+    }
+  }
+
+  return [start, end, await buildBrief()]
 }

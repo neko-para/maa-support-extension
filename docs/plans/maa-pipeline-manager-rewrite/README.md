@@ -523,6 +523,54 @@ interface IPathUtils {
 | 标记 TODO 完成 | TODO#17 ✅, TODO#22 ✅, TODO#24 ✅ |
 | 更新文档 | `docs/maa-pipeline-manager/models/`, `tech/`, `specs/` 三份文档同步更新 |
 
+#### maatools.config.mts 适配
+
+`maatools.config.mts` 是横跨 maa-tools 和 extension 的统一配置文件。虽然文件本身属于 consumer 层（`FullConfig` 类型定义在 `maa-tools`），但其内容直接影响 pipeline-manager 的行为，需要在 API 设计上对齐。
+
+**配置在多 consumer 间的共享关系**：
+
+```
+maatools.config.mts (项目根目录)
+  ├── maa-tools/check  ── 读取 check.override → DiagnosticOption
+  ├── maa-tools/test   ── 读取 test.* → 测试用例配置
+  ├── extension/root   ── 读取 vscode.agents → Agent 配置
+  └── 两者共同          ── 读取 interfacePath, cwd, parser → 传给 Project
+```
+
+**`FullConfig` 中影响 pipeline-manager 的字段**：
+
+| 字段 | 类型（来源） | 影响的 API |
+|------|------------|-----------|
+| `interfacePath` | `string` | `Project.loadInterface(path)` |
+| `cwd` | `string` | `Project` 构造函数的 `root` 参数 |
+| `parser` | `ParserConfig`（pipeline-manager 导出） | `parsePipelineFile(content, { maa, parser })` |
+| `check.override` | `Partial<Record<DiagnosticType, ...>>` | `performDiagnostic(snapshot, { ignoreTypes, errorTypes })` |
+
+**当前实现的缺口**：`Project` 构造函数未接受 `ParserConfig` 参数，仅硬编码 `{ maa: this.maa }`。MaaEnd 项目通过 `ParserConfig.customReco` / `customAction` 注册了自定义识别/动作类型（如 `SubTask`、`RealTimeTaskAction`），`Project` 需要支持透传：
+
+```typescript
+// 需要支持的构造方式
+new Project(loader, pathUtils, { maa: false, parser: parserConfig }, root)
+```
+
+**`@nekosu/maa-tools/pm` 的 re-export 模式**：当前 `maa-tools/src/pm.ts` 只做 `export * from '@nekosu/maa-pipeline-manager'`，让 MaaEnd 项目通过 `@nekosu/maa-tools/pm` 间接导入 pipeline-manager 类型。迁移后可以保持此模式（改为 re-export 新包），或让消费者直接从新包导入。
+
+**迁移后架构**（`maa-tools/utils/bundle.ts`）：
+
+```
+maatools.config.mts → loadConfig(jiti) → FullConfig
+  → new Project(loader, pathUtils, { maa: false, parser: cfg.parser }, root)
+  → project.loadInterface(file) → project.switchActive(ctrl, res)
+  → performDiagnostic(project.getSnapshot())
+```
+
+关键变更：
+- `InterfaceBundle` → `Project`（`FsContentLoader` + `nodePathUtils`，无 watcher）
+- `ParserConfig` 从构造函数注入，`Project` 内部透传给 `parsePipelineFile`
+- `bundle.switchActive()` → 返回 `Promise<void>`，结果通过 `getSnapshot()` 获取
+- `performDiagnostic()` 参数从旧的 `InterfaceBundle` 变为 `ResourceSnapshot`
+- `loadBundle()` 函数简化：不再需要管理 watcher 和 flush
+
 ## 模块依赖关系（目标状态）
 
 ```

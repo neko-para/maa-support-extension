@@ -5,7 +5,7 @@ import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
 import { parsePipelineFile } from '../pipeline/fw'
-import type { TaskInfo } from '../pipeline/types'
+import type { ParserConfig, TaskInfo } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
 import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
 import type { FileView } from '../snapshot/file-view'
@@ -19,6 +19,7 @@ export class Project {
   readonly loader: IContentLoader
   readonly pathUtils: IPathUtils
   readonly maa: boolean
+  readonly parser: ParserConfig | undefined
 
   /** 项目根目录（interface.json 所在目录） */
   readonly root: string
@@ -49,11 +50,18 @@ export class Project {
     return this._activeResource
   }
 
-  constructor(loader: IContentLoader, pathUtils: IPathUtils, maa: boolean, root: string) {
+  constructor(
+    loader: IContentLoader,
+    pathUtils: IPathUtils,
+    maa: boolean,
+    root: string,
+    parser?: ParserConfig
+  ) {
     this.loader = loader
     this.pathUtils = pathUtils
     this.maa = maa
     this.root = root
+    this.parser = parser
   }
 
   /** 加载并解析 interface.json，包括 import 文件的合并 */
@@ -251,7 +259,7 @@ export class Project {
     if (content === null) {
       return null
     }
-    const parsed = parsePipelineFile(content, { maa: this.maa })
+    const parsed = parsePipelineFile(content, { maa: this.maa, parser: this.parser })
     return Object.freeze({
       path: absPath,
       tasks: parsed.tasks as ReadonlyMap<TaskName, TaskInfo>,
@@ -265,7 +273,7 @@ export class Project {
     if (content === null) {
       return null
     }
-    const parsed = parsePipelineFile(content, { maa: this.maa, isDefault: true })
+    const parsed = parsePipelineFile(content, { maa: this.maa, isDefault: true, parser: this.parser })
     return parsed.tasks as DefaultConfig
   }
 

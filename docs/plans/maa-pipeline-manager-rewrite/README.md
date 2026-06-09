@@ -523,6 +523,26 @@ interface IPathUtils {
 | 标记 TODO 完成 | TODO#17 ✅, TODO#22 ✅, TODO#24 ✅ |
 | 更新文档 | `docs/maa-pipeline-manager/models/`, `tech/`, `specs/` 三份文档同步更新 |
 
+### Phase 7 审查遗留项
+
+> 2026-06-10 代码审查发现，以下项目未在原 Phase 4-7 中完成，需在 Phase 8 之前或同期处理。
+
+#### 待补完
+
+| ID | 项目 | 归属 Phase | 说明 |
+|----|------|-----------|------|
+| R-06 | `src/snapshot/completions.ts` | Phase 4 | 补全项生成。接受 Snapshot + position，返回 CompletionItem[]。当前 LSP completion 无任何实现 |
+| R-14 | `resolveTask()` + defaultConfig 继承 | Phase 4 | `BundleView.findTask` 仅做纯查找（后者覆盖前者）。需实现 `resolveTask()` 合并 defaultConfig 的属性继承链：任务自身 → 算法/动作类型默认值 → `$Default` → 框架内置值 |
+| R-17 | `parseTaskNode` 的 `as TaskInfo` 类型转换 | Phase 2/3 | `parseMaaTaskNode` 返回 `Omit<TaskInfo, 'parts'> & { parts }` 被强制 cast 为 `TaskInfo`，应统一 parser 返回类型消除 cast |
+| R-19 | MAA fixture JSON 文件 | Phase 2 | `src/__tests__/fixtures/` 只有 Framework 模式的 fixture，缺少 MAA 模式（baseTask / `@` 表达式、`sub` 等语法）的测试数据 |
+
+#### 待测试
+
+| ID | 项目 | 归属 Phase | 说明 |
+|----|------|-----------|------|
+| R-20 | `WatchedProject` 集成测试 | Phase 7 | `project.test.ts` 仅覆盖 `Project`。文件监视路径（`handleFileChange` → `_reloadPipelineFile` / `_updateBundleImage`）无测试 |
+| R-21 | 文档更新 | Phase 8 | `docs/maa-pipeline-manager/models/`, `tech/`, `specs/` 三份文档仍描述 V1 实现，需在替换旧包前同步更新 |
+
 #### maatools.config.mts 适配
 
 `maatools.config.mts` 是横跨 maa-tools 和 extension 的统一配置文件。虽然文件本身属于 consumer 层（`FullConfig` 类型定义在 `maa-tools`），但其内容直接影响 pipeline-manager 的行为，需要在 API 设计上对齐。

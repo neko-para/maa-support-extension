@@ -245,12 +245,13 @@ function parseReco(
   if (customReco) {
     for (const [key, obj] of props) {
       switch (key) {
-        case 'custom_recognition_param':
+        case 'custom_recognition_param': {
           const refs = ctx.parser?.customReco?.call(ctx, customReco, obj, parseUtils) ?? []
           for (const ref of refs) {
             processCustom(ref, customReco, 'reco', info, ctx)
           }
           break
+        }
       }
     }
   }
@@ -277,12 +278,13 @@ function parseAct(props: PropPair[], info: TaskInfo, ctx: TaskParseContext) {
   if (customAct) {
     for (const [key, obj] of props) {
       switch (key) {
-        case 'custom_action_param':
+        case 'custom_action_param': {
           const refs = ctx.parser?.customAction?.call(ctx, customAct, obj, parseUtils) ?? []
           for (const ref of refs) {
             processCustom(ref, customAct, 'act', info, ctx)
           }
           break
+        }
       }
     }
   }

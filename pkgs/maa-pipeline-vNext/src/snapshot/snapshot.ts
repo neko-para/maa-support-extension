@@ -1,4 +1,4 @@
-import type { InterfaceParseResult } from '../interface/types'
+import type { InterfaceDeclInFile, InterfaceFileView, InterfaceRefInFile, ParsedInterface } from '../interface/types'
 import type { TaskDeclInFile, TaskRefInFile } from '../pipeline/types'
 import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
 import { BundleView, type BundleView as BundleViewType } from './bundle-view'
@@ -17,7 +17,10 @@ export type RefWithBundle = TaskRefInFile & { bundleIndex: number }
 
 export type ResourceSnapshot = {
   readonly bundles: readonly BundleViewType[]
-  readonly interface: InterfaceParseResult | null
+  /** 合并后的 interface 数据（controller/resource/task/option... Records，import 已合并） */
+  readonly interfaceData: ParsedInterface | null
+  /** 各 interface 文件独立视图——decls/refs 未合并，惰性查询时拼接 */
+  readonly interfaceFiles: readonly InterfaceFileView[]
   readonly interfaceFile: AbsolutePath
   readonly languages: readonly LanguageInfo[]
   readonly activeController: string
@@ -26,7 +29,8 @@ export type ResourceSnapshot = {
 
 export function createSnapshot(opts: {
   bundles: readonly BundleViewType[]
-  interface?: InterfaceParseResult | null
+  interfaceData?: ParsedInterface | null
+  interfaceFiles?: readonly InterfaceFileView[]
   interfaceFile?: AbsolutePath
   languages?: readonly LanguageInfo[]
   activeController?: string
@@ -34,7 +38,8 @@ export function createSnapshot(opts: {
 }): ResourceSnapshot {
   return Object.freeze({
     bundles: Object.freeze([...opts.bundles]),
-    interface: opts.interface ?? null,
+    interfaceData: opts.interfaceData ?? null,
+    interfaceFiles: opts.interfaceFiles ?? [],
     interfaceFile: opts.interfaceFile ?? ('' as AbsolutePath),
     languages: Object.freeze([...opts.languages ?? []]),
     activeController: opts.activeController ?? '',
@@ -103,6 +108,16 @@ export const Snapshot = {
     return result
   },
 
+  /** 惰性合并所有 interface 文件的 decls（各文件保持独立存储，查询时拼接） */
+  allInterfaceDecls(snapshot: ResourceSnapshot): InterfaceDeclInFile[] {
+    return snapshot.interfaceFiles.flatMap(f => [...f.decls])
+  },
+
+  /** 惰性合并所有 interface 文件的 refs */
+  allInterfaceRefs(snapshot: ResourceSnapshot): InterfaceRefInFile[] {
+    return snapshot.interfaceFiles.flatMap(f => [...f.refs])
+  },
+
   listImages(snapshot: ResourceSnapshot): ImageRelativePath[] {
     const all = new Set<ImageRelativePath>()
     for (const bundle of snapshot.bundles) {
@@ -145,7 +160,9 @@ export const Snapshot = {
     next[index] = bundle
     return createSnapshot({
       bundles: next,
-      interface: snapshot.interface,
+      interfaceData: snapshot.interfaceData,
+      interfaceFiles: snapshot.interfaceFiles,
+      interfaceFile: snapshot.interfaceFile,
       languages: snapshot.languages,
       activeController: snapshot.activeController,
       activeResource: snapshot.activeResource

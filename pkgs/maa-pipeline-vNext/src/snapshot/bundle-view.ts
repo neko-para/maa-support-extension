@@ -1,5 +1,5 @@
 import type { TaskDeclInFile, TaskInfoInFile, TaskRefInFile } from '../pipeline/types'
-import type { AbsolutePath, AnchorName, ImageRelativePath, TaskName } from '../types'
+import type { AbsolutePath, AnchorName, ImageRelativePath, RelativePath, TaskName } from '../types'
 import { FileView } from './file-view'
 
 /** default_pipeline.json 的解析结果——已标注文件路径 */
@@ -7,7 +7,7 @@ export type DefaultConfig = ReadonlyMap<TaskName, TaskInfoInFile>
 
 export type BundleView = {
   readonly root: AbsolutePath
-  readonly files: ReadonlyMap<string, FileView>
+  readonly files: ReadonlyMap<RelativePath, FileView>
   readonly images: ReadonlySet<ImageRelativePath>
   readonly defaultConfig: DefaultConfig | null
   readonly maa: boolean
@@ -15,7 +15,7 @@ export type BundleView = {
 
 export function createBundleView(opts: {
   root: AbsolutePath
-  files: ReadonlyMap<string, FileView>
+  files: ReadonlyMap<RelativePath, FileView>
   images: ReadonlySet<ImageRelativePath>
   defaultConfig?: DefaultConfig | null
   maa?: boolean

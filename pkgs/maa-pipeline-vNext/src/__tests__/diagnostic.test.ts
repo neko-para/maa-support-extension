@@ -6,7 +6,7 @@ import type { InterfaceDeclInFile, InterfaceParseResult, InterfaceRefInFile } fr
 import { parsePipelineFile } from '../pipeline/fw'
 import type { TaskDeclInFile, TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
-import type { AbsolutePath, TaskName } from '../types'
+import type { AbsolutePath, RelativePath, TaskName } from '../types'
 
 function annotateInterface(raw: ReturnType<typeof parseInterface>, file: AbsolutePath): InterfaceParseResult {
   return {
@@ -39,7 +39,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -55,7 +55,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -74,7 +74,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -90,7 +90,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -106,7 +106,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set(['img/icon.png']) as Set<never>
         })
       ]
@@ -122,7 +122,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -138,7 +138,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -154,7 +154,7 @@ describe('checkPipeline', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -167,7 +167,7 @@ describe('checkPipeline', () => {
 describe('checkInterface', () => {
   it('detects duplicate controllers', () => {
     const iface = annotateInterface(parseInterface('{"controller": [{"name": "C1"}, {"name": "C1"}]}'), '/fake/interface.json' as AbsolutePath)
-    const snap = createSnapshot({ bundles: [], interface: iface })
+    const snap = createSnapshot({ bundles: [], interfaceFiles: [{ path: '/fake/interface.json' as AbsolutePath, decls: iface.decls, refs: iface.refs }] })
     const diags = checkInterface(snap)
     expect(diags.some(d => d.type === 'int-conflict-controller')).toBe(true)
   })
@@ -176,14 +176,14 @@ describe('checkInterface', () => {
     const iface = annotateInterface(parseInterface(
       '{"task": [{"name": "T1", "entry": "Start", "controller": ["UnknownCtrl"]}]}'
     ), '/fake/interface.json' as AbsolutePath)
-    const snap = createSnapshot({ bundles: [], interface: iface })
+    const snap = createSnapshot({ bundles: [], interfaceFiles: [{ path: '/fake/interface.json' as AbsolutePath, decls: iface.decls, refs: iface.refs }] })
     const diags = checkInterface(snap)
     expect(diags.some(d => d.type === 'int-unknown-controller')).toBe(true)
   })
 
   it('detects switch missing', () => {
     const iface = annotateInterface(parseInterface('{"option": {"sw": {"type": "switch"}}}'), '/fake/interface.json' as AbsolutePath)
-    const snap = createSnapshot({ bundles: [], interface: iface })
+    const snap = createSnapshot({ bundles: [], interfaceFiles: [{ path: '/fake/interface.json' as AbsolutePath, decls: iface.decls, refs: iface.refs }] })
     const diags = checkInterface(snap)
     expect(diags.some(d => d.type === 'int-switch-missing')).toBe(true)
   })
@@ -197,7 +197,7 @@ describe('performDiagnostic', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]
@@ -215,7 +215,7 @@ describe('performDiagnostic', () => {
       bundles: [
         createBundleView({
           root: '/fake' as AbsolutePath,
-          files: new Map([['f.json', fv]]),
+          files: new Map([['f.json' as RelativePath, fv]]),
           images: new Set()
         })
       ]

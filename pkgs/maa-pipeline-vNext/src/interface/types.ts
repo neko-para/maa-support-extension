@@ -385,9 +385,16 @@ export type RawInterfaceParseResult = {
   readonly refs: readonly InterfaceRefInfo[]
 }
 
-/** 完整解析结果——所有 decl/ref 已标注所属文件。Snapshot / Diagnostic 层使用。 */
+/** 完整解析结果——data + 已标注文件的 decl/ref。用于 merge 流程。 */
 export type InterfaceParseResult = {
   readonly data: ParsedInterface
+  readonly decls: readonly InterfaceDeclInFile[]
+  readonly refs: readonly InterfaceRefInFile[]
+}
+
+/** 单文件视图——类似 pipeline 的 FileView。 */
+export type InterfaceFileView = {
+  readonly path: AbsolutePath
   readonly decls: readonly InterfaceDeclInFile[]
   readonly refs: readonly InterfaceRefInFile[]
 }

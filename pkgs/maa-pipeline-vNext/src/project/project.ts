@@ -1,6 +1,6 @@
 import { mergeInterfaces } from '../interface/merge'
 import { parseInterface } from '../interface/parser'
-import type { InterfaceDeclInFile, InterfaceParseResult, InterfaceRefInFile, RawInterfaceParseResult } from '../interface/types'
+import type { InterfaceDeclInFile, InterfaceFileView, InterfaceParseResult, InterfaceRefInFile, ParsedInterface, RawInterfaceParseResult } from '../interface/types'
 import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
@@ -10,7 +10,7 @@ import { createBundleView, createSnapshot } from '../snapshot'
 import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
 import type { FileView } from '../snapshot/file-view'
 import type { LanguageInfo, ResourceSnapshot } from '../snapshot/snapshot'
-import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
+import type { AbsolutePath, ImageRelativePath, RelativePath, TaskName } from '../types'
 
 const PIPELINE_EXTENSIONS = new Set(['.json', '.jsonc'])
 const IMAGE_EXTENSIONS = new Set(['.png'])
@@ -38,14 +38,25 @@ export class Project {
 
   private _bundles: readonly BundleView[] = []
   private _languages: readonly LanguageInfo[] = []
-  private _parsedInterface: InterfaceParseResult | null = null
+  private _interfaceData: ParsedInterface | null = null
+  private _interfaceFiles: readonly InterfaceFileView[] = []
   private _snapshot: ResourceSnapshot | null = null
   private _activeController: string | null = null
   private _activeResource: string | null = null
 
-  /** 当前解析后的 interface（含 import 合并） */
+  /** 合并后的 interface 数据（controller/resource/task/option... Records 已合并 import） */
+  get interfaceData(): ParsedInterface | null {
+    return this._interfaceData
+  }
+
+  /** 合并后的 interface（含 decls/refs——惰性拼接自各文件，保持向后兼容） */
   get parsedInterface(): InterfaceParseResult | null {
-    return this._parsedInterface
+    if (!this._interfaceData) return null
+    return {
+      data: this._interfaceData,
+      decls: this._interfaceFiles.flatMap(f => f.decls),
+      refs: this._interfaceFiles.flatMap(f => f.refs)
+    }
   }
 
   /** 当前快照 */
@@ -93,6 +104,7 @@ export class Project {
 
     const imports = base.data.import ?? []
     const importResults: InterfaceParseResult[] = []
+    const importPaths: AbsolutePath[] = []
     for (const imp of imports) {
       const impPath = this.pathUtils.join(this.root, imp as string)
       const impContent = await this.loader.get(impPath)
@@ -100,24 +112,35 @@ export class Project {
         const rawImp = parseInterface(impContent)
         if (rawImp) {
           importResults.push(annotateInterfaceParseResult(rawImp, impPath))
+          importPaths.push(impPath)
         }
       }
     }
 
-    this._parsedInterface =
-      importResults.length > 0 ? mergeInterfaces(base, ...importResults) : base
+    // data 即时合并（业务层使用），decls/refs 保持按文件隔离（诊断层惰性合并）
+    this._interfaceData = importResults.length > 0
+      ? mergeInterfaces(base, ...importResults).data
+      : base.data
+    this._interfaceFiles = [
+      { path: filePath, decls: base.decls, refs: base.refs },
+      ...importResults.map((r, i) => ({
+        path: importPaths[i],
+        decls: r.decls,
+        refs: r.refs
+      }))
+    ]
 
     await this._loadLanguages()
   }
 
   private async _loadLanguages(): Promise<void> {
-    const iface = this._parsedInterface
+    const iface = this._interfaceData
     if (!iface) {
       this._languages = []
       return
     }
 
-    const langMap = iface.data.languages
+    const langMap = iface.languages
     if (!langMap) {
       this._languages = []
       return
@@ -156,12 +179,12 @@ export class Project {
     const allPipelineFiles = await this.loader.listFiles(pipelineRoot)
     const jsonFiles = allPipelineFiles.filter(f => PIPELINE_EXTENSIONS.has(extname(f)))
 
-    const files = new Map<string, FileView>()
+    const files = new Map<RelativePath, FileView>()
     for (const rel of jsonFiles) {
       const absPath = this.pathUtils.join(pipelineRoot, rel)
       const parsed = await this._loadPipelineFile(absPath)
       if (parsed) {
-        files.set(rel, parsed)
+        files.set(rel as RelativePath, parsed)
       }
     }
 
@@ -182,7 +205,7 @@ export class Project {
 
   /** 根据当前 active resource 加载所有 Bundle 并重建快照 */
   async loadBundles(): Promise<void> {
-    if (!this._parsedInterface) {
+    if (!this._interfaceData) {
       throw new Error('Interface not loaded. Call loadInterface() first.')
     }
 
@@ -193,7 +216,7 @@ export class Project {
       return
     }
 
-    const resInfo = this._parsedInterface.data.resource[resName]
+    const resInfo = this._interfaceData.resource[resName]
     if (!resInfo) {
       this._bundles = []
       this._buildSnapshot()
@@ -254,7 +277,7 @@ export class Project {
     }
 
     if (bundleRel.startsWith(pipelineDir + this.pathUtils.sep)) {
-      const relPath = bundleRel.slice(pipelineDir.length + 1)
+      const relPath = bundleRel.slice(pipelineDir.length + 1) as RelativePath
       if (action === 'deleted') {
         this._removePipelineFile(idx, relPath)
       } else {
@@ -286,7 +309,7 @@ export class Project {
   /** 从文件系统重新读取所有文件并重建快照 */
   async reload(): Promise<void> {
     await this.loadInterface()
-    if (this._parsedInterface) {
+    if (this._interfaceData) {
       await this.loadBundles()
     }
   }
@@ -294,7 +317,8 @@ export class Project {
   private _buildSnapshot(): void {
     this._snapshot = createSnapshot({
       bundles: this._bundles,
-      interface: this._parsedInterface ?? undefined,
+      interfaceData: this._interfaceData,
+      interfaceFiles: this._interfaceFiles,
       interfaceFile: this.pathUtils.join(this.root, 'interface.json'),
       languages: this._languages
     })
@@ -352,15 +376,15 @@ export class Project {
   }
 
   private _isImportFile(rel: string): boolean {
-    if (!this._parsedInterface) {
+    if (!this._interfaceData) {
       return false
     }
     return (
-      (this._parsedInterface.data.import as readonly string[] | undefined)?.includes(rel) ?? false
+      (this._interfaceData.import as readonly string[] | undefined)?.includes(rel) ?? false
     )
   }
 
-  private async _reloadPipelineFile(bundleIndex: number, relPath: string): Promise<void> {
+  private async _reloadPipelineFile(bundleIndex: number, relPath: RelativePath): Promise<void> {
     const bundle = this._bundles[bundleIndex]
     const pipelineRoot = this.pathUtils.join(bundle.root, this._pipelineDir)
     const absPath = this.pathUtils.join(pipelineRoot, relPath)
@@ -384,7 +408,7 @@ export class Project {
     )
   }
 
-  private _removePipelineFile(bundleIndex: number, relPath: string): void {
+  private _removePipelineFile(bundleIndex: number, relPath: RelativePath): void {
     const bundle = this._bundles[bundleIndex]
     const newFiles = new Map(bundle.files)
     newFiles.delete(relPath)

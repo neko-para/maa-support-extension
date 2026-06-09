@@ -5,14 +5,15 @@ import { diagPos } from './utils'
 
 export function checkInterface(snapshot: Parameters<typeof Snapshot.allDecls>[0]): Diagnostic[] {
   const result: Diagnostic[] = []
-  const iface = snapshot.interface
-  if (!iface) {
+
+  // 惰性合并——各 interface 文件保持独立存储，查询时拼接
+  const decls = Snapshot.allInterfaceDecls(snapshot)
+  const refs = Snapshot.allInterfaceRefs(snapshot)
+  if (decls.length === 0 && refs.length === 0) {
     return result
   }
 
   const interfaceFile = snapshot.interfaceFile
-  const decls = iface.decls
-  const refs = iface.refs
 
   // duplicate detection helpers — each item carries its own .file
   function findDuplicates<

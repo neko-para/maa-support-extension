@@ -156,7 +156,7 @@ describe('parseTaskNode — edge cases', () => {
   it('handles empty object', () => {
     const json = '{}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'Empty' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'Empty' as TaskName })
     expect(result.decls).toHaveLength(1)
     expect(result.decls[0].type).toBe('task.decl')
     expect(result.refs).toHaveLength(0)
@@ -165,7 +165,7 @@ describe('parseTaskNode — edge cases', () => {
   it('preserves duplicate keys', () => {
     const json = '{"next": ["T1", "T2"], "next": ["T3"]}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'Dup' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'Dup' as TaskName })
     const nexts = result.refs.filter(r => r.type === 'task.next')
     expect(nexts).toHaveLength(3)
   })
@@ -173,14 +173,14 @@ describe('parseTaskNode — edge cases', () => {
   it('recoType undefined when no recognition field', () => {
     const json = '{"action": "Click"}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'NoReco' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'NoReco' as TaskName })
     expect(result.parts.recoType).toBeUndefined()
   })
 
   it('next as single string', () => {
     const json = '{"next": "SingleTarget"}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'Solo' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'Solo' as TaskName })
     expect(result.refs).toHaveLength(1)
     expect(result.refs[0].type).toBe('task.next')
     const ref = result.refs[0]
@@ -190,7 +190,7 @@ describe('parseTaskNode — edge cases', () => {
   it('desc field creates doc decl', () => {
     const json = '{"desc": "a description"}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'DocExample' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'DocExample' as TaskName })
     const doc = result.decls.find(d => d.type === 'task.doc')
     expect(doc).toBeDefined()
     expect(doc!.doc).toBe('a description')
@@ -199,7 +199,7 @@ describe('parseTaskNode — edge cases', () => {
   it('$__mpe prefixed keys create mpe_config decl in task', () => {
     const json = '{"$__mpe_custom": 123}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'Mpe' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'Mpe' as TaskName })
     expect(result.decls.some(d => d.type === 'task.mpe_config')).toBe(true)
   })
 
@@ -236,7 +236,7 @@ describe('parseTaskNode — focus', () => {
   it('parses focus with locale ($ prefix)', () => {
     const json = '{"focus": {"display": "$some.key"}}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'FocusTask' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'FocusTask' as TaskName })
     const locale = result.refs.find(r => r.type === 'task.locale')
     expect(locale).toBeDefined()
     expect(locale!.target).toBe('some.key')
@@ -245,7 +245,7 @@ describe('parseTaskNode — focus', () => {
   it('parses focus with can_locale (non-$ string)', () => {
     const json = '{"focus": {"display": "plain_text"}}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'FocusTask2' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'FocusTask2' as TaskName })
     const canLocale = result.refs.find(r => r.type === 'task.can_locale')
     expect(canLocale).toBeDefined()
     expect(canLocale!.target).toBe('plain_text')
@@ -256,7 +256,7 @@ describe('parseTaskNode — freeze', () => {
   it('parses target ref inside freeze objects', () => {
     const json = '{"pre_wait_freezes": {"target": "SomeNode"}}'
     const tree = parseTreeWithoutParent(json)!
-    const result = parseTaskNode(tree, { taskName: 'FreezeTask' as TaskName })
+    const result = parseTaskNode(tree, { taskKey: tree, taskName: 'FreezeTask' as TaskName })
     const tgt = result.refs.find(r => r.type === 'task.target')
     expect(tgt).toBeDefined()
     expect(tgt!.target).toBe('SomeNode')

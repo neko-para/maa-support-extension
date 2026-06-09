@@ -1,4 +1,3 @@
-import { parseTree } from 'jsonc-parser'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -8,9 +7,7 @@ import type { InterfaceParseResult } from '../interface/types'
 import type { RelativePath } from '../types'
 
 function parse(json: string): InterfaceParseResult {
-  const tree = parseTree(json)
-  expect(tree).toBeDefined()
-  const result = parseInterface(tree!)
+  const result = parseInterface(json)
   expect(result).not.toBeNull()
   return result!
 }
@@ -29,9 +26,9 @@ describe('parseInterface', () => {
   })
 
   it('returns null for non-object AST', () => {
-    expect(parseInterface(parseTree('[]')!)).toBeNull()
-    expect(parseInterface(parseTree('"string"')!)).toBeNull()
-    expect(parseInterface(parseTree('42')!)).toBeNull()
+    expect(parseInterface('[]')).toBeNull()
+    expect(parseInterface('"string"')).toBeNull()
+    expect(parseInterface('42')).toBeNull()
   })
 
   it('supports JSONC comments and trailing commas', () => {

@@ -1,6 +1,6 @@
 import type { Node } from 'jsonc-parser'
 
-import { buildTree } from '../utils/json'
+import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import { eachOrOne, isString, parseArray, parseObject, parseObjectFlex } from '../utils/parse'
 import type {
   InterfaceDeclVariant,
@@ -9,12 +9,9 @@ import type {
   ParsedInterface
 } from './types'
 
-/**
- * 将 jsonc-parser AST 节点解析为 InterfaceParseResult。
- * 调用方负责通过 parseTree() 获得 Node。
- */
-export function parseInterface(node: Node): InterfaceParseResult | null {
-  if (node.type !== 'object') {
+export function parseInterface(content: string): InterfaceParseResult | null {
+  const node = parseTreeWithoutParent(content)
+  if (!node || node.type !== 'object') {
     return null
   }
 
@@ -253,7 +250,6 @@ function parseTasks(
           taskRaw[key] = buildTree(val)
           break
         case 'pipeline_override':
-          parsePipelineOverride(val, refs, taskName)
           taskRaw[key] = buildTree(val)
           break
         default:
@@ -301,7 +297,6 @@ function parseOptions(
           inputNames = parseInputs(val, decls, optName, optRaw)
           break
         case 'pipeline_override':
-          parsePipelineOverride(val, refs, optName)
           parseInputRefsInOverride(val, refs, optName, inputNames)
           optRaw[key] = buildTree(val)
           break
@@ -367,7 +362,6 @@ function parseCases(
           caseRaw[key] = buildTree(val)
           break
         case 'pipeline_override':
-          parsePipelineOverride(val, refs, caseName)
           caseRaw[key] = buildTree(val)
           break
         default:
@@ -474,13 +468,6 @@ function searchInputRefs(
       searchInputRefs(val, refs, option, names)
     }
   }
-}
-
-// ── Pipeline Override ──
-
-function parsePipelineOverride(_node: Node, _refs: InterfaceRefVariant[], _origin: string) {
-  // pipeline_override 的内容是 pipeline task 节点，由 Phase 4 Snapshot 处理。
-  // Phase 3 仅将原始数据通过 buildTree 存入 data。
 }
 
 // ── Presets ──
@@ -667,9 +654,11 @@ function arrayToRecord(arr: unknown[]): Record<string, unknown> {
   const rec: Record<string, unknown> = {}
   for (const item of arr) {
     const obj = item as Record<string, unknown>
-    const name = obj.name as string
+    if (typeof obj.name !== 'string') {
+      continue
+    }
     const { name: _, ...rest } = obj
-    rec[name] = rest
+    rec[obj.name] = rest
   }
   return rec
 }

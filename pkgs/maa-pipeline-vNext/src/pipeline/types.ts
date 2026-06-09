@@ -6,8 +6,6 @@ import type { AnchorName, ImageRelativePath, TaskName } from '../types'
 import type { StringNode } from '../utils/parse'
 import type { TaskAttrInfo } from './attr'
 
-// ── Task Parts ──
-
 export type TaskParts = {
   node: Node
   recoType?: StringNode
@@ -21,15 +19,15 @@ export type TaskParts = {
 // ── Declarations ──
 
 export type TaskDeclVariant =
-  | { type: 'task.decl'; task: TaskName; tasks: TaskMaaTaskRef[] }
-  | { type: 'task.anchor'; anchor: AnchorName; task: TaskName; belong: TaskName }
-  | { type: 'task.sub_reco'; name: string; reco: Node; task: TaskName }
-  | { type: 'task.locale'; key: string; value: string; valueNode: Node }
-  | { type: 'task.doc'; task: TaskName; doc: string }
-  | { type: 'task.mpe_config' }
+  | { type: 'task.decl'; task: TaskName; tasks: TaskMaaTaskRef[]; location: Node }
+  | { type: 'task.anchor'; anchor: AnchorName; task: TaskName; belong: TaskName; location: Node }
+  | { type: 'task.sub_reco'; name: string; reco: Node; task: TaskName; location: Node }
+  | { type: 'task.locale'; key: string; value: string; valueNode: Node; location: Node }
+  | { type: 'task.doc'; task: TaskName; doc: string; location: Node }
+  | { type: 'task.mpe_config'; location: Node }
 
-/** 解析器输出——不含 file/location。由调用方添加。 */
 export type TaskDeclInfo = TaskDeclVariant
+export type TaskDeclInFile = TaskDeclInfo & { file: string }
 
 export type TaskMaaTaskRef = {
   task: TaskName
@@ -45,12 +43,14 @@ export type TaskNextRefInfo = {
   target: TaskName
   objMode: boolean
   attrs: TaskAttrInfo<'JumpBack' | 'Anchor'>
+  location: Node
 }
 
 export type TaskTargetRefInfo = {
   type: 'task.target'
   target: TaskName
   attrs: TaskAttrInfo<'Anchor'>
+  location: Node
 }
 
 export type TaskRoiRefInfo = {
@@ -60,16 +60,19 @@ export type TaskRoiRefInfo = {
   prev: StringNode[]
   task: TaskName
   prevRef: boolean
+  location: Node
 }
 
 export type TaskRecoRefInfo = {
   type: 'task.reco'
   target: TaskName
+  location: Node
 }
 
 export type TaskTemplateRefInfo = {
   type: 'task.template'
   target: ImageRelativePath
+  location: Node
 }
 
 export type TaskCustomMeta = {
@@ -82,6 +85,7 @@ export type TaskCustomTaskRefInfo = {
   type: 'task.custom_task'
   target: TaskName
   meta: TaskCustomMeta
+  location: Node
 }
 
 export type TaskCustomAnchorRefInfo = {
@@ -89,48 +93,57 @@ export type TaskCustomAnchorRefInfo = {
   target: string
   meta: TaskCustomMeta
   attrs: TaskAttrInfo<'Anchor'>
+  location: Node
 }
 
 export type TaskCustomTemplateRefInfo = {
   type: 'task.custom_template'
   target: ImageRelativePath
   meta: TaskCustomMeta
+  location: Node
 }
 
 export type TaskEntryRefInfo = {
   type: 'task.entry'
   target: TaskName
+  location: Node
 }
 
 export type TaskLocaleRefInfo = {
   type: 'task.locale'
   target: string
+  location: Node
 }
 
 export type TaskLocaleTextRefInfo = {
   type: 'task.locale_text'
   target: string
+  location: Node
 }
 
 export type TaskCanLocaleRefInfo = {
   type: 'task.can_locale'
   target: string
+  location: Node
 }
 
 export type TaskColorRefInfo = {
   type: 'task.color'
   method: 'rgb' | 'hsv'
   color: number[]
+  location: Node
 }
 
 export type TaskColorFilterRefInfo = {
   type: 'task.color_filter'
   target: TaskName
+  location: Node
 }
 
 export type TaskAnchorRefInfo = {
   type: 'task.anchor'
   target: TaskName
+  location: Node
 }
 
 type MaaFwTaskRefVariant =
@@ -155,6 +168,7 @@ export type TaskMaaBaseTaskRefInfo = {
   target: TaskName
   tasks: TaskMaaTaskRef[]
   belong: TaskName
+  location: Node
 }
 
 export type TaskMaaExprRefInfo = {
@@ -162,18 +176,13 @@ export type TaskMaaExprRefInfo = {
   target: MaaTaskExpr
   tasks: TaskMaaTaskRef[]
   belong: TaskName
+  location: Node
 }
 
 type MaaTaskRefVariant = TaskMaaBaseTaskRefInfo | TaskMaaExprRefInfo
 
-/** 解析器输出——不含 file。由调用方添加。 */
 export type TaskRefInfo = MaaFwTaskRefVariant | MaaTaskRefVariant
-
-/** 完整引用信息——含 file 和位置。用于 Snapshot / Diagnostic。 */
-export type TaskRefInFile = TaskRefInfo & { file: string; location: Node }
-
-/** 完整声明信息——含 file 和位置。用于 Snapshot / Diagnostic。 */
-export type TaskDeclInFile = TaskDeclInfo & { file: string; location: Node }
+export type TaskRefInFile = TaskRefInfo & { file: string }
 
 // ── Parsed Task ──
 

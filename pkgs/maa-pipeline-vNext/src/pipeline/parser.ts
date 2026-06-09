@@ -1,4 +1,4 @@
-import { type Node, parseTree } from 'jsonc-parser'
+import type { Node } from 'jsonc-parser'
 
 import type { ImageRelativePath } from '../types'
 import { type StringNode, eachOrOne, isString, parseObject as parseObj } from '../utils/parse'
@@ -101,25 +101,10 @@ function parseActionField(obj: Node, result: TaskParts) {
   }
 }
 
-export function parseTreeWithoutParent(content: string): Node | undefined {
-  const node = parseTree(content)
-  if (node) {
-    type DeepWritable<T> = { -readonly [P in keyof T]: DeepWritable<T[P]> }
-    const shrink = (n: Node) => {
-      delete (n as DeepWritable<Node>).parent
-      for (const c of n.children ?? []) {
-        shrink(c)
-      }
-    }
-    shrink(node)
-  }
-  return node
-}
-
 export function parseTemplate(node: Node, refs: TaskRefInfo[]) {
   eachOrOne(node, n => {
     if (isString(n)) {
-      refs.push({ type: 'task.template', target: n.value as ImageRelativePath })
+      refs.push({ type: 'task.template', target: n.value as ImageRelativePath, location: n })
     }
   })
 }

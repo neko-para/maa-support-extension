@@ -1,6 +1,7 @@
 import type { Node } from 'jsonc-parser'
 
 import type { AnchorName, ImageRelativePath, TaskName } from '../types'
+import { parseTreeWithoutParent } from '../utils/json'
 import {
   type StringNode,
   eachOrOne,
@@ -13,7 +14,7 @@ import {
 } from '../utils/parse'
 import { parseAttr } from './attr'
 import { parseMaaTaskNode } from './maa'
-import { parseTemplate, parseTreeWithoutParent, splitNode } from './parser'
+import { parseTemplate, splitNode } from './parser'
 import type {
   ParserConfig,
   PropSelectorResult,
@@ -27,7 +28,13 @@ function parseNext(node: Node, refs: TaskRefInfo[]) {
   eachOrOne(node, n => {
     if (isString(n)) {
       const [target, attrs] = parseAttr(n.value, ['JumpBack', 'Anchor'] as const)
-      refs.push({ type: 'task.next', target: target as TaskName, objMode: false, attrs })
+      refs.push({
+        type: 'task.next',
+        target: target as TaskName,
+        objMode: false,
+        attrs,
+        location: n
+      })
     } else if (n.type === 'object') {
       let loc: StringNode | null = null
       let jb: boolean | undefined
@@ -48,7 +55,8 @@ function parseNext(node: Node, refs: TaskRefInfo[]) {
           type: 'task.next',
           target,
           objMode: true,
-          attrs: { offset: 0, attrs: { JumpBack: jb, Anchor: an }, unknown: [] }
+          attrs: { offset: 0, attrs: { JumpBack: jb, Anchor: an }, unknown: [] },
+          location: loc!
         })
       }
     }
@@ -58,27 +66,35 @@ function parseNext(node: Node, refs: TaskRefInfo[]) {
 function parseAnchor(node: Node, decls: TaskDeclInfo[], refs: TaskRefInfo[], task: TaskName) {
   const parseOne = (n: Node) => {
     if (isString(n)) {
-      decls.push({ type: 'task.anchor', anchor: n.value as AnchorName, task, belong: task })
+      decls.push({
+        type: 'task.anchor',
+        anchor: n.value as AnchorName,
+        task,
+        belong: task,
+        location: n
+      })
     }
   }
   if (isString(node) || node.type === 'array') {
     eachOrOne(node, parseOne)
   } else {
-    for (const [key, obj, _prop] of parseObjectFlex(node)) {
+    for (const [key, obj, prop] of parseObjectFlex(node)) {
       if (obj && isString(obj)) {
         decls.push({
           type: 'task.anchor',
           anchor: key as AnchorName,
           task: obj.value as TaskName,
-          belong: task
+          belong: task,
+          location: prop
         })
-        refs.push({ type: 'task.anchor', target: obj.value as TaskName })
+        refs.push({ type: 'task.anchor', target: obj.value as TaskName, location: obj })
       } else {
         decls.push({
           type: 'task.anchor',
           anchor: key as AnchorName,
           task: '' as TaskName,
-          belong: task
+          belong: task,
+          location: prop
         })
       }
     }
@@ -97,7 +113,8 @@ function parseRoi(node: Node, refs: TaskRefInfo[], task: TaskName, prev: StringN
       attrs,
       prev: [...prev],
       task,
-      prevRef: false
+      prevRef: false,
+      location: node
     })
   } else {
     const prevRef = !!prev.find(p => p.value === node.value)
@@ -107,7 +124,8 @@ function parseRoi(node: Node, refs: TaskRefInfo[], task: TaskName, prev: StringN
       attrs: { offset: 0, attrs: {}, unknown: [] },
       prev: [...prev],
       task,
-      prevRef
+      prevRef,
+      location: node
     })
   }
 }
@@ -116,7 +134,7 @@ function parseTarget(node: Node, refs: TaskRefInfo[], acceptArray = false) {
   const parseOne = (n: Node) => {
     if (isString(n)) {
       const [target, attrs] = parseAttr(n.value, ['Anchor'])
-      refs.push({ type: 'task.target', target: target as TaskName, attrs })
+      refs.push({ type: 'task.target', target: target as TaskName, attrs, location: n })
     }
   }
   if (acceptArray && node.type === 'array') {
@@ -130,7 +148,7 @@ function parseTarget(node: Node, refs: TaskRefInfo[], acceptArray = false) {
 
 function parseColorFilter(node: Node, refs: TaskRefInfo[]) {
   if (isString(node)) {
-    refs.push({ type: 'task.color_filter', target: node.value as TaskName })
+    refs.push({ type: 'task.color_filter', target: node.value as TaskName, location: node })
   }
 }
 
@@ -140,9 +158,9 @@ function parseFocus(node: Node, refs: TaskRefInfo[]) {
       continue
     }
     if (obj.value.startsWith('$')) {
-      refs.push({ type: 'task.locale', target: obj.value.substring(1) })
+      refs.push({ type: 'task.locale', target: obj.value.substring(1), location: obj })
     } else if (obj.value.length > 0) {
-      refs.push({ type: 'task.can_locale', target: obj.value })
+      refs.push({ type: 'task.can_locale', target: obj.value, location: obj })
     }
   }
 }
@@ -176,7 +194,7 @@ function parseColor(node: Node, refs: TaskRefInfo[], method: 'rgb' | 'hsv') {
         color.push(obj.value)
       }
     }
-    refs.push({ type: 'task.color', method, color })
+    refs.push({ type: 'task.color', method, color, location: n })
   }
   if (isColorArr(node)) {
     addColor(node)
@@ -196,7 +214,7 @@ function parseSubName(
   parent: Node
 ): StringNode | null {
   if (isString(node)) {
-    decls.push({ type: 'task.sub_reco', name: node.value, reco: parent, task })
+    decls.push({ type: 'task.sub_reco', name: node.value, reco: parent, task, location: node })
     return node
   }
   return null
@@ -211,21 +229,28 @@ function processCustom(
   const meta = { customName, customType, missingPolicy: result.missingPolicy ?? 'error' } as const
   switch (result.type) {
     case 'taskRef':
-      refs.push({ type: 'task.custom_task', target: result.node.value as TaskName, meta })
+      refs.push({
+        type: 'task.custom_task',
+        target: result.node.value as TaskName,
+        meta,
+        location: result.node
+      })
       break
     case 'anchorRef':
       refs.push({
         type: 'task.custom_anchor',
         target: result.node.value,
         meta,
-        attrs: { offset: 0, attrs: { Anchor: true }, unknown: [] }
+        attrs: { offset: 0, attrs: { Anchor: true }, unknown: [] },
+        location: result.node
       })
       break
     case 'template':
       refs.push({
         type: 'task.custom_template',
         target: result.node.value as ImageRelativePath,
-        meta
+        meta,
+        location: result.node
       })
       break
   }
@@ -267,7 +292,7 @@ function parseRecoAndAct(
       case 'any_of':
         for (const sub of parseArray(obj)) {
           if (isString(sub)) {
-            refs.push({ type: 'task.reco', target: sub.value as TaskName })
+            refs.push({ type: 'task.reco', target: sub.value as TaskName, location: sub })
           } else {
             const subParts = splitNode(sub, false)
             parseRecoAndAct(subParts, decls, refs, task, prev)
@@ -352,12 +377,14 @@ function parseRecoAndAct(
 
 export function parseTaskNode(
   node: Node,
-  opts: { taskName: TaskName; parser?: ParserConfig }
+  opts: { taskName: TaskName; taskKey: Node; parser?: ParserConfig }
 ): Omit<TaskInfo, 'parts'> & { parts: TaskParts } {
   const { taskName, parser } = opts
   const parts = splitNode(node, false)
 
-  const decls: TaskDeclInfo[] = [{ type: 'task.decl', task: taskName, tasks: [] }]
+  const decls: TaskDeclInfo[] = [
+    { type: 'task.decl', task: taskName, tasks: [], location: opts.taskKey }
+  ]
   const refs: TaskRefInfo[] = []
 
   for (const [key, obj] of parts.base) {
@@ -380,7 +407,7 @@ export function parseTaskNode(
       case 'doc':
       case 'desc':
         if (isString(obj)) {
-          decls.push({ type: 'task.doc', task: taskName, doc: obj.value })
+          decls.push({ type: 'task.doc', task: taskName, doc: obj.value, location: obj })
         }
         break
     }
@@ -388,9 +415,9 @@ export function parseTaskNode(
 
   parseRecoAndAct(parts, decls, refs, taskName, [], parser)
 
-  for (const [key, _obj] of parts.unknown) {
+  for (const [key, _obj, propNode] of parts.unknown) {
     if (key.startsWith('$__mpe')) {
-      decls.push({ type: 'task.mpe_config' })
+      decls.push({ type: 'task.mpe_config', location: propNode })
     }
   }
 
@@ -408,19 +435,22 @@ export function parsePipelineFile(
     return { tasks, fileDecls }
   }
 
-  for (const [key, obj] of parseObj(tree)) {
+  for (const [key, obj, propNode] of parseObj(tree)) {
     if (key.startsWith('$')) {
       if (key.startsWith('$__mpe')) {
-        fileDecls.push({ type: 'task.mpe_config' })
+        fileDecls.push({ type: 'task.mpe_config', location: propNode })
       }
       continue
     }
     const taskName = (opts.isDefault ? '$' + key : key) as TaskName
 
     if (opts.maa) {
-      tasks.set(taskName, parseMaaTaskNode(obj, taskName) as TaskInfo)
+      tasks.set(taskName, parseMaaTaskNode(obj, taskName, propNode) as TaskInfo)
     } else {
-      tasks.set(taskName, parseTaskNode(obj, { taskName, parser: opts.parser }) as TaskInfo)
+      tasks.set(
+        taskName,
+        parseTaskNode(obj, { taskName, taskKey: propNode, parser: opts.parser }) as TaskInfo
+      )
     }
   }
   return { tasks, fileDecls }

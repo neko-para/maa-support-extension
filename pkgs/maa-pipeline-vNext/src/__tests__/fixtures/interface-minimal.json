@@ -1,12 +1,6 @@
 {
   "name": "MinimalProject",
-  "controller": [
-    { "name": "Adb", "type": "Adb" }
-  ],
-  "resource": [
-    { "name": "base", "path": "resource/base" }
-  ],
-  "task": [
-    { "name": "Start", "entry": "T001Start" }
-  ]
+  "controller": [{ "name": "Adb", "type": "Adb" }],
+  "resource": [{ "name": "base", "path": "resource/base" }],
+  "task": [{ "name": "Start", "entry": "T001Start" }]
 }

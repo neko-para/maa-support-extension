@@ -1,12 +1,8 @@
 {
   "name": "ImportFile",
   "version": "1.0.0",
-  "controller": [
-    { "name": "ShouldBeIgnored", "type": "Adb" }
-  ],
-  "resource": [
-    { "name": "ShouldBeIgnored", "path": "ignored" }
-  ],
+  "controller": [{ "name": "ShouldBeIgnored", "type": "Adb" }],
+  "resource": [{ "name": "ShouldBeIgnored", "path": "ignored" }],
   "task": [
     {
       "name": "ImportedTask",

@@ -12,8 +12,8 @@
 
 对于跨包/跨模块的分析任务（如 LSP 策略、解析器设计），`docs/extra/` 中的专题文档应优先于源码阅读。
 
-**代码修改完成后**，使用 Prettier 格式化改动的代码文件（`.ts`、`.json` 等）。不格式化文档（`.md`）。
+**代码修改完成后**，按以下顺序验证和格式化：
 
-```bash
-npx prettier -w <改动的代码文件...>
-```
+1. 验证类型和 lint：`tsc -p tsconfig.json --noEmit`，`npx eslint <改动的文件> --max-warnings 0`
+2. 运行测试（如有 vitest）：`vitest run`
+3. 格式化代码：`npx prettier -w <改动的代码文件>`（不格式化 `.md` 文档）

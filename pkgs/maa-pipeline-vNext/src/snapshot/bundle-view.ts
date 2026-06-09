@@ -2,7 +2,7 @@ import type { TaskInfo } from '../pipeline/types'
 import type { AnchorName, ImageRelativePath, TaskName } from '../types'
 import { FileView } from './file-view'
 
-export type DefaultConfig = ReadonlyMap<TaskName, { obj: unknown }>
+export type DefaultConfig = ReadonlyMap<TaskName, TaskInfo>
 
 export type BundleView = {
   readonly root: string
@@ -19,13 +19,13 @@ export function createBundleView(opts: {
   defaultConfig?: DefaultConfig | null
   maa?: boolean
 }): BundleView {
-  return {
+  return Object.freeze({
     root: opts.root,
     files: opts.files,
     images: opts.images,
     defaultConfig: opts.defaultConfig ?? null,
     maa: opts.maa ?? false
-  }
+  })
 }
 
 export const BundleView = {

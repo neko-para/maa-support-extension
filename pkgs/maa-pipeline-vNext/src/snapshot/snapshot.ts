@@ -30,13 +30,13 @@ export function createSnapshot(opts: {
   activeController?: string
   activeResource?: string
 }): ResourceSnapshot {
-  return {
-    bundles: opts.bundles,
+  return Object.freeze({
+    bundles: Object.freeze([...opts.bundles]),
     interface: opts.interface ?? null,
-    languages: opts.languages ?? [],
+    languages: Object.freeze([...opts.languages ?? []]),
     activeController: opts.activeController ?? '',
     activeResource: opts.activeResource ?? ''
-  }
+  })
 }
 
 export const Snapshot = {

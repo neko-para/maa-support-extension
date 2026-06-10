@@ -13,4 +13,10 @@ export {
 export type { BundleView as BundleViewType, DefaultConfig, ResolvedTaskConfig } from './bundle-view'
 
 export { createSnapshot, Snapshot } from './snapshot'
-export type { DeclWithBundle, RefWithBundle, LanguageInfo, ResourceSnapshot } from './snapshot'
+export type {
+  DeclWithBundle,
+  LocaleEntry,
+  RefWithBundle,
+  LanguageInfo,
+  ResourceSnapshot
+} from './snapshot'

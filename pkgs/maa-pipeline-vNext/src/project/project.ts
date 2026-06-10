@@ -1,3 +1,5 @@
+import { parseTree } from 'jsonc-parser'
+
 import { mergeInterfaces } from '../interface/merge'
 import { parseInterface } from '../interface/parser'
 import type {
@@ -16,7 +18,7 @@ import type { ParserConfig, TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
 import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
 import type { FileView } from '../snapshot/file-view'
-import type { LanguageInfo, ResourceSnapshot } from '../snapshot/snapshot'
+import type { LanguageInfo, LocaleEntry, ResourceSnapshot } from '../snapshot/snapshot'
 import type { AbsolutePath, ImageRelativePath, RelativePath, TaskName } from '../types'
 
 const PIPELINE_EXTENSIONS = new Set(['.json', '.jsonc'])
@@ -163,10 +165,21 @@ export class Project {
         continue
       }
       try {
-        const raw = JSON.parse(content)
-        const entries = new Map<string, string>(
-          Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, String(v)])
-        )
+        const tree = parseTree(content)
+        const entries = new Map<string, LocaleEntry>()
+        if (tree && tree.type === 'object') {
+          for (const prop of tree.children ?? []) {
+            if (prop.type === 'property' && prop.children?.length === 2) {
+              const [keyNode, valueNode] = prop.children
+              if (keyNode.type === 'string') {
+                entries.set(keyNode.value as string, {
+                  value: String(valueNode.value ?? ''),
+                  keyOffset: keyNode.offset
+                })
+              }
+            }
+          }
+        }
         langs.push(Object.freeze({ name, file: absPath, entries }))
       } catch {
         // 语言文件解析失败时跳过，不影响其他文件加载
@@ -400,7 +413,10 @@ export class Project {
     if (content === null) {
       return null
     }
-    return this._makeFileView(absPath, parsePipelineFile(content, { maa: this.maa, parser: this.parser }))
+    return this._makeFileView(
+      absPath,
+      parsePipelineFile(content, { maa: this.maa, parser: this.parser })
+    )
   }
 
   private async _loadDefaultConfig(bundlePath: AbsolutePath): Promise<DefaultConfig | null> {

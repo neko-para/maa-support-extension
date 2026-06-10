@@ -18,10 +18,15 @@ import {
 export type { BundleView as BundleViewType, DefaultConfig } from './bundle-view'
 export type { FileView } from './file-view'
 
+export type LocaleEntry = {
+  readonly value: string
+  readonly keyOffset: number
+}
+
 export type LanguageInfo = {
   readonly name: string
   readonly file: AbsolutePath
-  readonly entries: ReadonlyMap<string, string>
+  readonly entries: ReadonlyMap<string, LocaleEntry>
 }
 
 export type DeclWithBundle = TaskDeclInFile & { bundleIndex: number }
@@ -187,6 +192,28 @@ export const Snapshot = {
       }
     }
     return result
+  },
+
+  queryLocale(snapshot: ResourceSnapshot, key: string) {
+    return snapshot.languages.map(l => l.entries.get(key) ?? null) as (LocaleEntry | null)[]
+  },
+
+  queryLocaleIndex(snapshot: ResourceSnapshot, name?: string) {
+    if (!name) {
+      return 0
+    }
+    const idx = snapshot.languages.findIndex(l => l.name === name)
+    return idx === -1 ? 0 : idx
+  },
+
+  allLocaleKeys(snapshot: ResourceSnapshot) {
+    const keys = new Set<string>()
+    for (const lang of snapshot.languages) {
+      for (const k of lang.entries.keys()) {
+        keys.add(k)
+      }
+    }
+    return [...keys]
   },
 
   getAnchorList(snapshot: ResourceSnapshot) {

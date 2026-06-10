@@ -430,6 +430,60 @@ describe('ResourceSnapshot', () => {
     expect(located!.file.isDefault).toBe(false)
   })
 
+  describe('locale', () => {
+    function makeSnapshotWithLocales() {
+      const bv = createBundleView({
+        root: '/fake' as AbsolutePath,
+        files: new Map([['a.json' as RelativePath, makeFileView('pipeline-v1.json')]]),
+        images: new Set()
+      })
+      return createSnapshot({
+        bundles: [bv],
+        languages: [
+          {
+            name: 'zh-CN',
+            file: '/fake/zh-CN.json' as AbsolutePath,
+            entries: new Map([
+              ['hello', { value: '你好', keyOffset: 10 }],
+              ['world', { value: '世界', keyOffset: 30 }]
+            ])
+          },
+          {
+            name: 'en-US',
+            file: '/fake/en-US.json' as AbsolutePath,
+            entries: new Map([['hello', { value: 'Hello', keyOffset: 10 }]])
+          }
+        ]
+      })
+    }
+
+    it('queryLocale returns entries with value and keyOffset', () => {
+      const snap = makeSnapshotWithLocales()
+      const hello = Snapshot.queryLocale(snap, 'hello')
+      expect(hello[0]?.value).toBe('你好')
+      expect(hello[0]?.keyOffset).toBe(10)
+      expect(hello[1]?.value).toBe('Hello')
+      expect(Snapshot.queryLocale(snap, 'world')[0]?.value).toBe('世界')
+      expect(Snapshot.queryLocale(snap, 'world')[1]).toBeNull()
+    })
+
+    it('queryLocaleIndex finds by name', () => {
+      const snap = makeSnapshotWithLocales()
+      expect(Snapshot.queryLocaleIndex(snap, 'en-US')).toBe(1)
+      expect(Snapshot.queryLocaleIndex(snap, 'zh-CN')).toBe(0)
+      expect(Snapshot.queryLocaleIndex(snap, 'fr-FR')).toBe(0) // fallback
+      expect(Snapshot.queryLocaleIndex(snap, undefined)).toBe(0)
+    })
+
+    it('allLocaleKeys returns unique keys', () => {
+      const snap = makeSnapshotWithLocales()
+      const keys = Snapshot.allLocaleKeys(snap)
+      expect(keys).toContain('hello')
+      expect(keys).toContain('world')
+      expect(keys).toHaveLength(2)
+    })
+  })
+
   it('getAnchorList merges across bundles', () => {
     const bv = createBundleView({
       root: '/fake' as AbsolutePath,

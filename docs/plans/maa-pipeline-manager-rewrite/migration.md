@@ -252,11 +252,13 @@ project.onChange = (snapshot) => {
 
 | 旧 | 新 | 状态 | 使用者 |
 |----|----|------|--------|
-| `intBundle.langBundle.langs` | `snapshot.languages` | 🔄 | base (pipeline + interface), completion |
-| `intBundle.langBundle.queryKey(key)` | **未实现** | ❌ | webview/control, hover (pipeline), base (interface) |
-| `intBundle.langBundle.queryName(name)` | **未实现** | ❌ | webview/control, inlayHint |
-| `intBundle.langBundle.allKeys()` | **未实现** | ❌ | completion, completion-legacy, codeActions |
-| `intBundle.langBundle.addPair(key, value)` | **未实现** | ❌ | codeActions |
+| `intBundle.langBundle.langs` | `snapshot.languages` (`LanguageInfo[]`) | ✅ | base (pipeline + interface), completion |
+
+> `LanguageInfo.entries` 为 `ReadonlyMap<string, LocaleEntry>`，`LocaleEntry` 含 `value: string` 和 `keyOffset: number`（AST 位置，供 LSP hover 生成源码链接）。`keyOffset` 对应旧 `entry.keyNode.offset`。
+| `intBundle.langBundle.queryKey(key)` | `Snapshot.queryLocale(snapshot, key)` → `(LocaleEntry \| null)[]` | ✅ | webview/control, hover, base |
+| `intBundle.langBundle.queryName(name)` | `Snapshot.queryLocaleIndex(snapshot, name)` | ✅ | webview/control, inlayHint |
+| `intBundle.langBundle.allKeys()` | `Snapshot.allLocaleKeys(snapshot)` | ✅ | completion, codeActions |
+| `intBundle.langBundle.addPair(key, value)` | **未实现** | ❌ | codeActions — 需要 AST 位置和文件写入，Phase 8 在 Project 层处理 |
 
 > `snapshot.languages` 提供 `LanguageInfo[]`（含 `name`, `file`, `entries: Map<string,string>`）。按 key 查询和编辑操作需要在 consumer 层或用新辅助函数实现。
 
@@ -327,7 +329,7 @@ return project
 | `BundleView.getTaskBriefInfo(task)` | completion, completion-legacy | 提取 reco/act type 字符串 |
 | `Snapshot.getTaskDoc(task)` / `BundleView.getTaskDoc(task)` | webview, inlayHint, hover | 从 decls 中收集 `task.doc` |
 | `BundleView.toggleMode(mode, info)` | codeActions | v1↔v2 format 切换（可暂缓） |
-| Language query API: `queryKey`, `queryName`, `allKeys`, `addPair` | completion, webview, codeActions | 在 Snapshot 或独立 LanguageService 上添加 |
+| `LanguageBundle.addPair(key, value)` | codeActions | 需要 AST 位置 + 文件写入，Phase 8 在 Project 层处理 |
 | MAA eval: `maaEvalTask`, `maaEvalExpr` | command, base (pipeline) | 集成 `@nekosu/maa-tasker` 的 `MaaEvalContext` |
 | MAA error delegate: `evalErrorDelegate` | interface.ts (extension) | `MaaErrorDelegate` 注入 |
 

@@ -91,6 +91,9 @@ export class Project {
   private _activeController: string | null = null
   private _activeResource: string | null = null
 
+  /** 快照变更回调——每次 _buildSnapshot() 后触发 */
+  onSnapshotChange: ((snapshot: ResourceSnapshot) => void) | null = null
+
   /** 合并后的 interface 数据（controller/resource/task/option... Records 已合并 import） */
   get interfaceData(): ParsedInterface | null {
     return this._interfaceData
@@ -452,6 +455,9 @@ export class Project {
       interfaceFile: this.pathUtils.join(this.root, 'interface.json'),
       languages: this._languages
     })
+    if (this._snapshot && this.onSnapshotChange) {
+      this.onSnapshotChange(this._snapshot)
+    }
   }
 
   private get _pipelineDir(): string {

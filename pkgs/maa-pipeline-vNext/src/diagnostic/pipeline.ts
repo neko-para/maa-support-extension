@@ -100,7 +100,7 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
     // duplicate-next
     const taskRef = taskRefTarget(ref)
     if (taskRef !== null) {
-      if (!taskLists[ref.bundleIndex].has(taskRef) && taskRef !== '') {
+      if (!taskLists[ref.bundleIndex].has(taskRef) && !(taskRef === '' && ref.type === 'task.anchor')) {
         let detailLoc = loc
         if (ref.type === 'task.next' && ref.attrs.offset > 0) {
           detailLoc = { ...loc, ...adjustForAttrPrefix(loc, ref.attrs) }

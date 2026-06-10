@@ -2,11 +2,10 @@ import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
 import {
-  type AbsolutePath,
-  type Diagnostic,
   buildDiagnosticMessage,
+  nodePathUtils,
   performDiagnostic
-} from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import { interfaceService, rootService } from '.'
 import { BaseService } from './context'
@@ -40,44 +39,34 @@ class DiagnosticScanner extends FlushHelper {
     this.defer = rootService.onConfigChanged(() => {
       this.flushDirty()
     })
+
+    this.defer = interfaceService.onSnapshotChanged(() => {
+      this.scheduleFlush()
+    })
   }
 
   async doFlushImpl() {
-    const intBundle = interfaceService.interfaceBundle
-    if (!intBundle) {
+    const snapshot = interfaceService.getSnapshot()
+    if (!snapshot) {
       return
     }
-    await intBundle.flush(true)
 
     const result: [uri: vscode.Uri, diag: vscode.Diagnostic][] = []
 
-    const rawDiags = performDiagnostic(intBundle, {})
-    const diags: Diagnostic[] = []
-    for (const diag of rawDiags) {
-      const override = rootService.config?.check?.override?.[diag.type]
-      if (override === 'ignore') {
-        continue
-      }
-      if (override) {
-        diags.push({
-          ...diag,
-          level: override
-        })
-      } else {
-        diags.push(diag)
-      }
-    }
+    const diags = performDiagnostic(snapshot, {
+      override: rootService.config?.check?.override
+    })
 
     for (const diag of diags) {
       const [start, end, brief] = await buildDiagnosticMessage(
-        rootService.activeResource!.workspace.fsPath as AbsolutePath,
+        interfaceService.vNextProject!.root,
         diag,
         async (file, offset) => {
           const doc = await vscode.workspace.openTextDocument(file)
           const pos = doc.positionAt(offset)
           return [pos.line, pos.character]
         },
-        {}
+        nodePathUtils
       )
 
       const uri = vscode.Uri.file(diag.file)

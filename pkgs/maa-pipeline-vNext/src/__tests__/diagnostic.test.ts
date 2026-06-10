@@ -198,6 +198,64 @@ describe('checkPipeline', () => {
     expect(diags.some(d => d.type === 'unknown-anchor')).toBe(true)
   })
 
+  it('empty string in next triggers unknown-task', () => {
+    const json = '{"T1": {"next": [""]}}'
+    const fv = makeAnnotated(
+      '/fake/f.json' as AbsolutePath,
+      parsePipelineFile(json, { maa: false })
+    )
+    const snap = createSnapshot({
+      bundles: [
+        createBundleView({
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json' as RelativePath, fv]]),
+          images: new Set()
+        })
+      ]
+    })
+    const diags = checkPipeline(snap)
+    expect(diags.filter(d => d.type === 'unknown-task')).toHaveLength(1)
+  })
+
+  it('empty anchor target does not trigger unknown-task', () => {
+    const json = '{"T1": {"anchor": {"A": ""}}}'
+    const fv = makeAnnotated(
+      '/fake/f.json' as AbsolutePath,
+      parsePipelineFile(json, { maa: false })
+    )
+    const snap = createSnapshot({
+      bundles: [
+        createBundleView({
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json' as RelativePath, fv]]),
+          images: new Set()
+        })
+      ]
+    })
+    const diags = checkPipeline(snap)
+    expect(diags.filter(d => d.type === 'unknown-task')).toHaveLength(0)
+  })
+
+  it('[Anchor] with no name does not trigger unknown-task but triggers unknown-anchor', () => {
+    const json = '{"T1": {"next": ["[Anchor]"]}}'
+    const fv = makeAnnotated(
+      '/fake/f.json' as AbsolutePath,
+      parsePipelineFile(json, { maa: false })
+    )
+    const snap = createSnapshot({
+      bundles: [
+        createBundleView({
+          root: '/fake' as AbsolutePath,
+          files: new Map([['f.json' as RelativePath, fv]]),
+          images: new Set()
+        })
+      ]
+    })
+    const diags = checkPipeline(snap)
+    expect(diags.filter(d => d.type === 'unknown-task')).toHaveLength(0)
+    expect(diags.filter(d => d.type === 'unknown-anchor')).toHaveLength(1)
+  })
+
   it('detects unknown-attr', () => {
     const json = '{"T1": {"next": ["[Unknown]T2"]}}'
     const fv = makeAnnotated(

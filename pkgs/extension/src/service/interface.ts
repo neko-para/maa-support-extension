@@ -17,10 +17,10 @@ import {
   buildResourceRuntime,
   buildTaskRuntime
 } from '@nekosu/maa-pipeline-manager'
-import { Project, nodePathUtils } from '@nekosu/maa-pipeline-manager-vnext'
+import { WatchedProject, nodePathUtils } from '@nekosu/maa-pipeline-manager-vnext'
 import type { ResourceSnapshot } from '@nekosu/maa-pipeline-manager-vnext'
 
-import { diagnosticService, rootService, serverService } from '.'
+import { rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
@@ -30,8 +30,8 @@ export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle
   interfaceConfigJson: InterfaceConfig
 
-  // Step 1: 双模型共存 — vNext Project 与旧 InterfaceBundle 并行
-  vNextProject?: Project
+  // 双模型共存 — vNext WatchedProject 与旧 InterfaceBundle 并行
+  vNextProject?: WatchedProject
 
   getSnapshot(): ResourceSnapshot | null {
     return this.vNextProject?.getSnapshot() ?? null
@@ -102,6 +102,12 @@ export class InterfaceService extends BaseService {
     return this.localeChanged.event
   }
 
+  // vNext 快照变更事件——由 WatchedProject.onSnapshotChange 驱动
+  snapshotChanged: vscode.EventEmitter<void> = new vscode.EventEmitter()
+  get onSnapshotChanged() {
+    return this.snapshotChanged.event
+  }
+
   constructor() {
     super()
     console.log('construct InterfaceService')
@@ -114,6 +120,7 @@ export class InterfaceService extends BaseService {
     this.defer = this.resourceChanged
     this.defer = this.pipelineChanged
     this.defer = this.localeChanged
+    this.defer = this.snapshotChanged
 
     this.defer = {
       dispose: () => {
@@ -131,15 +138,10 @@ export class InterfaceService extends BaseService {
 
     this.defer = this.onInterfaceChanged(() => {
       this.updateResource()
-      diagnosticService.scanner.scheduleFlush()
     })
 
     this.defer = this.onInterfaceConfigChanged(() => {
       this.updateResource()
-    })
-
-    this.defer = this.onPipelineChanged(() => {
-      diagnosticService.scanner.scheduleFlush()
     })
   }
 
@@ -149,6 +151,7 @@ export class InterfaceService extends BaseService {
 
   async loadInterface() {
     this.interfaceBundle?.stop()
+    this.vNextProject?.stopWatching()
 
     this.interfaceBundle = undefined
     this.vNextProject = undefined
@@ -188,22 +191,19 @@ export class InterfaceService extends BaseService {
     })
     await this.interfaceBundle.load()
 
-    // Step 1: 双模型共存 — 同步创建 vNext Project 用于渐进式查询迁移
-    this.vNextProject = new Project(
+    this.vNextProject = new WatchedProject(
       new VscodeContentLoader(),
+      new VscodeContentWatcher(),
       nodePathUtils,
       isMaaAssistantArknights,
       root.dirUri.fsPath,
       rootService.config?.parser
     )
-    await this.vNextProject.loadInterface(path.basename(root.interfaceUri.fsPath))
-    // 初始 active — 用旧 InterfaceBundle 的当前 active 来同步
-    if (this.interfaceBundle.activeController && this.interfaceBundle.activeResource) {
-      await this.vNextProject.switchActive(
-        this.interfaceBundle.activeController,
-        this.interfaceBundle.activeResource
-      )
+    this.vNextProject.onSnapshotChange = () => {
+      this.snapshotChanged.fire()
     }
+    await this.vNextProject.loadInterface(path.basename(root.interfaceUri.fsPath))
+    await this.vNextProject.beginWatch()
 
     try {
       this.interfaceConfigJson = JSON.parse(await fs.readFile(root.configUri.fsPath, 'utf8'))
@@ -290,7 +290,9 @@ export class InterfaceService extends BaseService {
     const ctrl = this.interfaceConfigJson?.controller ?? ''
     const res = this.interfaceConfigJson?.resource ?? ''
     this.interfaceBundle?.switchActive(ctrl, res)
-    this.vNextProject?.switchActive(ctrl, res)
+    if (this.vNextProject?.interfaceData) {
+      this.vNextProject.switchActive(ctrl, res)
+    }
   }
 
   suggestResource() {

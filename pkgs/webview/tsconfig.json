@@ -1,7 +1,6 @@
 {
   "extends": ["@vue/tsconfig/tsconfig.json"],
   "compilerOptions": {
-    "baseUrl": ".",
     "esModuleInterop": true,
     "types": ["@maaxyz/maa-node", "@types/vscode-webview", "@types/node"]
   },

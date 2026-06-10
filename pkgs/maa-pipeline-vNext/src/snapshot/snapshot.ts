@@ -4,12 +4,14 @@ import type {
   InterfaceRefInFile,
   ParsedInterface
 } from '../interface/types'
-import type { TaskDeclInFile, TaskRefInFile } from '../pipeline/types'
+import type { IPathUtils } from '../path/interface'
+import type { TaskDeclInFile, TaskInfoInFile, TaskRefInFile } from '../pipeline/types'
 import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
 import {
   BundleView,
   type BundleView as BundleViewType,
   type ResolvedTaskConfig,
+  bundleImagePath,
   mergeIntoDefaults
 } from './bundle-view'
 
@@ -154,6 +156,37 @@ export const Snapshot = {
       }
     }
     return [...all]
+  },
+
+  /** 遍历所有 Bundle 查找图片。MAA 模式下同时匹配后缀。 */
+  getImage(snapshot: ResourceSnapshot, pathUtils: IPathUtils, image: ImageRelativePath) {
+    const result: { bundle: BundleViewType; absPath: AbsolutePath; rel: ImageRelativePath }[] = []
+    for (const bundle of snapshot.bundles) {
+      if (bundle.images.has(image)) {
+        result.push({ bundle, absPath: bundleImagePath(bundle, pathUtils, image), rel: image })
+      }
+      if (bundle.maa) {
+        const suffix = '/' + image
+        for (const img of bundle.images) {
+          if (img.endsWith(suffix)) {
+            result.push({ bundle, absPath: bundleImagePath(bundle, pathUtils, img), rel: img })
+          }
+        }
+      }
+    }
+    return result
+  },
+
+  /** 遍历所有 Bundle 查找任务定义。返回所有包含该任务的 Bundle 及其定义。 */
+  getTask(snapshot: ResourceSnapshot, name: TaskName) {
+    const result: { bundle: BundleViewType; info: TaskInfoInFile }[] = []
+    for (const bundle of snapshot.bundles) {
+      const info = BundleView.findTask(bundle, name)
+      if (info) {
+        result.push({ bundle, info })
+      }
+    }
+    return result
   },
 
   getAnchorList(snapshot: ResourceSnapshot) {

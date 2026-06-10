@@ -1,6 +1,13 @@
 import { mergeInterfaces } from '../interface/merge'
 import { parseInterface } from '../interface/parser'
-import type { InterfaceDeclInFile, InterfaceFileView, InterfaceParseResult, InterfaceRefInFile, ParsedInterface, RawInterfaceParseResult } from '../interface/types'
+import type {
+  InterfaceDeclInFile,
+  InterfaceFileView,
+  InterfaceParseResult,
+  InterfaceRefInFile,
+  ParsedInterface,
+  RawInterfaceParseResult
+} from '../interface/types'
 import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
@@ -118,9 +125,8 @@ export class Project {
     }
 
     // data 即时合并（业务层使用），decls/refs 保持按文件隔离（诊断层惰性合并）
-    this._interfaceData = importResults.length > 0
-      ? mergeInterfaces(base, ...importResults).data
-      : base.data
+    this._interfaceData =
+      importResults.length > 0 ? mergeInterfaces(base, ...importResults).data : base.data
     this._interfaceFiles = [
       { path: filePath, decls: base.decls, refs: base.refs },
       ...importResults.map((r, i) => ({
@@ -188,7 +194,25 @@ export class Project {
       }
     }
 
-    const defaultConfig = await this._loadDefaultConfig(bundlePath)
+    const defaultPath = this.pathUtils.join(bundlePath, 'default_pipeline.json')
+    const defaultContent = await this.loader.get(defaultPath)
+    let defaultConfig: DefaultConfig | null = null
+    if (defaultContent !== null) {
+      // 作为 DefaultConfig（供 resolveTask 属性继承）
+      defaultConfig = this._makeDefaultConfig(
+        defaultPath,
+        parsePipelineFile(defaultContent, { maa: this.maa, isDefault: true, parser: this.parser })
+      )
+      // 同时作为 FileView（isDefault: true），让 LSP 和 locateBundle 能找到
+      files.set(
+        'default_pipeline.json' as RelativePath,
+        this._makeFileView(
+          defaultPath,
+          parsePipelineFile(defaultContent, { maa: this.maa, parser: this.parser }),
+          true
+        )
+      )
+    }
 
     const allImageFiles = await this.loader.listFiles(imageRoot)
     const images = new Set<ImageRelativePath>(
@@ -253,7 +277,10 @@ export class Project {
    * interface / import 文件变更会触发全量重载；
    * pipeline / 图像文件变更仅重建所属 Bundle。
    */
-  async handleFileChange(absPath: AbsolutePath, action: 'added' | 'changed' | 'deleted'): Promise<void> {
+  async handleFileChange(
+    absPath: AbsolutePath,
+    action: 'added' | 'changed' | 'deleted'
+  ): Promise<void> {
     const rel = this.pathUtils.relative(this.root, absPath)
 
     if (rel === 'interface.json' || this._isImportFile(rel)) {
@@ -332,29 +359,48 @@ export class Project {
     return this.maa ? 'template' : 'image'
   }
 
-  private async _loadPipelineFile(absPath: AbsolutePath): Promise<FileView | null> {
-    const content = await this.loader.get(absPath)
-    if (content === null) {
-      return null
-    }
-    const parsed = parsePipelineFile(content, { maa: this.maa, parser: this.parser })
-
-    // 将 parser 原始输出（不含 file）标注为 FileView 存储格式（含 file）
-    const annotatedTasks = new Map<TaskName, TaskInfoInFile>()
+  private _makeFileView(
+    absPath: AbsolutePath,
+    parsed: ReturnType<typeof parsePipelineFile>,
+    isDefault = false
+  ): FileView {
+    const tasks = new Map<TaskName, TaskInfoInFile>()
     for (const [name, info] of parsed.tasks) {
-      annotatedTasks.set(name, {
+      tasks.set(name, {
         parts: info.parts,
         decls: info.decls.map(d => ({ ...d, file: absPath })),
         refs: info.refs.map(r => ({ ...r, file: absPath }))
       })
     }
-    const annotatedFileDecls = parsed.fileDecls.map(d => ({ ...d, file: absPath }))
-
     return Object.freeze({
       path: absPath,
-      tasks: annotatedTasks,
-      fileDecls: annotatedFileDecls
+      tasks,
+      fileDecls: parsed.fileDecls.map(d => ({ ...d, file: absPath })),
+      isDefault
     } satisfies FileView)
+  }
+
+  private _makeDefaultConfig(
+    absPath: AbsolutePath,
+    parsed: ReturnType<typeof parsePipelineFile>
+  ): DefaultConfig {
+    const annotated = new Map<TaskName, TaskInfoInFile>()
+    for (const [name, info] of parsed.tasks) {
+      annotated.set(name, {
+        parts: info.parts,
+        decls: info.decls.map(d => ({ ...d, file: absPath })),
+        refs: info.refs.map(r => ({ ...r, file: absPath }))
+      })
+    }
+    return annotated
+  }
+
+  private async _loadPipelineFile(absPath: AbsolutePath): Promise<FileView | null> {
+    const content = await this.loader.get(absPath)
+    if (content === null) {
+      return null
+    }
+    return this._makeFileView(absPath, parsePipelineFile(content, { maa: this.maa, parser: this.parser }))
   }
 
   private async _loadDefaultConfig(bundlePath: AbsolutePath): Promise<DefaultConfig | null> {
@@ -363,7 +409,11 @@ export class Project {
     if (content === null) {
       return null
     }
-    const parsed = parsePipelineFile(content, { maa: this.maa, isDefault: true, parser: this.parser })
+    const parsed = parsePipelineFile(content, {
+      maa: this.maa,
+      isDefault: true,
+      parser: this.parser
+    })
     const annotated = new Map<TaskName, TaskInfoInFile>()
     for (const [name, info] of parsed.tasks) {
       annotated.set(name, {
@@ -379,9 +429,7 @@ export class Project {
     if (!this._interfaceData) {
       return false
     }
-    return (
-      (this._interfaceData.import as readonly string[] | undefined)?.includes(rel) ?? false
-    )
+    return (this._interfaceData.import as readonly string[] | undefined)?.includes(rel) ?? false
   }
 
   private async _reloadPipelineFile(bundleIndex: number, relPath: RelativePath): Promise<void> {
@@ -446,13 +494,33 @@ export class Project {
 
   private async _reloadDefaultConfig(bundleIndex: number): Promise<void> {
     const bundle = this._bundles[bundleIndex]
-    const defaultConfig = await this._loadDefaultConfig(bundle.root)
+    const defaultPath = this.pathUtils.join(bundle.root, 'default_pipeline.json')
+    const content = await this.loader.get(defaultPath)
+
+    let defaultConfig: DefaultConfig | null = null
+    const newFiles = new Map(bundle.files)
+    if (content !== null) {
+      defaultConfig = this._makeDefaultConfig(
+        defaultPath,
+        parsePipelineFile(content, { maa: this.maa, isDefault: true, parser: this.parser })
+      )
+      newFiles.set(
+        'default_pipeline.json' as RelativePath,
+        this._makeFileView(
+          defaultPath,
+          parsePipelineFile(content, { maa: this.maa, parser: this.parser }),
+          true
+        )
+      )
+    } else {
+      newFiles.delete('default_pipeline.json' as RelativePath)
+    }
 
     this._replaceBundle(
       bundleIndex,
       createBundleView({
         root: bundle.root,
-        files: bundle.files,
+        files: newFiles,
         images: bundle.images,
         defaultConfig
       })

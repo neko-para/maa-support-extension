@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+import type { IPathUtils } from '../path/interface'
 import { parsePipelineFile } from '../pipeline/fw'
 import type { TaskInfoInFile } from '../pipeline/types'
 import {
@@ -10,7 +11,8 @@ import {
   Snapshot,
   createBundleView,
   createSnapshot,
-  mergeIntoDefaults
+  mergeIntoDefaults,
+  normalizeImageFolder
 } from '../snapshot'
 import type { AbsolutePath, ImageRelativePath, RelativePath, TaskName } from '../types'
 
@@ -46,7 +48,12 @@ function makeFileView(fixtureName: string) {
       refs: info.refs.map(r => ({ ...r, file: filePath }))
     })
   }
-  return { path: filePath, tasks, fileDecls: rawFileDecls.map(d => ({ ...d, file: filePath })) }
+  return {
+    path: filePath,
+    tasks,
+    fileDecls: rawFileDecls.map(d => ({ ...d, file: filePath })),
+    isDefault: false
+  }
 }
 
 describe('FileView', () => {
@@ -143,6 +150,38 @@ describe('BundleView', () => {
     const folders = BundleView.getImageFolders(bv)
     expect(folders.has('a/b' as ImageRelativePath)).toBe(true)
     expect(folders.has('a' as ImageRelativePath)).toBe(true)
+  })
+
+  it('normalizeImageFolder normalizes backslash and strips trailing slash', () => {
+    const mockPathUtils = {
+      sep: '\\',
+      normalize: (p: string) => p.replace(/\//g, '\\')
+    } as IPathUtils
+    const result = normalizeImageFolder(mockPathUtils, 'a\\b\\c/' as ImageRelativePath)
+    expect(result).toBe('a/b/c')
+  })
+
+  it('BundleView.imagePath constructs maa/fw path', () => {
+    const pu = { join: (...s: string[]) => s.join('/'), sep: '/' } as IPathUtils
+    const fw = createBundleView({
+      root: '/proj' as AbsolutePath,
+      files: new Map(),
+      images: new Set(),
+      maa: false
+    })
+    expect(BundleView.imagePath(fw, pu, 'ui/btn.png' as ImageRelativePath)).toBe(
+      '/proj/image/ui/btn.png'
+    )
+
+    const maa = createBundleView({
+      root: '/proj' as AbsolutePath,
+      files: new Map(),
+      images: new Set(),
+      maa: true
+    })
+    expect(BundleView.imagePath(maa, pu, 'ui/btn.png' as ImageRelativePath)).toBe(
+      '/proj/template/ui/btn.png'
+    )
   })
 
   describe('resolveTask', () => {
@@ -357,6 +396,38 @@ describe('ResourceSnapshot', () => {
 
   it('listImages merges across bundles', () => {
     expect(Snapshot.listImages(makeSnapshot())).toHaveLength(2)
+  })
+
+  it('getImage finds image across bundles', () => {
+    const pu = { join: (...s: string[]) => s.join('/'), sep: '/' } as IPathUtils
+    const results = Snapshot.getImage(makeSnapshot(), pu, 'base/img.png' as ImageRelativePath)
+    expect(results).toHaveLength(1)
+    expect(results[0].absPath).toBe('/fake/base/image/base/img.png')
+  })
+
+  it('getImage returns empty for unknown image', () => {
+    const pu = { join: (...s: string[]) => s.join('/'), sep: '/' } as IPathUtils
+    expect(Snapshot.getImage(makeSnapshot(), pu, 'no/such.png' as ImageRelativePath)).toHaveLength(
+      0
+    )
+  })
+
+  it('getTask finds task definition across bundles', () => {
+    const results = Snapshot.getTask(makeSnapshot(), 'T001Start' as TaskName)
+    expect(results).toHaveLength(1)
+    expect(results[0].bundle.root).toBe('/fake/base')
+    expect(results[0].info.decls[0].type).toBe('task.decl')
+  })
+
+  it('getTask returns empty for unknown task', () => {
+    expect(Snapshot.getTask(makeSnapshot(), 'NoSuchTask' as TaskName)).toHaveLength(0)
+  })
+
+  it('FileView includes isDefault flag', () => {
+    const snap = makeSnapshot()
+    const located = Snapshot.locateBundle(snap, '/fake/pipeline-v1.json')
+    expect(located).not.toBeNull()
+    expect(located!.file.isDefault).toBe(false)
   })
 
   it('getAnchorList merges across bundles', () => {

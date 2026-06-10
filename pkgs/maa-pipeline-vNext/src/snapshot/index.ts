@@ -6,7 +6,9 @@ export {
   BundleView,
   buildDefaultsMap,
   mergeIntoDefaults,
-  applyDefaultLayer
+  applyDefaultLayer,
+  normalizeImageFolder,
+  bundleImagePath
 } from './bundle-view'
 export type { BundleView as BundleViewType, DefaultConfig, ResolvedTaskConfig } from './bundle-view'
 

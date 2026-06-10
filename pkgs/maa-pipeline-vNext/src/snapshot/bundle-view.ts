@@ -1,3 +1,4 @@
+import type { IPathUtils } from '../path/interface'
 import { actKeys, recoKeys } from '../pipeline/keys'
 import type { TaskDeclInFile, TaskInfoInFile, TaskRefInFile } from '../pipeline/types'
 import type { AbsolutePath, AnchorName, ImageRelativePath, RelativePath, TaskName } from '../types'
@@ -189,6 +190,30 @@ function resolve(
   return resolveFromInfo(info, bundle, defaults)
 }
 
+// ── image path utilities ──
+
+/** 将图片相对路径中的 `\` 替换为 `/`，移除末尾 `/`。匹配 MaaFramework 的路径规范化行为。 */
+export function normalizeImageFolder(
+  pathUtils: IPathUtils,
+  image: ImageRelativePath
+): ImageRelativePath {
+  let norm = pathUtils.normalize(image).replaceAll(pathUtils.sep, '/')
+  if (norm.endsWith('/')) {
+    norm = norm.slice(0, -1)
+  }
+  return norm as ImageRelativePath
+}
+
+/** 构建图片的绝对路径。MAA 模式使用 `template/` 目录，Framework 模式使用 `image/` 目录。 */
+export function bundleImagePath(
+  bundle: BundleView,
+  pathUtils: IPathUtils,
+  image: ImageRelativePath
+): AbsolutePath {
+  const dir = bundle.maa ? 'template' : 'image'
+  return pathUtils.join(bundle.root, dir, image)
+}
+
 // ── BundleView namespace ──
 
 /** 按文件名字母序排序——匹配 MaaFramework 按字母序加载 pipeline 文件的行为 */
@@ -265,6 +290,8 @@ export const BundleView = {
   getImageList(bundle: BundleView): ImageRelativePath[] {
     return [...bundle.images]
   },
+
+  imagePath: bundleImagePath,
 
   getImageFolders(bundle: BundleView): Map<ImageRelativePath, BundleView[]> {
     const result = new Map<ImageRelativePath, BundleView[]>()

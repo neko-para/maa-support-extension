@@ -3,10 +3,9 @@ import type { AbsolutePath, TaskName } from '../types'
 
 export type FileView = {
   readonly path: AbsolutePath
-  /** 任务定义——所有 decl/ref 已标注所属文件 */
   readonly tasks: ReadonlyMap<TaskName, TaskInfoInFile>
-  /** 文件级声明（如 mpe_config）——已标注所属文件 */
   readonly fileDecls: readonly TaskDeclInFile[]
+  readonly isDefault: boolean
 }
 
 export const FileView = {

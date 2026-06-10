@@ -77,7 +77,7 @@ export function parseMaaTaskNode(
   node: Node,
   taskName: TaskName,
   taskKey: Node
-): Omit<TaskInfo, 'parts'> & { parts: TaskInfo['parts'] } {
+): TaskInfo {
   const parts = splitNode(node, true)
   const decls: TaskDeclInfo[] = [
     { type: 'task.decl', task: taskName, tasks: buildTaskRef(taskName), location: taskKey }

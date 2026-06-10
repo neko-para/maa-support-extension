@@ -378,7 +378,7 @@ function parseRecoAndAct(
 export function parseTaskNode(
   node: Node,
   opts: { taskName: TaskName; taskKey: Node; parser?: ParserConfig }
-): Omit<TaskInfo, 'parts'> & { parts: TaskParts } {
+): TaskInfo {
   const { taskName, parser } = opts
   const parts = splitNode(node, false)
 
@@ -445,12 +445,9 @@ export function parsePipelineFile(
     const taskName = (opts.isDefault ? '$' + key : key) as TaskName
 
     if (opts.maa) {
-      tasks.set(taskName, parseMaaTaskNode(obj, taskName, propNode) as TaskInfo)
+      tasks.set(taskName, parseMaaTaskNode(obj, taskName, propNode))
     } else {
-      tasks.set(
-        taskName,
-        parseTaskNode(obj, { taskName, taskKey: propNode, parser: opts.parser }) as TaskInfo
-      )
+      tasks.set(taskName, parseTaskNode(obj, { taskName, taskKey: propNode, parser: opts.parser }))
     }
   }
   return { tasks, fileDecls }

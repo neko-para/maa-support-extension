@@ -1,7 +1,17 @@
-import type { InterfaceDeclInFile, InterfaceFileView, InterfaceRefInFile, ParsedInterface } from '../interface/types'
+import type {
+  InterfaceDeclInFile,
+  InterfaceFileView,
+  InterfaceRefInFile,
+  ParsedInterface
+} from '../interface/types'
 import type { TaskDeclInFile, TaskRefInFile } from '../pipeline/types'
 import type { AbsolutePath, ImageRelativePath, TaskName } from '../types'
-import { BundleView, type BundleView as BundleViewType } from './bundle-view'
+import {
+  BundleView,
+  type BundleView as BundleViewType,
+  type ResolvedTaskConfig,
+  mergeIntoDefaults
+} from './bundle-view'
 
 export type { BundleView as BundleViewType, DefaultConfig } from './bundle-view'
 export type { FileView } from './file-view'
@@ -17,9 +27,7 @@ export type RefWithBundle = TaskRefInFile & { bundleIndex: number }
 
 export type ResourceSnapshot = {
   readonly bundles: readonly BundleViewType[]
-  /** 合并后的 interface 数据（controller/resource/task/option... Records，import 已合并） */
   readonly interfaceData: ParsedInterface | null
-  /** 各 interface 文件独立视图——decls/refs 未合并，惰性查询时拼接 */
   readonly interfaceFiles: readonly InterfaceFileView[]
   readonly interfaceFile: AbsolutePath
   readonly languages: readonly LanguageInfo[]
@@ -41,7 +49,7 @@ export function createSnapshot(opts: {
     interfaceData: opts.interfaceData ?? null,
     interfaceFiles: opts.interfaceFiles ?? [],
     interfaceFile: opts.interfaceFile ?? ('' as AbsolutePath),
-    languages: Object.freeze([...opts.languages ?? []]),
+    languages: Object.freeze([...(opts.languages ?? [])]),
     activeController: opts.activeController ?? '',
     activeResource: opts.activeResource ?? ''
   })
@@ -59,15 +67,7 @@ export const Snapshot = {
     return null
   },
 
-  /**
-   * 跨 Bundle 查找任务定义。
-   *
-   * 按 `resource[].path` 顺序从后向前遍历 Bundle（后加载覆盖先加载）。
-   * Bundle 内部按文件名字母序查找（见 BundleView.findTask）。
-   *
-   * 这是纯查找——仅返回最高优先级的任务定义，不合并 defaultConfig。
-   * defaultConfig 继承 + 属性合并由 `resolveTask()` 处理（未来 phase）。
-   */
+  /** 纯查找——不合并 defaultConfig。需要属性继承用 resolveTask。 */
   findTask(snapshot: ResourceSnapshot, name: TaskName) {
     for (let i = snapshot.bundles.length - 1; i >= 0; i--) {
       const info = BundleView.findTask(snapshot.bundles[i], name)
@@ -76,6 +76,36 @@ export const Snapshot = {
       }
     }
     return null
+  },
+
+  /**
+   * 渐进式解析——精确对应 MaaFramework PipelineResMgr::parse_and_override_once 的行为。
+   *
+   * 按 bundles 顺序从低到高遍历，累积 defaultConfig；
+   * 首次定义使用当时的累积默认值，重定义仅叠加自身属性不重新 apply 默认值。
+   */
+  resolveTask(snapshot: ResourceSnapshot, name: TaskName): ResolvedTaskConfig | null {
+    let resolved: ResolvedTaskConfig | null = null
+    const cumulativeDefaults: Record<string, Record<string, unknown>> = {}
+
+    for (let i = 0; i < snapshot.bundles.length; i++) {
+      const bundle = snapshot.bundles[i]
+
+      mergeIntoDefaults(cumulativeDefaults, bundle.defaultConfig)
+
+      const info = BundleView.findTask(bundle, name)
+      if (!info) {
+        continue
+      }
+
+      if (!resolved) {
+        resolved = BundleView.resolveFromInfo(info, bundle, cumulativeDefaults)
+      } else {
+        resolved = BundleView.resolveFromInfo(info, bundle, cumulativeDefaults, resolved.config)
+      }
+    }
+
+    return resolved
   },
 
   listTasks(snapshot: ResourceSnapshot): TaskName[] {
@@ -108,12 +138,10 @@ export const Snapshot = {
     return result
   },
 
-  /** 惰性合并所有 interface 文件的 decls（各文件保持独立存储，查询时拼接） */
   allInterfaceDecls(snapshot: ResourceSnapshot): InterfaceDeclInFile[] {
     return snapshot.interfaceFiles.flatMap(f => [...f.decls])
   },
 
-  /** 惰性合并所有 interface 文件的 refs */
   allInterfaceRefs(snapshot: ResourceSnapshot): InterfaceRefInFile[] {
     return snapshot.interfaceFiles.flatMap(f => [...f.refs])
   },

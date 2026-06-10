@@ -1,0 +1,35 @@
+{
+  "Default": {
+    "pre_delay": 100,
+    "post_delay": 50,
+    "timeout": 30000
+  },
+  "DirectHit": {
+    "recognition": "DirectHit"
+  },
+  "TemplateMatch": {
+    "recognition": "TemplateMatch",
+    "template": "default/template.png",
+    "threshold": 0.7,
+    "roi": [0, 0, 1280, 720]
+  },
+  "OCR": {
+    "recognition": "OCR",
+    "expected": ["Default"],
+    "roi": [0, 0, 1280, 720]
+  },
+  "DoNothing": {
+    "action": "DoNothing"
+  },
+  "Click": {
+    "action": "Click",
+    "target": true,
+    "duration": 200
+  },
+  "Swipe": {
+    "action": "Swipe",
+    "duration": 300,
+    "begin": [0, 0, 100, 100],
+    "end": [100, 0, 200, 100]
+  }
+}

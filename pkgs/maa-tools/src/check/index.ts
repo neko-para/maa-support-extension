@@ -61,22 +61,9 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
         startGroup(`${ctrlName} ${resName}`)
       }
 
-      const rawDiags = performDiagnostic(project.getSnapshot()!, {})
-      const currDiags: Diagnostic[] = []
-      for (const diag of rawDiags) {
-        const override = cfg.check.override?.[diag.type]
-        if (override === 'ignore') {
-          continue
-        }
-        if (override) {
-          currDiags.push({
-            ...diag,
-            level: override
-          })
-        } else {
-          currDiags.push(diag)
-        }
-      }
+      const currDiags = performDiagnostic(project.getSnapshot()!, {
+        override: cfg.check.override
+      })
 
       for (const diag of currDiags) {
         const [start, _end, brief] = await buildDiagnosticMessage(project.root, diag, locate, nodePathUtils)

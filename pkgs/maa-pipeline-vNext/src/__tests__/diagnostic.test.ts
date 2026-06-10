@@ -104,6 +104,24 @@ describe('checkPipeline', () => {
     expect(diags.filter(d => d.type === 'unknown-task')).toHaveLength(0)
   })
 
+  it('unknown-task is scoped: lower bundle cannot reference higher bundle tasks', () => {
+    // b0 (low priority): defines TaskA, references TaskB (only in b1)
+    const json0 = '{"TaskA": {"next": ["TaskB"]}}'
+    const fv0 = makeAnnotated('/fake/b0.json' as AbsolutePath, parsePipelineFile(json0, { maa: false }))
+    // b1 (high priority): defines TaskB
+    const json1 = '{"TaskB": {"recognition": "DirectHit"}}'
+    const fv1 = makeAnnotated('/fake/b1.json' as AbsolutePath, parsePipelineFile(json1, { maa: false }))
+    const snap = createSnapshot({
+      bundles: [
+        createBundleView({ root: '/fake/b0' as AbsolutePath, files: new Map([['b0.json' as RelativePath, fv0]]), images: new Set() }),
+        createBundleView({ root: '/fake/b1' as AbsolutePath, files: new Map([['b1.json' as RelativePath, fv1]]), images: new Set() })
+      ]
+    })
+    const diags = checkPipeline(snap)
+    // TaskA in b0 references TaskB which only exists in b1 → unknown-task
+    expect(diags.filter(d => d.type === 'unknown-task')).toHaveLength(1)
+  })
+
   it('detects unknown-image', () => {
     const json = '{"T1": {"recognition": "TemplateMatch", "template": "missing.png"}}'
     const fv = makeAnnotated(

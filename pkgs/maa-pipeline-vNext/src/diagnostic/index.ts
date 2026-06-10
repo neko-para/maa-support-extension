@@ -24,4 +24,15 @@ export function performDiagnostic(
       }
       return diag
     })
+    .filter(diag => {
+      const ov = option.override?.[diag.type]
+      return ov !== 'ignore'
+    })
+    .map(diag => {
+      const ov = option.override?.[diag.type]
+      if (ov === 'warning' || ov === 'error') {
+        return { ...diag, level: ov }
+      }
+      return diag
+    })
 }

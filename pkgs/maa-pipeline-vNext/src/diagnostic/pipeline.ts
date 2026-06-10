@@ -1,6 +1,7 @@
 import { BundleView } from '../snapshot/bundle-view'
 import type { ResourceSnapshot } from '../snapshot/snapshot'
 import { Snapshot } from '../snapshot/snapshot'
+import type { TaskName } from '../types'
 import type { Diagnostic } from './types'
 import { adjustForAttrPrefix, diagPos, imageRefTarget, taskRefTarget } from './utils'
 
@@ -9,7 +10,16 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
 
   const decls = Snapshot.allDecls(snapshot)
   const refs = Snapshot.allRefs(snapshot)
-  const taskList = new Set(Snapshot.listTasks(snapshot))
+  // per-bundle 累进 taskList: taskLists[i] = bundles[0..i] 的任务集合
+  const taskLists: Set<TaskName>[] = []
+  const accum = new Set<TaskName>()
+  for (const bundle of snapshot.bundles) {
+    for (const t of BundleView.listTasks(bundle)) {
+      accum.add(t)
+    }
+    taskLists.push(new Set(accum))
+  }
+  const allTaskList = taskLists[taskLists.length - 1] ?? new Set<TaskName>()
   const anchors = new Set<string>(Snapshot.getAnchorList(snapshot).map(([name]) => name))
   const images = new Set<string>(Snapshot.listImages(snapshot))
   const imageFolders = new Set<string>()
@@ -61,7 +71,7 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
   }
 
   // duplicate-next: 同一任务中 next 数组出现重复引用
-  for (const taskName of taskList) {
+  for (const taskName of allTaskList) {
     const taskInfo = Snapshot.findTask(snapshot, taskName)
     if (!taskInfo) continue
     const nextRefs = taskInfo.refs
@@ -90,20 +100,21 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
     // duplicate-next
     const taskRef = taskRefTarget(ref)
     if (taskRef !== null) {
-      if (!taskList.has(taskRef) && taskRef !== '') {
+      if (!taskLists[ref.bundleIndex].has(taskRef) && taskRef !== '') {
         let detailLoc = loc
         if (ref.type === 'task.next' && ref.attrs.offset > 0) {
           detailLoc = { ...loc, ...adjustForAttrPrefix(loc, ref.attrs) }
         }
-        result.push({
-          level:
-            ref.type === 'task.custom_task' && ref.meta.missingPolicy === 'ignore'
-              ? 'warning'
-              : 'error',
-          ...detailLoc,
-          type: 'unknown-task',
+        const policy =
+          ref.type === 'task.custom_task' ? ref.meta.missingPolicy : undefined
+        if (policy !== 'ignore') {
+          result.push({
+            level: policy ?? 'error',
+            ...detailLoc,
+            type: 'unknown-task',
           task: taskRef
         })
+        }
       }
 
       if (ref.type === 'task.color_filter') {
@@ -158,15 +169,16 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
         continue
       }
       if (!images.has(imagePath as string)) {
-        result.push({
-          level:
-            ref.type === 'task.custom_template' && ref.meta.missingPolicy === 'ignore'
-              ? 'warning'
-              : 'error',
-          ...loc,
-          type: 'unknown-image',
-          image: imageRef
-        })
+        const tplPolicy =
+          ref.type === 'task.custom_template' ? ref.meta.missingPolicy : undefined
+        if (tplPolicy !== 'ignore') {
+          result.push({
+            level: tplPolicy ?? 'error',
+            ...loc,
+            type: 'unknown-image',
+            image: imageRef
+          })
+        }
       }
     }
 
@@ -180,20 +192,20 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
       if (ref.attrs.attrs.Anchor) {
         const anchorRef = ref.target
         if (!anchors.has(anchorRef)) {
-          let policy: 'warning' | 'error' = 'error'
-          if (ref.type === 'task.custom_anchor' && ref.meta.missingPolicy === 'ignore') {
-            policy = 'warning'
-          }
-          result.push({
-            level: policy,
-            ...{
-              ...loc,
-              ...adjustForAttrPrefix(loc, ref.attrs)
-            },
-            type: 'unknown-anchor',
-            anchor: anchorRef
-          })
+          const anchorPolicy =
+            ref.type === 'task.custom_anchor' ? ref.meta.missingPolicy : undefined
+          if (anchorPolicy !== 'ignore') {
+            result.push({
+              level: anchorPolicy ?? 'error',
+              ...{
+                ...loc,
+                ...adjustForAttrPrefix(loc, ref.attrs)
+              },
+              type: 'unknown-anchor',
+              anchor: anchorRef
+            })
         }
+      }
       }
     }
 

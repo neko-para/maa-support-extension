@@ -149,4 +149,5 @@ export type DiagnosticType = Diagnostic['type']
 export type DiagnosticOption = {
   ignoreTypes?: DiagnosticType[]
   errorTypes?: DiagnosticType[]
+  override?: Partial<Record<DiagnosticType, 'ignore' | 'warning' | 'error'>>
 }

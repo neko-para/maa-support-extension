@@ -182,25 +182,33 @@ project.onChange = (snapshot) => {
 
 > 新 API 返回 `DeclWithBundle` / `RefWithBundle`（含 `bundleIndex`），旧代码需适配。
 
+### 数据模型变更
+
+| 变更 | 说明 |
+|------|------|
+| `FileView.tasks` 类型 | `Map<TaskName, TaskInfoInFile>` → `Map<TaskName, readonly TaskInfoInFile[]>` — 支持同名 task 多条 override |
+| `BundleView.isInterface` | 新增字段，标记 interface BundleView |
+| `FileView.isDefault` | 新增字段，标记 `default_pipeline.json` 的 FileView |
+
 ### 任务列表 / 锚点 / 图片
 
 | 旧 | 新 | 状态 | 使用者 |
 |----|----|------|--------|
-| `layer.getTaskList()` | `Snapshot.listTasks(snapshot)` | ✅ | command, completion, completion-legacy |
+| `layer.getTaskList()` | `Snapshot.listTasks(snapshot, { includeInterface? })` | ✅ | command, completion, completion-legacy |
 | `layer.getAnchorList()` | `Snapshot.getAnchorList(snapshot)` | ✅ | completion, completion-legacy |
 | `layer.getImageList()` | `Snapshot.listImages(snapshot)` | ✅ | completion, completion-legacy |
 | `layer.getImageFolders()` | `Snapshot.getImageFolders(snapshot)` | ✅ | documentLink, completion, hover |
 | `layer.getImage(img)` | `Snapshot.getImage(snapshot, pathUtils, image)` | ✅ | documentLink, hover (pipeline) |
 | `layer.getTask(task)` | `Snapshot.getTask(snapshot, name)` | ✅ | hover, codeActions |
 
-> `getImage(img)` 和 `getTask(task)` 返回跨层搜索结果，在新架构中需要通过 `bundles` 遍历实现。
+> `listTasks` 默认 `includeInterface: true`（workspace symbol 用），诊断用 `{ includeInterface: false }` 排除 interface override 任务。
 
 ### 任务详情
 
 | 旧 | 新 | 状态 | 使用者 |
 |----|----|------|--------|
 | `layer.getTaskBriefInfo(task)` | (手动查) | ❌ | completion, completion-legacy |
-| `layer.getTaskDoc(task)` | **未实现** | ❌ | webview/launch, inlayHint, hover |
+| `layer.getTaskDoc(task)` | `Snapshot.getTaskDoc(snapshot, name)` | ✅ | webview/launch, inlayHint, hover |
 | `layer.toggleMode(1\|2, info, indent)` | **未实现** | ❌ | codeActions |
 | `layer.evalTask(task)` | `Snapshot.resolveTask(snapshot, task)` | ✅ | hover, codeActions (via getTaskHover) |
 | `layer.maaFindTaskDecl(task)` | **未实现** | ❌ | hover (pipeline MAA mode) |
@@ -230,10 +238,31 @@ project.onChange = (snapshot) => {
 
 | 旧 | 新 | 状态 | 使用者 |
 |----|----|------|--------|
-| `performDiagnostic(bundle, opts)` | `performDiagnostic(snapshot, opts)` | 🔄 | `diagnostic.ts` (extension), `check/index.ts` (maa-tools) |
-| `buildDiagnosticMessage(root, diag, locate, opts)` | `buildDiagnosticMessage(root, diag, locate, opts)` | ✅ | `diagnostic.ts` (extension), `check/index.ts` |
+| `performDiagnostic(bundle, opts)` | `performDiagnostic(snapshot, opts)` | ✅ | `diagnostic.ts` (extension), `check/index.ts` (maa-tools) |
+| `buildDiagnosticMessage(root, diag, locate, opts)` | `buildDiagnosticMessage(root, diag, locate, pathUtils)` | ✅ | `diagnostic.ts` (extension), `check/index.ts` |
+| 诊断 override 循环 (consumer 侧) | `DiagnosticOption.override` | ✅ | maa-tools + extension 均可直接传入 |
 
-> `performDiagnostic` 参数从 `InterfaceBundle` 变为 `ResourceSnapshot`。maa-tools CI checker 需要从 `Project.getSnapshot()` 获取 snapshot。
+> `performDiagnostic` 参数从 `InterfaceBundle` 变为 `ResourceSnapshot`。新增 `DiagnosticOption.override` 统一处理 custom policy（`missingPolicy`）和 config override，consumer 不再需要手动循环。
+
+### 诊断行为变更
+
+| 变更 | 说明 |
+|------|------|
+| `unknown-task` scoped | `taskLists[bundleIndex]` — 低优先级 bundle 的 ref 只能看到 ≤ 自己层级的任务，不再跨层泄露 |
+| `conflict-task` per-bundle | 改为逐 bundle 检测，跳过 `isInterface` bundle（允许 interface 多个 override 同名） |
+| `int-override-unknown-task` | 通过 interface BundleView 实现：检查 pipeline_override 的任务是否存在于 resource bundle 中 |
+| `missingPolicy` 处理 | `'error'`/`'warning'` 直接设置 level，`'ignore'` 跳过 emit（不再硬编码降级为 warning） |
+
+### Interface BundleView
+
+新架构新增 interface BundleView（`isInterface: true`），由 `pipeline_override` 条目构建，作为 `bundles[]` 的最后一项。所有 query/diagnostic 通过现有 BundleView/Snapshot API 统一访问，无需特殊路径。
+
+| 特性 | 说明 |
+|------|------|
+| 数据来源 | `Project.loadInterface()` 时从 interface JSON AST 提取所有 `pipeline_override` 条目 |
+| 解析方式 | 使用 `parseTaskNode` 解析每个 entry，存入 `FileView.tasks`（数组支持多条 override） |
+| 优先级 | `bundles[]` 最后一项，`resolveTask` 渐进解析自然处理 |
+| 诊断集成 | `conflict-task` 跳过 `isInterface` bundle；`int-override-unknown-task` 检查 override 目标是否存在于 resource bundle |
 
 ---
 
@@ -253,14 +282,12 @@ project.onChange = (snapshot) => {
 | 旧 | 新 | 状态 | 使用者 |
 |----|----|------|--------|
 | `intBundle.langBundle.langs` | `snapshot.languages` (`LanguageInfo[]`) | ✅ | base (pipeline + interface), completion |
-
-> `LanguageInfo.entries` 为 `ReadonlyMap<string, LocaleEntry>`，`LocaleEntry` 含 `value: string` 和 `keyOffset: number`（AST 位置，供 LSP hover 生成源码链接）。`keyOffset` 对应旧 `entry.keyNode.offset`。
-| `intBundle.langBundle.queryKey(key)` | `Snapshot.queryLocale(snapshot, key)` → `(LocaleEntry \| null)[]` | ✅ | webview/control, hover, base |
+| `intBundle.langBundle.queryKey(key)` | `Snapshot.queryLocale(snapshot, key)` | ✅ | webview/control, hover, base |
 | `intBundle.langBundle.queryName(name)` | `Snapshot.queryLocaleIndex(snapshot, name)` | ✅ | webview/control, inlayHint |
 | `intBundle.langBundle.allKeys()` | `Snapshot.allLocaleKeys(snapshot)` | ✅ | completion, codeActions |
-| `intBundle.langBundle.addPair(key, value)` | **未实现** | ❌ | codeActions — 需要 AST 位置和文件写入，Phase 8 在 Project 层处理 |
+| `intBundle.langBundle.addPair(key, value)` | **未实现** | ❌ | codeActions — 需要 AST 位置和文件写入 |
 
-> `snapshot.languages` 提供 `LanguageInfo[]`（含 `name`, `file`, `entries: Map<string,string>`）。按 key 查询和编辑操作需要在 consumer 层或用新辅助函数实现。
+> `LanguageInfo.entries` 为 `ReadonlyMap<string, LocaleEntry>`（含 `value: string` + `keyOffset: number`）。`LocaleEntry` 在 `Project._loadLanguages()` 中通过 `jsonc-parser` 的 `parseTree` 解析，保留 key 的 AST 偏移量供 LSP hover 生成源码链接。
 
 ---
 
@@ -304,13 +331,13 @@ return project
 
 ### CI Checker
 
-旧 `check/index.ts` 遍历 controller/resource → `switchActive` → `performDiagnostic(bundle, ...)` → `buildDiagnosticMessage(bundle.root, ...)`。
+旧 `check/index.ts` 遍历 controller/resource → `switchActive` → `performDiagnostic(bundle, ...)` + 手动 override 循环 → `buildDiagnosticMessage(bundle.root, ...)`。
 
-新：遍历 → `switchActive` → `performDiagnostic(project.getSnapshot(), ...)` → `buildDiagnosticMessage(project.root, ...)`。
+新：遍历 → `switchActive` → `performDiagnostic(project.getSnapshot(), { override: cfg.check.override })` → `buildDiagnosticMessage(project.root, ...)`。
 
-`bundle.allControllerNames()` / `bundle.allResourceNames(ctrl)` → 遍历 `project.interfaceData.controller` / `project.interfaceData.resource` 的 keys。
+`bundle.allControllerNames()` / `bundle.allResourceNames(ctrl)` → `Object.keys(project.interfaceData.controller)` / `Object.keys(project.interfaceData.resource)`。
 
-`bundle.paths` → `project.interfaceData.resource[name]?.path`。
+`bundle.paths` → `project.interfaceData.resource[name]?.path`，`joinPath(bundle.root, f)` → `nodePathUtils.join(project.root, f)`。
 
 ### `@nekosu/maa-tools/pm` re-export
 
@@ -327,9 +354,8 @@ return project
 | 功能 | 使用者 | 建议 |
 |------|--------|------|
 | `BundleView.getTaskBriefInfo(task)` | completion, completion-legacy | 提取 reco/act type 字符串 |
-| `Snapshot.getTaskDoc(task)` / `BundleView.getTaskDoc(task)` | webview, inlayHint, hover | 从 decls 中收集 `task.doc` |
 | `BundleView.toggleMode(mode, info)` | codeActions | v1↔v2 format 切换（可暂缓） |
-| `LanguageBundle.addPair(key, value)` | codeActions | 需要 AST 位置 + 文件写入，Phase 8 在 Project 层处理 |
+| `LanguageBundle.addPair(key, value)` | codeActions | 需要 AST 位置 + 文件写入 |
 | MAA eval: `maaEvalTask`, `maaEvalExpr` | command, base (pipeline) | 集成 `@nekosu/maa-tasker` 的 `MaaEvalContext` |
 | MAA error delegate: `evalErrorDelegate` | interface.ts (extension) | `MaaErrorDelegate` 注入 |
 
@@ -348,8 +374,8 @@ return project
 
 ---
 
-## 11. 迁移优先级建议
+## 11. 迁移状态
 
-1. **先替换 maa-tools**（无文件监视，API 简单，验证 Project + Snapshot 诊断链路）
-2. **再替换 extension**（需要 WatchedProject + 事件回调 + LSP 全链路）
-3. **最后处理 MAA 专用功能**（maaEval 需要集成 maa-tasker，复杂度最高）
+- ✅ **maa-tools 已完成** — `loadBundle`、`check/index.ts`、`test/index.ts`、`pm.ts` 全部迁移到 vNext，已通过 MaaEnd 真实项目验证
+- 🔄 **extension 待进行** — 需要 WatchedProject + 事件回调 + LSP 全链路
+- ❌ **MAA 专用功能待处理** — `maaEvalTask`/`maaEvalExpr`/`evalErrorDelegate` 需集成 maa-tasker

@@ -189,6 +189,14 @@ export const Snapshot = {
     return result
   },
 
+  getTaskDoc(snapshot: ResourceSnapshot, name: TaskName) {
+    return Snapshot.allDecls(snapshot)
+      .filter(d => d.type === 'task.doc')
+      .filter(d => d.task === name)
+      .map(d => d.doc)
+      .join(' ')
+  },
+
   /** 遍历所有 Bundle 查找任务定义。返回所有包含该任务的 Bundle 及其定义。 */
   getTask(snapshot: ResourceSnapshot, name: TaskName) {
     const result: { bundle: BundleViewType; info: TaskInfoInFile }[] = []

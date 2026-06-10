@@ -28,7 +28,7 @@
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@nekosu/maa-locale": "workspace:*",
-    "@nekosu/maa-pipeline-manager": "workspace:*",
+    "@nekosu/maa-pipeline-manager-vnext": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",
     "chalk": "^5.6.2",
     "jiti": "^2.6.1",

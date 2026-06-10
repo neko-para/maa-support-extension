@@ -13,6 +13,7 @@ export type BundleView = {
   readonly images: ReadonlySet<ImageRelativePath>
   readonly defaultConfig: DefaultConfig | null
   readonly maa: boolean
+  readonly isInterface: boolean
 }
 
 export function createBundleView(opts: {
@@ -21,13 +22,15 @@ export function createBundleView(opts: {
   images: ReadonlySet<ImageRelativePath>
   defaultConfig?: DefaultConfig | null
   maa?: boolean
+  isInterface?: boolean
 }): BundleView {
   return Object.freeze({
     root: opts.root,
     files: opts.files,
     images: opts.images,
     defaultConfig: opts.defaultConfig ?? null,
-    maa: opts.maa ?? false
+    maa: opts.maa ?? false,
+    isInterface: opts.isInterface ?? false
   })
 }
 
@@ -243,9 +246,9 @@ export const BundleView = {
   findTask(bundle: BundleView, name: TaskName): TaskInfoInFile | null {
     let found: TaskInfoInFile | null = null
     for (const file of sortedFiles(bundle)) {
-      const info = file.tasks.get(name)
-      if (info) {
-        found = info
+      const infos = file.tasks.get(name)
+      if (infos && infos.length > 0) {
+        found = infos[infos.length - 1]
       }
     }
     return found

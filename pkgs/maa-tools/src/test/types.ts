@@ -1,4 +1,4 @@
-import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
+import type { AbsolutePath } from '@nekosu/maa-pipeline-manager-vnext'
 
 import type { TestCases } from '../types/config'
 

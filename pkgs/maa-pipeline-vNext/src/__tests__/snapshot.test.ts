@@ -40,13 +40,15 @@ function loadDefaultConfig(): Map<TaskName, TaskInfoInFile> {
 function makeFileView(fixtureName: string) {
   const filePath = ('/fake/' + fixtureName) as AbsolutePath
   const { tasks: rawTasks, fileDecls: rawFileDecls } = loadPipeline(fixtureName)
-  const tasks = new Map<TaskName, TaskInfoInFile>()
+  const tasks = new Map<TaskName, TaskInfoInFile[]>()
   for (const [name, info] of rawTasks) {
-    tasks.set(name, {
-      parts: info.parts,
-      decls: info.decls.map(d => ({ ...d, file: filePath })),
-      refs: info.refs.map(r => ({ ...r, file: filePath }))
-    })
+    tasks.set(name, [
+      {
+        parts: info.parts,
+        decls: info.decls.map(d => ({ ...d, file: filePath })),
+        refs: info.refs.map(r => ({ ...r, file: filePath }))
+      }
+    ])
   }
   return {
     path: filePath,

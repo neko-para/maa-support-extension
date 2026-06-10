@@ -1,3 +1,4 @@
+import { BundleView } from '../snapshot/bundle-view'
 import type { ResourceSnapshot } from '../snapshot/snapshot'
 import { Snapshot } from '../snapshot/snapshot'
 import type { Diagnostic } from './types'
@@ -19,25 +20,31 @@ export function checkPipeline(snapshot: ResourceSnapshot): Diagnostic[] {
     }
   }
 
-  // conflict-task: detect across files/bundles
-  const taskDecls = decls.filter(d => d.type === 'task.decl')
-  const byName = new Map<string, typeof taskDecls>()
-  for (const d of taskDecls) {
-    const arr = byName.get(d.task) ?? []
-    arr.push(d)
-    byName.set(d.task, arr)
-  }
-  for (const [, entries] of byName) {
-    if (entries.length > 1) {
-      const [first, ...rest] = entries
-      for (const dup of rest) {
-        result.push({
-          level: 'error',
-          ...diagPos(dup.location, dup.file),
-          type: 'conflict-task',
-          task: dup.task,
-          previous: diagPos(first.location, first.file)
-        })
+  // conflict-task: 在每个 non-interface bundle 内检测同名 task。
+  // interface bundle 允许多个 override 定义同名 task。
+  for (const bundle of snapshot.bundles) {
+    if (bundle.isInterface) {
+      continue
+    }
+    const taskDecls = BundleView.allDecls(bundle).filter(d => d.type === 'task.decl')
+    const byName = new Map<string, typeof taskDecls>()
+    for (const d of taskDecls) {
+      const arr = byName.get(d.task) ?? []
+      arr.push(d)
+      byName.set(d.task, arr)
+    }
+    for (const [, entries] of byName) {
+      if (entries.length > 1) {
+        const [first, ...rest] = entries
+        for (const dup of rest) {
+          result.push({
+            level: 'error',
+            ...diagPos(dup.location, dup.file),
+            type: 'conflict-task',
+            task: dup.task,
+            previous: diagPos(first.location, first.file)
+          })
+        }
       }
     }
   }

@@ -5,9 +5,9 @@ import * as path from 'node:path'
 import {
   type Diagnostic,
   buildDiagnosticMessage,
-  joinPath,
+  nodePathUtils,
   performDiagnostic
-} from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import type { FullConfig } from '../types/config'
 import { loadBundle } from '../utils/bundle'
@@ -32,8 +32,8 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
 
   const result: Diagnostic[] = []
 
-  const bundle = await loadBundle(cfg)
-  if (!bundle) {
+  const project = await loadBundle(cfg)
+  if (!project) {
     return false
   }
 
@@ -49,11 +49,11 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
 
   let loadResourceFailed = false
 
-  const ctrlNames = bundle.allControllerNames()
+  const ctrlNames = Object.keys(project.interfaceData?.controller ?? {})
   for (const ctrlName of ctrlNames) {
-    const resNames = bundle.allResourceNames(ctrlName)
+    const resNames = Object.keys(project.interfaceData?.resource ?? {})
     for (const resName of resNames) {
-      await bundle.switchActive(ctrlName, resName)
+      await project.switchActive(ctrlName, resName)
 
       if (!cfg.mode || cfg.mode === 'stdio') {
         console.log(`${ctrlName} ${resName}`)
@@ -61,7 +61,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
         startGroup(`${ctrlName} ${resName}`)
       }
 
-      const rawDiags = performDiagnostic(bundle, {})
+      const rawDiags = performDiagnostic(project.getSnapshot()!, {})
       const currDiags: Diagnostic[] = []
       for (const diag of rawDiags) {
         const override = cfg.check.override?.[diag.type]
@@ -79,7 +79,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
       }
 
       for (const diag of currDiags) {
-        const [start, _end, brief] = await buildDiagnosticMessage(bundle.root, diag, locate, {})
+        const [start, _end, brief] = await buildDiagnosticMessage(project.root, diag, locate, nodePathUtils)
 
         const [line, col] = start
         const relative = path.relative(repo, diag.file)
@@ -115,8 +115,11 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
       result.push(...currDiags)
 
       const res = new maa.Resource()
-      for (const folder of bundle.paths) {
-        const succ = await res.post_bundle(joinPath(bundle.root, folder)).wait().succeeded
+      const resInfo = project.interfaceData?.resource[resName]
+      const resourcePaths = typeof resInfo?.path === 'string' ? [resInfo.path] : (resInfo?.path as string[] | undefined) ?? []
+      for (const relPath of resourcePaths) {
+        const fullPath = nodePathUtils.join(project.root, relPath)
+        const succ = await res.post_bundle(fullPath).wait().succeeded
         if (!succ) {
           if (!cfg.mode || cfg.mode === 'stdio') {
             console.error('  load resource failed')

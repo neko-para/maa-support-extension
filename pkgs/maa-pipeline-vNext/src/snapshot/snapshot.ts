@@ -115,9 +115,16 @@ export const Snapshot = {
     return resolved
   },
 
-  listTasks(snapshot: ResourceSnapshot): TaskName[] {
+  listTasks(
+    snapshot: ResourceSnapshot,
+    opts?: { includeInterface?: boolean }
+  ): TaskName[] {
+    const includeInterface = opts?.includeInterface ?? true
     const all = new Set<TaskName>()
     for (const bundle of snapshot.bundles) {
+      if (!includeInterface && bundle.isInterface) {
+        continue
+      }
       for (const name of BundleView.listTasks(bundle)) {
         all.add(name)
       }

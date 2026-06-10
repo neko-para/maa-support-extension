@@ -1,5 +1,5 @@
 import type { LocaleType } from '@nekosu/maa-locale'
-import type { DiagnosticType, ParserConfig } from '@nekosu/maa-pipeline-manager'
+import type { DiagnosticType, ParserConfig } from '@nekosu/maa-pipeline-manager-vnext'
 import type { NpmRegistryType } from '@nekosu/maa-version-manager'
 
 export type BaseConfig = {

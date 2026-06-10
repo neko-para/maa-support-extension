@@ -1,4 +1,4 @@
-import { parseTree } from 'jsonc-parser'
+import { type Node, parseTree } from 'jsonc-parser'
 
 import { mergeInterfaces } from '../interface/merge'
 import { parseInterface } from '../interface/parser'
@@ -13,7 +13,8 @@ import type {
 import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
-import { parsePipelineFile } from '../pipeline/fw'
+import { parseArray, parseObject } from '../utils/parse'
+import { parsePipelineFile, parseTaskNode } from '../pipeline/fw'
 import type { ParserConfig, TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
 import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
@@ -36,6 +37,42 @@ function annotateInterfaceParseResult(
   }
 }
 
+/** 从 interface JSON AST 中提取所有 pipeline_override 条目 */
+function extractOverrideEntries(
+  node: Node
+): { taskName: TaskName; taskNode: Node; propNode: Node }[] {
+  const result: { taskName: TaskName; taskNode: Node; propNode: Node }[] = []
+  extractOverrideEntriesRecur(node, result)
+  return result
+}
+
+function extractOverrideEntriesRecur(
+  node: Node,
+  out: { taskName: TaskName; taskNode: Node; propNode: Node }[]
+) {
+  if (node.type === 'object') {
+    for (const [key, val] of parseObject(node)) {
+      if (key === 'pipeline_override' && val.type === 'object') {
+        for (const [taskKey, taskVal, propNode] of parseObject(val)) {
+          if (!taskKey.startsWith('$')) {
+            out.push({
+              taskName: taskKey as TaskName,
+              taskNode: taskVal,
+              propNode
+            })
+          }
+        }
+      } else {
+        extractOverrideEntriesRecur(val, out)
+      }
+    }
+  } else if (node.type === 'array') {
+    for (const item of parseArray(node)) {
+      extractOverrideEntriesRecur(item, out)
+    }
+  }
+}
+
 export class Project {
   readonly loader: IContentLoader
   readonly pathUtils: IPathUtils
@@ -49,6 +86,7 @@ export class Project {
   private _languages: readonly LanguageInfo[] = []
   private _interfaceData: ParsedInterface | null = null
   private _interfaceFiles: readonly InterfaceFileView[] = []
+  private _interfaceBundle: BundleView | null = null
   private _snapshot: ResourceSnapshot | null = null
   private _activeController: string | null = null
   private _activeResource: string | null = null
@@ -106,6 +144,7 @@ export class Project {
     }
 
     const rawBase = parseInterface(content)
+    this._interfaceBundle = this._buildInterfaceBundle(content)
     if (!rawBase) {
       throw new Error(`Failed to parse interface file: ${filePath}`)
     }
@@ -270,8 +309,59 @@ export class Project {
       bundles.push(bundle)
     }
 
+    if (this._interfaceBundle) {
+      bundles.push(this._interfaceBundle)
+    }
+
     this._bundles = bundles
     this._buildSnapshot()
+  }
+
+  /** 从 interface JSON 的 pipeline_override 构建 interface BundleView */
+  private _buildInterfaceBundle(content: string): BundleView | null {
+    const tree = parseTree(content)
+    if (!tree) {
+      return null
+    }
+    const entries = extractOverrideEntries(tree)
+    if (entries.length === 0) {
+      return null
+    }
+
+    const root = (this.root + '/interface') as AbsolutePath
+    const tasks = new Map<TaskName, TaskInfoInFile[]>()
+    for (const { taskName, taskNode, propNode } of entries) {
+      const parsed = parseTaskNode(taskNode, {
+        taskName,
+        taskKey: propNode,
+        parser: this.parser
+      })
+      const annotated: TaskInfoInFile = {
+        parts: parsed.parts,
+        decls: parsed.decls.map(d => ({ ...d, file: root })),
+        refs: parsed.refs.map(r => ({ ...r, file: root }))
+      }
+      const existing = tasks.get(taskName)
+      if (existing) {
+        existing.push(annotated)
+      } else {
+        tasks.set(taskName, [annotated])
+      }
+    }
+
+    const fv: FileView = Object.freeze({
+      path: root,
+      tasks,
+      fileDecls: [],
+      isDefault: false
+    })
+
+    return createBundleView({
+      root,
+      files: new Map([['__pipeline_override.json' as RelativePath, fv]]),
+      images: new Set(),
+      isInterface: true
+    })
   }
 
   /** 根据绝对路径查找所属 Bundle 的索引，-1 表示不属于任何 Bundle */
@@ -377,13 +467,15 @@ export class Project {
     parsed: ReturnType<typeof parsePipelineFile>,
     isDefault = false
   ): FileView {
-    const tasks = new Map<TaskName, TaskInfoInFile>()
+    const tasks = new Map<TaskName, TaskInfoInFile[]>()
     for (const [name, info] of parsed.tasks) {
-      tasks.set(name, {
-        parts: info.parts,
-        decls: info.decls.map(d => ({ ...d, file: absPath })),
-        refs: info.refs.map(r => ({ ...r, file: absPath }))
-      })
+      tasks.set(name, [
+        {
+          parts: info.parts,
+          decls: info.decls.map(d => ({ ...d, file: absPath })),
+          refs: info.refs.map(r => ({ ...r, file: absPath }))
+        }
+      ])
     }
     return Object.freeze({
       path: absPath,

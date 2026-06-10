@@ -302,9 +302,9 @@ importers:
       '@nekosu/maa-locale':
         specifier: workspace:*
         version: link:../maa-locale
-      '@nekosu/maa-pipeline-manager':
+      '@nekosu/maa-pipeline-manager-vnext':
         specifier: workspace:*
-        version: link:../maa-pipeline-manager
+        version: link:../maa-pipeline-vNext
       '@nekosu/maa-version-manager':
         specifier: workspace:*
         version: link:../maa-version-manager

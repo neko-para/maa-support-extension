@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import * as path from 'node:path'
 
-import { FsContentLoader, FsContentWatcher, InterfaceBundle } from '@nekosu/maa-pipeline-manager'
+import { FsContentLoader, nodePathUtils, Project } from '@nekosu/maa-pipeline-manager-vnext'
 
 import type { BaseConfig } from '../types/config'
 
@@ -13,16 +13,14 @@ export async function loadBundle(cfg: BaseConfig) {
     return null
   }
 
-  const bundle = new InterfaceBundle(
+  const project = new Project(
     new FsContentLoader(),
-    new FsContentWatcher(),
+    nodePathUtils,
     false,
     path.dirname(interfacePath),
-    path.basename(interfacePath),
     cfg.parser
   )
-  await bundle.load()
-  await bundle.flush(false) // 刷下 imports
+  await project.loadInterface(path.basename(interfacePath))
 
-  return bundle
+  return project
 }

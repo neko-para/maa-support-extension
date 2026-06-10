@@ -25,13 +25,15 @@ function annotateInterface(
 }
 
 function makeAnnotated(path: AbsolutePath, parsed: ReturnType<typeof parsePipelineFile>): FileView {
-  const tasks = new Map<TaskName, TaskInfoInFile>()
+  const tasks = new Map<TaskName, TaskInfoInFile[]>()
   for (const [name, info] of parsed.tasks) {
-    tasks.set(name, {
-      parts: info.parts,
-      decls: info.decls.map(d => ({ ...d, file: path })),
-      refs: info.refs.map(r => ({ ...r, file: path }))
-    })
+    tasks.set(name, [
+      {
+        parts: info.parts,
+        decls: info.decls.map(d => ({ ...d, file: path })),
+        refs: info.refs.map(r => ({ ...r, file: path }))
+      }
+    ])
   }
   return {
     path,

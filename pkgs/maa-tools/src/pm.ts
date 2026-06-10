@@ -1,1 +1,1 @@
-export * from '@nekosu/maa-pipeline-manager'
+export * from '@nekosu/maa-pipeline-manager-vnext'

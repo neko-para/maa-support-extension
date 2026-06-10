@@ -1,3 +1,4 @@
+import { BundleView } from '../snapshot/bundle-view'
 import type { ResourceSnapshot } from '../snapshot/snapshot'
 import { Snapshot } from '../snapshot/snapshot'
 import type { TaskName } from '../types'
@@ -208,19 +209,19 @@ export function checkInterface(snapshot: ResourceSnapshot): Diagnostic[] {
     }
   }
 
-  // int-override-unknown-task: pipeline 任务未被任何 interface task 的 entry 引用
-  const realTasks = new Set(
-    refs.filter(r => r.type === 'interface.task_entry').map(r => r.target)
-  )
-  const pipelineDecls = Snapshot.allDecls(snapshot)
-  for (const decl of pipelineDecls) {
-    if (decl.type === 'task.decl' && !realTasks.has(decl.task)) {
-      result.push({
-        level: 'error',
-        ...diagPos(decl.location, decl.file),
-        type: 'int-override-unknown-task',
-        task: decl.task
-      })
+  // int-override-unknown-task: interface bundle 的 pipeline_override 引用了不存在的任务
+  const intBundle = snapshot.bundles.find(b => b.isInterface)
+  if (intBundle) {
+    const resourceTasks = new Set(Snapshot.listTasks(snapshot, { includeInterface: false }))
+    for (const decl of BundleView.allDecls(intBundle)) {
+      if (decl.type === 'task.decl' && !resourceTasks.has(decl.task)) {
+        result.push({
+          level: 'error',
+          ...diagPos(decl.location, decl.file),
+          type: 'int-override-unknown-task',
+          task: decl.task
+        })
+      }
     }
   }
 

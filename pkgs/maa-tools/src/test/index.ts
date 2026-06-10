@@ -6,7 +6,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
-import { joinPath } from '@nekosu/maa-pipeline-manager'
+import { nodePathUtils } from '@nekosu/maa-pipeline-manager-vnext'
 
 import type { FullConfig } from '../types/config'
 import { loadBundle } from '../utils/bundle'
@@ -45,8 +45,8 @@ export async function runTest(cfg: FullConfig) {
 
   const result: GroupRecoResult[] = []
 
-  const bundle = await loadBundle(cfg)
-  if (!bundle) {
+  const project = await loadBundle(cfg)
+  if (!project) {
     return false
   }
 
@@ -115,8 +115,10 @@ export async function runTest(cfg: FullConfig) {
       )
     ]
 
-    await bundle.switchActive(testCases.configs.controller, testCases.configs.resource)
-    const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
+    await project.switchActive(testCases.configs.controller, testCases.configs.resource)
+    const resInfo = project.interfaceData?.resource[testCases.configs.resource]
+    const resPaths = typeof resInfo?.path === 'string' ? [resInfo.path] : (resInfo?.path as string[] | undefined) ?? []
+    const resourcePaths = resPaths.map(rp => nodePathUtils.join(project.root, rp))
 
     const newHashKey = `${testCases.configs.controller}-${testCases.configs.resource}`
     if (newHashKey !== poolHashKey) {

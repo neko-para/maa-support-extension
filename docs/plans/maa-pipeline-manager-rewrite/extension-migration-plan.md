@@ -151,3 +151,7 @@ language/
 // TODO(Phase8): toggleMode — vNext 需补充 v1↔v2 格式切换
 // TODO(Phase8): addPair — 需要 AST 位置 + 文件写入
 ```
+
+---
+
+TODO: pkgs/extension/src/service/language/pipeline/base.ts

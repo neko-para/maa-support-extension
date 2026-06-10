@@ -261,7 +261,8 @@ export type IntLangDeclInfo = {
   location: Node
 }
 
-export type InterfaceDeclVariant =
+/** 解析器输出——不含 file，仅用于 parseInterface 返回值。 */
+export type InterfaceDeclInfo =
   | IntCtrlDeclInfo
   | IntResDeclInfo
   | IntTaskDeclInfo
@@ -271,9 +272,6 @@ export type InterfaceDeclVariant =
   | IntPresetDeclInfo
   | IntGroupDeclInfo
   | IntLangDeclInfo
-
-/** 解析器输出——不含 file，仅用于 parseInterface 返回值。 */
-export type InterfaceDeclInfo = InterfaceDeclVariant
 
 /** 完整声明——含 file。Snapshot / Diagnostic 层使用。 */
 export type InterfaceDeclInFile = InterfaceDeclInfo & { file: AbsolutePath }
@@ -357,7 +355,8 @@ export type IntGroupRefInfo = {
   location: Node
 }
 
-export type InterfaceRefVariant =
+/** 解析器输出——不含 file，仅用于 parseInterface 返回值。 */
+export type InterfaceRefInfo =
   | IntImportPathRefInfo
   | IntLangPathRefInfo
   | IntResPathRefInfo
@@ -369,9 +368,6 @@ export type InterfaceRefVariant =
   | IntCaseRefInfo
   | IntInputRefInfo
   | IntGroupRefInfo
-
-/** 解析器输出——不含 file，仅用于 parseInterface 返回值。 */
-export type InterfaceRefInfo = InterfaceRefVariant
 
 /** 完整引用——含 file。Snapshot / Diagnostic 层使用。 */
 export type InterfaceRefInFile = InterfaceRefInfo & { file: AbsolutePath }

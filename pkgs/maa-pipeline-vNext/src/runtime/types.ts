@@ -90,6 +90,13 @@ export type TaskRuntime = {
   tasks: TaskRuntimeItem[]
 }
 
+export type InterfaceRuntime = {
+  root: string
+  controller: ControllerRuntime
+  resource: ResourceRuntime
+  task: TaskRuntime
+}
+
 // ═══ Option resolution ═══
 
 export type ResolvedOption = {

@@ -4,8 +4,8 @@ import type { RelativePath } from '../types'
 import { buildTree, parseTreeWithoutParent } from '../utils/json'
 import { eachOrOne, isString, parseArray, parseObject, parseObjectFlex } from '../utils/parse'
 import type {
-  InterfaceDeclVariant,
-  InterfaceRefVariant,
+  InterfaceDeclInfo,
+  InterfaceRefInfo,
   ParsedInterface,
   RawInterfaceParseResult
 } from './types'
@@ -16,8 +16,8 @@ export function parseInterface(content: string): RawInterfaceParseResult | null 
     return null
   }
 
-  const decls: InterfaceDeclVariant[] = []
-  const refs: InterfaceRefVariant[] = []
+  const decls: InterfaceDeclInfo[] = []
+  const refs: InterfaceRefInfo[] = []
   const raw: Record<string, unknown> = {}
 
   for (const [key, obj] of parseObject(node)) {
@@ -62,8 +62,8 @@ export function parseInterface(content: string): RawInterfaceParseResult | null 
 
 function parseControllers(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   raw: Record<string, unknown>
 ) {
   const arr: unknown[] = []
@@ -113,8 +113,8 @@ function parseControllers(
 
 function parseResources(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   raw: Record<string, unknown>
 ) {
   const arr: unknown[] = []
@@ -168,7 +168,7 @@ function parseResources(
   }
 }
 
-function parseResourcePaths(node: Node, refs: InterfaceRefVariant[]) {
+function parseResourcePaths(node: Node, refs: InterfaceRefInfo[]) {
   eachOrOne(node, n => {
     if (isString(n)) {
       refs.push({ type: 'interface.resource_path', target: n.value as RelativePath, location: n })
@@ -180,8 +180,8 @@ function parseResourcePaths(node: Node, refs: InterfaceRefVariant[]) {
 
 function parseTasks(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   raw: Record<string, unknown>
 ) {
   const arr: unknown[] = []
@@ -267,8 +267,8 @@ function parseTasks(
 
 function parseOptions(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   raw: Record<string, unknown>
 ) {
   const optObj: Record<string, unknown> = {}
@@ -329,8 +329,8 @@ function parseOptions(
 
 function parseCases(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   option: string,
   parentRaw: Record<string, unknown>
 ) {
@@ -378,7 +378,7 @@ function parseCases(
 
 function parseInputs(
   node: Node,
-  decls: InterfaceDeclVariant[],
+  decls: InterfaceDeclInfo[],
   option: string,
   parentRaw: Record<string, unknown>
 ): string[] {
@@ -418,7 +418,7 @@ function parseInputs(
   return names
 }
 
-function parseDefaultCase(node: Node, refs: InterfaceRefVariant[], option: string) {
+function parseDefaultCase(node: Node, refs: InterfaceRefInfo[], option: string) {
   eachOrOne(node, n => {
     if (isString(n)) {
       refs.push({ type: 'interface.case', target: n.value, option, location: n })
@@ -428,7 +428,7 @@ function parseDefaultCase(node: Node, refs: InterfaceRefVariant[], option: strin
 
 function parseInputRefsInOverride(
   node: Node,
-  refs: InterfaceRefVariant[],
+  refs: InterfaceRefInfo[],
   option: string,
   inputNames: string[]
 ) {
@@ -444,7 +444,7 @@ function parseInputRefsInOverride(
 
 function searchInputRefs(
   node: Node,
-  refs: InterfaceRefVariant[],
+  refs: InterfaceRefInfo[],
   option: string,
   names: [string, RegExp][]
 ) {
@@ -475,8 +475,8 @@ function searchInputRefs(
 
 function parsePresets(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   raw: Record<string, unknown>
 ) {
   const arr: unknown[] = []
@@ -510,7 +510,7 @@ function parsePresets(
 
 function parsePresetTasks(
   node: Node,
-  refs: InterfaceRefVariant[],
+  refs: InterfaceRefInfo[],
   presetName: string,
   parentRaw: Record<string, unknown>
 ) {
@@ -545,7 +545,7 @@ function parsePresetTasks(
 
 function parsePresetOptions(
   node: Node,
-  refs: InterfaceRefVariant[],
+  refs: InterfaceRefInfo[],
   presetName: string,
   parentRaw: Record<string, unknown>
 ) {
@@ -590,7 +590,7 @@ function parsePresetOptions(
 
 // ── Simple sections ──
 
-function parseGlobalOption(node: Node, refs: InterfaceRefVariant[], raw: Record<string, unknown>) {
+function parseGlobalOption(node: Node, refs: InterfaceRefInfo[], raw: Record<string, unknown>) {
   const arr: string[] = []
   raw.global_option = arr
   for (const obj of parseArray(node)) {
@@ -606,7 +606,7 @@ function parseGlobalOption(node: Node, refs: InterfaceRefVariant[], raw: Record<
   }
 }
 
-function parseGroups(node: Node, decls: InterfaceDeclVariant[], raw: Record<string, unknown>) {
+function parseGroups(node: Node, decls: InterfaceDeclInfo[], raw: Record<string, unknown>) {
   const arr: unknown[] = []
   raw.group = arr
   for (const obj of parseArray(node)) {
@@ -621,7 +621,7 @@ function parseGroups(node: Node, decls: InterfaceDeclVariant[], raw: Record<stri
   }
 }
 
-function parseImports(node: Node, refs: InterfaceRefVariant[], raw: Record<string, unknown>) {
+function parseImports(node: Node, refs: InterfaceRefInfo[], raw: Record<string, unknown>) {
   const arr: string[] = []
   raw.import = arr
   for (const obj of parseArray(node)) {
@@ -634,8 +634,8 @@ function parseImports(node: Node, refs: InterfaceRefVariant[], raw: Record<strin
 
 function parseLanguages(
   node: Node,
-  decls: InterfaceDeclVariant[],
-  refs: InterfaceRefVariant[],
+  decls: InterfaceDeclInfo[],
+  refs: InterfaceRefInfo[],
   raw: Record<string, unknown>
 ) {
   const langs: Record<string, string> = {}

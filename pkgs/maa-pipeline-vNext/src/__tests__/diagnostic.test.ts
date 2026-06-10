@@ -8,7 +8,7 @@ import type {
   InterfaceRefInFile
 } from '../interface/types'
 import { parsePipelineFile } from '../pipeline/fw'
-import type { TaskDeclInFile, TaskInfoInFile } from '../pipeline/types'
+import type { TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
 import type { FileView } from '../snapshot/file-view'
 import type { AbsolutePath, RelativePath, TaskName } from '../types'

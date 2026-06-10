@@ -97,6 +97,9 @@ importers:
       '@nekosu/maa-pipeline-manager':
         specifier: workspace:*
         version: link:../maa-pipeline-manager
+      '@nekosu/maa-pipeline-manager-vnext':
+        specifier: workspace:*
+        version: link:../maa-pipeline-vNext
       '@nekosu/maa-tasker':
         specifier: workspace:*
         version: link:../maa-tasker

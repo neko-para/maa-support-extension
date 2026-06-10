@@ -14,6 +14,7 @@
     "@mse/utils": "workspace:*",
     "@nekosu/maa-locale": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",
+    "@nekosu/maa-pipeline-manager-vnext": "workspace:*",
     "@nekosu/maa-tasker": "workspace:*",
     "@nekosu/maa-tools": "workspace:*",
     "@nekosu/maa-version-manager": "workspace:*",

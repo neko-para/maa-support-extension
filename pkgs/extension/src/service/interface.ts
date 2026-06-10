@@ -17,6 +17,8 @@ import {
   buildResourceRuntime,
   buildTaskRuntime
 } from '@nekosu/maa-pipeline-manager'
+import { Project, nodePathUtils } from '@nekosu/maa-pipeline-manager-vnext'
+import type { ResourceSnapshot } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
@@ -27,6 +29,13 @@ import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle
   interfaceConfigJson: InterfaceConfig
+
+  // Step 1: 双模型共存 — vNext Project 与旧 InterfaceBundle 并行
+  vNextProject?: Project
+
+  getSnapshot(): ResourceSnapshot | null {
+    return this.vNextProject?.getSnapshot() ?? null
+  }
 
   get interfaceJson(): Interface {
     if (!this.interfaceBundle?.content.object) {
@@ -142,6 +151,7 @@ export class InterfaceService extends BaseService {
     this.interfaceBundle?.stop()
 
     this.interfaceBundle = undefined
+    this.vNextProject = undefined
     this.interfaceConfigJson = {}
 
     const root = rootService.activeResource
@@ -177,6 +187,23 @@ export class InterfaceService extends BaseService {
       this.localeChanged.fire()
     })
     await this.interfaceBundle.load()
+
+    // Step 1: 双模型共存 — 同步创建 vNext Project 用于渐进式查询迁移
+    this.vNextProject = new Project(
+      new VscodeContentLoader(),
+      nodePathUtils,
+      isMaaAssistantArknights,
+      root.dirUri.fsPath,
+      rootService.config?.parser
+    )
+    await this.vNextProject.loadInterface(path.basename(root.interfaceUri.fsPath))
+    // 初始 active — 用旧 InterfaceBundle 的当前 active 来同步
+    if (this.interfaceBundle.activeController && this.interfaceBundle.activeResource) {
+      await this.vNextProject.switchActive(
+        this.interfaceBundle.activeController,
+        this.interfaceBundle.activeResource
+      )
+    }
 
     try {
       this.interfaceConfigJson = JSON.parse(await fs.readFile(root.configUri.fsPath, 'utf8'))
@@ -260,10 +287,10 @@ export class InterfaceService extends BaseService {
   }
 
   updateResource() {
-    this.interfaceBundle?.switchActive(
-      this.interfaceConfigJson?.controller ?? '',
-      this.interfaceConfigJson?.resource ?? ''
-    )
+    const ctrl = this.interfaceConfigJson?.controller ?? ''
+    const res = this.interfaceConfigJson?.resource ?? ''
+    this.interfaceBundle?.switchActive(ctrl, res)
+    this.vNextProject?.switchActive(ctrl, res)
   }
 
   suggestResource() {

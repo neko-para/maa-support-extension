@@ -17,6 +17,25 @@ export class VscodeContentLoader implements IContentLoader {
       return null
     }
   }
+
+  async listFiles(dir: string): Promise<string[]> {
+    const result: string[] = []
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(dir))
+      for (const [name, type] of entries) {
+        if (type === vscode.FileType.File) {
+          result.push(name)
+        } else if (type === vscode.FileType.Directory) {
+          const fullPath = path.join(dir, name)
+          const sub = await this.listFiles(fullPath)
+          result.push(...sub.map(s => path.join(name, s)))
+        }
+      }
+    } catch {
+      // 目录不存在是正常情况，跳过即可
+    }
+    return result
+  }
 }
 
 export class VscodeContentWatcher extends FsContentWatcher implements IContentWatcher {

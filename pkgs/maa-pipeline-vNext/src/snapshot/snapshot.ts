@@ -197,6 +197,29 @@ export const Snapshot = {
       .join(' ')
   },
 
+  getTaskBriefInfo(
+    snapshot: ResourceSnapshot,
+    name: TaskName
+  ): { reco?: string; act?: string } {
+    const result: { reco?: string; act?: string } = {}
+    for (const bundle of snapshot.bundles) {
+      const info = BundleView.findTask(bundle, name)
+      if (!info) {
+        continue
+      }
+      if (!result.reco && info.parts.recoType) {
+        result.reco = info.parts.recoType.value
+      }
+      if (!result.act && info.parts.actType) {
+        result.act = info.parts.actType.value
+      }
+      if (result.reco && result.act) {
+        return result
+      }
+    }
+    return result
+  },
+
   /** 遍历所有 Bundle 查找任务定义。返回所有包含该任务的 Bundle 及其定义。 */
   getTask(snapshot: ResourceSnapshot, name: TaskName) {
     const result: { bundle: BundleViewType; info: TaskInfoInFile }[] = []

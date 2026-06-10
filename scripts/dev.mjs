@@ -7,6 +7,7 @@ buildChain(['pkgs/simple-parser', 'pkgs/maa-tasker']).then(() => {
   watchChain([
     'pkgs/maa-version-manager',
     'pkgs/maa-pipeline-manager',
+    'pkgs/maa-pipeline-vNext',
     'pkgs/maa-locale',
 
     'pkgs/maa-server',

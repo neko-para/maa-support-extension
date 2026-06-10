@@ -13,7 +13,6 @@ import type {
 import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
-import { parseArray, parseObject } from '../utils/parse'
 import { parsePipelineFile, parseTaskNode } from '../pipeline/fw'
 import type { ParserConfig, TaskInfoInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
@@ -21,6 +20,7 @@ import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
 import type { FileView } from '../snapshot/file-view'
 import type { LanguageInfo, LocaleEntry, ResourceSnapshot } from '../snapshot/snapshot'
 import type { AbsolutePath, ImageRelativePath, RelativePath, TaskName } from '../types'
+import { type StringNode, parseArray, parseObject } from '../utils/parse'
 
 const PIPELINE_EXTENSIONS = new Set(['.json', '.jsonc'])
 const IMAGE_EXTENSIONS = new Set(['.png'])
@@ -38,17 +38,15 @@ function annotateInterfaceParseResult(
 }
 
 /** 从 interface JSON AST 中提取所有 pipeline_override 条目 */
-function extractOverrideEntries(
-  node: Node
-): { taskName: TaskName; taskNode: Node; propNode: Node }[] {
-  const result: { taskName: TaskName; taskNode: Node; propNode: Node }[] = []
+function extractOverrideEntries(node: Node) {
+  const result: { taskName: TaskName; taskNode: Node; propNode: StringNode }[] = []
   extractOverrideEntriesRecur(node, result)
   return result
 }
 
 function extractOverrideEntriesRecur(
   node: Node,
-  out: { taskName: TaskName; taskNode: Node; propNode: Node }[]
+  out: { taskName: TaskName; taskNode: Node; propNode: StringNode }[]
 ) {
   if (node.type === 'object') {
     for (const [key, val] of parseObject(node)) {
@@ -342,7 +340,9 @@ export class Project {
       const annotated: TaskInfoInFile = {
         parts: parsed.parts,
         decls: parsed.decls.map(d => ({ ...d, file: root })),
-        refs: parsed.refs.map(r => ({ ...r, file: root }))
+        refs: parsed.refs.map(r => ({ ...r, file: root })),
+        prop: propNode,
+        data: taskNode
       }
       const existing = tasks.get(taskName)
       if (existing) {
@@ -479,7 +479,9 @@ export class Project {
         {
           parts: info.parts,
           decls: info.decls.map(d => ({ ...d, file: absPath })),
-          refs: info.refs.map(r => ({ ...r, file: absPath }))
+          refs: info.refs.map(r => ({ ...r, file: absPath })),
+          prop: info.prop,
+          data: info.data
         }
       ])
     }
@@ -500,7 +502,9 @@ export class Project {
       annotated.set(name, {
         parts: info.parts,
         decls: info.decls.map(d => ({ ...d, file: absPath })),
-        refs: info.refs.map(r => ({ ...r, file: absPath }))
+        refs: info.refs.map(r => ({ ...r, file: absPath })),
+        prop: info.prop,
+        data: info.data
       })
     }
     return annotated
@@ -533,7 +537,9 @@ export class Project {
       annotated.set(name, {
         parts: info.parts,
         decls: info.decls.map(d => ({ ...d, file: defaultPath })),
-        refs: info.refs.map(r => ({ ...r, file: defaultPath }))
+        refs: info.refs.map(r => ({ ...r, file: defaultPath })),
+        prop: info.prop,
+        data: info.data
       })
     }
     return annotated

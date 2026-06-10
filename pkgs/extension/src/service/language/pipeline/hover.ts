@@ -1,11 +1,12 @@
 import * as vscode from 'vscode'
 
 import {
-  type AbsolutePath,
+  FileViewUtils,
+  Snapshot,
   extractTaskRef,
   findDeclRef,
   findMaaDeclRef
-} from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { PipelineLanguageProvider } from './base'
@@ -25,19 +26,19 @@ export class PipelineHoverProvider
     position: vscode.Position,
     _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return null
     }
-    const [layer, file, isDefault] = layerInfo
+    const { file } = located
 
-    const decls = layer.mergedDecls.filter(decl => decl.file === file)
-    const refs = layer.mergedRefs.filter(ref => ref.file === file)
+    const decls = FileViewUtils.allDecls(file)
+    const refs = FileViewUtils.allRefs(file)
 
     const offset = document.offsetAt(position)
     const decl = findDeclRef(decls, offset)
@@ -45,52 +46,44 @@ export class PipelineHoverProvider
 
     if (decl) {
       if (decl.type === 'task.decl') {
-        if (isDefault) {
+        if (file.isDefault) {
           return null
         }
 
-        const hover = await this.getTaskHover(intBundle, intBundle.topLayer, decl.task)
+        const hover = await this.getTaskHover(snapshot, file, decl.task)
         return new vscode.Hover(hover)
       } else if (decl.type === 'task.locale') {
         const hover = await this.getLocaleHover(decl.key)
         if (hover) {
           return new vscode.Hover(hover)
-        } else {
-          return null
         }
+        return null
       }
     } else if (ref) {
       if (isMaaAssistantArknights) {
         if (ref && (ref.type === 'task.maa.base_task' || ref.type === 'task.maa.expr')) {
           const taskRef = findMaaDeclRef(ref.tasks, offset - ref.location.offset)
           if (taskRef) {
-            const hover = await this.getTaskHover(
-              intBundle,
-              intBundle.topLayer,
-              taskRef.taskSuffix,
-              ref.belong
-            )
+            const hover = await this.getTaskHover(snapshot, file, taskRef.taskSuffix, ref.belong)
             return new vscode.Hover(hover)
-          } else {
-            return null
           }
+          return null
         }
       }
 
       const task = extractTaskRef(ref)
       if (task) {
-        const hover = await this.getTaskHover(intBundle, intBundle.topLayer, task)
+        const hover = await this.getTaskHover(snapshot, file, task)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.template' || ref.type === 'task.custom_template') {
-        const hover = this.getImageHover(intBundle, intBundle.topLayer, ref.target)
+        const hover = this.getImageHover(snapshot, file, ref.target)
         return new vscode.Hover(hover)
       } else if (ref.type === 'task.locale') {
         const hover = await this.getLocaleHover(ref.target)
         if (hover) {
           return new vscode.Hover(hover)
-        } else {
-          return null
         }
+        return null
       }
     }
     return null

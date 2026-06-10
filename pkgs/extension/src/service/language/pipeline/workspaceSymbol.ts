@@ -1,6 +1,8 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
+import { Snapshot } from '@nekosu/maa-pipeline-manager-vnext'
+
 import { convertRangeLocation } from '../utils'
 import { PipelineLanguageProvider } from './base'
 
@@ -18,8 +20,8 @@ export class PipelineWorkspaceSymbolProvider
     query: string,
     _token: vscode.CancellationToken
   ): Promise<vscode.SymbolInformation[]> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return []
     }
 
@@ -27,7 +29,7 @@ export class PipelineWorkspaceSymbolProvider
 
     const result: vscode.SymbolInformation[] = []
 
-    const decls = intBundle.info.layer.mergedAllDecls
+    const decls = Snapshot.allDecls(snapshot)
     for (const decl of decls) {
       if (decl.type !== 'task.decl') {
         continue

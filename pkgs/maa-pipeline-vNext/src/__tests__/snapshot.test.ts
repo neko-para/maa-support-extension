@@ -7,7 +7,7 @@ import { parsePipelineFile } from '../pipeline/fw'
 import type { TaskInfoInFile } from '../pipeline/types'
 import {
   BundleView,
-  FileView,
+  FileViewUtils,
   Snapshot,
   createBundleView,
   createSnapshot,
@@ -31,7 +31,9 @@ function loadDefaultConfig(): Map<TaskName, TaskInfoInFile> {
     annotated.set(name, {
       parts: info.parts,
       decls: info.decls.map(d => ({ ...d, file: '/fake/default_pipeline.json' as AbsolutePath })),
-      refs: info.refs.map(r => ({ ...r, file: '/fake/default_pipeline.json' as AbsolutePath }))
+      refs: info.refs.map(r => ({ ...r, file: '/fake/default_pipeline.json' as AbsolutePath })),
+      prop: info.prop,
+      data: info.data
     })
   }
   return annotated
@@ -46,7 +48,9 @@ function makeFileView(fixtureName: string) {
       {
         parts: info.parts,
         decls: info.decls.map(d => ({ ...d, file: filePath })),
-        refs: info.refs.map(r => ({ ...r, file: filePath }))
+        refs: info.refs.map(r => ({ ...r, file: filePath })),
+        prop: info.prop,
+        data: info.data
       }
     ])
   }
@@ -67,13 +71,13 @@ describe('FileView', () => {
   })
 
   it('allDecls returns all decls from all tasks', () => {
-    const decls = FileView.allDecls(fv)
+    const decls = FileViewUtils.allDecls(fv)
     expect(decls.filter(d => d.type === 'task.decl')).toHaveLength(3)
     expect(decls.filter(d => d.type === 'task.doc')).toHaveLength(1)
   })
 
   it('allRefs returns all refs from all tasks', () => {
-    const refs = FileView.allRefs(fv)
+    const refs = FileViewUtils.allRefs(fv)
     expect(refs.filter(r => r.type === 'task.next')).toHaveLength(2)
     expect(refs.filter(r => r.type === 'task.template')).toHaveLength(1)
   })

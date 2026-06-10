@@ -1,12 +1,6 @@
 import * as vscode from 'vscode'
 
-import {
-  type AbsolutePath,
-  type RelativePath,
-  joinImagePath,
-  joinPath,
-  normalizeImageFolder
-} from '@nekosu/maa-pipeline-manager'
+import { BundleView, FileViewUtils, Snapshot, nodePathUtils } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { convertRange } from '../utils'
@@ -26,21 +20,20 @@ export class PipelineDocumentLinkProvider
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return []
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return []
     }
-    const [layer, file] = layerInfo
-    const topLayer = intBundle.topLayer
+    const { bundle, file } = located
 
-    const refs = layer.mergedRefs.filter(ref => ref.file === file)
+    const refs = FileViewUtils.allRefs(file)
 
-    const imageFolders = topLayer.getImageFolders()
+    const imageFolders = Snapshot.getImageFolders(snapshot)
 
     const result: vscode.DocumentLink[] = []
     for (const ref of refs) {
@@ -48,7 +41,7 @@ export class PipelineDocumentLinkProvider
         (ref.type === 'task.can_locale' || ref.type === 'task.locale_text') &&
         (ref.target.endsWith('.md') || ref.target.endsWith('.png'))
       ) {
-        const full = joinPath(topLayer.root, ref.target as RelativePath)
+        const full = nodePathUtils.join(bundle.root, ref.target)
         result.push(
           new vscode.DocumentLink(convertRange(document, ref.location), vscode.Uri.file(full))
         )
@@ -62,25 +55,26 @@ export class PipelineDocumentLinkProvider
         if (isMaaAssistantArknights) {
           continue
         }
-        const norm = normalizeImageFolder(ref.target)
-        if (imageFolders.has(norm)) {
-          const layer = imageFolders.get(norm)![0]
+        const normImg = ref.target
+        if (imageFolders.has(normImg)) {
+          const bundles = imageFolders.get(normImg)!
+          const firstBundle = bundles[0]
           result.push(
             new vscode.DocumentLink(
               convertRange(document, ref.location),
-              vscode.Uri.file(joinImagePath(false, layer.root, norm))
+              vscode.Uri.file(BundleView.imagePath(firstBundle, nodePathUtils, normImg))
             )
           )
         }
         continue
       }
 
-      const layers = topLayer.getImage(ref.target)
-      for (const [, full] of layers) {
+      const layers = Snapshot.getImage(snapshot, nodePathUtils, ref.target)
+      for (const { absPath } of layers) {
         result.push(
-          new vscode.DocumentLink(convertRange(document, ref.location), vscode.Uri.file(full))
+          new vscode.DocumentLink(convertRange(document, ref.location), vscode.Uri.file(absPath))
         )
-        break // 只要最顶层的最匹配的那个
+        break
       }
     }
 

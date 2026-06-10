@@ -190,6 +190,8 @@ export type TaskInfo = {
   parts: TaskParts
   decls: TaskDeclInfo[]
   refs: TaskRefInfo[]
+  prop: StringNode
+  data: Node
 }
 
 /** Parser 原始输出的 TaskInfo，不含 file。仅用于 parsePipelineFile 返回值。 */

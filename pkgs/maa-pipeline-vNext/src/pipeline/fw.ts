@@ -377,7 +377,7 @@ function parseRecoAndAct(
 
 export function parseTaskNode(
   node: Node,
-  opts: { taskName: TaskName; taskKey: Node; parser?: ParserConfig }
+  opts: { taskName: TaskName; taskKey: StringNode; parser?: ParserConfig }
 ): TaskInfo {
   const { taskName, parser } = opts
   const parts = splitNode(node, false)
@@ -421,7 +421,7 @@ export function parseTaskNode(
     }
   }
 
-  return { parts, decls, refs }
+  return { parts, decls, refs, prop: opts.taskKey, data: node }
 }
 
 export function parsePipelineFile(

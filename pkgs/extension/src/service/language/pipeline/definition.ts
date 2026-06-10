@@ -1,11 +1,12 @@
 import * as vscode from 'vscode'
 
 import {
-  type AbsolutePath,
+  FileViewUtils,
+  Snapshot,
   type TaskMaaTaskRef,
   findDeclRef,
   findMaaDeclRef
-} from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'
@@ -26,27 +27,26 @@ export class PipelineDefinitionProvider
     position: vscode.Position,
     _token: vscode.CancellationToken
   ): Promise<vscode.Definition | vscode.DefinitionLink[] | null> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return null
     }
-    const [layer, file, isDefault] = layerInfo
-    const topLayer = intBundle.topLayer
+    const { file } = located
 
     const offset = document.offsetAt(position)
-    const decls = layer.mergedDecls.filter(decl => decl.file === file)
-    const refs = layer.mergedRefs.filter(ref => ref.file === file)
+    const decls = FileViewUtils.allDecls(file)
+    const refs = FileViewUtils.allRefs(file)
 
     const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
-    const allDecls = topLayer.mergedAllDecls
-    const allRefs = topLayer.mergedAllRefs
+    const allDecls = Snapshot.allDecls(snapshot)
+    const allRefs = Snapshot.allRefs(snapshot)
 
     if (isMaaAssistantArknights) {
       let taskRef: TaskMaaTaskRef | null = null
@@ -69,22 +69,21 @@ export class PipelineDefinitionProvider
           }
         }
         return result
-      } else {
-        return null
       }
+      return null
     }
 
     if (decl) {
-      if (isDefault && decl.type === 'task.decl') {
+      if (file.isDefault && decl.type === 'task.decl') {
         return null
       }
 
-      const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
-      const refs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
-      return await Promise.all([...decls, ...refs].map(autoConvertRangeLocation))
+      const resultDecls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
+      const resultRefs = this.makeRefs(allDecls, allRefs, decl, ref) ?? []
+      return await Promise.all([...resultDecls, ...resultRefs].map(autoConvertRangeLocation))
     } else if (ref) {
-      const decls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
-      return await Promise.all(decls.map(autoConvertRangeLocation))
+      const resultDecls = this.makeDecls(allDecls, allRefs, decl, ref) ?? []
+      return await Promise.all(resultDecls.map(autoConvertRangeLocation))
     }
 
     return null

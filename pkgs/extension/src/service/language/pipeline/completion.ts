@@ -1,12 +1,11 @@
 import * as vscode from 'vscode'
 
 import {
-  type InterfaceBundle,
-  type LayerInfo,
+  FileViewUtils,
+  Snapshot,
   type TaskRefInfo,
   findDeclRef
-} from '@nekosu/maa-pipeline-manager'
-import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
@@ -103,30 +102,29 @@ export class PipelineCompletionProvider
     _token: vscode.CancellationToken,
     _context: vscode.CompletionContext
   ): Promise<CustomCompletionItem[] | null> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return null
     }
-    const [layer, file] = layerInfo
+    const { file } = located
 
     const offset = document.offsetAt(position)
-    const decls = layer.mergedDecls.filter(decl => decl.file === file)
-    const refs = layer.mergedRefs.filter(ref => ref.file === file)
+    const decls = FileViewUtils.allDecls(file)
+    const refs = FileViewUtils.allRefs(file)
     const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
     if (decl && decl.type === 'task.anchor') {
       const anchorsDeclared = decls
         .filter(d => d.type === 'task.anchor')
-        .filter(d2 => (d2 as typeof decl).belong === decl.belong)
-        .map(d => (d as typeof decl).anchor)
-      const anchors = layer
-        .getAnchorList()
+        .filter(d2 => d2.belong === decl.belong)
+        .map(d => d.anchor)
+      const anchors = Snapshot.getAnchorList(snapshot)
         .map(([anchor]) => anchor)
         .filter(anchor => !anchorsDeclared.includes(anchor))
       return [...new Set(anchors)].map(anchor => ({
@@ -150,7 +148,7 @@ export class PipelineCompletionProvider
       return null
     }
 
-    return this.buildCompletionItems(ref, spec, layer, intBundle, document)
+    return this.buildCompletionItems(ref, spec, snapshot, document)
   }
 
   resolveCompletionSpec(ref: TaskRefInfo) {
@@ -210,14 +208,14 @@ export class PipelineCompletionProvider
   buildCompletionItems(
     ref: TaskRefInfo,
     spec: CompletionSpec,
-    layer: LayerInfo,
-    intBundle: InterfaceBundle,
+    snapshot: ReturnType<typeof this.flush> extends Promise<infer T> ? T : never,
     document: vscode.TextDocument
   ) {
-    // locale 的 item 结构不同（insertText + fillDetail），需要 early return
+    if (!snapshot) return []
+
     if (spec.kind === 'locale') {
       const range = convertRangeWithDelta(document, ref.location, -1, spec.rangeExpandRight)
-      return intBundle.langBundle.allKeys().map(name => {
+      return Snapshot.allLocaleKeys(snapshot).map(name => {
         const esc = JSON.stringify(name)
         return {
           label: name,
@@ -251,9 +249,9 @@ export class PipelineCompletionProvider
 
     switch (spec.kind) {
       case 'task':
-        for (const task of layer.getTaskList()) {
+        for (const task of Snapshot.listTasks(snapshot)) {
           if (spec.taskFilter) {
-            const info = layer.getTaskBriefInfo(task)
+            const info = Snapshot.getTaskBriefInfo(snapshot, task)
             if (!spec.taskFilter(info)) {
               continue
             }
@@ -263,13 +261,13 @@ export class PipelineCompletionProvider
             kind: vscode.CompletionItemKind.Class,
             range,
             sortText: '1_' + task,
-            fillTaskDetail: () => this.getTaskBrief(intBundle, task)
+            fillTaskDetail: () => this.getTaskBrief(snapshot, task)
           })
         }
         break
 
       case 'anchor': {
-        const anchors = [...new Set(layer.getAnchorList().map(([a]) => a))]
+        const anchors = [...new Set(Snapshot.getAnchorList(snapshot).map(([a]) => a))]
         if (anchors.length === 0) {
           items.push({
             label: '(no anchors)',
@@ -291,7 +289,7 @@ export class PipelineCompletionProvider
       }
 
       case 'image':
-        for (const [folder] of layer.getImageFolders()) {
+        for (const [folder] of Snapshot.getImageFolders(snapshot)) {
           items.push({
             label: folder + '/',
             kind: vscode.CompletionItemKind.Folder,
@@ -299,7 +297,7 @@ export class PipelineCompletionProvider
             sortText: '0_' + folder + '/'
           })
         }
-        for (const image of layer.getImageList()) {
+        for (const image of Snapshot.listImages(snapshot)) {
           items.push({
             label: image,
             kind: vscode.CompletionItemKind.File,

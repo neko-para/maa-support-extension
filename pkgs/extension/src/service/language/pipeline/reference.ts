@@ -1,11 +1,12 @@
 import * as vscode from 'vscode'
 
 import {
-  type AbsolutePath,
+  FileViewUtils,
+  Snapshot,
   type TaskMaaTaskRef,
   findDeclRef,
   findMaaDeclRef
-} from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import { isMaaAssistantArknights } from '../../../utils/fs'
 import { autoConvertRangeLocation } from '../utils'
@@ -27,27 +28,26 @@ export class PipelineReferenceProvider
     _context: vscode.ReferenceContext,
     _token: vscode.CancellationToken
   ): Promise<vscode.Location[] | null> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return null
     }
-    const [layer, file, isDefault] = layerInfo
-    const topLayer = intBundle.topLayer
+    const { file } = located
 
     const offset = document.offsetAt(position)
-    const decls = layer.mergedDecls.filter(decl => decl.file === file)
-    const refs = layer.mergedRefs.filter(ref => ref.file === file)
+    const decls = FileViewUtils.allDecls(file)
+    const refs = FileViewUtils.allRefs(file)
 
     const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
-    const allDecls = topLayer.mergedAllDecls
-    const allRefs = topLayer.mergedAllRefs
+    const allDecls = Snapshot.allDecls(snapshot)
+    const allRefs = Snapshot.allRefs(snapshot)
 
     if (isMaaAssistantArknights) {
       let taskRef: TaskMaaTaskRef | null = null
@@ -64,12 +64,11 @@ export class PipelineReferenceProvider
           result.push(...(await this.makeMaaRefs(allRefs, taskRef.taskSuffix)))
         }
         return result
-      } else {
-        return null
       }
+      return null
     }
 
-    if (isDefault && decl?.type === 'task.decl') {
+    if (file.isDefault && decl?.type === 'task.decl') {
       return null
     }
 

@@ -115,10 +115,7 @@ export const Snapshot = {
     return resolved
   },
 
-  listTasks(
-    snapshot: ResourceSnapshot,
-    opts?: { includeInterface?: boolean }
-  ): TaskName[] {
+  listTasks(snapshot: ResourceSnapshot, opts?: { includeInterface?: boolean }): TaskName[] {
     const includeInterface = opts?.includeInterface ?? true
     const all = new Set<TaskName>()
     for (const bundle of snapshot.bundles) {
@@ -197,10 +194,7 @@ export const Snapshot = {
       .join(' ')
   },
 
-  getTaskBriefInfo(
-    snapshot: ResourceSnapshot,
-    name: TaskName
-  ): { reco?: string; act?: string } {
+  getTaskBriefInfo(snapshot: ResourceSnapshot, name: TaskName): { reco?: string; act?: string } {
     const result: { reco?: string; act?: string } = {}
     for (const bundle of snapshot.bundles) {
       const info = BundleView.findTask(bundle, name)

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { type AbsolutePath, extractTaskRef } from '@nekosu/maa-pipeline-manager'
+import { FileViewUtils, Snapshot, extractTaskRef } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { interfaceService } from '../..'
 import { debounce } from '../../utils/debounce'
@@ -44,35 +44,32 @@ export class PipelineInlayHintsProvider
     range: vscode.Range,
     _token: vscode.CancellationToken
   ): Promise<vscode.InlayHint[]> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return []
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return []
     }
-    const [layer] = layerInfo
+    const { file } = located
 
     const beginOffset = document.offsetAt(range.start)
     const endOffset = document.offsetAt(range.end)
-    const refs = layer.mergedRefs.filter(ref => {
-      if (ref.file !== document.uri.fsPath) {
-        return false
-      }
-      return (
-        ref.location.offset >= beginOffset && ref.location.offset + ref.location.length <= endOffset
-      )
-    })
+    const refs = FileViewUtils.allRefs(file).filter(
+      ref =>
+        ref.location.offset >= beginOffset &&
+        ref.location.offset + ref.location.length <= endOffset
+    )
 
     const preferredLocale = interfaceService.interfaceConfigJson.__locale
-    const preferredIndex = intBundle.langBundle.queryName(preferredLocale)
+    const preferredIndex = Snapshot.queryLocaleIndex(snapshot, preferredLocale)
 
     const locales = refs
       .filter(ref => ref.type === 'task.locale')
       .map(ref => {
-        const result = intBundle.langBundle.queryKey(ref.target)[preferredIndex]
+        const result = Snapshot.queryLocale(snapshot, ref.target)[preferredIndex]
         if (!result) {
           return null
         }
@@ -90,7 +87,7 @@ export class PipelineInlayHintsProvider
         return null
       }
 
-      const text = layer.getTaskDoc(task)
+      const text = Snapshot.getTaskDoc(snapshot, task)
       if (!text) {
         return null
       }

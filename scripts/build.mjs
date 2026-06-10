@@ -9,6 +9,7 @@ await buildChain([
 
   'pkgs/maa-version-manager',
   'pkgs/maa-pipeline-manager',
+  'pkgs/maa-pipeline-vNext',
   'pkgs/maa-locale',
 
   'pkgs/maa-server',

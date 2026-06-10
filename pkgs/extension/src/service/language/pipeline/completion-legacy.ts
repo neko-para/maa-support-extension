@@ -1,6 +1,10 @@
 import * as vscode from 'vscode'
 
-import { type AbsolutePath, findDeclRef } from '@nekosu/maa-pipeline-manager'
+import {
+  FileViewUtils,
+  Snapshot,
+  findDeclRef
+} from '@nekosu/maa-pipeline-manager-vnext'
 
 import { commands } from '../../../command'
 import { isMaaAssistantArknights } from '../../../utils/fs'
@@ -21,7 +25,6 @@ export type CustomCompletionItem = vscode.CompletionItem & {
   fillTaskDetail?: () => string
 }
 
-// 自由函数使用 this 参数，调用方通过 .call(provider, ...) 注入 Provider 实例
 export async function provideCompletionItemsLegacy(
   this: PipelineLanguageProvider,
   document: vscode.TextDocument,
@@ -29,20 +32,20 @@ export async function provideCompletionItemsLegacy(
   _token: vscode.CancellationToken,
   _context: vscode.CompletionContext
 ): Promise<CustomCompletionItem[] | null> {
-  const intBundle = await this.flush()
-  if (!intBundle) {
+  const snapshot = await this.flush()
+  if (!snapshot) {
     return null
   }
 
-  const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-  if (!layerInfo) {
+  const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+  if (!located) {
     return null
   }
-  const [layer, file] = layerInfo
+  const { file } = located
 
   const offset = document.offsetAt(position)
-  const decls = layer.mergedDecls.filter(decl => decl.file === file)
-  const refs = layer.mergedRefs.filter(ref => ref.file === file)
+  const decls = FileViewUtils.allDecls(file)
+  const refs = FileViewUtils.allRefs(file)
   const decl = findDeclRef(decls, offset)
   const ref = findDeclRef(refs, offset)
 
@@ -50,11 +53,10 @@ export async function provideCompletionItemsLegacy(
 
   if (decl && decl.type === 'task.anchor') {
     const anchorsDeclared = decls
-      .filter(decl => decl.type === 'task.anchor')
-      .filter(decl2 => decl2.belong === decl.belong)
-      .map(decl => decl.anchor)
-    const anchors = layer
-      .getAnchorList()
+      .filter(d => d.type === 'task.anchor')
+      .filter(d2 => d2.belong === decl.belong)
+      .map(d => d.anchor)
+    const anchors = Snapshot.getAnchorList(snapshot)
       .map(([anchor]) => anchor)
       .filter(anchor => !anchorsDeclared.includes(anchor))
     for (const anchor of new Set(anchors)) {
@@ -106,12 +108,12 @@ export async function provideCompletionItemsLegacy(
           offset - ref.location.offset
         )
         const taskRange = findTaskWordRange() ?? range
-        for (const task of layer.getTaskList()) {
+        for (const task of Snapshot.listTasks(snapshot)) {
           const item: CustomCompletionItem = {
             label: task,
             kind: vscode.CompletionItemKind.Class,
             range: taskRange,
-            fillTaskDetail: () => this.getTaskBrief(intBundle, task, ref.belong)
+            fillTaskDetail: () => this.getTaskBrief(snapshot, task, ref.belong)
           }
           result.push(item)
         }
@@ -120,12 +122,12 @@ export async function provideCompletionItemsLegacy(
       const range = new vscode.Range(position, position)
       if (offset === ref.location.offset + 1 || /[ @+^(a-zA-Z0-9_-]/.test(lastChar)) {
         const taskRange = findTaskWordRange() ?? range
-        for (const task of layer.getTaskList()) {
+        for (const task of Snapshot.listTasks(snapshot)) {
           const item: CustomCompletionItem = {
             label: task,
             kind: vscode.CompletionItemKind.Class,
             range: taskRange,
-            fillTaskDetail: () => this.getTaskBrief(intBundle, task, ref.belong),
+            fillTaskDetail: () => this.getTaskBrief(snapshot, task, ref.belong),
             command: {
               command: commands.TriggerCompletion,
               title: 'trigger next'
@@ -176,10 +178,10 @@ export async function provideCompletionItemsLegacy(
     ref.type === 'task.entry'
   ) {
     const range = convertRangeWithDelta(document, ref.location, -1, 1)
-    for (const task of layer.getTaskList()) {
+    for (const task of Snapshot.listTasks(snapshot)) {
       if (ref.type === 'task.color_filter') {
-        const { reco } = layer.getTaskBriefInfo(task)
-        if (reco !== 'ColorMatch') {
+        const brief = Snapshot.getTaskBriefInfo(snapshot, task)
+        if (brief.reco !== 'ColorMatch') {
           continue
         }
       }
@@ -188,7 +190,7 @@ export async function provideCompletionItemsLegacy(
         kind: vscode.CompletionItemKind.Class,
         range,
         sortText: '1_' + task,
-        fillTaskDetail: () => this.getTaskBrief(intBundle, task)
+        fillTaskDetail: () => this.getTaskBrief(snapshot, task)
       }
       result.push(item)
     }
@@ -196,7 +198,7 @@ export async function provideCompletionItemsLegacy(
     (ref.type === 'task.next' && ref.objMode && ref.attrs.attrs.Anchor) ||
     ref.type === 'task.custom_anchor'
   ) {
-    const anchors = layer.getAnchorList().map(([anchor]) => anchor)
+    const anchors = Snapshot.getAnchorList(snapshot).map(([anchor]) => anchor)
     for (const anchor of new Set(anchors)) {
       const item: CustomCompletionItem = {
         label: anchor,
@@ -243,7 +245,7 @@ export async function provideCompletionItemsLegacy(
     }
 
     if (ref.attrs.attrs.Anchor) {
-      const anchors = layer.getAnchorList().map(([anchor]) => anchor)
+      const anchors = Snapshot.getAnchorList(snapshot).map(([anchor]) => anchor)
       for (const anchor of new Set(anchors)) {
         const item: CustomCompletionItem = {
           label: anchor,
@@ -254,13 +256,13 @@ export async function provideCompletionItemsLegacy(
         result.push(item)
       }
     } else {
-      for (const task of layer.getTaskList()) {
+      for (const task of Snapshot.listTasks(snapshot)) {
         const item: CustomCompletionItem = {
           label: task,
           kind: vscode.CompletionItemKind.Class,
           range,
           sortText: '1_' + task,
-          fillTaskDetail: () => this.getTaskBrief(intBundle, task)
+          fillTaskDetail: () => this.getTaskBrief(snapshot, task)
         }
         result.push(item)
       }
@@ -278,7 +280,8 @@ export async function provideCompletionItemsLegacy(
       }
     }
   } else if (ref.type === 'task.template' || ref.type === 'task.custom_template') {
-    for (const [imageFolder] of layer.getImageFolders()) {
+    const imageFolders = Snapshot.getImageFolders(snapshot)
+    for (const [imageFolder] of imageFolders) {
       const item: CustomCompletionItem = {
         label: imageFolder + '/',
         kind: vscode.CompletionItemKind.Folder,
@@ -287,7 +290,7 @@ export async function provideCompletionItemsLegacy(
       }
       result.push(item)
     }
-    for (const image of layer.getImageList()) {
+    for (const image of Snapshot.listImages(snapshot)) {
       const item: CustomCompletionItem = {
         label: image,
         kind: vscode.CompletionItemKind.File,
@@ -299,7 +302,7 @@ export async function provideCompletionItemsLegacy(
   } else if (ref.type === 'task.locale') {
     const range = convertRangeWithDelta(document, ref.location, -1, 2)
 
-    const keys = intBundle.langBundle.allKeys()
+    const keys = Snapshot.allLocaleKeys(snapshot)
 
     return keys.map(name => {
       const esc = JSON.stringify(name)

@@ -3,7 +3,7 @@ import type { Node } from 'jsonc-parser'
 import { type MaaTaskExpr, type MaaTaskExprAst, parseExpr } from '@nekosu/maa-tasker'
 
 import type { TaskName } from '../types'
-import { isString, parseArray } from '../utils/parse'
+import { type StringNode, isString, parseArray } from '../utils/parse'
 import { parseTemplate, splitNode } from './parser'
 import type { TaskDeclInfo, TaskInfo, TaskMaaTaskRef, TaskRefInfo } from './types'
 
@@ -73,11 +73,7 @@ function parseMaaExprTask(ast: MaaTaskExprAst, tasks: TaskMaaTaskRef[]) {
   }
 }
 
-export function parseMaaTaskNode(
-  node: Node,
-  taskName: TaskName,
-  taskKey: Node
-): TaskInfo {
+export function parseMaaTaskNode(node: Node, taskName: TaskName, taskKey: StringNode): TaskInfo {
   const parts = splitNode(node, true)
   const decls: TaskDeclInfo[] = [
     { type: 'task.decl', task: taskName, tasks: buildTaskRef(taskName), location: taskKey }
@@ -129,5 +125,5 @@ export function parseMaaTaskNode(
     parseTemplate(obj, refs)
   }
 
-  return { parts, decls, refs }
+  return { parts, decls, refs, prop: taskKey, data: node }
 }

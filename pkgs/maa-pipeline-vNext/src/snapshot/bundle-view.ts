@@ -3,7 +3,7 @@ import { actKeys, recoKeys } from '../pipeline/keys'
 import type { TaskDeclInFile, TaskInfoInFile, TaskRefInFile } from '../pipeline/types'
 import type { AbsolutePath, AnchorName, ImageRelativePath, RelativePath, TaskName } from '../types'
 import { buildTree } from '../utils/json'
-import { FileView } from './file-view'
+import { type FileView, FileViewUtils } from './file-view'
 
 export type DefaultConfig = ReadonlyMap<TaskName, TaskInfoInFile>
 
@@ -267,7 +267,7 @@ export const BundleView = {
   allDecls(bundle: BundleView): TaskDeclInFile[] {
     const result: TaskDeclInFile[] = []
     for (const file of sortedFiles(bundle)) {
-      result.push(...FileView.allDecls(file))
+      result.push(...FileViewUtils.allDecls(file))
     }
     return result
   },
@@ -275,7 +275,7 @@ export const BundleView = {
   allRefs(bundle: BundleView): TaskRefInFile[] {
     const result: TaskRefInFile[] = []
     for (const file of sortedFiles(bundle)) {
-      result.push(...FileView.allRefs(file))
+      result.push(...FileViewUtils.allRefs(file))
     }
     return result
   },

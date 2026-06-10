@@ -9,7 +9,7 @@ export type FileView = {
   readonly isDefault: boolean
 }
 
-export const FileView = {
+export const FileViewUtils = {
   allDecls(view: FileView): TaskDeclInFile[] {
     const result: TaskDeclInFile[] = [...view.fileDecls]
     for (const infos of view.tasks.values()) {

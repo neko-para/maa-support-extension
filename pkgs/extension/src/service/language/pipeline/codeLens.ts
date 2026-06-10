@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
-import { type AbsolutePath, extractTaskRef } from '@nekosu/maa-pipeline-manager'
+import { Snapshot, extractTaskRef } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { interfaceService } from '../..'
 import { commands } from '../../../command'
@@ -44,46 +44,48 @@ export class PipelineCodeLensProvider
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[] | null> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return null
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return null
     }
-    const [layer, file, isDefault] = layerInfo
+    const { file } = located
 
-    if (isDefault) {
+    if (file.isDefault) {
       return []
     }
 
-    const taskRefs = intBundle.topLayer.mergedAllRefs
-      .map(ref => extractTaskRef(ref))
-      .filter(ref => ref !== null)
+    const allRefsArr = Snapshot.allRefs(snapshot)
     const taskRefCounts = new Map<string, number>()
-    for (const task of taskRefs) {
-      taskRefCounts.set(task, (taskRefCounts.get(task) ?? 0) + 1)
+    for (const r of allRefsArr) {
+      const refTarget = extractTaskRef(r)
+      if (refTarget) {
+        taskRefCounts.set(refTarget, (taskRefCounts.get(refTarget) ?? 0) + 1)
+      }
     }
 
     const result: vscode.CodeLens[] = []
-    for (const [name, taskInfos] of Object.entries(layer.tasks)) {
-      for (const taskInfo of taskInfos) {
-        if (taskInfo.file !== file) {
+    for (const [name, taskInfos] of file.tasks) {
+      for (const info of taskInfos) {
+        const taskDecl = info.decls.find(d => d.type === 'task.decl')
+        if (!taskDecl || taskDecl.file !== file.path) {
           continue
         }
 
         if (isMaaAssistantArknights) {
           result.push(
-            new vscode.CodeLens(convertRange(document, taskInfo.prop), {
+            new vscode.CodeLens(convertRange(document, taskDecl.location), {
               title: t('maa.pipeline.codelens.eval-task'),
               command: commands.EvalTask,
               arguments: [name]
             })
           )
         } else {
-          const range = convertRange(document, taskInfo.prop)
+          const range = convertRange(document, taskDecl.location)
           result.push(
             new vscode.CodeLens(range, {
               title: t('maa.pipeline.codelens.launch'),
@@ -95,7 +97,7 @@ export class PipelineCodeLensProvider
             new vscode.CodeLens(range, {
               title: t('maa.pipeline.codelens.refs', `${taskRefCounts.get(name) ?? 0}`),
               command: commands.FindTaskRef,
-              arguments: [name, document.uri, document.positionAt(taskInfo.prop.offset)]
+              arguments: [name, document.uri, document.positionAt(taskDecl.location.offset)]
             })
           )
         }

@@ -1,5 +1,5 @@
-export { FileView } from './file-view'
-export type { FileView as FileViewType } from './file-view'
+export { FileViewUtils } from './file-view'
+export type { FileView } from './file-view'
 
 export {
   createBundleView,

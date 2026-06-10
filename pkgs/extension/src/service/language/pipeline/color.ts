@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
+import { FileViewUtils, Snapshot } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { hsv2rgb } from '../../utils/color'
 import { convertRange } from '../utils'
@@ -20,20 +20,17 @@ export class PipelineDocumentColorProvider
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): Promise<vscode.ColorInformation[]> {
-    const intBundle = await this.flush()
-    if (!intBundle) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return []
     }
 
-    const layerInfo = intBundle.locateLayer(document.uri.fsPath as AbsolutePath)
-    if (!layerInfo) {
+    const located = Snapshot.locateBundle(snapshot, document.uri.fsPath)
+    if (!located) {
       return []
     }
-    const [layer, file] = layerInfo
 
-    const refs = layer.mergedRefs
-      .filter(ref => ref.file === file)
-      .filter(ref => ref.type === 'task.color')
+    const refs = FileViewUtils.allRefs(located.file).filter(ref => ref.type === 'task.color')
 
     const result: vscode.ColorInformation[] = []
     for (const ref of refs) {

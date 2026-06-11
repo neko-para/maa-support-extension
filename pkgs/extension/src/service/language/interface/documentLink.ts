@@ -1,7 +1,7 @@
-import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import { interfaceService } from '../..'
+import { nodePathUtils } from '@nekosu/maa-pipeline-manager-vnext'
+
 import { convertRange } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 
@@ -19,14 +19,20 @@ export class InterfaceDocumentLinkProvider
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): Promise<vscode.DocumentLink[]> {
-    const index = await this.flushIndex()
-    if (!index) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
+      return []
+    }
+
+    const ifv = snapshot.interfaceFiles.find(f => f.path === document.uri.fsPath)
+    if (!ifv) {
       return []
     }
 
     const result: vscode.DocumentLink[] = []
+    const root = nodePathUtils.dirname(snapshot.interfaceFile)
 
-    for (const ref of index.refs.filter(ref => ref.file === document.uri.fsPath)) {
+    for (const ref of ifv.refs) {
       if (
         ref.type === 'interface.language_path' ||
         ref.type === 'interface.resource_path' ||
@@ -35,7 +41,7 @@ export class InterfaceDocumentLinkProvider
         result.push(
           new vscode.DocumentLink(
             convertRange(document, ref.location),
-            vscode.Uri.file(path.join(interfaceService.interfaceBundle!.root, ref.target))
+            vscode.Uri.file(nodePathUtils.join(root, ref.target))
           )
         )
       }

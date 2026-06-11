@@ -3,13 +3,13 @@ import type { Node } from 'jsonc-parser'
 import type { TaskRefInfo } from '../pipeline/types'
 import type { TaskName } from '../types'
 
-export function filterDeclRef<T extends { location: Node }>(infos: T[], offset: number) {
+export function filterDeclRef<T extends { location: Node }>(infos: readonly T[], offset: number) {
   return infos.filter(
     info => info.location.offset <= offset && info.location.offset + info.location.length >= offset
   )
 }
 
-export function findDeclRef<T extends { location: Node }>(infos: T[], offset: number) {
+export function findDeclRef<T extends { location: Node }>(infos: readonly T[], offset: number) {
   let result: T | null = null
   for (const info of filterDeclRef(infos, offset)) {
     if (result === null) {

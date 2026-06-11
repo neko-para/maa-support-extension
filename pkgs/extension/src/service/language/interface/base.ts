@@ -2,11 +2,12 @@ import * as path from 'node:path'
 import * as vscode from 'vscode'
 
 import {
-  type InterfaceDeclInfo,
-  type InterfaceInfo,
-  type InterfaceRefInfo,
-  joinPath
-} from '@nekosu/maa-pipeline-manager'
+  type InterfaceDeclInFile,
+  type InterfaceRefInFile,
+  Snapshot,
+  nodePathUtils
+} from '@nekosu/maa-pipeline-manager-vnext'
+import type { ResourceSnapshot } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { interfaceService, rootService } from '../..'
 import { BaseService } from '../../context'
@@ -35,7 +36,12 @@ export class InterfaceLanguageProvider extends BaseService {
           scheme: 'file',
           pattern: new vscode.RelativePattern(root.dirUri, path.basename(root.interfaceUri.fsPath))
         })
-        for (const imp of interfaceService.interfaceBundle?.importFiles ?? []) {
+        const snapshot = interfaceService.getSnapshot()
+        const importPaths =
+          snapshot?.interfaceData?.import?.map(imp =>
+            nodePathUtils.join(root.dirUri.fsPath, imp as string)
+          ) ?? []
+        for (const imp of importPaths) {
           filters.push({
             scheme: 'file',
             pattern: new vscode.RelativePattern(root.dirUri, imp)
@@ -49,24 +55,27 @@ export class InterfaceLanguageProvider extends BaseService {
     this.defer = interfaceService.onInterfaceImportChanged(updateProvider)
   }
 
-  async flush() {
-    await interfaceService.interfaceBundle?.flush()
-    return interfaceService.interfaceBundle ?? null
+  async flush(): Promise<ResourceSnapshot | null> {
+    return interfaceService.getSnapshot()
   }
 
-  async flushIndex() {
-    return (await this.flush())?.info ?? null
+  findDecls<Type extends InterfaceDeclInFile['type']>(snapshot: ResourceSnapshot, type: Type) {
+    return Snapshot.allInterfaceDecls(snapshot).filter(
+      decl => decl.type === type
+    ) as (InterfaceDeclInFile & { type: Type })[]
   }
 
-  findDecls<Type extends InterfaceDeclInfo['type']>(index: InterfaceInfo, type: Type) {
-    return index.decls.filter(decl => decl.type === type) as (InterfaceDeclInfo & { type: Type })[]
+  findRefs<Type extends InterfaceRefInFile['type']>(snapshot: ResourceSnapshot, type: Type) {
+    return Snapshot.allInterfaceRefs(snapshot).filter(
+      ref => ref.type === type
+    ) as (InterfaceRefInFile & { type: Type })[]
   }
 
-  findRefs<Type extends InterfaceRefInfo['type']>(index: InterfaceInfo, type: Type) {
-    return index.refs.filter(ref => ref.type === type) as (InterfaceRefInfo & { type: Type })[]
-  }
-
-  makeDecls(index: InterfaceInfo, decl: InterfaceDeclInfo | null, ref: InterfaceRefInfo | null) {
+  makeDecls(
+    snapshot: ResourceSnapshot,
+    decl: InterfaceDeclInFile | null,
+    ref: InterfaceRefInFile | null
+  ) {
     if (decl) {
       if (
         decl.type === 'interface.controller' ||
@@ -75,13 +84,11 @@ export class InterfaceLanguageProvider extends BaseService {
         decl.type === 'interface.task' ||
         decl.type === 'interface.option'
       ) {
-        const decls = this.findDecls(index, decl.type).filter(decl2 => decl2.name === decl.name)
-        return decls
+        return this.findDecls(snapshot, decl.type).filter(decl2 => decl2.name === decl.name)
       } else if (decl.type === 'interface.case' || decl.type === 'interface.input') {
-        const decls = this.findDecls(index, decl.type).filter(
+        return this.findDecls(snapshot, decl.type).filter(
           decl2 => decl2.name === decl.name && decl2.option === decl.option
         )
-        return decls
       }
     } else if (ref) {
       if (
@@ -91,19 +98,21 @@ export class InterfaceLanguageProvider extends BaseService {
         ref.type === 'interface.task' ||
         ref.type === 'interface.option'
       ) {
-        const decls = this.findDecls(index, ref.type).filter(decl => decl.name === ref.target)
-        return decls
+        return this.findDecls(snapshot, ref.type).filter(decl => decl.name === ref.target)
       } else if (ref.type === 'interface.case' || ref.type === 'interface.input') {
-        const decls = this.findDecls(index, ref.type).filter(
+        return this.findDecls(snapshot, ref.type).filter(
           decl => decl.name === ref.target && decl.option === ref.option
         )
-        return decls
       }
     }
     return null
   }
 
-  makeRefs(index: InterfaceInfo, decl: InterfaceDeclInfo | null, ref: InterfaceRefInfo | null) {
+  makeRefs(
+    snapshot: ResourceSnapshot,
+    decl: InterfaceDeclInFile | null,
+    ref: InterfaceRefInFile | null
+  ) {
     if (decl) {
       if (
         decl.type === 'interface.controller' ||
@@ -112,13 +121,11 @@ export class InterfaceLanguageProvider extends BaseService {
         decl.type === 'interface.task' ||
         decl.type === 'interface.option'
       ) {
-        const refs = this.findRefs(index, decl.type).filter(ref => ref.target === decl.name)
-        return refs
+        return this.findRefs(snapshot, decl.type).filter(ref => ref.target === decl.name)
       } else if (decl.type === 'interface.case' || decl.type === 'interface.input') {
-        const decls = this.findRefs(index, decl.type).filter(
+        return this.findRefs(snapshot, decl.type).filter(
           ref => ref.target === decl.name && ref.option === decl.option
         )
-        return decls
       }
     } else if (ref) {
       if (
@@ -128,39 +135,36 @@ export class InterfaceLanguageProvider extends BaseService {
         ref.type === 'interface.task' ||
         ref.type === 'interface.option'
       ) {
-        const decls = this.findRefs(index, ref.type).filter(ref2 => ref2.target === ref.target)
-        return decls
+        return this.findRefs(snapshot, ref.type).filter(ref2 => ref2.target === ref.target)
       } else if (ref.type === 'interface.case' || ref.type === 'interface.input') {
-        const decls = this.findRefs(index, ref.type).filter(
+        return this.findRefs(snapshot, ref.type).filter(
           ref2 => ref2.target === ref.target && ref2.option === ref.option
         )
-        return decls
       }
     }
     return null
   }
 
   async getLocaleHover(target: string) {
-    const intBundle = interfaceService.interfaceBundle
-    if (!intBundle) {
+    const snapshot = interfaceService.getSnapshot()
+    if (!snapshot) {
       return null
     }
 
-    if (intBundle.langBundle.langs.length === 0) {
+    if (snapshot.languages.length === 0) {
       return null
     }
 
-    const result = intBundle.langBundle.queryKey(target)
+    const result = Snapshot.queryLocale(snapshot, target)
 
     const content: string[] = []
-    for (const [index, entry] of result.entries()) {
-      const lang = intBundle.langBundle.langs[index]
+    for (const [index, lang] of snapshot.languages.entries()) {
+      const entry = result[index]
       if (entry) {
-        const full = joinPath(intBundle.root, lang.file)
-        const doc = await vscode.workspace.openTextDocument(full)
-        const pos = doc.positionAt(entry.keyNode.offset)
+        const doc = await vscode.workspace.openTextDocument(lang.file)
+        const pos = doc.positionAt(entry.keyOffset)
         content.push(
-          `| [${lang.name}](${vscode.Uri.file(full)}#L${pos.line + 1}) | ${entry.value} |`
+          `| [${lang.name}](${vscode.Uri.file(lang.file)}#L${pos.line + 1}) | ${entry.value} |`
         )
       } else {
         content.push(`| ${lang.name} | <missing> |`)

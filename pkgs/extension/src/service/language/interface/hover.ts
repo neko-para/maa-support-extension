@@ -17,17 +17,6 @@ export class InterfaceHoverProvider
     _position: vscode.Position,
     _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
-    const index = await this.flushIndex()
-    if (!index) {
-      return null
-    }
-
-    // const offset = document.offsetAt(position)
-    // const ref = findDeclRef(
-    //   index.refs.filter(ref => ref.file === document.uri.fsPath),
-    //   offset
-    // )
-
     return null
   }
 }

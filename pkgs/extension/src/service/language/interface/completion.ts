@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 
-import { findDeclRef } from '@nekosu/maa-pipeline-manager'
+import { Snapshot, findDeclRef } from '@nekosu/maa-pipeline-manager-vnext'
 
 import { convertRangeWithDelta } from '../utils'
 import { InterfaceLanguageProvider } from './base'
@@ -25,126 +25,98 @@ export class InterfaceCompletionProvider
     _token: vscode.CancellationToken,
     _context: vscode.CompletionContext
   ): Promise<CustomCompletionItem[] | null> {
-    const index = await this.flushIndex()
-    if (!index) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
       return []
     }
 
+    const ifv = snapshot.interfaceFiles.find(f => f.path === document.uri.fsPath)
+    if (!ifv) {
+      return null
+    }
+
     const offset = document.offsetAt(position)
-    const ref = findDeclRef(
-      index.refs.filter(ref => ref.file === document.uri.fsPath),
-      offset
-    )
+    const ref = findDeclRef(ifv.refs, offset)
 
     if (!ref) {
       return null
     }
 
+    const allDecls = Snapshot.allInterfaceDecls(snapshot)
+
     if (ref.type === 'interface.controller') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
+      const opts = allDecls
         .filter(decl => decl.type === 'interface.controller')
         .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     } else if (ref.type === 'interface.resource') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
+      const opts = allDecls
         .filter(decl => decl.type === 'interface.resource')
         .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     } else if (ref.type === 'interface.task') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls.filter(decl => decl.type === 'interface.task').map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      const opts = allDecls.filter(decl => decl.type === 'interface.task').map(decl => decl.name)
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     } else if (ref.type === 'interface.group') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
-        .filter(decl => decl.type === 'interface.group')
-        .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      const opts = allDecls.filter(decl => decl.type === 'interface.group').map(decl => decl.name)
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     } else if (ref.type === 'interface.option') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
-        .filter(decl => decl.type === 'interface.option')
-        .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      const opts = allDecls.filter(decl => decl.type === 'interface.option').map(decl => decl.name)
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     } else if (ref.type === 'interface.case') {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
+      const opts = allDecls
         .filter(decl => decl.type === 'interface.case')
         .filter(decl => decl.option === ref.option)
         .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     } else if (ref.type === 'interface.input' && ref.offset === undefined) {
       const range = convertRangeWithDelta(document, ref.location, -1, 1)
-
-      const opts = index.decls
+      const opts = allDecls
         .filter(decl => decl.type === 'interface.input')
         .filter(decl => decl.option === ref.option)
         .map(decl => decl.name)
-      return opts.map(name => {
-        const esc = JSON.stringify(name)
-        return {
-          label: name,
-          kind: vscode.CompletionItemKind.Reference,
-          insertText: esc.substring(1, esc.length - 1),
-          range
-        }
-      })
+      return opts.map(name => ({
+        label: name,
+        kind: vscode.CompletionItemKind.Reference,
+        insertText: JSON.stringify(name).slice(1, -1),
+        range
+      }))
     }
 
     return null

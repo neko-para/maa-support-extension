@@ -42,18 +42,24 @@ export class InterfaceCodeLensProvider
     document: vscode.TextDocument,
     _token: vscode.CancellationToken
   ): Promise<vscode.CodeLens[]> {
-    const index = await this.flushIndex()
-    if (!index) {
+    const snapshot = await this.flush()
+    if (!snapshot) {
+      return []
+    }
+
+    const ifv = snapshot.interfaceFiles.find(f => f.path === document.uri.fsPath)
+    if (!ifv) {
       return []
     }
 
     const result: vscode.CodeLens[] = []
-    for (const decl of index.decls.filter(decl => decl.file === document.uri.fsPath)) {
+    for (const decl of ifv.decls) {
       if (decl.type === 'interface.resource') {
+        const resInfo = snapshot.interfaceData?.resource?.[decl.name]
         const activated = decl.name === interfaceService.interfaceConfigJson.resource
         const disabled =
-          decl.controller &&
-          !decl.controller.includes(interfaceService.interfaceConfigJson.controller ?? '')
+          resInfo?.controller &&
+          !resInfo.controller.includes(interfaceService.interfaceConfigJson.controller ?? '')
 
         const range = convertRange(document, decl.location)
 

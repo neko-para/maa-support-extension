@@ -143,28 +143,27 @@ export class PipelineLanguageProvider extends BaseService {
     if (task.length === 0) {
       return ''
     }
-    const taskInfos = Snapshot.getTask(snapshot, task)
-    const total = taskInfos.length
+    const grouped = Snapshot.getTask(snapshot, task)
     const content: string[] = []
-    for (let i = 0; i < taskInfos.length && i < 3; i++) {
-      const { bundle, info } = taskInfos[i]
-      const doc = await vscode.workspace.openTextDocument(info.decls[0].file)
-      const begin = doc.positionAt(info.prop.offset)
-      const end = doc.positionAt(info.data.offset + info.data.length)
-      const range = new vscode.Range(
-        new vscode.Position(begin.line, 0),
-        new vscode.Position(end.line + 1, 0)
-      )
-      const header =
-        total > 3
-          ? `${rootService.relativeToRoot(bundle.root)} (${i + 1}/${total})`
-          : rootService.relativeToRoot(bundle.root)
-      content.push(`${header}
+    for (const { bundle, infos } of grouped.toReversed()) {
+      const totalInBundle = infos.length
+      for (const [i, info] of infos.slice(0, 3).entries()) {
+        const doc = await vscode.workspace.openTextDocument(info.decls[0].file)
+        const begin = doc.positionAt(info.prop.offset)
+        const end = doc.positionAt(info.data.offset + info.data.length)
+        const range = new vscode.Range(
+          new vscode.Position(begin.line, 0),
+          new vscode.Position(end.line + 1, 0)
+        )
+        const relFile = nodePathUtils.relative(bundle.root, info.decls[0].file)
+        const counter = totalInBundle > 3 ? ` (${i + 1}/${totalInBundle})` : ''
+        content.push(`${relFile}${counter}
 
 \`\`\`json
 ${doc.getText(range)}
 \`\`\`
 `)
+      }
     }
     const final = this.evalTask(snapshot, task, current)
     if (final) {

@@ -422,7 +422,8 @@ describe('ResourceSnapshot', () => {
     const results = Snapshot.getTask(makeSnapshot(), 'T001Start' as TaskName)
     expect(results).toHaveLength(1)
     expect(results[0].bundle.root).toBe('/fake/base')
-    expect(results[0].info.decls[0].type).toBe('task.decl')
+    expect(results[0].infos).toHaveLength(1)
+    expect(results[0].infos[0].decls[0].type).toBe('task.decl')
   })
 
   it('getTask returns empty for unknown task', () => {

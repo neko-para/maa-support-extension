@@ -214,13 +214,17 @@ export const Snapshot = {
     return result
   },
 
-  /** 遍历所有 Bundle 查找任务定义。返回所有包含该任务的 Bundle 及其定义。 */
+  /** 遍历所有 Bundle 的所有文件，返回该任务的所有定义。同名 override 会包含多条。 */
   getTask(snapshot: ResourceSnapshot, name: TaskName) {
     const result: { bundle: BundleViewType; info: TaskInfoInFile }[] = []
     for (const bundle of snapshot.bundles) {
-      const info = BundleView.findTask(bundle, name)
-      if (info) {
-        result.push({ bundle, info })
+      for (const file of bundle.files.values()) {
+        const infos = file.tasks.get(name)
+        if (infos) {
+          for (const info of infos) {
+            result.push({ bundle, info })
+          }
+        }
       }
     }
     return result

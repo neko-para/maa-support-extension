@@ -98,7 +98,10 @@ export class PipelineLanguageProvider extends BaseService {
       return null
     }
     const resolved = Snapshot.resolveTask(snapshot, task)
-    return (resolved as Partial<Record<keyof maa.Task | keyof MaaTask, unknown>>) ?? null
+    if (!resolved) {
+      return null
+    }
+    return resolved.config as Partial<Record<keyof maa.Task | keyof MaaTask, unknown>>
   }
 
   getTaskRecoAct(
@@ -141,25 +144,27 @@ export class PipelineLanguageProvider extends BaseService {
       return ''
     }
     const taskInfos = Snapshot.getTask(snapshot, task)
+    const total = taskInfos.length
     const content: string[] = []
-    for (const { bundle, info } of taskInfos) {
-      // TODO: 这里完全就不应该findDecl. 之前是迭代了所有Bundle中每个Bundle的任务, 现在每个Bundle只有一个了(来自getTask中findTask的逻辑)
-      const taskDecl = info.decls.find(d => d.type === 'task.decl')
-      if (taskDecl) {
-        const doc = await vscode.workspace.openTextDocument(taskDecl.file)
-        const begin = doc.positionAt(info.prop.offset)
-        const end = doc.positionAt(info.data.offset + info.data.length)
-        const range = new vscode.Range(
-          new vscode.Position(begin.line, 0),
-          new vscode.Position(end.line + 1, 0)
-        )
-        content.push(`${rootService.relativeToRoot(bundle.root)}
+    for (let i = 0; i < taskInfos.length && i < 3; i++) {
+      const { bundle, info } = taskInfos[i]
+      const doc = await vscode.workspace.openTextDocument(info.decls[0].file)
+      const begin = doc.positionAt(info.prop.offset)
+      const end = doc.positionAt(info.data.offset + info.data.length)
+      const range = new vscode.Range(
+        new vscode.Position(begin.line, 0),
+        new vscode.Position(end.line + 1, 0)
+      )
+      const header =
+        total > 3
+          ? `${rootService.relativeToRoot(bundle.root)} (${i + 1}/${total})`
+          : rootService.relativeToRoot(bundle.root)
+      content.push(`${header}
 
 \`\`\`json
 ${doc.getText(range)}
 \`\`\`
 `)
-      }
     }
     const final = this.evalTask(snapshot, task, current)
     if (final) {

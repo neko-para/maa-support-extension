@@ -144,8 +144,8 @@ export class Project {
       throw new Error(`Cannot read interface file: ${filePath}`)
     }
 
+    // ═══ Phase 1: 加载 & 合并 ParsedInterface ═══
     const rawBase = parseInterface(content)
-    this._interfaceBundle = this._buildInterfaceBundle(content)
     if (!rawBase) {
       throw new Error(`Failed to parse interface file: ${filePath}`)
     }
@@ -154,6 +154,10 @@ export class Project {
     const imports = base.data.import ?? []
     const importResults: InterfaceParseResult[] = []
     const importPaths: AbsolutePath[] = []
+    // Phase 2 复用 Phase 1 的 parseTree 结果：{ node, path }
+    const overrideNodes: { node: Node; path: AbsolutePath }[] = [
+      { node: rawBase.node, path: filePath }
+    ]
     for (const imp of imports) {
       const impPath = this.pathUtils.join(this.root, imp as string)
       const impContent = await this.loader.get(impPath)
@@ -162,11 +166,11 @@ export class Project {
         if (rawImp) {
           importResults.push(annotateInterfaceParseResult(rawImp, impPath))
           importPaths.push(impPath)
+          overrideNodes.push({ node: rawImp.node, path: impPath })
         }
       }
     }
 
-    // data 即时合并（业务层使用），decls/refs 保持按文件隔离（诊断层惰性合并）
     this._interfaceData =
       importResults.length > 0 ? mergeInterfaces(base, ...importResults).data : base.data
     this._interfaceFiles = [
@@ -177,6 +181,56 @@ export class Project {
         refs: r.refs
       }))
     ]
+
+    // ═══ Phase 2: 构建 interface BundleView（pipeline 侧 AST，按文件隔离） ═══
+    const files = new Map<RelativePath, FileView>()
+    for (const { node, path: fvPath } of overrideNodes) {
+      const entries = extractOverrideEntries(node)
+      if (entries.length === 0) {
+        continue
+      }
+
+      const tasks = new Map<TaskName, TaskInfoInFile[]>()
+      for (const { taskName, taskNode, propNode } of entries) {
+        const parsed = parseTaskNode(taskNode, {
+          taskName,
+          taskKey: propNode,
+          parser: this.parser
+        })
+        const annotated: TaskInfoInFile = {
+          parts: parsed.parts,
+          decls: parsed.decls.map(d => ({ ...d, file: fvPath })),
+          refs: parsed.refs.map(r => ({ ...r, file: fvPath })),
+          prop: propNode,
+          data: taskNode
+        }
+        const existing = tasks.get(taskName)
+        if (existing) {
+          existing.push(annotated)
+        } else {
+          tasks.set(taskName, [annotated])
+        }
+      }
+      files.set(
+        this.pathUtils.relative(this.root, fvPath) as RelativePath,
+        Object.freeze({
+          path: fvPath,
+          tasks,
+          fileDecls: [],
+          isDefault: false
+        })
+      )
+    }
+
+    this._interfaceBundle =
+      files.size > 0
+        ? createBundleView({
+            root: this.root,
+            files,
+            images: new Set(),
+            isInterface: true
+          })
+        : null
 
     await this._loadLanguages()
   }
@@ -316,55 +370,6 @@ export class Project {
 
     this._bundles = bundles
     this._buildSnapshot()
-  }
-
-  /** 从 interface JSON 的 pipeline_override 构建 interface BundleView */
-  private _buildInterfaceBundle(content: string): BundleView | null {
-    const tree = parseTree(content)
-    if (!tree) {
-      return null
-    }
-    const entries = extractOverrideEntries(tree)
-    if (entries.length === 0) {
-      return null
-    }
-
-    const root = (this.root + '/interface') as AbsolutePath
-    const tasks = new Map<TaskName, TaskInfoInFile[]>()
-    for (const { taskName, taskNode, propNode } of entries) {
-      const parsed = parseTaskNode(taskNode, {
-        taskName,
-        taskKey: propNode,
-        parser: this.parser
-      })
-      const annotated: TaskInfoInFile = {
-        parts: parsed.parts,
-        decls: parsed.decls.map(d => ({ ...d, file: root })),
-        refs: parsed.refs.map(r => ({ ...r, file: root })),
-        prop: propNode,
-        data: taskNode
-      }
-      const existing = tasks.get(taskName)
-      if (existing) {
-        existing.push(annotated)
-      } else {
-        tasks.set(taskName, [annotated])
-      }
-    }
-
-    const fv: FileView = Object.freeze({
-      path: root,
-      tasks,
-      fileDecls: [],
-      isDefault: false
-    })
-
-    return createBundleView({
-      root,
-      files: new Map([['__pipeline_override.json' as RelativePath, fv]]),
-      images: new Set(),
-      isInterface: true
-    })
   }
 
   /** 根据绝对路径查找所属 Bundle 的索引，-1 表示不属于任何 Bundle */

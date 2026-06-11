@@ -55,7 +55,7 @@ export function parseInterface(content: string): RawInterfaceParseResult | null 
   }
 
   const data = buildRawToParsed(raw)
-  return { data, decls, refs }
+  return { data, decls, refs, node }
 }
 
 // ── Controllers ──

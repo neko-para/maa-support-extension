@@ -379,6 +379,7 @@ export type RawInterfaceParseResult = {
   readonly data: ParsedInterface
   readonly decls: readonly InterfaceDeclInfo[]
   readonly refs: readonly InterfaceRefInfo[]
+  readonly node: Node
 }
 
 /** 完整解析结果——data + 已标注文件的 decl/ref。用于 merge 流程。 */

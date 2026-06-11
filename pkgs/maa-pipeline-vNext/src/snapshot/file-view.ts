@@ -6,6 +6,8 @@ export type FileView = {
   /** 按出现顺序排列。同名 task 允许多条（如 interface override 场景）。 */
   readonly tasks: ReadonlyMap<TaskName, readonly TaskInfoInFile[]>
   readonly fileDecls: readonly TaskDeclInFile[]
+  /** 文件级引用——不关联到特定 task（如 interface 中的 locale 引用） */
+  readonly fileRefs: readonly TaskRefInFile[]
   readonly isDefault: boolean
 }
 
@@ -21,7 +23,7 @@ export const FileViewUtils = {
   },
 
   allRefs(view: FileView): TaskRefInFile[] {
-    const result: TaskRefInFile[] = []
+    const result: TaskRefInFile[] = [...view.fileRefs]
     for (const infos of view.tasks.values()) {
       for (const info of infos) {
         result.push(...info.refs)

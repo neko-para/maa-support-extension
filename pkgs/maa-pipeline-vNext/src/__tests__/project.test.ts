@@ -98,7 +98,7 @@ describe('Project', () => {
       expect(project.snapshot).not.toBeNull()
 
       const snap = project.getSnapshot()!
-      expect(snap.bundles).toHaveLength(1)
+      expect(snap.bundles).toHaveLength(2)
 
       const bundle = snap.bundles[0]
       expect(bundle.files.size).toBeGreaterThan(0)
@@ -139,7 +139,7 @@ describe('Project', () => {
       await project.switchActive('Ctrl', 'Empty')
 
       expect(project.snapshot).not.toBeNull()
-      expect(project.getSnapshot()!.bundles).toHaveLength(0)
+      expect(project.getSnapshot()!.bundles).toHaveLength(1)
     } finally {
       await fs.rm(dir, { recursive: true, force: true })
     }
@@ -263,7 +263,7 @@ describe('Project', () => {
       await project.switchActive('Ctrl', 'Res')
 
       const snap = project.getSnapshot()!
-      expect(snap.bundles).toHaveLength(1)
+      expect(snap.bundles).toHaveLength(2)
       expect(snap.bundles[0].files.size).toBeGreaterThan(0)
     } finally {
       await fs.rm(dir, { recursive: true, force: true })

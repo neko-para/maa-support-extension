@@ -41,6 +41,7 @@ function makeAnnotated(path: AbsolutePath, parsed: ReturnType<typeof parsePipeli
     path,
     tasks,
     fileDecls: parsed.fileDecls.map(d => ({ ...d, file: path })),
+    fileRefs: [],
     isDefault: false
   }
 }

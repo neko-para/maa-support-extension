@@ -14,13 +14,13 @@ import type { IContentLoader } from '../io/types'
 import type { IPathUtils } from '../path/interface'
 import { extname } from '../path/utils'
 import { parsePipelineFile, parseTaskNode } from '../pipeline/fw'
-import type { ParserConfig, TaskInfoInFile } from '../pipeline/types'
+import type { ParserConfig, TaskInfoInFile, TaskRefInFile } from '../pipeline/types'
 import { createBundleView, createSnapshot } from '../snapshot'
 import type { BundleView, DefaultConfig } from '../snapshot/bundle-view'
 import type { FileView } from '../snapshot/file-view'
 import type { LanguageInfo, LocaleEntry, ResourceSnapshot } from '../snapshot/snapshot'
 import type { AbsolutePath, ImageRelativePath, RelativePath, TaskName } from '../types'
-import { type StringNode, parseArray, parseObject } from '../utils/parse'
+import { type StringNode, isString, parseArray, parseObject } from '../utils/parse'
 
 const PIPELINE_EXTENSIONS = new Set(['.json', '.jsonc'])
 const IMAGE_EXTENSIONS = new Set(['.png'])
@@ -67,6 +67,37 @@ function extractOverrideEntriesRecur(
   } else if (node.type === 'array') {
     for (const item of parseArray(node)) {
       extractOverrideEntriesRecur(item, out)
+    }
+  }
+}
+
+const LOCALE_KEYS = ['label', 'icon', 'description', 'title', 'contact', 'license', 'welcome']
+
+/** 从 interface JSON AST 中提取 locale 引用（task.locale / task.can_locale） */
+function extractLocaleRefs(node: Node, file: AbsolutePath): TaskRefInFile[] {
+  const refs: TaskRefInFile[] = []
+  extractLocaleRefsRecur(node, file, refs)
+  return refs
+}
+
+function extractLocaleRefsRecur(node: Node, file: AbsolutePath, refs: TaskRefInFile[]) {
+  if (node.type === 'object') {
+    for (const [key, val] of parseObject(node)) {
+      if (LOCALE_KEYS.includes(key)) {
+        if (isString(val)) {
+          if (val.value.startsWith('$')) {
+            refs.push({ type: 'task.locale', target: val.value.substring(1), location: val } as TaskRefInFile)
+          } else if (val.value.length > 0) {
+            refs.push({ type: 'task.can_locale', target: val.value, location: val } as TaskRefInFile)
+          }
+        }
+      } else {
+        extractLocaleRefsRecur(val, file, refs)
+      }
+    }
+  } else if (node.type === 'array') {
+    for (const item of parseArray(node)) {
+      extractLocaleRefsRecur(item, file, refs)
     }
   }
 }
@@ -185,13 +216,8 @@ export class Project {
     // ═══ Phase 2: 构建 interface BundleView（pipeline 侧 AST，按文件隔离） ═══
     const files = new Map<RelativePath, FileView>()
     for (const { node, path: fvPath } of overrideNodes) {
-      const entries = extractOverrideEntries(node)
-      if (entries.length === 0) {
-        continue
-      }
-
       const tasks = new Map<TaskName, TaskInfoInFile[]>()
-      for (const { taskName, taskNode, propNode } of entries) {
+      for (const { taskName, taskNode, propNode } of extractOverrideEntries(node)) {
         const parsed = parseTaskNode(taskNode, {
           taskName,
           taskKey: propNode,
@@ -217,6 +243,7 @@ export class Project {
           path: fvPath,
           tasks,
           fileDecls: [],
+          fileRefs: Object.freeze(extractLocaleRefs(node, fvPath)),
           isDefault: false
         })
       )
@@ -494,6 +521,7 @@ export class Project {
       path: absPath,
       tasks,
       fileDecls: parsed.fileDecls.map(d => ({ ...d, file: absPath })),
+      fileRefs: [],
       isDefault
     } satisfies FileView)
   }

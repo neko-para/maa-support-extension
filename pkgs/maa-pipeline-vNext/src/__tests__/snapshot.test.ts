@@ -58,6 +58,7 @@ function makeFileView(fixtureName: string) {
     path: filePath,
     tasks,
     fileDecls: rawFileDecls.map(d => ({ ...d, file: filePath })),
+    fileRefs: [],
     isDefault: false
   }
 }

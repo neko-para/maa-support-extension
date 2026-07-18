@@ -8,7 +8,7 @@ import type { RecoJob, RecoResult } from './types'
 
 await loadMaa(
   process.env.MAAFW_MODULE_PATH,
-  path.join(process.env.MAAFW_LOG_DIR, `maa-${process.env.MAATOOLS_POOL_ID}-${process.pid}`)
+  path.join(process.env.MAAFW_WORK_DIR, `maa-${process.env.MAATOOLS_POOL_ID}-${process.pid}`)
 )
 
 const stdoutLevels = ['Off', 'Fatal', 'Error', 'Warn', 'Info', 'Debug', 'Trace', 'All'] as const

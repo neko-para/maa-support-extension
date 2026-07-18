@@ -13,7 +13,8 @@ export type BaseConfig = {
   maaMirror?: NpmRegistryType
   // from @maaxyz/maa-node
   maaStdoutLevel?: 'Off' | 'Fatal' | 'Error' | 'Warn' | 'Info' | 'Debug' | 'Trace' | 'All'
-  maaLogDir?: string
+  // MaaFramework 用户数据根目录:日志写入其下 debug 文件夹
+  maaWorkDir?: string
 
   // color?: 'auto' | 'enable' | 'disable'
 
@@ -38,9 +39,9 @@ export type TestCases = {
     hits: (
       | string
       | {
-          node: string
-          box: maa.Rect
-        }
+        node: string
+        box: maa.Rect
+      }
     )[]
   }[]
 }

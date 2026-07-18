@@ -26,7 +26,9 @@ src/
     ├── bundle.ts         # InterfaceBundle 加载器
     ├── config.ts         # jiti 配置加载器
     ├── tools.ts          # 测试用例加载: loadTestCases(), loadAllTestCases()
-    ├── maa.ts            # MAA 框架生命周期: setupMaa(), loadMaa()
+    ├── maa.ts            # MAA 框架生命周期: setupMaa(), loadMaa(modulePath, workDir)
+    │                     #   通过 config_init_option(workDir) 设置用户数据根目录，
+    │                     #   日志落入 {workDir}/debug/
     └── utils.ts          # 通用工具: toArrayBuffer(), gzCompress(), makeFakeController()
 ```
 

@@ -112,7 +112,7 @@ export class ServerService extends BaseService {
       (await nativeService.load()) &&
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
-        maaLog: (context.storageUri ?? context.globalStorageUri).fsPath,
+        workDir: (context.storageUri ?? context.globalStorageUri).fsPath,
         debugMode: this.debugMode
       })) &&
       this.rpc.conn

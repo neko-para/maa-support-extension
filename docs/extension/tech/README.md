@@ -134,7 +134,7 @@ DisposableHelper
 插件使用 context.storageUri（回退到 context.globalStorageUri）作为存储根目录（下记 storage）：
 
 - **插件自身日志**: storage/mse.log
-- **MAA 日志**: storage/debug/maa.log（旧名 maafw.log）。server 进程以 storage 作为 workDir 传入 maa.Global.config_init_option()，MaaFramework 将其视为用户数据根目录，日志写入其下的 debug/。OpenMaaLog 命令按 maafw.log → maa.log 顺序在 storage/debug/ 下查找。
+- **MAA 日志**: storage/debug/maa.log。server 进程以 storage 作为 workDir 传入 maa.Global.config_init_option()，MaaFramework 将其视为用户数据根目录，日志写入其下的 debug/。OpenMaaLog 命令按 maafw.log → maa.log 顺序在 storage/debug/ 下查找。
 - **Native 模块**: context.globalStorageUri/native
 
 ## 构建

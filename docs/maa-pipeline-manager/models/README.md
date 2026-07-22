@@ -88,6 +88,8 @@
 - `buildOption()` — 解析选项依赖链
 - `buildTaskRuntime()` — 构建带 pipeline override 的任务运行时
 
+Select、Switch 和 Checkbox 在用户未提供显式配置时均使用各自的 `default_case`。Checkbox 默认选中的 case 会参与子选项依赖解析和 `pipeline_override` 构建。
+
 ## 抽象边界
 
 本包是 **TypeScript 库**，设计目标是无 I/O、无原生依赖。但实际存在 Node.js API 耦合（见顶部设计失误说明）。

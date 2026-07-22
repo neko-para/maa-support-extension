@@ -78,7 +78,7 @@ export function resolveSelect(
 }
 
 export function resolveCheckbox(task: TaskConfig, option: string, optMeta: CheckboxOption) {
-  const cfg = resolveOptionConfig(task, option, 'checkbox') ?? []
+  const cfg = resolveOptionConfig(task, option, 'checkbox') ?? optMeta.default_case ?? []
   return optMeta.cases?.filter(x => cfg.includes(x.name)) ?? null
 }
 

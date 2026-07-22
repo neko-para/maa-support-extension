@@ -25,6 +25,8 @@
 - **Eval**: MAA 表达式求值
 - **Toolkit**: 快捷工具跳转
 
+控制面板按 Toolkit → Interface → Controller → Resource → Task → Launch/Eval 的顺序展示；先选择 Controller，再选择受其约束的 Resource。
+
 > **已知性能问题**: 全量同步 State 时，interface 对象可能过大，导致 Vue 响应式对象重建延迟严重。针对高频率修改（如 text input），实现了临时性的 debounce 策略来缓解。预期改进方向：将 interface 文件隔离出主 state；或使用更精确的状态同步方案。但目前 state 由 utils 模块提供的固定能力管理，且 interface 对象是从文件全量 parse 而来，无法通过文件编辑信息增量优化。
 
 ### 2. Crop Tool（裁剪工具）

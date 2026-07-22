@@ -82,4 +82,4 @@ src/
 | `jiti` 配置加载 | TypeScript 配置文件，IDE 类型检查 |
 | `workerpool` | 多进程并行，隔离 MAA 实例 |
 | 三态输出模式 | 统一 CLI/CI/API 消费 |
-| devDependency 作为 fallback 版本 | `@maaxyz/maa-node` 版本从 devDeps 读取备用 |
+| devDependency 作为 fallback 版本 | 从 devDeps 读取 `@maaxyz/maa-node`，使默认运行时版本与编译/类型检查版本保持单一来源 |

@@ -38,7 +38,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 通过活动栏侧边面板提供类 MaaPiCli 的控制界面：
 
 - 选择 controller、resource、task
-- 开关 admin 模式、debug 模式
+- 开关 admin 模式（仅 Windows UAC 提权）、debug 模式
 - 配置 ADB/Win32/PlayCover 等控制器参数
 - 管理任务队列（添加、删除、配置选项）
 - 启动/停止任务执行

@@ -16,7 +16,6 @@
     "@vue/tsconfig": "^0.9.0",
     "buffer": "^6.0.3",
     "highlight.js": "^11.11.1",
-    "immer": "^11.1.4",
     "naive-ui": "^2.43.2",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",

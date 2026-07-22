@@ -30,7 +30,7 @@
 - [ ] **TODO-16** — **独立的 locale 系统**: Webview 有自己的 locale 文件（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。两套系统字典不共享。
 - [ ] **TODO-17** — **模拟 `globalThis.maa`**: control panel 的 `state.ts` 使用 Proxy 创建伪造的 `maa` global，始终返回 `'0'`。这是一个 hack 使 pipeline manager 代码在无原生绑定的情况下加载。
 - [ ] **TODO-18** — **全量 State 同步性能问题**: ControlPanel 全量同步 State 时，interface 对象可能过大，导致 Vue 响应式对象重建延迟严重。高频率修改（text input）有临时 debounce 策略。预期改进：将 interface 隔离出主 state；或使用增量同步。但 state 由 utils 模块的固定能力管理，且 interface 从文件全量 parse，难以增量优化。
-- [ ] **TODO-19** — **immer 依赖未实际使用**: `immer` 是为了解决上述性能问题引入的，但收益有限因此未实际使用。`package.json` 中的依赖是历史问题。
+- [x] **TODO-19** — **immer 依赖未实际使用**: 已确认代码中没有 `immer` 引用，现已从 Webview 依赖及技术文档中移除。
 
 ## @mse/maa-server-proto
 
@@ -67,7 +67,7 @@
 
 ## @nekosu/prettier-plugin-maafw-sort
 
-- [ ] **TODO-35** — **生产环境 console.log**: `parser.ts` 中有 `console.log('use pipeline mode')` 和 `console.log('use interface mode')` 调试输出，可能污染 Prettier 的 STDERR 输出。
+- [x] **TODO-35** — **生产环境 console.log**: 已移除 `parser.ts` 中 Pipeline/Interface 模式匹配时的调试输出，Prettier 格式化不再产生这两条额外控制台信息。
 
 ## @nekosu/simple-parser
 

@@ -90,6 +90,10 @@ export class WebviewControlService extends BaseService {
               serverService.switchDebugMode()
               this.pushState()
               break
+            case 'switch-save-draw':
+              serverService.switchSaveDraw()
+              this.pushState()
+              break
           }
           this.provider?.response(data.seq, null)
           break
@@ -405,6 +409,7 @@ export class WebviewControlService extends BaseService {
 
       admin: process.platform === 'win32' ? serverService.rpc.admin : undefined,
       debugMode: serverService.debugMode,
+      saveDraw: serverService.saveDraw,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),
       activeInterface: rootService.activeResource?.interfaceRelative,

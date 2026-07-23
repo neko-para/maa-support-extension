@@ -4,6 +4,7 @@ export let option: {
   module: string
   maaLog: string
   debugMode: boolean
+  saveDraw: boolean
 }
 
 export function initOptions() {

@@ -23,7 +23,7 @@
 - **Task 管理**: 添加/删除/配置任务选项
 - **Launch**: 启动任务执行
 - **Eval**: MAA 表达式求值
-- **Toolkit**: 快捷工具跳转
+- **Toolkit**: 快捷工具跳转，以及管理员模式、调试模式和识别绘图落盘开关；识别绘图开关会提示可能有大量图片落盘
 
 控制面板按 Toolkit → Interface → Controller → Resource → Task → Launch/Eval 的顺序展示；先选择 Controller，再选择受其约束的 Resource。
 

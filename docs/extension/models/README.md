@@ -76,7 +76,14 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 自动清理过期版本（7 天未使用）
 - 通过状态栏显示当前版本和连接状态
 
-### 6. 自定义调试适配器
+### 6. MaaFramework 调试图像
+
+- 控制面板工具栏的“保存识别绘图”按钮控制是否将识别绘制图像保存到 MaaFramework 的 `log_dir/vision` 目录，默认关闭
+- 控制面板是该选项唯一的用户配置入口，状态保存在当前 VS Code 工作区
+- 启用后可能产生大量图像并占用较多磁盘空间
+- 配置变更会终止当前 MaaFramework 运行实例，并在下次使用时按新配置启动
+
+### 7. 自定义调试适配器
 
 提供 `maa-launch` 调试类型，将任务执行映射到 VSCode 调试视图：
 
@@ -85,13 +92,13 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 断开 ⇔ 停止任务
 - 在任务上设置断点
 
-### 7. Agent 子进程管理
+### 8. Agent 子进程管理
 
 - 启动子进程或调试会话作为 "agent"
 - 注入 PI_* 协议环境变量
 - 管理 agent 生命周期
 
-### 8. MAA Assistant Arknights 模式 🄼
+### 9. MAA Assistant Arknights 模式 🄼
 
 自动检测工作区是否为 MAA 项目（检查 `src/MaaCore` 目录），适配：
 

@@ -14,6 +14,7 @@ export default {
   'maa.control.toolkit.switch-maa-version': 'Switch Maa Version',
   'maa.control.toolkit.toggle-admin-mode': 'Toggle Admin Mode',
   'maa.control.toolkit.toggle-debug-mode': 'Toggle Debug Mode',
+  'maa.control.toolkit.toggle-save-draw': 'Save Recognition Draws',
   'maa.control.interface.interface': 'Interface',
   'maa.control.tooltip.reveal-interface': 'Open the current interface file in File Explorer',
   'maa.control.tooltip.reveal-config': 'Open the current interface config in File Explorer',
@@ -35,6 +36,8 @@ export default {
   'maa.control.tooltip.switch-maa-version': 'Switch between different MAA core versions',
   'maa.control.tooltip.toggle-admin': 'Toggle administrator mode for the MAA process',
   'maa.control.tooltip.toggle-debug': 'Toggle debug mode for verbose logging',
+  'maa.control.tooltip.toggle-save-draw':
+    'Enabling this writes many images to disk and may consume significant disk space',
   'maa.control.interface.select-interface': 'Select interface',
   'maa.control.resource.resource': 'Resource',
   'maa.control.resource.select-resource': 'Select resource',

@@ -23,7 +23,7 @@ export async function initMaa() {
 
   logger.info(maa.Global.version)
   maa.Global.debug_mode = option.debugMode
-  maa.Global.config_init_option(option.workDir)
+  maa.Global.log_dir = option.maaLog
 }
 
 type InstanceCache = {

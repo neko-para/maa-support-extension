@@ -59,7 +59,6 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(commands.OpenMaaLog, async () => {
       const maaLogCandidates = ['maafw.log', 'maa.log'].map(name =>
-        // maafw 会为工作区创建一个debug目录作为日志输出目录
         vscode.Uri.joinPath(logPath, 'debug', name)
       )
       for (const maaLogFile of maaLogCandidates) {
@@ -73,10 +72,13 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       vscode.window.showErrorMessage(
-        t('maa.core.cannot-find-log', maaLogCandidates.map(candidate => candidate.fsPath).join(', '))
+        t(
+          'maa.core.cannot-find-log',
+          maaLogCandidates.map(candidate => candidate.fsPath).join(', ')
+        )
       )
     })
   )
 }
 
-export function deactivate() { }
+export function deactivate() {}

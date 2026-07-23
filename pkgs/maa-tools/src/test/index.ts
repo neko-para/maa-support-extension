@@ -135,7 +135,7 @@ export async function runTest(cfg: FullConfig) {
           env: {
             MAAFW_MODULE_PATH: modulePath,
             MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
-            MAAFW_WORK_DIR: path.resolve(cfg.cwd ?? process.cwd(), cfg.maaWorkDir ?? '.'),
+            MAAFW_LOG_DIR: path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? '.'),
             MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter),
             MAATOOLS_POOL_ID: newHashKey
           }

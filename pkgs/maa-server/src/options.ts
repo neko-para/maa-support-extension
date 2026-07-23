@@ -2,7 +2,7 @@ export let option: {
   id: string
   port: number
   module: string
-  workDir: string
+  maaLog: string
   debugMode: boolean
 }
 

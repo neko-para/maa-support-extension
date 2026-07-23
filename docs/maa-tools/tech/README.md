@@ -26,9 +26,9 @@ src/
     ├── bundle.ts         # InterfaceBundle 加载器
     ├── config.ts         # jiti 配置加载器
     ├── tools.ts          # 测试用例加载: loadTestCases(), loadAllTestCases()
-    ├── maa.ts            # MAA 框架生命周期: setupMaa(), loadMaa(modulePath, workDir)
-    │                     #   通过 config_init_option(workDir) 设置用户数据根目录，
-    │                     #   日志落入 {workDir}/debug/
+    ├── maa.ts            # MAA 框架生命周期: setupMaa(), loadMaa(modulePath, logDir)
+    │                     #   设置 maa.Global.log_dir = logDir（精确日志目录，
+    │                     #   check 默认 <cwd>/debug，test 默认 <cwd>）
     └── utils.ts          # 通用工具: toArrayBuffer(), gzCompress(), makeFakeController()
 ```
 
@@ -56,6 +56,13 @@ src/
 6. Worker: loadMaa() → setupInstance() → performReco()
 7. 收集结果, 按 mode 输出
 ```
+
+## MAA 日志目录
+
+`loadMaa(modulePath, logDir)` 直接设置 `maa.Global.log_dir = logDir`，保留 `cfg.maaLogDir` 配置字段及其兼容性，不重命名、不引入 `config_init_option`。
+
+- **check 流程**：未显式配置 `maaLogDir` 时默认 `debug`，即日志写入 `<cwd>/debug/`，避免以工作区根目录为日志目录时 MaaFramework 递归清理仓库内旧 PNG（TODO-23）。
+- **test 流程**：保留原默认 `.`（cwd 根目录），通过 `MAAFW_LOG_DIR` 环境变量传入，worker 在其下按 pool/pid 建子目录隔离。
 
 ## 依赖关系
 

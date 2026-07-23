@@ -10,7 +10,7 @@
 src/
 ├── index.ts          # 入口: 安装 source-map → initOptions() → initServer() → initMaa()
 ├── options.ts        # 启动配置: 解析 process.argv[2] (base64 JSON)
-│                     #   { id, port, module, workDir, debugMode }
+│                     #   { id, port, module, maaLog, debugMode }
 ├── server.ts         # TCP/RPC 传输层
 │                     #   - 连接 127.0.0.1:{port}
 │                     #   - 创建 vscode-jsonrpc MessageConnection
@@ -36,17 +36,19 @@ src/
 
 ```
 1. node server.mjs <base64-json>
-2. index.ts → initOptions()     # 解析 base64 JSON → { id, port, module, workDir, debugMode }
+2. index.ts → initOptions()     # 解析 base64 JSON → { id, port, module, maaLog, debugMode }
 3. index.ts → initServer()      # 创建 TCP 连接到 127.0.0.1:{port}
                                  #   建立 vscode-jsonrpc MessageConnection
                                  #   发送 initNoti (包含 client id)
 4. index.ts → initMaa()         # 动态 import(module) → 加载 MaaFramework
                                  #   设置 maa.Global.debug_mode
-                                 #   调用 maa.Global.config_init_option(workDir)
-                                 #   MAA 将 {workDir} 视为用户数据根目录，
-                                 #   日志写入 {workDir}/debug/（如 maafw.log）
-                                 #   而非直接写入根目录
+                                 #   设置 maa.Global.log_dir = option.maaLog
+                                 #   （精确日志目录，由 Host 传入 <storage>/debug）
 ```
+
+## MAA 日志目录
+
+`initMaa()` 直接设置 `maa.Global.log_dir = option.maaLog`。Host（extension）传入精确的 `<storage>/debug` 路径作为 `maaLog`，而非 storage 根目录；MAA 原生日志（`maafw.log` 等）写入该 `debug` 子目录。这样避免 MaaFramework 以 storage 根目录为日志目录时递归清理其下的 `fixed/*.png`。
 
 ## 依赖关系
 

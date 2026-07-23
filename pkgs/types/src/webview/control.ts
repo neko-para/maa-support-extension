@@ -10,6 +10,7 @@ export type EvalTaskConfig = {
 export type ControlHostState = HostStateBase & {
   admin?: boolean
   debugMode?: boolean
+  saveDraw?: boolean
 
   interface?: string[]
   activeInterface?: string
@@ -43,6 +44,7 @@ export type ToolkitJumpTarget =
   | 'switch-maa-ver'
   | 'switch-admin'
   | 'switch-debug-mode'
+  | 'switch-save-draw'
 
 export type InterfaceRevealOption =
   | {

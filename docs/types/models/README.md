@@ -32,6 +32,8 @@
 - `{Panel}HostToWeb` — Host → Webview 消息
 - `{Panel}WebToHost` — Webview → Host 消息
 
+Control 协议通过 `ControlHostState.saveDraw` 同步识别绘图落盘状态，并使用 `switch-save-draw` Toolkit target 请求切换。
+
 ### 2. 通用协议基类型
 
 `src/webview/base.ts` 定义：

@@ -97,6 +97,21 @@ async function jump(target: ToolkitJumpTarget) {
           </template>
           {{ t('maa.control.tooltip.toggle-debug') }}
         </Tooltip>
+        <Tooltip v-if="hostState.saveDraw !== undefined" trigger="hover">
+          <template #trigger>
+            <n-button
+              :disabled="!!loading"
+              :loading="loading === 'switch-save-draw'"
+              @click="jump('switch-save-draw')"
+              size="small"
+              :type="hostState.saveDraw ? 'warning' : 'default'"
+              :ghost="hostState.saveDraw"
+            >
+              {{ t('maa.control.toolkit.toggle-save-draw') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.toggle-save-draw') }}
+        </Tooltip>
       </n-flex>
       <n-text v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
         {{ info }}

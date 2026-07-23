@@ -25,8 +25,8 @@ hljs.registerLanguage('json', json)
         <n-flex vertical>
           <toolkit-view></toolkit-view>
           <interface-view></interface-view>
-          <resource-view></resource-view>
           <controller-view></controller-view>
+          <resource-view></resource-view>
           <task-view v-if="!hostState.isMAA"></task-view>
           <launch-view v-if="!hostState.isMAA"></launch-view>
           <eval-view v-if="hostState.isMAA"></eval-view>

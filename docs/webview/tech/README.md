@@ -114,7 +114,6 @@ Vite (vite.config.ts)
 |---|---|
 | `vue` 3.5 | UI 框架 |
 | `naive-ui` 2.43 | 组件库 |
-| `immer` | 不可变状态更新 |
 | `highlight.js` | 语法高亮 |
 | `@vicons/material` | Material Design 图标 |
 | `prettier` | JSON 实时格式化 (JsonCode.vue) |
@@ -133,4 +132,3 @@ Vite (vite.config.ts)
 | `useIpc()` composable | 统一的类型安全 IPC 抽象 |
 | `MutationObserver` 主题同步 | 实时响应 VS Code 主题变化 |
 | Prettier 在线格式化 | `JsonCode.vue` 实时美化 JSON 显示 |
-| `immer` | 简化不可变状态更新 |

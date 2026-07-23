@@ -38,6 +38,8 @@ MaaFramework pipeline 文件的编辑者和 CI 流程。
 
 `patchPlugin(plugin)` 将排序功能合并到其他 JSON Prettier 插件中，与 `prettier-plugin-multiline-arrays` 等共存。
 
+解析器匹配 Pipeline 或 Interface 模式时静默执行，不向控制台写入调试信息。
+
 ### 5. Key 迁移
 
 支持旧 key 到新 key 的映射（如 `doc` → `desc`）。

@@ -18,10 +18,10 @@
 - [ ] **TODO-7** — **无依赖注入**: 服务通过模块级变量互相引用，存在循环依赖风险（`interface.ts` 导入 `index.ts` 而 `index.ts` 也导出 `interfaceService`）。服务初始化是否需要显式依赖顺序或 DI 容器？
 - [ ] **TODO-8** — **MaaErrorDelegateImpl 静默吞错误**: `cannotFindTask` 和 `warnCannotFindBaseTask` 方法体被注释掉，某些 pipeline 解析失败被静默忽略。
 - [ ] **TODO-9** — **硬编码路径假设**: `src/MaaCore` 检测 MAA 模式、`config/maa_pi_config.json` 配置路径、`maatools.config.mts` 期望位置均在代码中硬编码。MAA 模式检测的可靠性是否需要改进？
-- [ ] **TODO-10** — **Proxy IPC 无 `then` 处理**: `server.ts` 的 IPC proxy 返回 `undefined` 对 `then` 键，防止被误认为 thenable，是已知的 Proxy 陷阱。
+- [x] **TODO-10** — **Proxy IPC 无 `then` 处理**: 已确认 extension 和 maa-server 的 IPC Proxy 均需对 `then` 返回 `undefined`，避免被 `await` / Promise 解析误判为 thenable 并发起错误 RPC。这是必要的 Proxy 兼容处理，已记录到 [ipc-architecture.md](extra/ipc-architecture.md#proxy-模式)。
 - [ ] **TODO-11** — **无自动重连**: `RpcManager` 发出 `connectionLost` 但 `ServerService` 仅更新状态栏，不尝试自动重连。
 - [ ] **TODO-12** — **InterfaceHoverProvider 是 no-op**: `provideHover()` 始终返回 `null`，实际实现被注释掉。
-- [ ] **TODO-13** — **Admin 模式仅 Windows**: `switchAdmin()` 在非 Windows 平台直接返回，UAC 提权是 Windows-only。
+- [x] **TODO-13** — **Admin 模式仅 Windows**: 已确认为有意的平台边界。Admin 模式用于 Windows UAC/进程完整性等级；macOS 的系统授权及 Linux 的 udev/用户组权限不应通过插件以 root 启动 maa-server 处理。控制面板在非 Windows 平台不暴露该开关。
 - [ ] **TODO-14** — **CommandService 职责混杂**: VSCode 命令注册直接写在 `CommandService` 构造函数中，而非委托给对应的服务。
 - [ ] **TODO-15** — **VSCode 命令命名未统一设计**: 命令命名空间缺乏一致的层级结构，属于历史遗留问题。
 
@@ -30,7 +30,7 @@
 - [ ] **TODO-16** — **独立的 locale 系统**: Webview 有自己的 locale 文件（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。两套系统字典不共享。
 - [ ] **TODO-17** — **模拟 `globalThis.maa`**: control panel 的 `state.ts` 使用 Proxy 创建伪造的 `maa` global，始终返回 `'0'`。这是一个 hack 使 pipeline manager 代码在无原生绑定的情况下加载。
 - [ ] **TODO-18** — **全量 State 同步性能问题**: ControlPanel 全量同步 State 时，interface 对象可能过大，导致 Vue 响应式对象重建延迟严重。高频率修改（text input）有临时 debounce 策略。预期改进：将 interface 隔离出主 state；或使用增量同步。但 state 由 utils 模块的固定能力管理，且 interface 从文件全量 parse，难以增量优化。
-- [ ] **TODO-19** — **immer 依赖未实际使用**: `immer` 是为了解决上述性能问题引入的，但收益有限因此未实际使用。`package.json` 中的依赖是历史问题。
+- [x] **TODO-19** — **immer 依赖未实际使用**: 已确认代码中没有 `immer` 引用，现已从 Webview 依赖及技术文档中移除。
 
 ## @mse/maa-server-proto
 
@@ -56,18 +56,18 @@
 
 ## @nekosu/maa-tools
 
-- [ ] **TODO-30** — **devDependency 作为 fallback**: `@maaxyz/maa-node` 的版本从 `pkg.devDependencies` 读取作为 fallback。是否应将默认版本定义为常量而非从 devDeps 读取？
+- [x] **TODO-30** — **devDependency 作为 fallback**: 已确认从 `pkg.devDependencies['@maaxyz/maa-node']` 读取默认版本是有意设计，使运行时下载版本与编译/类型检查版本保持单一来源，避免额外常量发生漂移。
 - [ ] **TODO-31** — **workerpool 缓存抖动**: test runner 按 `controller-resource` hash key 缓存 worker pool，若组合频繁变化会导致重复创建/销毁。
 
 ## @nekosu/maa-version-manager
 
 - [ ] **TODO-32** — **可变 registry 状态**: `this.registry` 可变，修改后影响所有后续操作。在并发场景下可能导致混乱。
 - [ ] **TODO-33** — **`fs.rename()` 跨设备风险**: `prepare()` 使用 `rename()` 原子移动文件，若 temp 目录和目标目录不在同一文件系统会失败（实际场景中少见）。
-- [ ] **TODO-34** — **pacote 进度限制**: 由于 `pacote` 的技术限制，无法获取下载本身的进度（如百分比），仅能报告阶段切换。
+- [x] **TODO-34** — **pacote 进度限制**: 已确认这是当前依赖的能力边界。`prepare()` 的 `progress` API 明确提供阶段事件而非下载百分比，限制已记录到 maa-version-manager 产品文档。
 
 ## @nekosu/prettier-plugin-maafw-sort
 
-- [ ] **TODO-35** — **生产环境 console.log**: `parser.ts` 中有 `console.log('use pipeline mode')` 和 `console.log('use interface mode')` 调试输出，可能污染 Prettier 的 STDERR 输出。
+- [x] **TODO-35** — **生产环境 console.log**: 已移除 `parser.ts` 中 Pipeline/Interface 模式匹配时的调试输出，Prettier 格式化不再产生这两条额外控制台信息。
 
 ## @nekosu/simple-parser
 

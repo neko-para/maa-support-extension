@@ -28,6 +28,7 @@ export class ServerService extends BaseService {
   ipc: IpcType | null
   status: boolean
   debugMode: boolean
+  saveDraw: boolean
 
   instMap: Record<string, WebviewLaunchPanel>
 
@@ -46,6 +47,7 @@ export class ServerService extends BaseService {
     this.ipc = null
     this.status = false
     this.debugMode = stateService.state.debugMode ?? true
+    this.saveDraw = stateService.state.saveDraw ?? false
 
     this.instMap = {}
 
@@ -106,6 +108,22 @@ export class ServerService extends BaseService {
     }
   }
 
+  switchSaveDraw(saveDraw?: boolean) {
+    if (saveDraw === undefined) {
+      saveDraw = !this.saveDraw
+    }
+    if (saveDraw !== this.saveDraw) {
+      this.kill()
+      this.saveDraw = saveDraw
+
+      stateService.reduce({
+        saveDraw
+      })
+      this.pushStatus(false)
+      statusBarService.showServerStatus('close')
+    }
+  }
+
   async setupServer() {
     statusBarService.showServerStatus('loading~spin')
     if (
@@ -113,7 +131,8 @@ export class ServerService extends BaseService {
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
         maaLog: vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'debug').fsPath,
-        debugMode: this.debugMode
+        debugMode: this.debugMode,
+        saveDraw: this.saveDraw
       })) &&
       this.rpc.conn
     ) {

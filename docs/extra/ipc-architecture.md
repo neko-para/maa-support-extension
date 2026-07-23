@@ -81,6 +81,8 @@ ipc.quickPick(items)            // 自动转换为 subToHostReq JSON-RPC 调用
 ipc.$ = { postTask: handler }   // 注册 hostToSubReq 处理器
 ```
 
+两端 Proxy 对 `then` 属性固定返回 `undefined`，使 IPC 对象保持 non-thenable。否则 `await` 或 Promise resolution 会把 Proxy 当作 Promise，并将 `then` 误发为 RPC 方法。
+
 ## Channel 3: Extension → Agent (子进程)
 
 - **触发方式**: Server 通过 `subToHostReq`（`startTask` / `startDebugSession`）回调 extension

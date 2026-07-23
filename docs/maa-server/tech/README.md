@@ -10,7 +10,7 @@
 src/
 ├── index.ts          # 入口: 安装 source-map → initOptions() → initServer() → initMaa()
 ├── options.ts        # 启动配置: 解析 process.argv[2] (base64 JSON)
-│                     #   { id, port, module, maaLog, debugMode }
+│                     #   { id, port, module, maaLog, debugMode, saveDraw }
 ├── server.ts         # TCP/RPC 传输层
 │                     #   - 连接 127.0.0.1:{port}
 │                     #   - 创建 vscode-jsonrpc MessageConnection
@@ -36,7 +36,7 @@ src/
 
 ```
 1. node server.mjs <base64-json>
-2. index.ts → initOptions()     # 解析 base64 JSON → { id, port, module, maaLog, debugMode }
+2. index.ts → initOptions()     # 解析 base64 JSON → { id, port, module, maaLog, debugMode, saveDraw }
 3. index.ts → initServer()      # 创建 TCP 连接到 127.0.0.1:{port}
                                  #   建立 vscode-jsonrpc MessageConnection
                                  #   发送 initNoti (包含 client id)
@@ -79,3 +79,7 @@ src/
 | 动态 import MaaFramework | 服务器与 MAA 安装位置解耦 |
 | Proxy IPC | 消除样板代码，类型安全的双向调用 |
 | Throwaway instance | 工具操作隔离，避免污染主实例 |
+
+## 全局配置
+
+`initMaa()` 将启动参数 `saveDraw` 直接写入 MaaFramework 的全局 `save_draw`。启用后识别绘制图像由 MaaFramework 保存到 `log_dir/vision`。

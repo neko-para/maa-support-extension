@@ -35,6 +35,10 @@ npm run build
   - `@mse/types` 和 `@mse/utils`: 无需构建（由消费方打包器直接处理）
   - `@mse/maa-server`: `@maaxyz/maa-node` 不打包（运行时动态导入）
 
+### MaaFramework 基线版本
+
+`scripts/.maaver` 记录插件预装的 MaaFramework 版本。更新时必须同步 7 个相关 workspace 包中 `@maaxyz/maa-node` 的精确 devDependency 版本及 `pnpm-lock.yaml`，确保预装运行时、动态下载 fallback 和编译类型保持一致。`scripts/updateMaa.sh` 用于执行这项同步。
+
 ## 包发布
 
 发布流程由 [.github/workflows/release.yml](../../.github/workflows/release.yml) 驱动。

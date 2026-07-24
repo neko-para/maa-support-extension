@@ -46,7 +46,7 @@ npx @nekosu/maa-tools test [config-path]
 - 加载 pipeline bundle
 - 执行用户定义的测试用例（controller/resource/图像/期望节点）
 - 使用 `workerpool` 并行执行
-- 验证识别命中（可选 bounding box 约束）
+- 验证识别命中（可选 bounding box 约束；缺失识别框按不匹配处理）
 - 输出成功/失败统计
 
 ### 3. 项目初始化 (`init`)

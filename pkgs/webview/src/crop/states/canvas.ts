@@ -99,6 +99,9 @@ export function draw(ctx: CanvasRenderingContext2D) {
           ]
           while (detailEntries.length > 0) {
             const fullEntry = detailEntries.shift()!
+            if (!fullEntry.entry) {
+              continue
+            }
             if (Array.isArray(fullEntry.entry)) {
               detailEntries.push(
                 ...fullEntry.entry.map(x => ({

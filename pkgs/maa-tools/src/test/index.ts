@@ -226,7 +226,7 @@ export async function runTest(cfg: FullConfig) {
             putError(`  ${testCase.image} ${res.node} should hit but missed`)
             errorDetails.push(res)
           } else if (typeof hitCfg !== 'string') {
-            if (!checkRect(hitCfg.box, res.detail!.box)) {
+            if (!res.detail.box || !checkRect(hitCfg.box, res.detail.box)) {
               putError(
                 `  ${testCase.image} ${res.node} box mismatch. Expect ${JSON.stringify(hitCfg.box)}, hit ${JSON.stringify(res.detail.box)}`
               )

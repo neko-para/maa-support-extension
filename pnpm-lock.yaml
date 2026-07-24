@@ -79,8 +79,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@mse/maa-server-proto':
         specifier: workspace:*
         version: link:../maa-server-proto
@@ -176,8 +176,8 @@ importers:
         version: 3.3.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -191,8 +191,8 @@ importers:
   pkgs/maa-server:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@mse/maa-server-proto':
         specifier: workspace:*
         version: link:../maa-server-proto
@@ -234,8 +234,8 @@ importers:
         version: 8.2.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -293,8 +293,8 @@ importers:
         version: 10.0.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -364,8 +364,8 @@ importers:
   pkgs/types:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@nekosu/maa-pipeline-manager':
         specifier: workspace:*
         version: link:../maa-pipeline-manager
@@ -404,8 +404,8 @@ importers:
   pkgs/webview:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.9.0-alpha.4
-        version: 5.9.0-alpha.4
+        specifier: 5.12.2
+        version: 5.12.2
       '@mse/types':
         specifier: workspace:*
         version: link:../types
@@ -1252,58 +1252,58 @@ packages:
         integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==
       }
 
-  '@maaxyz/maa-node-darwin-arm64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-darwin-arm64@5.12.2':
     resolution:
       {
-        integrity: sha512-PdGtwRbHVq2WWXHsH0OKTa2UpDujtQZeD/Q2YmeTjdC5HYAfQnmkDqnOvsGCVpv+0ijNdTdwzI1FZ5nFBqUTgA==
+        integrity: sha512-STd2t3yDz/U5eB08XzrKuE+gI11Reh7Ky+Q9/8dMTMoqkSSaWtL9+zTKtF+vFivCcOqDzR1tqiIU5P6MgO8Uog==
       }
     cpu: [arm64]
     os: [darwin]
 
-  '@maaxyz/maa-node-darwin-x64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-darwin-x64@5.12.2':
     resolution:
       {
-        integrity: sha512-lhSeE5sKI3Ml+57HkXG/4fOw/Bwq+W27sSH6zccQlAhD0JhGQp3fpWgD0D6RClM44Ps8HqNYhxODohXOifEKwQ==
+        integrity: sha512-2/sqFE2pfF5hwwSOSrIP9C4p4PVTaH3pBdZPC+qqkSmvrUDZ14aMnt5juh6pPqDLnvgvTtXFhRwZ3QSxZc650A==
       }
     cpu: [x64]
     os: [darwin]
 
-  '@maaxyz/maa-node-linux-arm64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-linux-arm64@5.12.2':
     resolution:
       {
-        integrity: sha512-ZzJFjoiHyDT0FU4E5/Khh5J1Iaeg890DaYGxk5YH0VI6tMAZW5R1kn5SD8l9Z3J1adk0oULkAITpsGlantYApg==
+        integrity: sha512-NxAEZ+wOZiHR3GhKNJtaZCLKKlsuqEgtrUUEnletHv8VrJi5Y4RO+VKGQtMl4Wcq8viwuNHHGCEwj7EXx5IsHA==
       }
     cpu: [arm64]
     os: [linux]
 
-  '@maaxyz/maa-node-linux-x64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-linux-x64@5.12.2':
     resolution:
       {
-        integrity: sha512-FRm4ro3E0+xiWddnCUtBONwkaJXDmVgfRXFCGKnef/m8sumsxkZp8R0TxS31Dxet8WUyEL9mjePbqNC7sScxVg==
+        integrity: sha512-HU1z4SdCwsLAnPy7VRUvFcd1ks/kVWXUKs+6xZNyYq6P4eQWq/mwCNPv0dHvEbw9ccpuI8+g5TrTtfEgBoEd/g==
       }
     cpu: [x64]
     os: [linux]
 
-  '@maaxyz/maa-node-win32-arm64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-win32-arm64@5.12.2':
     resolution:
       {
-        integrity: sha512-k/6Fl5d6eWBDpJ3cPZ357myXmI7LAKZ+PT6/HTGb41pYdzYEWqV5kaCXvSHpxQ8wKO0d4p/SOwDwrRsnsL+b9w==
+        integrity: sha512-LFLsRHwlqwdhjGt71uu6U+yv7/6M9QyMxM53ohYglbL8Yd/xzrzxpTTPKz3zvLnB6KXA2t1ZplHtFeYh/xqIcw==
       }
     cpu: [arm64]
     os: [win32]
 
-  '@maaxyz/maa-node-win32-x64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-win32-x64@5.12.2':
     resolution:
       {
-        integrity: sha512-Rj4OVwyZEgqCpuKXYFiLxMPxyKMhst3eQKa2fvnBjcvCoZxidfb9nvmfM/arb+rnDcmsPPWcue+X7Bkxsf0Xfw==
+        integrity: sha512-5TRc11c/ZYgvrN+LzrqqmkKoIxZ/JhpjVkJ+jolYebidhmuh1oV2CLA6LQH7l1toZf6CderrUnV395zTuAvK3Q==
       }
     cpu: [x64]
     os: [win32]
 
-  '@maaxyz/maa-node@5.9.0-alpha.4':
+  '@maaxyz/maa-node@5.12.2':
     resolution:
       {
-        integrity: sha512-XoB8uqd7ecy2bxCmJJDPRazfIrURsnkUMLmwuGxOHVIea49RHWwrMztRSdWLLeo5B4Nc0cMSEZaBOBbcSD5qcw==
+        integrity: sha512-2MzI2x5uAKp4YScDIq96Mjns4JeZUbt9nqqXLj+uVAtK059KVaNwpa2kpCuV0y8ip3WK20ZChoq1jPL2+iqj/w==
       }
     engines: { node: '>= 20.0.0' }
 
@@ -2268,6 +2268,14 @@ packages:
     engines: { node: '>=0.4.0' }
     hasBin: true
 
+  acorn@8.17.0:
+    resolution:
+      {
+        integrity: sha512-xRQbDb9BnwDafYNn6Vwl839DYVjqXYb1XVGtWAZ1kcDc6iwAL4hg3B1dZlRiuENFeO2H53gFG3in621AdERVAg==
+      }
+    engines: { node: '>=0.4.0' }
+    hasBin: true
+
   agent-base@7.1.3:
     resolution:
       {
@@ -2778,6 +2786,13 @@ packages:
     resolution:
       {
         integrity: sha512-AVHPqQoZYc+RUM4/3Ly5udlZY/U4LS8pIG05jEjWM2lQMU/oaZ7qshzAl2YP1tfNmXfftH3ohurfwNAug+MnsQ==
+      }
+    engines: { node: ^20.19.0 || ^22.13.0 || >=24 }
+
+  espree@11.2.0:
+    resolution:
+      {
+        integrity: sha512-7p3DrVEIopW1B1avAGLuCSh1jubc01H2JHc8B4qqGblmg5gI9yumBgACjWo4JlIc04ufug4xJ3SQI8HkS/Rgzw==
       }
     engines: { node: ^20.19.0 || ^22.13.0 || >=24 }
 
@@ -3886,6 +3901,14 @@ packages:
     engines: { node: '>=10' }
     hasBin: true
 
+  semver@7.8.5:
+    resolution:
+      {
+        integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==
+      }
+    engines: { node: '>=10' }
+    hasBin: true
+
   shebang-command@2.0.0:
     resolution:
       {
@@ -4960,32 +4983,32 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@maaxyz/maa-node-darwin-arm64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-darwin-arm64@5.12.2':
     optional: true
 
-  '@maaxyz/maa-node-darwin-x64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-darwin-x64@5.12.2':
     optional: true
 
-  '@maaxyz/maa-node-linux-arm64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-linux-arm64@5.12.2':
     optional: true
 
-  '@maaxyz/maa-node-linux-x64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-linux-x64@5.12.2':
     optional: true
 
-  '@maaxyz/maa-node-win32-arm64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-win32-arm64@5.12.2':
     optional: true
 
-  '@maaxyz/maa-node-win32-x64@5.9.0-alpha.4':
+  '@maaxyz/maa-node-win32-x64@5.12.2':
     optional: true
 
-  '@maaxyz/maa-node@5.9.0-alpha.4':
+  '@maaxyz/maa-node@5.12.2':
     optionalDependencies:
-      '@maaxyz/maa-node-darwin-arm64': 5.9.0-alpha.4
-      '@maaxyz/maa-node-darwin-x64': 5.9.0-alpha.4
-      '@maaxyz/maa-node-linux-arm64': 5.9.0-alpha.4
-      '@maaxyz/maa-node-linux-x64': 5.9.0-alpha.4
-      '@maaxyz/maa-node-win32-arm64': 5.9.0-alpha.4
-      '@maaxyz/maa-node-win32-x64': 5.9.0-alpha.4
+      '@maaxyz/maa-node-darwin-arm64': 5.12.2
+      '@maaxyz/maa-node-darwin-x64': 5.12.2
+      '@maaxyz/maa-node-linux-arm64': 5.12.2
+      '@maaxyz/maa-node-linux-x64': 5.12.2
+      '@maaxyz/maa-node-win32-arm64': 5.12.2
+      '@maaxyz/maa-node-win32-x64': 5.12.2
 
   '@napi-rs/wasm-runtime@1.1.1':
     dependencies:
@@ -5582,7 +5605,13 @@ snapshots:
     dependencies:
       acorn: 8.16.0
 
+  acorn-jsx@5.3.2(acorn@8.17.0):
+    dependencies:
+      acorn: 8.17.0
+
   acorn@8.16.0: {}
+
+  acorn@8.17.0: {}
 
   agent-base@7.1.3: {}
 
@@ -5882,6 +5911,12 @@ snapshots:
     dependencies:
       acorn: 8.16.0
       acorn-jsx: 5.3.2(acorn@8.16.0)
+      eslint-visitor-keys: 5.0.1
+
+  espree@11.2.0:
+    dependencies:
+      acorn: 8.17.0
+      acorn-jsx: 5.3.2(acorn@8.17.0)
       eslint-visitor-keys: 5.0.1
 
   esquery@1.7.0:
@@ -6533,6 +6568,8 @@ snapshots:
 
   semver@7.7.4: {}
 
+  semver@7.8.5: {}
+
   shebang-command@2.0.0:
     dependencies:
       shebang-regex: 3.0.0
@@ -6786,9 +6823,9 @@ snapshots:
       eslint: 10.0.3(jiti@2.6.1(patch_hash=61ff68a4cec75a38e00365c27dee56dc3a7ffd68b2199a5889ad3446bdb19a8a))
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
-      espree: 11.1.1
+      espree: 11.2.0
       esquery: 1.7.0
-      semver: 7.7.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
 

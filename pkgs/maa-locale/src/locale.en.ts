@@ -128,6 +128,16 @@ export default {
 
   'maa.crop.warning.no-resource': 'resource of interface not configured, will save directly',
 
+  'maa.screencap.no-runtime': 'No runtime resource project is available for screenshots',
+  'maa.screencap.multiple-resources':
+    'Running Maa instances belong to multiple resource projects; the screenshot target is ambiguous',
+  'maa.screencap.failed': 'Failed to take screenshot',
+  'maa.screencap.saved': 'Screenshot saved: {0}',
+
+  'maa.shortcut.no-target':
+    'No global shortcut target is active. Activate this window in the Maa control panel',
+  'maa.shortcut.no-instances': 'No Maa instance is running in the shortcut target window',
+
   'maa.eval.input-task': 'Input task',
   'maa.eval.eval-failed': 'Evaluate failed!',
   'maa.eval.loop-detected': 'Loop detected',

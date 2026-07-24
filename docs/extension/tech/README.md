@@ -20,6 +20,7 @@ src/
     ├── index.ts              # 服务创建和初始化编排
     ├── context.ts            # DisposableHelper / BaseService 基类
     ├── state.ts              # StateService — 工作区状态持久化
+    ├── shortcut.ts           # ShortcutService — 全局快捷键目标租约和跨窗口请求转发
     ├── native.ts             # NativeService — MaaFramework 二进制管理
     ├── server.ts             # ServerService — RPC 连接管理
     ├── root.ts               # RootService — 资源根目录扫描
@@ -72,6 +73,7 @@ src/
 DisposableHelper
   └── BaseService
        ├── StateService
+       ├── ShortcutService
        ├── NativeService
        ├── ServerService
        ├── RootService
@@ -86,6 +88,15 @@ DisposableHelper
        ├── InterfaceLanguageProvider → Interface*Providers
        └── PipelineLanguageProvider → Pipeline*Providers
 ```
+
+## 跨窗口全局快捷键
+
+`ShortcutService` 在扩展的 `globalStorageUri/shortcut-control` 下维护跨窗口协调文件：
+
+- 每个窗口用 session 文件发送心跳；`target.json` 记录唯一目标，后激活窗口会取得租约，超时或关闭后租约失效
+- 非目标窗口通过临时文件原子改名投递请求；文件监听负责唤醒，轮询负责兜底，目标窗口删除请求后执行
+
+该机制只转移快捷键命令的执行目标，不终止其他窗口中已经运行的 Maa 实例。
 
 ## 依赖关系
 

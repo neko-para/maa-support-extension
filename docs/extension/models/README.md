@@ -62,6 +62,8 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 基于截图的图像工具：
 
 - 截图捕获（通过连接的 MaaFramework runtime）
+- `maa.screencap` 命令可将截图直接保存到运行资源项目的 `debug/screenshot`，文件名使用 ISO 时间戳
+- 同一资源项目有多个运行实例时，`maa.screencap` 只截取最近启动实例；不同资源项目同时运行时拒绝截图
 - Jimp 图像裁剪
 - OCR 识别
 - 模板匹配
@@ -92,13 +94,20 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 断开 ⇔ 停止任务
 - 在任务上设置断点
 
-### 8. Agent 子进程管理
+### 8. 全局快捷键控制
+
+- `maa.start` 在快捷键目标窗口中启动当前资源项目配置的任务
+- `maa.toggle-pause`、`maa.stop` 和 `maa.screencap` 控制该窗口中的运行实例；切换暂停时，存在未暂停实例则全部暂停，否则全部继续
+- 控制面板可将当前窗口设为唯一快捷键目标；后激活窗口会取得租约，异常退出后租约自动失效
+- VS Code 1.128 及以上可在用户 `keybindings.json` 中配置 `systemWide: true`；插件不提供默认系统快捷键
+
+### 9. Agent 子进程管理
 
 - 启动子进程或调试会话作为 "agent"
 - 注入 PI_* 协议环境变量
 - 管理 agent 生命周期
 
-### 9. MAA Assistant Arknights 模式 🄼
+### 10. MAA Assistant Arknights 模式 🄼
 
 自动检测工作区是否为 MAA 项目（检查 `src/MaaCore` 目录），适配：
 

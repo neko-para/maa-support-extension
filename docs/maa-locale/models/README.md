@@ -46,6 +46,8 @@ t('maa.pi.error.cannotFindTask', taskName)
 - `maa.status.*` — 状态栏
 - `maa.core.*` — 核心功能
 - `maa.crop.*` — 裁剪工具
+- `maa.screencap.*` — 快速截图命令
+- `maa.shortcut.*` — 全局快捷键目标和运行控制提示
 - `maa.eval.*` — 表达式求值
 
 ## 抽象边界

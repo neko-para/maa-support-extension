@@ -41,6 +41,22 @@
         "command": "maa.launch-interface"
       },
       {
+        "title": "%maa.command.start%",
+        "command": "maa.start"
+      },
+      {
+        "title": "%maa.command.toggle-pause%",
+        "command": "maa.toggle-pause"
+      },
+      {
+        "title": "%maa.command.stop%",
+        "command": "maa.stop"
+      },
+      {
+        "title": "%maa.command.screencap%",
+        "command": "maa.screencap"
+      },
+      {
         "title": "%maa.command.open-crop%",
         "command": "maa.open-crop"
       },

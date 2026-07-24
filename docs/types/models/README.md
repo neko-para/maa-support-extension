@@ -32,7 +32,7 @@
 - `{Panel}HostToWeb` — Host → Webview 消息
 - `{Panel}WebToHost` — Webview → Host 消息
 
-Control 协议通过 `ControlHostState.saveDraw` 同步识别绘图落盘状态，并使用 `switch-save-draw` Toolkit target 请求切换。
+Control 协议通过 `ControlHostState.saveDraw` 同步识别绘图落盘状态，并使用 `switch-save-draw` Toolkit target 请求切换；`shortcutTarget` 标识当前窗口是否持有全局快捷键目标租约，`activate-shortcuts` 用于取得该租约。
 
 ### 2. 通用协议基类型
 

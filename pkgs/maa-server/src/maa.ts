@@ -347,11 +347,12 @@ export async function setupInst(
   }
 }
 
-export async function getScreencap() {
-  if (!cache) {
+export async function getScreencap(id?: string) {
+  const controller = id ? taskerMap[id]?.controller : cache?.controller
+  if (!controller) {
     return null
   }
-  const image = await cache.controller.post_screencap().wait().get()
+  const image = await controller.post_screencap().wait().get()
   if (image) {
     return Buffer.from(image).toString('base64')
   } else {

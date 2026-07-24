@@ -62,6 +62,14 @@
   - 基于interface配置创建实例, 然后执行指定任务.
 - Maa: 执行interface
   - 基于interface配置创建实例, 然后执行所有配置任务.
+- Maa: 快捷键启动
+  - 在控制面板激活的 VS Code 窗口中执行当前资源项目的配置任务.
+- Maa: 暂停/继续全部运行实例
+  - 存在未暂停实例时全部暂停, 否则全部继续.
+- Maa: 停止全部运行实例
+  - 停止快捷键目标窗口中的全部运行实例.
+- Maa: 截图
+  - 截取快捷键目标窗口中的当前控制器画面并保存到运行资源项目的 `debug/screenshot`.
 - Maa: 打开截图工具
   - 打开 进行截图裁剪 的 Webview.
 - Maa: 展示控制面板
@@ -70,6 +78,17 @@
   - 下载并切换插件自身使用的 MaaFramework.
 - Maa: 选择下载源
   - 选择下载插件自身使用的 MaaFramework 的镜像源.
+
+先在 Maa 控制面板点击“激活全局快捷键”，将当前窗口设为唯一执行目标。VS Code 1.128 及以上可在用户 `keybindings.json` 中将上述任一命令配置为系统级快捷键，例如：
+
+```json
+[
+  { "key": "ctrl+shift+f9", "command": "maa.start", "systemWide": true },
+  { "key": "ctrl+shift+f10", "command": "maa.toggle-pause", "systemWide": true },
+  { "key": "ctrl+shift+f8", "command": "maa.stop", "systemWide": true },
+  { "key": "ctrl+shift+f12", "command": "maa.screencap", "systemWide": true }
+]
+```
 
 ## Provided vscode commands
 
@@ -85,6 +104,14 @@ Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
   - Create instance based on interface, and launch the specified task.
 - Maa: launch interface
   - Create instance based on interface, and launch all configured tasks.
+- Maa: shortcut start
+  - Launch the configured tasks in the VS Code window activated from the Maa control panel.
+- Maa: pause or continue all running instances
+  - Pause all when any active instance is not paused, otherwise continue all paused instances.
+- Maa: stop all running instances
+  - Stop every running instance in the shortcut target window.
+- Maa: take screenshot
+  - Capture the current controller in the shortcut target window and save it under `debug/screenshot` in the runtime resource project.
 - Maa: open crop tool
   - Open webview for taking screenshots and cropping images.
 - Maa: reveal control panel
@@ -93,3 +120,14 @@ Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
   - Download and change the version of MaaFramework used by extension.
 - Maa: select fetch registry
   - Select the mirrors to download MaaFramework used by extension.
+
+First click **Activate Global Shortcuts** in the Maa control panel to make that window the sole command target. With VS Code 1.128 or later, any command above can be configured as an OS-level shortcut in your user `keybindings.json`, for example:
+
+```json
+[
+  { "key": "ctrl+shift+f9", "command": "maa.start", "systemWide": true },
+  { "key": "ctrl+shift+f10", "command": "maa.toggle-pause", "systemWide": true },
+  { "key": "ctrl+shift+f8", "command": "maa.stop", "systemWide": true },
+  { "key": "ctrl+shift+f12", "command": "maa.screencap", "systemWide": true }
+]
+```

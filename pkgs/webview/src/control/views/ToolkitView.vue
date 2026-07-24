@@ -112,6 +112,25 @@ async function jump(target: ToolkitJumpTarget) {
           </template>
           {{ t('maa.control.tooltip.toggle-save-draw') }}
         </Tooltip>
+        <Tooltip trigger="hover">
+          <template #trigger>
+            <n-button
+              :disabled="!!loading || hostState.shortcutTarget || !hostState.activeInterface"
+              :loading="loading === 'activate-shortcuts'"
+              @click="jump('activate-shortcuts')"
+              size="small"
+              :type="hostState.shortcutTarget ? 'primary' : 'default'"
+              :ghost="hostState.shortcutTarget"
+            >
+              {{
+                hostState.shortcutTarget
+                  ? t('maa.control.toolkit.shortcuts-active')
+                  : t('maa.control.toolkit.activate-shortcuts')
+              }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.activate-shortcuts') }}
+        </Tooltip>
       </n-flex>
       <n-text v-for="(info, idx) in hostState.fwStatus ?? []" :key="idx">
         {{ info }}

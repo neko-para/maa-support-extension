@@ -57,16 +57,26 @@ export class LaunchService extends BaseService {
     return [true, result.handle]
   }
 
-  async launchRuntime(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
-    loggerChannel.show(true)
+  async launchRuntime(
+    runtime: InterfaceRuntime,
+    tasks?: InterfaceRuntime['task'],
+    presentation: { revealLog?: boolean; preserveFocus?: boolean } = {}
+  ) {
+    if (presentation.revealLog !== false) {
+      loggerChannel.show(true)
+    }
     try {
-      await this.launchRuntimeImpl(runtime, tasks)
+      await this.launchRuntimeImpl(runtime, tasks, presentation.preserveFocus ?? false)
     } catch (err) {
       logger.error(`${err}`)
     }
   }
 
-  async launchRuntimeImpl(runtime: InterfaceRuntime, tasks?: InterfaceRuntime['task']) {
+  async launchRuntimeImpl(
+    runtime: InterfaceRuntime,
+    tasks?: InterfaceRuntime['task'],
+    preserveFocus = false
+  ) {
     if (runtime.controller.permission_required && !serverService.rpc.admin) {
       vscode.window.showWarningMessage(t('maa.pi.warning.require-admin'))
     }
@@ -104,7 +114,14 @@ export class LaunchService extends BaseService {
     session.pushMessage(t('maa.debug.init-instance-succeeded'))
     session.pushContinued()
 
-    const panel = new WebviewLaunchPanel(ipc, errorOrHandle, 'Maa Launch')
+    const panel = new WebviewLaunchPanel(
+      ipc,
+      errorOrHandle,
+      runtime.root,
+      'Maa Launch',
+      undefined,
+      preserveFocus
+    )
     serverService.instMap[errorOrHandle] = panel
     await panel.init()
 

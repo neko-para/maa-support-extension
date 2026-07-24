@@ -23,6 +23,7 @@ import { isLaunchDev } from './dev'
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
   ipc: IpcType
   instance: string
+  runtimeRoot: string
   knownTasks: string[]
   sessionId: string
   sessionStartedAt: number
@@ -34,7 +35,14 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
   paused: boolean = false
   pausedResolve?: () => void
 
-  constructor(ipc: IpcType, instance: string, title: string, viewColumn?: vscode.ViewColumn) {
+  constructor(
+    ipc: IpcType,
+    instance: string,
+    runtimeRoot: string,
+    title: string,
+    viewColumn?: vscode.ViewColumn,
+    preserveFocus = false
+  ) {
     super({
       context,
       folder: 'webview',
@@ -42,13 +50,14 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
       webId: 'maa.view.launch',
       title,
       viewColumn: viewColumn ?? vscode.ViewColumn.Active,
-      preserveFocus: false,
+      preserveFocus,
       iconPath: 'images/logo.png',
       dev: isLaunchDev
     })
 
     this.ipc = ipc
     this.instance = instance
+    this.runtimeRoot = runtimeRoot
     this.knownTasks = []
     this.sessionId = `${instance}-${Date.now()}`
     this.sessionStartedAt = Date.now()

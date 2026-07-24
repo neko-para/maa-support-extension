@@ -4,11 +4,15 @@ export const commands = {
 
   GotoTask: 'maa.goto-task',
   LaunchTask: 'maa.launch-task',
+  Start: 'maa.start',
+  TogglePause: 'maa.toggle-pause',
+  Stop: 'maa.stop',
   EvalTask: 'maa.eval-task',
   EvalExprImpl: 'maa.eval-expr-impl',
   EvalExpr: 'maa.eval-expr',
 
   LaunchInterface: 'maa.launch-interface',
+  Screencap: 'maa.screencap',
   OpenCrop: 'maa.open-crop',
 
   RevealControlPanel: 'maa.reveal-control-panel',

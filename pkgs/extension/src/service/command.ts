@@ -10,12 +10,20 @@ import {
   shouldStrip
 } from '@nekosu/maa-tasker'
 
-import { interfaceService, launchService, rootService, serverService, stateService } from '.'
+import {
+  interfaceService,
+  launchService,
+  rootService,
+  serverService,
+  shortcutService,
+  stateService
+} from '.'
 import { commands } from '../command'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { autoConvertRangeLocation, convertRange } from './language/utils'
 import { WebviewCropPanel } from './webview/crop'
+import type { ShortcutCommand } from './shortcut'
 
 export class CommandService extends BaseService {
   constructor() {
@@ -61,6 +69,21 @@ export class CommandService extends BaseService {
       })
       return true
     })
+
+    this.defer = vscode.commands.registerCommand(commands.Start, () =>
+      this.routeShortcut('start')
+    )
+    this.defer = vscode.commands.registerCommand(commands.TogglePause, () =>
+      this.routeShortcut('toggle-pause')
+    )
+    this.defer = vscode.commands.registerCommand(commands.Stop, () =>
+      this.routeShortcut('stop')
+    )
+    this.defer = vscode.commands.registerCommand(commands.Screencap, () =>
+      this.routeShortcut('screencap')
+    )
+
+    shortcutService.setCommandHandler(command => this.executeShortcut(command))
 
     this.defer = vscode.commands.registerCommand(
       commands.FindTaskRef,
@@ -252,5 +275,126 @@ export class CommandService extends BaseService {
 
   async init() {
     console.log('init CommandService')
+  }
+
+  private async routeShortcut(command: ShortcutCommand) {
+    const route = await shortcutService.route(command)
+    if (route === 'local') {
+      await this.executeShortcut(command)
+      return true
+    }
+    if (route === 'forwarded') {
+      return true
+    }
+
+    vscode.window.showWarningMessage(t('maa.shortcut.no-target'))
+    return false
+  }
+
+  private async executeShortcut(command: ShortcutCommand) {
+    switch (command) {
+      case 'start': {
+        if (!rootService.activeResource) {
+          await rootService.refresh()
+        }
+        const runtime = await interfaceService.buildRuntime()
+        if (typeof runtime === 'string') {
+          vscode.window.showErrorMessage(t('maa.pi.error.generate-runtime-failed', runtime))
+          return
+        }
+        void launchService.launchRuntime(runtime, undefined, {
+          revealLog: false,
+          preserveFocus: true
+        })
+        return
+      }
+      case 'toggle-pause': {
+        const panels = this.requireActivePanels()
+        if (panels) {
+          const shouldPause = panels.some(panel => !panel.paused)
+          panels.forEach(panel => (shouldPause ? panel.pause() : panel.cont()))
+        }
+        return
+      }
+      case 'stop': {
+        const panels = this.requireActivePanels()
+        if (panels) {
+          await Promise.all(panels.map(panel => panel.stop()))
+        }
+        return
+      }
+      case 'screencap':
+        await this.takeScreencap()
+        return
+    }
+  }
+
+  private activePanels() {
+    return Object.values(serverService.instMap).filter(panel => !panel.stopped)
+  }
+
+  private requireActivePanels() {
+    const panels = this.activePanels()
+    if (panels.length === 0) {
+      vscode.window.showWarningMessage(t('maa.shortcut.no-instances'))
+      return null
+    }
+    return panels
+  }
+
+  private async takeScreencap() {
+    try {
+      const activeInstances = Object.entries(serverService.instMap).filter(
+        ([, panel]) => !panel.stopped
+      )
+
+      let instance: string | undefined
+      let runtimeRoot: vscode.Uri
+      if (activeInstances.length > 0) {
+        const roots = new Set(
+          activeInstances.map(([, panel]) =>
+            process.platform === 'win32' ? panel.runtimeRoot.toLowerCase() : panel.runtimeRoot
+          )
+        )
+        if (roots.size > 1) {
+          vscode.window.showWarningMessage(t('maa.screencap.multiple-resources'))
+          return
+        }
+
+        const [handle, panel] = activeInstances.sort(
+          ([, left], [, right]) => right.sessionStartedAt - left.sessionStartedAt
+        )[0]
+        instance = handle
+        runtimeRoot = vscode.Uri.file(panel.runtimeRoot)
+      } else {
+        const activeResource = rootService.activeResource
+        if (!activeResource) {
+          vscode.window.showErrorMessage(t('maa.screencap.no-runtime'))
+          return
+        }
+        if (!(await launchService.updateCache())) {
+          vscode.window.showErrorMessage(t('maa.screencap.failed'))
+          return
+        }
+        runtimeRoot = activeResource.dirUri
+      }
+
+      const ipc = await serverService.ensureServer()
+      const image = await ipc?.getScreencap(instance)
+      if (!image) {
+        vscode.window.showErrorMessage(t('maa.screencap.failed'))
+        return
+      }
+
+      const screenshotDir = vscode.Uri.joinPath(runtimeRoot, 'debug', 'screenshot')
+      await vscode.workspace.fs.createDirectory(screenshotDir)
+      const timestamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')
+      const screenshot = vscode.Uri.joinPath(screenshotDir, `${timestamp}.png`)
+      await vscode.workspace.fs.writeFile(screenshot, Buffer.from(image, 'base64'))
+      vscode.window.setStatusBarMessage(t('maa.screencap.saved', screenshot.fsPath), 5000)
+    } catch (err) {
+      logger.error(`screencap failed: ${err}`)
+      vscode.window.showErrorMessage(t('maa.screencap.failed'))
+    }
   }
 }

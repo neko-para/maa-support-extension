@@ -51,6 +51,7 @@ VSCode 插件进程可能无法以管理员权限运行，而某些 MaaFramework
 ### 6. 截图
 
 - 通过控制器获取当前屏幕截图
+- 可指定运行中的 Tasker 实例，或在空闲时使用缓存 controller
 
 ### 7. Agent 进程管理
 

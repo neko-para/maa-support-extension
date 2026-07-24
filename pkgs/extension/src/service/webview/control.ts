@@ -19,6 +19,7 @@ import {
   nativeService,
   rootService,
   serverService,
+  shortcutService,
   stateService
 } from '..'
 import { commands } from '../../command'
@@ -92,6 +93,10 @@ export class WebviewControlService extends BaseService {
               break
             case 'switch-save-draw':
               serverService.switchSaveDraw()
+              this.pushState()
+              break
+            case 'activate-shortcuts':
+              await shortcutService.activate()
               this.pushState()
               break
           }
@@ -303,6 +308,10 @@ export class WebviewControlService extends BaseService {
       this.pushState()
     })
 
+    this.defer = shortcutService.onTargetChanged(() => {
+      this.pushState()
+    })
+
     this.defer = nativeService.onVersionChanged(() => {
       this.pushState()
     })
@@ -410,6 +419,7 @@ export class WebviewControlService extends BaseService {
       admin: process.platform === 'win32' ? serverService.rpc.admin : undefined,
       debugMode: serverService.debugMode,
       saveDraw: serverService.saveDraw,
+      shortcutTarget: shortcutService.isTarget,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),
       activeInterface: rootService.activeResource?.interfaceRelative,

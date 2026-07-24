@@ -32,7 +32,7 @@
 
 **Host → Server** (约 18 个方法)：
 - `fetchConstants()`、`updateController()`、`setupInstance()`
-- `getScreencap()`、`resize()`
+- `getScreencap(instance?)`、`resize()`
 - `performOcr()`、`performTemplateMatch()`、`performReco()`
 - `refreshAdb()`、`refreshDesktop()`
 - `postTask()`、`postStop()`、`getKnownTasks()`、`destroyInstance()`

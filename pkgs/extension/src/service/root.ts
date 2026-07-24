@@ -75,7 +75,7 @@ export class RootService extends BaseService {
   async init() {
     console.log('init RootService')
 
-    this.refresh()
+    await this.refresh()
   }
 
   dispose() {
@@ -107,6 +107,7 @@ export class RootService extends BaseService {
     }
 
     stateService.reduce({
+      activeWorkspace: this.activeResource?.workspace.fsPath,
       activeInterface: this.activeResource?.interfaceRelative
     })
     this.activeResourceChanged.fire()
@@ -121,6 +122,7 @@ export class RootService extends BaseService {
       this.activeResource = this.resourceRoots[index]
     }
     stateService.reduce({
+      activeWorkspace: this.activeResource?.workspace.fsPath,
       activeInterface: this.activeResource?.interfaceRelative
     })
     this.activeResourceChanged.fire()

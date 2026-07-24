@@ -123,6 +123,14 @@ export default {
 
   'maa.crop.warning.no-resource': '未配置interface的资源, 将直接保存',
 
+  'maa.screencap.no-runtime': '未找到可截图的运行资源项目',
+  'maa.screencap.multiple-resources': '运行中的 Maa 实例属于多个资源项目，无法确定截图目标',
+  'maa.screencap.failed': '截图失败',
+  'maa.screencap.saved': '截图已保存: {0}',
+
+  'maa.shortcut.no-target': '未激活全局快捷键目标，请在 Maa 控制面板中激活当前窗口',
+  'maa.shortcut.no-instances': '当前快捷键目标窗口中没有运行中的 Maa 实例',
+
   'maa.eval.input-task': '输入任务',
   'maa.eval.eval-failed': '计算失败!',
   'maa.eval.loop-detected': '检测到循环',

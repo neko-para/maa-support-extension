@@ -14,7 +14,7 @@ export type HostToSubApis = {
     handle?: string
     error?: string
   }
-  getScreencap: () => string | null
+  getScreencap: (inst?: string) => string | null
   resize: (image: string, width: number, height: number) => string
   performOcr: (
     isMaa: boolean,

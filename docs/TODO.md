@@ -43,7 +43,7 @@
 ## @nekosu/maa-pipeline-manager
 
 - [ ] **TODO-22** — **Node.js API 耦合**: 模块深度依赖 Node.js API（`fs`、`path`），导致无法在 browser 环境使用。`IContentLoader` / `IContentWatcher` 等抽象接口未能真正解耦底层实现。这是设计失误。
-- [ ] **TODO-23** — **已知罕见 Bug——文件被删除**: 插件和 checker 同时执行时，有概率错误删除所有图片文件（可能还有其他文件）。代码层面没有任何删除操作，怀疑与 watch 库有关，但理论上不应该发生。
+- [x] **TODO-23** — **已知罕见 Bug——文件被删除**: checker 执行时，有概率错误删除所有图片文件。代码层面没有任何删除操作，但理论上不应该发生。实际情况是将日志目录设置为工作区根目录后，MaaFramework 会递归清理上次更新时间在7天以上的 png 文件。
 - [ ] **TODO-24** — **事件驱动导致 checker 使用困难**: 事件驱动架构是历史遗留问题，checker 需要同步的一次性结果而非持续的变更事件流。
 - [ ] **TODO-25** — **自定义解析器局限性**: 自定义 reco/action 解析器无法转发 `pipeline_override` 格式内容，且 AST 产物与标准解析完全隔离。设计失误。
 - [ ] **TODO-26** — **格式切换实验性功能**: `toggleMode()` 会丢失注释，官方推荐使用其他方法迁移。

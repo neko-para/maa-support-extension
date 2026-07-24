@@ -129,6 +129,14 @@ DisposableHelper
 | Jimp 精简版 | 仅包含 PNG + crop 插件，最小化依赖 |
 | 两套 Language Provider | 反映两层结构：interface 文件和 pipeline 文件 |
 
+## 日志与存储目录
+
+插件使用 context.storageUri（回退到 context.globalStorageUri）作为存储根目录（下记 storage）：
+
+- **插件自身日志**: storage/mse.log
+- **MAA 日志**: storage/debug/（maafw.log / maa.log）。extension 向 maa-server 传递精确的 `maaLog = <storage>/debug` 路径，maa-server 直接设置 `maa.Global.log_dir = option.maaLog`，日志写入该 `debug` 子目录而非 storage 根目录。这样避免 MaaFramework 以 storage 根目录为日志目录时递归清理其下的 `fixed/*.png`。OpenMaaLog 命令按 maafw.log → maa.log 顺序在 storage/debug/ 下查找。
+- **Native 模块**: context.globalStorageUri/native
+
 ## 构建
 
 - **配置**: [tsdown.config.mts](../../../pkgs/extension/tsdown.config.mts)

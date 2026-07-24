@@ -41,8 +41,14 @@ src/
                                  #   建立 vscode-jsonrpc MessageConnection
                                  #   发送 initNoti (包含 client id)
 4. index.ts → initMaa()         # 动态 import(module) → 加载 MaaFramework
-                                 #   设置全局 logger
+                                 #   设置 maa.Global.debug_mode
+                                 #   设置 maa.Global.log_dir = option.maaLog
+                                 #   （精确日志目录，由 Host 传入 <storage>/debug）
 ```
+
+## MAA 日志目录
+
+`initMaa()` 直接设置 `maa.Global.log_dir = option.maaLog`。Host（extension）传入精确的 `<storage>/debug` 路径作为 `maaLog`，而非 storage 根目录；MAA 原生日志（`maafw.log` 等）写入该 `debug` 子目录。这样避免 MaaFramework 以 storage 根目录为日志目录时递归清理其下的 `fixed/*.png`。
 
 ## 依赖关系
 

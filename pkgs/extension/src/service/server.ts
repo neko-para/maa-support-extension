@@ -130,7 +130,7 @@ export class ServerService extends BaseService {
       (await nativeService.load()) &&
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
-        maaLog: (context.storageUri ?? context.globalStorageUri).fsPath,
+        maaLog: vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'debug').fsPath,
         debugMode: this.debugMode,
         saveDraw: this.saveDraw
       })) &&

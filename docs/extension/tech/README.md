@@ -102,43 +102,43 @@ DisposableHelper
 
 ### 工作区依赖
 
-| 包 | 角色 |
-|---|---|
-| `@mse/maa-server-proto` | JSON-RPC 协议类型 |
-| `@mse/types` | 前后端共享类型 |
-| `@mse/utils` | 通用工具 (WebviewProvider, logger) |
-| `@nekosu/maa-locale` | 国际化 |
-| `@nekosu/maa-pipeline-manager` | 核心解析引擎 |
-| `@nekosu/maa-tasker` | MAA 任务类型和表达式 |
-| `@nekosu/maa-tools` | `FullConfig` 类型 |
-| `@nekosu/maa-version-manager` | MaaFramework 版本管理 |
-| `@nekosu/simple-parser` | 简单解析器 |
+| 包                             | 角色                               |
+| ------------------------------ | ---------------------------------- |
+| `@mse/maa-server-proto`        | JSON-RPC 协议类型                  |
+| `@mse/types`                   | 前后端共享类型                     |
+| `@mse/utils`                   | 通用工具 (WebviewProvider, logger) |
+| `@nekosu/maa-locale`           | 国际化                             |
+| `@nekosu/maa-pipeline-manager` | 核心解析引擎                       |
+| `@nekosu/maa-tasker`           | MAA 任务类型和表达式               |
+| `@nekosu/maa-tools`            | `FullConfig` 类型                  |
+| `@nekosu/maa-version-manager`  | MaaFramework 版本管理              |
+| `@nekosu/simple-parser`        | 简单解析器                         |
 
 ### 外部依赖
 
-| 包 | 用途 |
-|---|---|
-| `@maaxyz/maa-node` | MaaFramework 原生绑定 |
-| `@vscode/debugadapter` | 调试适配器协议实现 |
-| `@vscode/debugprotocol` | 调试适配器协议类型 |
-| `vscode-jsonrpc` | JSON-RPC 通信 |
-| `jsonc-parser` | JSONC 解析 |
-| `semver` | 版本比较 |
-| `jiti` | 运行时 TypeScript 配置加载 |
-| `uuid` | UUID 生成 |
-| `source-map-support` | 源码映射 |
-| `@jimp/core`、`@jimp/js-png`、`@jimp/plugin-crop` | 图片裁剪 |
+| 包                                                | 用途                       |
+| ------------------------------------------------- | -------------------------- |
+| `@maaxyz/maa-node`                                | MaaFramework 原生绑定      |
+| `@vscode/debugadapter`                            | 调试适配器协议实现         |
+| `@vscode/debugprotocol`                           | 调试适配器协议类型         |
+| `vscode-jsonrpc`                                  | JSON-RPC 通信              |
+| `jsonc-parser`                                    | JSONC 解析                 |
+| `semver`                                          | 版本比较                   |
+| `jiti`                                            | 运行时 TypeScript 配置加载 |
+| `uuid`                                            | UUID 生成                  |
+| `source-map-support`                              | 源码映射                   |
+| `@jimp/core`、`@jimp/js-png`、`@jimp/plugin-crop` | 图片裁剪                   |
 
 ## 技术选型
 
-| 选择 | 理由 |
-|---|---|
+| 选择                      | 理由                                                |
+| ------------------------- | --------------------------------------------------- |
 | `vscode-jsonrpc` over TCP | 子进程需要独立运行（可能提权），TCP 不受 stdio 限制 |
-| `jiti` 配置加载 | 允许用户编写 TypeScript 配置，运行时直接加载 |
-| Proxy 模式 IPC | 类型安全的双向 RPC，无需手动序列化 |
-| 自定义 Debug Adapter | 复用 VSCode 调试 UI 控制任务执行 |
-| Jimp 精简版 | 仅包含 PNG + crop 插件，最小化依赖 |
-| 两套 Language Provider | 反映两层结构：interface 文件和 pipeline 文件 |
+| `jiti` 配置加载           | 允许用户编写 TypeScript 配置，运行时直接加载        |
+| Proxy 模式 IPC            | 类型安全的双向 RPC，无需手动序列化                  |
+| 自定义 Debug Adapter      | 复用 VSCode 调试 UI 控制任务执行                    |
+| Jimp 精简版               | 仅包含 PNG + crop 插件，最小化依赖                  |
+| 两套 Language Provider    | 反映两层结构：interface 文件和 pipeline 文件        |
 
 ## 日志与存储目录
 

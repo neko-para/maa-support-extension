@@ -53,41 +53,41 @@
 
 ### 第 0 层：零依赖基础
 
-| 包 | 说明 |
-|---|---|
-| `@nekosu/simple-parser` | LL\* 解析库 |
-| `@nekosu/maa-locale` | 国际化文案 |
+| 包                                   | 说明          |
+| ------------------------------------ | ------------- |
+| `@nekosu/simple-parser`              | LL\* 解析库   |
+| `@nekosu/maa-locale`                 | 国际化文案    |
 | `@nekosu/prettier-plugin-maafw-sort` | Prettier 插件 |
 
 ### 第 1 层：算法引擎
 
-| 包 | 依赖 |
-|---|---|
+| 包                   | 依赖              |
+| -------------------- | ----------------- |
 | `@nekosu/maa-tasker` | ← `simple-parser` |
 
 ### 第 2 层：核心解析 + 基础设施
 
-| 包 | 依赖 |
-|---|---|
-| `@nekosu/maa-pipeline-manager` | ← `maa-tasker`, `maa-locale` |
-| `@mse/types` | ← `maa-pipeline-manager`, `maa-node` |
-| `@mse/maa-server-proto` | ← `types`, `maa-pipeline-manager`, `maa-node` |
-| `@nekosu/maa-version-manager` | (零内部依赖) |
+| 包                             | 依赖                                          |
+| ------------------------------ | --------------------------------------------- |
+| `@nekosu/maa-pipeline-manager` | ← `maa-tasker`, `maa-locale`                  |
+| `@mse/types`                   | ← `maa-pipeline-manager`, `maa-node`          |
+| `@mse/maa-server-proto`        | ← `types`, `maa-pipeline-manager`, `maa-node` |
+| `@nekosu/maa-version-manager`  | (零内部依赖)                                  |
 
 ### 第 3 层：应用和工具
 
-| 包 | 依赖 |
-|---|---|
+| 包                  | 依赖                                                          |
+| ------------------- | ------------------------------------------------------------- |
 | `@nekosu/maa-tools` | ← `maa-pipeline-manager`, `maa-locale`, `maa-version-manager` |
-| `@mse/maa-server` | ← `maa-server-proto`, `types`, `maa-pipeline-manager` |
-| `@mse/utils` | ← `types` |
+| `@mse/maa-server`   | ← `maa-server-proto`, `types`, `maa-pipeline-manager`         |
+| `@mse/utils`        | ← `types`                                                     |
 
 ### 第 4 层：最终用户
 
-| 包 | 依赖 |
-|---|---|
-| `@mse/extension` | ← 几乎所有包 |
-| `@mse/webview` | ← `types`, `maa-pipeline-manager` |
+| 包               | 依赖                              |
+| ---------------- | --------------------------------- |
+| `@mse/extension` | ← 几乎所有包                      |
+| `@mse/webview`   | ← `types`, `maa-pipeline-manager` |
 
 ## 构建顺序
 

@@ -23,6 +23,7 @@
 ### 2. 版本安装
 
 `prepare(version, progress)` 下载并安装指定版本：
+
 - 下载 `@maaxyz/maa-node` 主包（JavaScript 脚本）
 - 下载平台特定的二进制包 (`@maaxyz/maa-node-{platform}-{arch}`)
 - 原子性移动到最终安装目录

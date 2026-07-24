@@ -51,6 +51,7 @@ observer.observe(document.body, { attributes: true })
 三个应用各自通过 `@mse/types` 的协议类型与 host 通信。
 
 详见源码目录：
+
 - [src/control/](../../../pkgs/webview/src/control/)
 - [src/crop/](../../../pkgs/webview/src/crop/)
 - [src/launch/](../../../pkgs/webview/src/launch/)

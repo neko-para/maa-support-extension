@@ -21,6 +21,7 @@ type OutputMode = 'stdio' | 'github' | 'json'
 ### 错误传播
 
 `runCheck()` 和 `runTest()` 返回 `Promise<boolean>`：
+
 - `true` — 成功
 - `false` — 发现错误
 

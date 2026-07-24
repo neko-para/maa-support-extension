@@ -8,15 +8,26 @@
 
 修改任何包的代码时，需同步更新对应文档：
 
-| 代码变更类型 | 需更新的文档 |
-|---|---|
-| 新增/删除功能、改变对外行为 | `docs/{pkg}/models/README.md` |
-| 修改模块架构、依赖关系、技术选型 | `docs/{pkg}/tech/README.md` |
-| 改变命名约定、代码模式、编码规范 | `docs/{pkg}/specs/README.md`（通用规范变更则更新 `docs/extra/common-specs.md`） |
-| 新增跨包机制或共享约定 | `docs/extra/` 中对应主题文档 |
-| 修复了 [docs/TODO.md](docs/TODO.md) 中记录的问题 | 标记为 `[x]`，记录结论，**不删除条目** |
+| 代码变更类型                                     | 需更新的文档                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| 新增/删除功能、改变对外行为                      | `docs/{pkg}/models/README.md`                                                   |
+| 修改模块架构、依赖关系、技术选型                 | `docs/{pkg}/tech/README.md`                                                     |
+| 改变命名约定、代码模式、编码规范                 | `docs/{pkg}/specs/README.md`（通用规范变更则更新 `docs/extra/common-specs.md`） |
+| 新增跨包机制或共享约定                           | `docs/extra/` 中对应主题文档                                                    |
+| 修复了 [docs/TODO.md](docs/TODO.md) 中记录的问题 | 标记为 `[x]`，记录结论，**不删除条目**                                          |
 
 PR 和 code review 时应将文档同步作为检查项。
+
+## 提交前格式化
+
+每次提交前，必须使用仓库配置的 Prettier 格式化本次修改中受支持的文件，并确认格式检查通过：
+
+```bash
+pnpm exec prettier --write <files...>
+pnpm exec prettier --check <files...>
+```
+
+不要为满足该要求格式化与本次提交无关的文件。全仓格式化必须作为独立提交。
 
 ## 文档标识
 

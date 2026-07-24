@@ -104,7 +104,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 ### 9. Agent 子进程管理
 
 - 启动子进程或调试会话作为 "agent"
-- 注入 PI_* 协议环境变量
+- 注入 PI\_\* 协议环境变量
 - 管理 agent 生命周期
 
 ### 10. MAA Assistant Arknights 模式 🄼

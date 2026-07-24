@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { NButton, NCard, NFlex, NPopselect } from 'naive-ui'
-import Tooltip from '../../components/AppTooltip.vue'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
 import type { NativeSelectOption } from '@mse/types'
 
+import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import TaskCard from '../components/TaskCard.vue'
 import { ipc } from '../ipc'

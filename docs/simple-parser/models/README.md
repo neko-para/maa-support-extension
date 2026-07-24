@@ -22,7 +22,7 @@
 const tokens = [
   ['virt', /\#[a-zA-Z]\w+/],
   ['number', /\d+/],
-  ['task', /[a-zA-Z]\w*/],
+  ['task', /[a-zA-Z]\w*/]
 ] as const
 ```
 
@@ -31,11 +31,13 @@ const tokens = [
 通过流畅 API 定义 LL\* 文法规则：
 
 ```typescript
-rule.for('expr')
+rule
+  .for('expr')
   .when('%task', '%at', '%multi', '%plus', '%diff', '%brace')
   .do(([item]) => item)
 
-rule.for('atList')
+rule
+  .for('atList')
   .entry('%task')
   .when('atList', '%at')
   .do(([list, at]) => [...list, at])

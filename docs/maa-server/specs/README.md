@@ -35,6 +35,7 @@ const { promise, resolve, reject } = makePromise<Type>()
 本包不暴露 API 给其他包。它的"接口"是 JSON-RPC 协议，定义在 [@mse/maa-server-proto](../maa-server-proto/models/)。
 
 详见源码：
+
 - 入口: [src/index.ts](../../../pkgs/maa-server/src/index.ts)
 - IPC 代理: [src/apis.ts](../../../pkgs/maa-server/src/apis.ts)
 - MAA 核心: [src/maa.ts](../../../pkgs/maa-server/src/maa.ts)

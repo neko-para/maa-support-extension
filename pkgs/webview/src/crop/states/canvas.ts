@@ -146,7 +146,9 @@ export function draw(ctx: CanvasRenderingContext2D) {
     if (pickSt.picking.value || pickSt.samplePoints.value.length > 0) {
       ctx.save()
       for (const point of pickSt.samplePoints.value) {
-        const viewPos = controlSt.viewport.value.toView(Pos.from(point.pos[0] + 0.5, point.pos[1] + 0.5))
+        const viewPos = controlSt.viewport.value.toView(
+          Pos.from(point.pos[0] + 0.5, point.pos[1] + 0.5)
+        )
         const s = Math.max(2, 1 / controlSt.viewport.value.scale)
         const x = viewPos.x - s / 2
         const y = viewPos.y - s / 2

@@ -130,7 +130,11 @@ export function addSelectSamplePoints(imageData: ImageData, box: Box) {
   for (let my = 0; my < imageData.height; my += step) {
     for (let mx = 0; mx < imageData.width; mx += step) {
       const idx = (my * imageData.width + mx) * 4
-      const color: [number, number, number] = [imageData.data[idx]!, imageData.data[idx + 1]!, imageData.data[idx + 2]!]
+      const color: [number, number, number] = [
+        imageData.data[idx]!,
+        imageData.data[idx + 1]!,
+        imageData.data[idx + 2]!
+      ]
       const pos: [number, number] = [Math.floor(box.origin.x + mx), Math.floor(box.origin.y + my)]
       points.push({ color, pos })
     }
@@ -167,7 +171,9 @@ export function clearSamplePoints() {
 }
 
 export function cssText() {
-  return color.value ? `#${color.value.map(x => x.toString(16).padStart(2, '0').toUpperCase()).join('')}` : ''
+  return color.value
+    ? `#${color.value.map(x => x.toString(16).padStart(2, '0').toUpperCase()).join('')}`
+    : ''
 }
 
 export function copyCss() {

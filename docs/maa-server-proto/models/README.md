@@ -18,19 +18,20 @@
 
 定义 JSON-RPC 通信 channel 常量：
 
-| Channel | 方向 | 说明 |
-|---|---|---|
-| `initNoti` | Server → Host | 连接时发送 client ID |
-| `logNoti` | Server → Host | 日志转发 |
-| `shutdownNoti` | Server → Host | 关闭信号 |
-| `hostToSubReq` | Host → Server | 双向请求 channel |
-| `subToHostReq` | Server → Host | 双向请求 channel |
+| Channel        | 方向          | 说明                 |
+| -------------- | ------------- | -------------------- |
+| `initNoti`     | Server → Host | 连接时发送 client ID |
+| `logNoti`      | Server → Host | 日志转发             |
+| `shutdownNoti` | Server → Host | 关闭信号             |
+| `hostToSubReq` | Host → Server | 双向请求 channel     |
+| `subToHostReq` | Server → Host | 双向请求 channel     |
 
 ### 2. API 类型定义
 
 定义完整的双向协议类型：
 
 **Host → Server** (约 18 个方法)：
+
 - `fetchConstants()`、`updateController()`、`setupInstance()`
 - `getScreencap(instance?)`、`resize()`
 - `performOcr()`、`performTemplateMatch()`、`performReco()`
@@ -40,6 +41,7 @@
 - `agentStopped()`
 
 **Server → Host** (约 4 个方法)：
+
 - `pushNotify()`、`startTask()`、`startDebugSession()`、`stopAgent()`、`quickPick()`
 
 ### 3. 工具类型

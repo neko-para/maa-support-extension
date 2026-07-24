@@ -40,7 +40,8 @@ export default {
   'maa.control.tooltip.toggle-debug': 'Toggle debug mode for verbose logging',
   'maa.control.tooltip.toggle-save-draw':
     'Enabling this writes many images to disk and may consume significant disk space',
-  'maa.control.tooltip.activate-shortcuts': 'Make this VS Code window the sole target for Maa global shortcuts',
+  'maa.control.tooltip.activate-shortcuts':
+    'Make this VS Code window the sole target for Maa global shortcuts',
   'maa.control.interface.select-interface': 'Select interface',
   'maa.control.resource.resource': 'Resource',
   'maa.control.resource.select-resource': 'Select resource',
@@ -108,8 +109,10 @@ export default {
   'maa.crop.tooltip.clear-samples': 'Remove all collected sample points',
   'maa.crop.tooltip.copy-lower': 'Copy the recommended lower color bound',
   'maa.crop.tooltip.copy-upper': 'Copy the recommended upper color bound',
-  'maa.crop.tooltip.copy-lower-expanded': 'Copy the lower bound expanded by the configured threshold',
-  'maa.crop.tooltip.copy-upper-expanded': 'Copy the upper bound expanded by the configured threshold',
+  'maa.crop.tooltip.copy-lower-expanded':
+    'Copy the lower bound expanded by the configured threshold',
+  'maa.crop.tooltip.copy-upper-expanded':
+    'Copy the upper bound expanded by the configured threshold',
   'maa.crop.tooltip.remove-sample': 'Remove this sample point',
   'maa.crop.tooltip.start-mask': 'Start drawing a green mask on the image',
   'maa.crop.tooltip.stop-mask': 'Stop green mask drawing',
@@ -132,7 +135,8 @@ export default {
   'maa.crop.tooltip.paste-roi': 'Paste an ROI rectangle from clipboard',
   'maa.crop.tooltip.copy-roi-ex': 'Copy the expanded ROI rectangle to clipboard',
   'maa.crop.tooltip.color-method': 'Target color space for the recommended range output',
-  'maa.crop.tooltip.recommend-method': 'Min/Max: tight bounds covering all samples. Mean +/- Std: statistical typical range',
+  'maa.crop.tooltip.recommend-method':
+    'Min/Max: tight bounds covering all samples. Mean +/- Std: statistical typical range',
   'maa.crop.settings.saving-file-with-roi': 'Add ROI in saved file name',
   'maa.crop.settings.with-roi': 'With ROI',
   'maa.crop.settings.without-roi': 'Without ROI',

@@ -27,9 +27,10 @@ interface SubToHostApis { ... }  // Server 可调用的 Host 方法
 ### $ 处理器注册
 
 ```typescript
-type MarkApis<Server, Client> = ServerApis & ClientApis & {
-  $: MarkApisImpl<Server>  // 本地处理器注册
-}
+type MarkApis<Server, Client> = ServerApis &
+  ClientApis & {
+    $: MarkApisImpl<Server> // 本地处理器注册
+  }
 ```
 
 ### Promise 包装

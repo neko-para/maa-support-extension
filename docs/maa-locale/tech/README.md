@@ -22,7 +22,7 @@ src/
 // locale.zh-cn.ts
 export const zhDict = {
   'maa.pi.error.cannotFindTask': '无法找到任务: {0}',
-  'maa.pi.error.duplicateTasks': '任务冲突: {0} 和 {1}',
+  'maa.pi.error.duplicateTasks': '任务冲突: {0} 和 {1}'
   // ...
 } as const
 ```
@@ -38,8 +38,8 @@ function t<K extends LocaleIndex>(key: K, ...args: CountArgs<K>): string {
 
 ## 技术选型
 
-| 选择 | 理由 |
-|---|---|
-| `as const` 字典 | 保留字面量类型以支持条件类型推断 |
+| 选择                    | 理由                             |
+| ----------------------- | -------------------------------- |
+| `as const` 字典         | 保留字面量类型以支持条件类型推断 |
 | 条件类型 (`CountBrace`) | 编译期参数数量验证，零运行时开销 |
-| 模块级单例 | 适合插件和 CLI 的单例场景 |
+| 模块级单例              | 适合插件和 CLI 的单例场景        |

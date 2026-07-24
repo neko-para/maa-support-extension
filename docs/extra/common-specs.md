@@ -17,6 +17,7 @@
 - **分支语句**: 所有 `if`/`else`/`for`/`while` 等分支和循环体必须使用 `{}`，即使只有单行语句。
 
 例外：
+
 - `@mse/types`、`@mse/utils`：不构建，由消费方 bundler 直接链接 TypeScript 源码（这两个包不对外发布）
 - `@nekosu/simple-parser`：核心运行时是纯 JavaScript + 手写 `.d.ts`（历史原因，JS/TS 有意隔离）
 - `@mse/webview`：使用 Vite 构建，浏览器环境

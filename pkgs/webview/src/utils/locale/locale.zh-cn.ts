@@ -131,7 +131,8 @@ export default {
   'maa.crop.tooltip.paste-roi': '从剪贴板粘贴 ROI 矩形',
   'maa.crop.tooltip.copy-roi-ex': '复制扩展 ROI 矩形到剪贴板',
   'maa.crop.tooltip.color-method': '推荐范围输出的目标颜色空间',
-  'maa.crop.tooltip.recommend-method': 'Min/Max：覆盖所有采样点的紧致范围。Mean +/- Std：统计典型范围',
+  'maa.crop.tooltip.recommend-method':
+    'Min/Max：覆盖所有采样点的紧致范围。Mean +/- Std：统计典型范围',
   'maa.crop.settings.saving-file-with-roi': '保存时文件名中附带ROI',
   'maa.crop.settings.with-roi': '附带ROI',
   'maa.crop.settings.without-roi': '不附带ROI',

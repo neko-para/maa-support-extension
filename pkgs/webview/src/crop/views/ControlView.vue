@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NButton, NFlex } from 'naive-ui'
-import Tooltip from '../../components/AppTooltip.vue'
 
+import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
@@ -96,13 +96,17 @@ import { toggleShow } from '../states/visible'
         {{ controlSt.roiDisp() }}
         <Tooltip trigger="hover">
           <template #trigger>
-            <n-button @click="controlSt.copyRoi()" size="small"> {{ t('maa.crop.copy') }} </n-button>
+            <n-button @click="controlSt.copyRoi()" size="small">
+              {{ t('maa.crop.copy') }}
+            </n-button>
           </template>
           {{ t('maa.crop.tooltip.copy-roi') }}
         </Tooltip>
         <Tooltip trigger="hover">
           <template #trigger>
-            <n-button @click="controlSt.pasteRoi()" size="small"> {{ t('maa.crop.paste') }} </n-button>
+            <n-button @click="controlSt.pasteRoi()" size="small">
+              {{ t('maa.crop.paste') }}
+            </n-button>
           </template>
           {{ t('maa.crop.tooltip.paste-roi') }}
         </Tooltip>

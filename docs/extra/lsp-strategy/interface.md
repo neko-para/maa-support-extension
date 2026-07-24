@@ -10,10 +10,10 @@
 
 查找与给定 decl/ref 相关联的声明和引用。匹配规则：
 
-| 类型种类 | 匹配键 |
-|---|---|
-| controller / resource / group / task / option | `name` |
-| case / input | `name` + `option` |
+| 类型种类                                      | 匹配键            |
+| --------------------------------------------- | ----------------- |
+| controller / resource / group / task / option | `name`            |
+| case / input                                  | `name` + `option` |
 
 ### getLocaleHover(target)
 
@@ -28,21 +28,23 @@
 **触发字符**: `"`
 
 **策略**：
+
 1. 获取 index，通过 `findDeclRef(index.refs, offset)` 匹配光标所在的 ref
 2. **仅当光标位于 ref 上时才补全**（`!ref → return null`）
 3. 根据 ref 类型从 `index.decls` 过滤生成补全：
 
-| ref 类型 | 补全内容 | 额外过滤 |
-|---|---|---|
-| `interface.controller` | 所有 controller 名 | — |
-| `interface.resource` | 所有 resource 名 | — |
-| `interface.task` | 所有 task 名 | — |
-| `interface.group` | 所有 group 名 | — |
-| `interface.option` | 所有 option 名 | — |
-| `interface.case` | 同 option 下的 case 名 | `decl.option === ref.option` |
+| ref 类型                       | 补全内容                | 额外过滤                     |
+| ------------------------------ | ----------------------- | ---------------------------- |
+| `interface.controller`         | 所有 controller 名      | —                            |
+| `interface.resource`           | 所有 resource 名        | —                            |
+| `interface.task`               | 所有 task 名            | —                            |
+| `interface.group`              | 所有 group 名           | —                            |
+| `interface.option`             | 所有 option 名          | —                            |
+| `interface.case`               | 同 option 下的 case 名  | `decl.option === ref.option` |
 | `interface.input`（无 offset） | 同 option 下的 input 名 | `decl.option === ref.option` |
 
 **补全项属性**：
+
 - `kind`: `Reference`
 - `insertText`: `JSON.stringify(name)` 去首尾引号（处理转义字符）
 - `range`: ref.location 左右各扩展 1 字符（覆盖引号）
@@ -61,6 +63,7 @@
 ### Definition（[definition.ts](../../../pkgs/extension/src/service/language/interface/definition.ts)）
 
 **策略**：
+
 1. 定位光标所在的 decl 或 ref
 2. **光标在 decl 上** → `makeDecls() + makeRefs()` 并集（同名声明 + 所有引用）
 3. **光标在 ref 上** → 仅 `makeDecls()`（跳转到目标声明）
@@ -99,11 +102,11 @@
 
 **策略**：遍历当前文件中所有 ref，对路径类 ref 创建可点击链接：
 
-| ref 类型 | 链接目标 |
-|---|---|
+| ref 类型                  | 链接目标     |
+| ------------------------- | ------------ |
 | `interface.language_path` | 语言文件路径 |
 | `interface.resource_path` | 资源目录路径 |
-| `interface.import_path` | 导入文件路径 |
+| `interface.import_path`   | 导入文件路径 |
 
 目标 = `joinPath(interfaceBundle.root, ref.target)`。
 

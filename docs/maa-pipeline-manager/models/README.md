@@ -15,6 +15,7 @@
 ## 目标用户
 
 本包是 monorepo 内部的核心引擎库，直接消费方包括：
+
 - `@mse/extension` — VSCode 插件的所有语言特性
 - `@nekosu/maa-tools` — CLI 检查器的 pipeline 加载和诊断
 - 间接消费方：通过 `@nekosu/maa-tools/pm` 子路径导出的外部用户
@@ -56,6 +57,7 @@
 ### 4. 分层任务存储
 
 `LayerInfo` 提供父子层的任务存储，支持：
+
 - 按层查找任务（含 MAA `@` 后缀追踪）
 - 跨层合并声明和引用
 - 任务配置求值（合并 `$Default`、识别类型默认值等）
@@ -72,6 +74,7 @@
 ### 6. 诊断引擎
 
 对 pipeline 和 interface 文件进行完整性检查（约 25 种诊断类型）：
+
 - 任务冲突检测
 - 未知引用检测（任务、锚点、图片、属性）
 - 重复条目检测
@@ -83,6 +86,7 @@
 ### 7. 运行时配置构建
 
 从 interface 配置和用户选择构建可执行的运行时对象：
+
 - `buildControllerRuntime()` — 构建控制器运行时常量
 - `buildResourceRuntime()` — 构建资源路径运行时
 - `buildOption()` — 解析选项依赖链

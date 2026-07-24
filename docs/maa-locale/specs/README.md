@@ -13,10 +13,9 @@
 ### 类型安全模板
 
 ```typescript
-type CountBrace<Str, Cnt extends string[] = []> =
-  Str extends `${string}{${number}}${infer Rest}`
-    ? CountBrace<Rest, [...Cnt, '']>
-    : Cnt['length']
+type CountBrace<Str, Cnt extends string[] = []> = Str extends `${string}{${number}}${infer Rest}`
+  ? CountBrace<Rest, [...Cnt, '']>
+  : Cnt['length']
 ```
 
 利用递归条件类型计数占位符，编译期强制参数数量匹配。

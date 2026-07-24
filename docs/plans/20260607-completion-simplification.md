@@ -12,15 +12,16 @@
 
 [completion.ts](../../../pkgs/extension/src/service/language/pipeline/completion.ts) `provideCompletionItems` ~150 行，核心 5 路 if-else：
 
-| 分支 | 条件 | 补全内容 | 特殊点 |
-|---|---|---|---|
-| Branch 1 | `next`(obj,!A) / `anchor`(ref) / `reco` / `color_filter` / `custom_task` / `entry` | task name | `color_filter` 额外过滤 ColorMatch |
-| Branch 2 | `next`(obj,A) / `custom_anchor` | anchor name | — |
-| Branch 3 | `next`(!obj) / `roi` / `target` | 前缀 + task/anchor + roi subName | 最复杂分支，~70 行 |
-| Branch 4 | `template` / `custom_template` | image folder + file | — |
-| Branch 5 | `locale` | locale key | early return，结构不同 |
+| 分支     | 条件                                                                               | 补全内容                         | 特殊点                             |
+| -------- | ---------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------- |
+| Branch 1 | `next`(obj,!A) / `anchor`(ref) / `reco` / `color_filter` / `custom_task` / `entry` | task name                        | `color_filter` 额外过滤 ColorMatch |
+| Branch 2 | `next`(obj,A) / `custom_anchor`                                                    | anchor name                      | —                                  |
+| Branch 3 | `next`(!obj) / `roi` / `target`                                                    | 前缀 + task/anchor + roi subName | 最复杂分支，~70 行                 |
+| Branch 4 | `template` / `custom_template`                                                     | image folder + file              | —                                  |
+| Branch 5 | `locale`                                                                           | locale key                       | early return，结构不同             |
 
 痛点：
+
 1. 条件表达式混合 type + 运行时属性（`objMode`、`attrs.Anchor`、`attrs.JumpBack`），可读性差
 2. 同一 `task.next` 散落在 3 个分支中
 3. 前缀补全、核心补全、来源特有附加——三个关注点交织
@@ -36,6 +37,7 @@
 **字符串模式** — ref 的值是 JSON 字符串，可能带 `[Anchor]`/`[JumpBack]` 前缀。有前缀补全，range 需跳过前缀偏移。覆盖 3 个 type（`next`、`target`、`roi`）。
 
 在这两种模式之上，只有 **2 个特殊配置**：
+
 1. `color_filter` 需要过滤 ColorMatch 任务（唯一需要 `taskFilter` 的 type）
 2. `locale` 的 range 是 `±2`（`$key` 比普通字符串多一个 `$`）
 
@@ -68,7 +70,9 @@ class CompletionSpec {
   readonly rangeExpandRight: number
   readonly taskFilter?: (info: TaskBriefInfo) => boolean
 
-  private constructor(/* ... */) { /* ... */ }
+  private constructor(/* ... */) {
+    /* ... */
+  }
 
   // ── 对象模式：简单名称补全 ──────────────────
 
@@ -95,9 +99,7 @@ class CompletionSpec {
    * 补全 anchor name（[Anchor] 前缀已在值中）。
    * 覆盖：next(!obj,A), target(A), roi(A)
    */
-  static anchorWithPrefix(
-    attrs: TaskAttrInfo<'Anchor'>
-  ): CompletionSpec
+  static anchorWithPrefix(attrs: TaskAttrInfo<'Anchor'>): CompletionSpec
 
   // ── 非名称补全 ─────────────────────────────
 
@@ -187,6 +189,7 @@ private resolveCompletionSpec(ref: TaskRefInfo): CompletionSpec | null {
 ```
 
 要点：
+
 - 常见模式一眼可辨：`CompletionSpec.task()` 一行收工（6 个 case）
 - 特殊配置视觉突出：`.withColorMatchFilter()` 链式调用仅 1 处
 - `target` 和 `roi` 的 Anchor/!Anchor 分叉结构完全一致，阅读时可快速跳过
@@ -304,6 +307,7 @@ private buildCompletionItems(
 ```
 
 三个关注点完全解耦：
+
 1. **前缀补全**：仅依赖 `spec.prefixOptions` 和 `spec.isStringMode`
 2. **核心补全**：仅依赖 `spec.kind`（+ 可选 `spec.taskFilter`）
 3. **来源特有附加**：按 `ref.type` 直接判断（仅 roi 一处）
@@ -352,23 +356,23 @@ async provideCompletionItems(
 
 ## 效果对比
 
-| 维度 | 当前 | 重构后 |
-|---|---|---|
-| `provideCompletionItems` | ~150 行 | ~35 行 |
-| 分支结构 | 5 路 if-else，条件含 2-3 个 clause | spec lookup + kind switch（2 层） |
-| 理解 "next 补全什么" | 跨 3 个分支搜索 | `resolveCompletionSpec` 的 `task.next` case（~10 行） |
-| 理解 "task name 怎么补全" | 在多个分支中找 task 补全代码 | `buildCompletionItems` 的 `case 'task'` 块 |
-| 新增 ref type | 添加条件表达式 + range + item | `resolveCompletionSpec` 中 1 行工厂调用 |
-| 修改前缀行为 | 定位到 Branch 3 的条件段 | `spec.prefixOptions` 驱动，改动点明确 |
-| 关注点耦合 | 前缀 + 核心 + 附加交织 | 三个独立步骤，顺序执行 |
+| 维度                      | 当前                               | 重构后                                                |
+| ------------------------- | ---------------------------------- | ----------------------------------------------------- |
+| `provideCompletionItems`  | ~150 行                            | ~35 行                                                |
+| 分支结构                  | 5 路 if-else，条件含 2-3 个 clause | spec lookup + kind switch（2 层）                     |
+| 理解 "next 补全什么"      | 跨 3 个分支搜索                    | `resolveCompletionSpec` 的 `task.next` case（~10 行） |
+| 理解 "task name 怎么补全" | 在多个分支中找 task 补全代码       | `buildCompletionItems` 的 `case 'task'` 块            |
+| 新增 ref type             | 添加条件表达式 + range + item      | `resolveCompletionSpec` 中 1 行工厂调用               |
+| 修改前缀行为              | 定位到 Branch 3 的条件段           | `spec.prefixOptions` 驱动，改动点明确                 |
+| 关注点耦合                | 前缀 + 核心 + 附加交织             | 三个独立步骤，顺序执行                                |
 
 ## 与 makeDecls/makeRefs 的架构一致性
 
-| 能力 | 核心策略 | Provider 角色 |
-|---|---|---|
-| Definition | `makeDecls` / `makeRefs` | 调用 + 组装 Location |
-| Reference | `makeDecls` / `makeRefs` | 调用 + 组装 Location |
-| **Completion** | **`resolveCompletionSpec` + `buildCompletionItems`** | **调用 + 返回** |
+| 能力           | 核心策略                                             | Provider 角色        |
+| -------------- | ---------------------------------------------------- | -------------------- |
+| Definition     | `makeDecls` / `makeRefs`                             | 调用 + 组装 Location |
+| Reference      | `makeDecls` / `makeRefs`                             | 调用 + 组装 Location |
+| **Completion** | **`resolveCompletionSpec` + `buildCompletionItems`** | **调用 + 返回**      |
 
 ## 文件组织
 
@@ -410,7 +414,8 @@ export async function provideCompletionItemsLegacy(
 // completion.ts
 import { provideCompletionItemsLegacy } from './completion-legacy'
 
-export class PipelineCompletionProvider extends PipelineLanguageProvider
+export class PipelineCompletionProvider
+  extends PipelineLanguageProvider
   implements vscode.CompletionItemProvider<CustomCompletionItem>
 {
   // ... constructor 等 ...
@@ -436,12 +441,17 @@ export class PipelineCompletionProvider extends PipelineLanguageProvider
   }
 
   // ── V2 私有方法 ──
-  private resolveCompletionSpec(ref: TaskRefInfo): CompletionSpec | null { /* ... */ }
-  private buildCompletionItems(ref, spec, layer, intBundle, document) { /* ... */ }
+  private resolveCompletionSpec(ref: TaskRefInfo): CompletionSpec | null {
+    /* ... */
+  }
+  private buildCompletionItems(ref, spec, layer, intBundle, document) {
+    /* ... */
+  }
 }
 ```
 
 关键点：
+
 - 旧逻辑通过 `.call(this, ...)` 注入 `this`——函数体内 `this.flush()` 等工作如常
 - 新逻辑作为私有方法，直接访问 `this`
 - 公开的 `provideCompletionItems` 先执行公共前置逻辑，再根据 setting 分支
@@ -450,7 +460,7 @@ export class PipelineCompletionProvider extends PipelineLanguageProvider
 
 ```jsonc
 {
-  "maa.pipelineCompletionV2": true  // false = 走 completion-legacy.ts
+  "maa.pipelineCompletionV2": true // false = 走 completion-legacy.ts
 }
 ```
 
@@ -472,6 +482,7 @@ export class PipelineCompletionProvider extends PipelineLanguageProvider
 ### Phase 3：验证
 
 手动测试各 ref type 的补全行为与重构前一致。重点关注：
+
 - `next` 的 obj/string 模式切换 + JumpBack/Anchor 前缀
 - `color_filter` 的 ColorMatch 过滤
 - `roi` 的 subName 历史

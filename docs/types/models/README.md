@@ -21,13 +21,14 @@
 
 定义三个 webview panel 的双向通信协议：
 
-| Panel | 类型文件 |
-|---|---|
+| Panel   | 类型文件                 |
+| ------- | ------------------------ |
 | Control | `src/webview/control.ts` |
-| Crop | `src/webview/crop.ts` |
-| Launch | `src/webview/launch.ts` |
+| Crop    | `src/webview/crop.ts`    |
+| Launch  | `src/webview/launch.ts`  |
 
 每个协议定义：
+
 - `{Panel}HostState` — Host 推送的状态数据
 - `{Panel}HostToWeb` — Host → Webview 消息
 - `{Panel}WebToHost` — Webview → Host 消息

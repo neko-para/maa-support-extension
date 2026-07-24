@@ -51,16 +51,16 @@ src/
 
 ### 外部依赖
 
-| 包 | 用途 |
-|---|---|
-| `@babel/types` | AST 节点构造和验证 |
-| `prettier` | peer 依赖，Prettier 插件 API |
+| 包             | 用途                         |
+| -------------- | ---------------------------- |
+| `@babel/types` | AST 节点构造和验证           |
+| `prettier`     | peer 依赖，Prettier 插件 API |
 
 ## 技术选型
 
-| 选择 | 理由 |
-|---|---|
+| 选择                       | 理由                                                     |
+| -------------------------- | -------------------------------------------------------- |
 | Babel AST (`@babel/types`) | Prettier 内部使用 Babel 解析 JSON，复用 AST 避免额外解析 |
-| 后处理模式 | 在 Prettier 格式化前插入，确保排序后仍由 Prettier 格式化 |
-| `patchPlugin()` | 解决多插件冲突，允许与其他 JSON Prettier 插件共存 |
-| 正则文件过滤器 | 精确控制插件作用域，避免影响非 MAA 的 JSON 文件 |
+| 后处理模式                 | 在 Prettier 格式化前插入，确保排序后仍由 Prettier 格式化 |
+| `patchPlugin()`            | 解决多插件冲突，允许与其他 JSON Prettier 插件共存        |
+| 正则文件过滤器             | 精确控制插件作用域，避免影响非 MAA 的 JSON 文件          |

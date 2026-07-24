@@ -4,11 +4,11 @@
 
 ## 构建工具链
 
-| 工具 | 用途 | 使用者 |
-|---|---|---|
-| `tsdown` | TypeScript 库打包 (ESM) | 大部分包 |
-| `vite` | Vue 3 webview 构建 | `@mse/webview` |
-| `node scripts/build.mjs` | 构建编排 | 项目根 |
+| 工具                     | 用途                    | 使用者         |
+| ------------------------ | ----------------------- | -------------- |
+| `tsdown`                 | TypeScript 库打包 (ESM) | 大部分包       |
+| `vite`                   | Vue 3 webview 构建      | `@mse/webview` |
+| `node scripts/build.mjs` | 构建编排                | 项目根         |
 
 ## 构建流程
 
@@ -49,14 +49,14 @@ npm run build
 simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipeline-manager → maa-tools → prettier-plugin-maafw-sort
 ```
 
-| 包 | npm 名 |
-|---|---|
-| `maa-locale` | `@nekosu/maa-locale` |
-| `maa-pipeline-manager` | `@nekosu/maa-pipeline-manager` |
-| `maa-tasker` | `@nekosu/maa-tasker` |
-| `maa-tools` | `@nekosu/maa-tools` |
-| `maa-version-manager` | `@nekosu/maa-version-manager` |
-| `simple-parser` | `@nekosu/simple-parser` |
+| 包                           | npm 名                               |
+| ---------------------------- | ------------------------------------ |
+| `maa-locale`                 | `@nekosu/maa-locale`                 |
+| `maa-pipeline-manager`       | `@nekosu/maa-pipeline-manager`       |
+| `maa-tasker`                 | `@nekosu/maa-tasker`                 |
+| `maa-tools`                  | `@nekosu/maa-tools`                  |
+| `maa-version-manager`        | `@nekosu/maa-version-manager`        |
+| `simple-parser`              | `@nekosu/simple-parser`              |
 | `prettier-plugin-maafw-sort` | `@nekosu/prettier-plugin-maafw-sort` |
 
 > **历史设计问题**: 当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动更新。发布流程未自动传递版本变更。
@@ -76,14 +76,14 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 ### 内部包（`@mse/*` 作用域）
 
-| 包 | 说明 |
-|---|---|
-| `types` | 仅内部消费，无 `publishConfig` |
-| `utils` | 仅内部消费，无 `publishConfig` |
-| `webview` | 随 extension 发布 |
-| `maa-server` | 随 extension 发布 |
-| `maa-server-proto` | 随 extension 发布 |
-| `extension` | 发布到 VSCode Marketplace (`maa-support`) |
+| 包                 | 说明                                      |
+| ------------------ | ----------------------------------------- |
+| `types`            | 仅内部消费，无 `publishConfig`            |
+| `utils`            | 仅内部消费，无 `publishConfig`            |
+| `webview`          | 随 extension 发布                         |
+| `maa-server`       | 随 extension 发布                         |
+| `maa-server-proto` | 随 extension 发布                         |
+| `extension`        | 发布到 VSCode Marketplace (`maa-support`) |
 
 ## 开发模式
 

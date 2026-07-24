@@ -43,11 +43,11 @@
 
 ### 三个独立的协议：
 
-| Panel | 消息类型 |
-|---|---|
+| Panel   | 消息类型                                                     |
+| ------- | ------------------------------------------------------------ |
 | Control | [ControlHostToWeb / ControlWebToHost](../types/tech/#协议流) |
-| Crop | [CropHostToWeb / CropWebToHost](../types/tech/#协议流) |
-| Launch | [LaunchHostToWeb / LaunchWebToHost](../types/tech/#协议流) |
+| Crop    | [CropHostToWeb / CropWebToHost](../types/tech/#协议流)       |
+| Launch  | [LaunchHostToWeb / LaunchWebToHost](../types/tech/#协议流)   |
 
 ## Channel 2: Extension ↔ Maa Server (TCP JSON-RPC)
 
@@ -59,13 +59,13 @@
 
 ### RPC Channel 常量
 
-| Channel | 类型 | 方向 | 说明 |
-|---|---|---|---|
-| `initNoti` | Notification | Server → Host | 连接握手（含 client ID） |
-| `logNoti` | Notification | Server → Host | 日志转发 |
-| `shutdownNoti` | Notification | Server → Host | 关闭信号 |
-| `hostToSubReq` | Request | Host → Server | Host 调用 Server 方法 |
-| `subToHostReq` | Request | Server → Host | Server 调用 Host 方法 |
+| Channel        | 类型         | 方向          | 说明                     |
+| -------------- | ------------ | ------------- | ------------------------ |
+| `initNoti`     | Notification | Server → Host | 连接握手（含 client ID） |
+| `logNoti`      | Notification | Server → Host | 日志转发                 |
+| `shutdownNoti` | Notification | Server → Host | 关闭信号                 |
+| `hostToSubReq` | Request      | Host → Server | Host 调用 Server 方法    |
+| `subToHostReq` | Request      | Server → Host | Server 调用 Host 方法    |
 
 ### Proxy 模式
 
@@ -73,12 +73,12 @@
 
 ```typescript
 // Host 端
-ipc.updateController(runtime)  // 自动转换为 hostToSubReq JSON-RPC 调用
+ipc.updateController(runtime) // 自动转换为 hostToSubReq JSON-RPC 调用
 ipc.$ = { pushNotify: handler } // 注册 subToHostReq 处理器
 
 // Server 端
-ipc.quickPick(items)            // 自动转换为 subToHostReq JSON-RPC 调用
-ipc.$ = { postTask: handler }   // 注册 hostToSubReq 处理器
+ipc.quickPick(items) // 自动转换为 subToHostReq JSON-RPC 调用
+ipc.$ = { postTask: handler } // 注册 hostToSubReq 处理器
 ```
 
 两端 Proxy 对 `then` 属性固定返回 `undefined`，使 IPC 对象保持 non-thenable。否则 `await` 或 Promise resolution 会把 Proxy 当作 Promise，并将 `then` 误发为 RPC 方法。
@@ -93,10 +93,10 @@ ipc.$ = { postTask: handler }   // 注册 hostToSubReq 处理器
 
 ## 设计理由
 
-| 设计 | 理由 |
-|---|---|
-| TCP 而非 stdio | Server 可能提权运行（UAC），stdio 管道会断开 |
-| `vscode-jsonrpc` | VSCode 生态标准，支持 JSON-RPC 2.0 全部特性 |
-| Proxy 模式 | 消除样板代码，编译期类型安全 |
-| postMessage 协议 | VS Code webview 唯一支持的通信方式 |
-| `forward.html` 代理 | 实现 Vite HMR 在 webview 沙箱中工作 |
+| 设计                | 理由                                         |
+| ------------------- | -------------------------------------------- |
+| TCP 而非 stdio      | Server 可能提权运行（UAC），stdio 管道会断开 |
+| `vscode-jsonrpc`    | VSCode 生态标准，支持 JSON-RPC 2.0 全部特性  |
+| Proxy 模式          | 消除样板代码，编译期类型安全                 |
+| postMessage 协议    | VS Code webview 唯一支持的通信方式           |
+| `forward.html` 代理 | 实现 Vite HMR 在 webview 沙箱中工作          |

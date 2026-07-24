@@ -22,8 +22,8 @@ import { commands } from '../command'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { autoConvertRangeLocation, convertRange } from './language/utils'
-import { WebviewCropPanel } from './webview/crop'
 import type { ShortcutCommand } from './shortcut'
+import { WebviewCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
   constructor() {
@@ -70,15 +70,11 @@ export class CommandService extends BaseService {
       return true
     })
 
-    this.defer = vscode.commands.registerCommand(commands.Start, () =>
-      this.routeShortcut('start')
-    )
+    this.defer = vscode.commands.registerCommand(commands.Start, () => this.routeShortcut('start'))
     this.defer = vscode.commands.registerCommand(commands.TogglePause, () =>
       this.routeShortcut('toggle-pause')
     )
-    this.defer = vscode.commands.registerCommand(commands.Stop, () =>
-      this.routeShortcut('stop')
-    )
+    this.defer = vscode.commands.registerCommand(commands.Stop, () => this.routeShortcut('stop'))
     this.defer = vscode.commands.registerCommand(commands.Screencap, () =>
       this.routeShortcut('screencap')
     )

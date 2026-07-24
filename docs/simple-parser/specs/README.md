@@ -29,7 +29,8 @@
 ### 流畅 Builder
 
 ```typescript
-rule.for('expr')
+rule
+  .for('expr')
   .when('%token1', 'subrule')
   .do(([tok, sub]) => result)
 ```

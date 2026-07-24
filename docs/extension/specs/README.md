@@ -50,6 +50,7 @@ this.defer = someDisposable
 本包的主要外部接口为 [VSCode Extension API](https://code.visualstudio.com/api) 的 `activate()` / `deactivate()` 生命周期钩子，以及通过 `package.json` 的 `contributes` 字段注册的命令、视图、语言特性。
 
 详见源码：
+
 - 入口: [src/extension.ts](../../../pkgs/extension/src/extension.ts)
 - 服务注册: [src/service/index.ts](../../../pkgs/extension/src/service/index.ts)
 - 命令注册: [src/service/command.ts](../../../pkgs/extension/src/service/command.ts)

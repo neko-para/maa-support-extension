@@ -29,11 +29,11 @@ npx @nekosu/maa-tools check [config-path]
 
 支持三种输出模式：
 
-| 模式 | 说明 |
-|---|---|
-| `stdio` | 人类可读的终端输出（默认） |
+| 模式     | 说明                         |
+| -------- | ---------------------------- |
+| `stdio`  | 人类可读的终端输出（默认）   |
 | `github` | GitHub Actions workflow 注解 |
-| `json` | 机器可读 JSON |
+| `json`   | 机器可读 JSON                |
 
 ### 2. 识别测试 (`test`)
 

@@ -6,10 +6,10 @@
 
 本项目涉及**两套独立**的 pipeline 语法系统，结构和风格相似但彼此无关：
 
-| 系统 | 说明 |
-|---|---|
-| **MaaFramework** | 通用自动化框架的 pipeline 语法。V1（平铺属性）和 V2（`recognition`/`action` 嵌套对象）均为官方支持的语法，可同时存在于同一 pipeline 中。 |
-| **MaaAssistantArknights** | 明日方舟专有项目的 pipeline 语法。引入 `baseTask` 继承机制和 `@` 表达式语法。与 MaaFramework 语法无依赖关系。 |
+| 系统                      | 说明                                                                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **MaaFramework**          | 通用自动化框架的 pipeline 语法。V1（平铺属性）和 V2（`recognition`/`action` 嵌套对象）均为官方支持的语法，可同时存在于同一 pipeline 中。 |
+| **MaaAssistantArknights** | 明日方舟专有项目的 pipeline 语法。引入 `baseTask` 继承机制和 `@` 表达式语法。与 MaaFramework 语法无依赖关系。                            |
 
 ## MaaFramework 语法
 
@@ -78,14 +78,14 @@ MaaAssistantArknights 是独立项目，拥有自己的 pipeline 语法，引入
 }
 ```
 
-| 操作符 | 含义 | 示例 |
-|---|---|---|
-| `@` | 链式继承 | `TaskA@TaskB` |
-| `#` | 虚拟属性 | `TaskA#next` |
-| `*` | 重复 | `TaskA*3` |
-| `+` | 联合 | `TaskA+TaskB` |
-| `^` | 差集 | `TaskA^TaskB` |
-| `()` | 分组 | `(TaskA+TaskB)@Base` |
+| 操作符 | 含义     | 示例                 |
+| ------ | -------- | -------------------- |
+| `@`    | 链式继承 | `TaskA@TaskB`        |
+| `#`    | 虚拟属性 | `TaskA#next`         |
+| `*`    | 重复     | `TaskA*3`            |
+| `+`    | 联合     | `TaskA+TaskB`        |
+| `^`    | 差集     | `TaskA^TaskB`        |
+| `()`   | 分组     | `(TaskA+TaskB)@Base` |
 
 ## 三者的关系
 

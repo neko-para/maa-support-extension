@@ -6,10 +6,10 @@ Extension 在 `service/language/` 下实现了两套并行的 Language Provider 
 
 ## 体系概览
 
-| 体系 | 基类 | 目标文件 | 能力数 | 详细文档 |
-|---|---|---|---|---|
-| Interface Language | `InterfaceLanguageProvider` | `interface.json` 及其 import 文件 | 6 | [interface.md](interface.md) |
-| Pipeline Language | `PipelineLanguageProvider` | pipeline JSON/JSONC + `default_pipeline.json` | 10 | [pipeline.md](pipeline.md) |
+| 体系               | 基类                        | 目标文件                                      | 能力数 | 详细文档                     |
+| ------------------ | --------------------------- | --------------------------------------------- | ------ | ---------------------------- |
+| Interface Language | `InterfaceLanguageProvider` | `interface.json` 及其 import 文件             | 6      | [interface.md](interface.md) |
+| Pipeline Language  | `PipelineLanguageProvider`  | pipeline JSON/JSONC + `default_pipeline.json` | 10     | [pipeline.md](pipeline.md)   |
 
 所有 Provider 在 [index.ts](../../../pkgs/extension/src/service/index.ts) 中统一创建并初始化。
 
@@ -40,10 +40,10 @@ interfaceService.onInterfaceImportChanged ──┘
 
 两个基类各自实现 `makeDecls()` 和 `makeRefs()`：
 
-| 光标位置 | 返回 |
-|---|---|
-| 在 decl 上 | 同名声明 + 所有引用该声明的 ref |
-| 在 ref 上 | 目标声明（+ 同名 ref，仅 Reference 能力） |
+| 光标位置   | 返回                                      |
+| ---------- | ----------------------------------------- |
+| 在 decl 上 | 同名声明 + 所有引用该声明的 ref           |
+| 在 ref 上  | 目标声明（+ 同名 ref，仅 Reference 能力） |
 
 ### 坐标转换
 
@@ -51,18 +51,18 @@ interfaceService.onInterfaceImportChanged ──┘
 
 ## 能力注册矩阵
 
-| VSCode API | Interface | Pipeline |
-|---|---|---|
-| `registerCompletionItemProvider` | ✅ | ✅ |
-| `registerHoverProvider` | ✅（骨架） | ✅ |
-| `registerDefinitionProvider` | ✅ | ✅ |
-| `registerReferenceProvider` | ✅ | ✅ |
-| `registerCodeLensProvider` | ✅ | ✅ |
-| `registerDocumentLinkProvider` | ✅ | ✅ |
-| `registerCodeActionsProvider` | — | ✅ |
-| `registerColorProvider` | — | ✅ |
-| `registerInlayHintsProvider` | — | ✅ |
-| `registerWorkspaceSymbolProvider` | — | ✅ |
+| VSCode API                        | Interface  | Pipeline |
+| --------------------------------- | ---------- | -------- |
+| `registerCompletionItemProvider`  | ✅         | ✅       |
+| `registerHoverProvider`           | ✅（骨架） | ✅       |
+| `registerDefinitionProvider`      | ✅         | ✅       |
+| `registerReferenceProvider`       | ✅         | ✅       |
+| `registerCodeLensProvider`        | ✅         | ✅       |
+| `registerDocumentLinkProvider`    | ✅         | ✅       |
+| `registerCodeActionsProvider`     | —          | ✅       |
+| `registerColorProvider`           | —          | ✅       |
+| `registerInlayHintsProvider`      | —          | ✅       |
+| `registerWorkspaceSymbolProvider` | —          | ✅       |
 
 ## 通用模式
 
@@ -81,6 +81,7 @@ CodeLens 和 InlayHint Provider 使用 50ms debounce 合并高频事件，避免
 ### MAA 双模式
 
 Pipeline 体系在以下维度分支处理 `isMaaAssistantArknights`：
+
 - 触发字符（`"@#+^(` vs `"[]$`）
 - 任务名解析（`task@sub` 命名空间 vs 扁平命名）
 - 后缀约定（`tasks` vs `pipeline`、`template` vs `image`）

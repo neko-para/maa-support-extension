@@ -56,6 +56,7 @@
 ### IPC 通信
 
 `useIpc<ToWeb, ToHost>()` 泛型 composable：
+
 - `send()` — 单向发送
 - `call()` — request-response（通过 `seq` 匹配）
 - `recv()` — 消息接收回调
@@ -65,6 +66,7 @@
 ### 主题集成
 
 `useTheme()` composable：
+
 - 读取 VS Code CSS 自定义属性（`--vscode-*`）
 - 动态构建 Naive UI 主题覆盖
 - `MutationObserver` 监听主题变化

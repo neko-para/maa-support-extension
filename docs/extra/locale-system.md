@@ -22,14 +22,14 @@
 
 ## 差异
 
-| 方面 | `@nekosu/maa-locale` | Webview locale |
-|---|---|---|
-| 发布方式 | npm 包 | 内联源码 |
-| 构建 | tsdown | Vite |
-| 消费方式 | `import { t }` | `import { t }` |
-| 字典内容 | 插件宿主端 + 诊断消息 | Webview UI 文案 |
-| 依赖 | 零 | 零 |
-| 运行时环境 | Node.js | Browser (webview sandbox) |
+| 方面       | `@nekosu/maa-locale`  | Webview locale            |
+| ---------- | --------------------- | ------------------------- |
+| 发布方式   | npm 包                | 内联源码                  |
+| 构建       | tsdown                | Vite                      |
+| 消费方式   | `import { t }`        | `import { t }`            |
+| 字典内容   | 插件宿主端 + 诊断消息 | Webview UI 文案           |
+| 依赖       | 零                    | 零                        |
+| 运行时环境 | Node.js               | Browser (webview sandbox) |
 
 ## 已知问题
 

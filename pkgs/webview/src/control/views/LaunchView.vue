@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NButton, NCard } from 'naive-ui'
-import Tooltip from '../../components/AppTooltip.vue'
 
+import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { canLaunch } from '../state'

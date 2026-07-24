@@ -103,32 +103,32 @@ Vite (vite.config.ts)
 
 ### 工作区依赖
 
-| 包 | 角色 |
-|---|---|
-| `@mse/types` | IPC 协议类型 |
+| 包                             | 角色                                    |
+| ------------------------------ | --------------------------------------- |
+| `@mse/types`                   | IPC 协议类型                            |
 | `@nekosu/maa-pipeline-manager` | 运行时构建（仅在 control panel 中使用） |
 
 ### 外部依赖
 
-| 包 | 用途 |
-|---|---|
-| `vue` 3.5 | UI 框架 |
-| `naive-ui` 2.43 | 组件库 |
-| `highlight.js` | 语法高亮 |
-| `@vicons/material` | Material Design 图标 |
-| `prettier` | JSON 实时格式化 (JsonCode.vue) |
-| `buffer` | Buffer polyfill (crop tool) |
-| `vite` 7.3 | 构建工具 |
-| `@vitejs/plugin-vue` + `@vitejs/plugin-vue-jsx` | Vite Vue 支持 |
+| 包                                              | 用途                           |
+| ----------------------------------------------- | ------------------------------ |
+| `vue` 3.5                                       | UI 框架                        |
+| `naive-ui` 2.43                                 | 组件库                         |
+| `highlight.js`                                  | 语法高亮                       |
+| `@vicons/material`                              | Material Design 图标           |
+| `prettier`                                      | JSON 实时格式化 (JsonCode.vue) |
+| `buffer`                                        | Buffer polyfill (crop tool)    |
+| `vite` 7.3                                      | 构建工具                       |
+| `@vitejs/plugin-vue` + `@vitejs/plugin-vue-jsx` | Vite Vue 支持                  |
 
 ## 技术选型
 
-| 选择 | 理由 |
-|---|---|
-| Vue 3 + Composition API | 响应式 UI，composition API 便于逻辑复用 |
-| Naive UI | Tree-shaking 友好，内置主题系统适配 VS Code 变量 |
-| Vite 多页面构建 | 三个独立应用无需路由，分别打包 |
-| `forward.html` 代理 | 实现 Vite HMR 在 VS Code webview 沙箱中运行 |
-| `useIpc()` composable | 统一的类型安全 IPC 抽象 |
-| `MutationObserver` 主题同步 | 实时响应 VS Code 主题变化 |
-| Prettier 在线格式化 | `JsonCode.vue` 实时美化 JSON 显示 |
+| 选择                        | 理由                                             |
+| --------------------------- | ------------------------------------------------ |
+| Vue 3 + Composition API     | 响应式 UI，composition API 便于逻辑复用          |
+| Naive UI                    | Tree-shaking 友好，内置主题系统适配 VS Code 变量 |
+| Vite 多页面构建             | 三个独立应用无需路由，分别打包                   |
+| `forward.html` 代理         | 实现 Vite HMR 在 VS Code webview 沙箱中运行      |
+| `useIpc()` composable       | 统一的类型安全 IPC 抽象                          |
+| `MutationObserver` 主题同步 | 实时响应 VS Code 主题变化                        |
+| Prettier 在线格式化         | `JsonCode.vue` 实时美化 JSON 显示                |

@@ -68,27 +68,27 @@ src/
 
 ### 工作区依赖
 
-| 包 | 角色 |
-|---|---|
-| `@nekosu/maa-locale` | 输出国际化 |
-| `@nekosu/maa-pipeline-manager` | Pipeline 加载/诊断 |
-| `@nekosu/maa-version-manager` | MaaFramework 版本管理 |
+| 包                             | 角色                  |
+| ------------------------------ | --------------------- |
+| `@nekosu/maa-locale`           | 输出国际化            |
+| `@nekosu/maa-pipeline-manager` | Pipeline 加载/诊断    |
+| `@nekosu/maa-version-manager`  | MaaFramework 版本管理 |
 
 ### 外部依赖
 
-| 包 | 用途 |
-|---|---|
+| 包              | 用途                    |
+| --------------- | ----------------------- |
 | `@actions/core` | GitHub Actions 注解输出 |
-| `chalk` | 终端颜色 |
-| `jiti` | 运行时 TS 配置加载 |
-| `jsonc-parser` | 测试用例 JSONC 解析 |
-| `workerpool` | 多进程并行测试 |
+| `chalk`         | 终端颜色                |
+| `jiti`          | 运行时 TS 配置加载      |
+| `jsonc-parser`  | 测试用例 JSONC 解析     |
+| `workerpool`    | 多进程并行测试          |
 
 ## 技术选型
 
-| 选择 | 理由 |
-|---|---|
-| `jiti` 配置加载 | TypeScript 配置文件，IDE 类型检查 |
-| `workerpool` | 多进程并行，隔离 MAA 实例 |
-| 三态输出模式 | 统一 CLI/CI/API 消费 |
+| 选择                             | 理由                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| `jiti` 配置加载                  | TypeScript 配置文件，IDE 类型检查                                                   |
+| `workerpool`                     | 多进程并行，隔离 MAA 实例                                                           |
+| 三态输出模式                     | 统一 CLI/CI/API 消费                                                                |
 | devDependency 作为 fallback 版本 | 从 devDeps 读取 `@maaxyz/maa-node`，使默认运行时版本与编译/类型检查版本保持单一来源 |

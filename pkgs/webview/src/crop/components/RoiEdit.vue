@@ -58,7 +58,7 @@ async function paste() {
 
 <template>
   <n-flex align="center">
-    <n-text v-if="label" style="min-width: 48px;">{{ label }}</n-text>
+    <n-text v-if="label" style="min-width: 48px">{{ label }}</n-text>
     <div>
       <n-input v-model:value="cache" :readonly="readonly" size="small"></n-input>
     </div>

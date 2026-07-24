@@ -54,31 +54,31 @@ src/
 
 ### 工作区依赖
 
-| 包 | 角色 |
-|---|---|
-| `@mse/maa-server-proto` | 协议类型和 RPC channel 定义 |
-| `@mse/types` | 共享类型 |
+| 包                             | 角色                                                 |
+| ------------------------------ | ---------------------------------------------------- |
+| `@mse/maa-server-proto`        | 协议类型和 RPC channel 定义                          |
+| `@mse/types`                   | 共享类型                                             |
 | `@nekosu/maa-pipeline-manager` | 运行时类型 (`ControllerRuntime`, `InterfaceRuntime`) |
 
 ### 外部依赖
 
-| 包 | 用途 |
-|---|---|
-| `@maaxyz/maa-node` | MaaFramework 原生绑定（运行时动态导入） |
-| `vscode-jsonrpc` | JSON-RPC 传输层 |
-| `source-map-support` | 源码映射 |
-| `uuid` | 实例 ID 生成 |
-| `semver` | 版本号比较 |
+| 包                   | 用途                                    |
+| -------------------- | --------------------------------------- |
+| `@maaxyz/maa-node`   | MaaFramework 原生绑定（运行时动态导入） |
+| `vscode-jsonrpc`     | JSON-RPC 传输层                         |
+| `source-map-support` | 源码映射                                |
+| `uuid`               | 实例 ID 生成                            |
+| `semver`             | 版本号比较                              |
 
 ## 技术选型
 
-| 选择 | 理由 |
-|---|---|
-| TCP socket 而非 stdio | 子进程可能需要 UAC 提权，stdio 管道会断开 |
-| `vscode-jsonrpc` | VSCode 生态标准，与插件端一致 |
-| 动态 import MaaFramework | 服务器与 MAA 安装位置解耦 |
-| Proxy IPC | 消除样板代码，类型安全的双向调用 |
-| Throwaway instance | 工具操作隔离，避免污染主实例 |
+| 选择                     | 理由                                      |
+| ------------------------ | ----------------------------------------- |
+| TCP socket 而非 stdio    | 子进程可能需要 UAC 提权，stdio 管道会断开 |
+| `vscode-jsonrpc`         | VSCode 生态标准，与插件端一致             |
+| 动态 import MaaFramework | 服务器与 MAA 安装位置解耦                 |
+| Proxy IPC                | 消除样板代码，类型安全的双向调用          |
+| Throwaway instance       | 工具操作隔离，避免污染主实例              |
 
 ## 全局配置
 

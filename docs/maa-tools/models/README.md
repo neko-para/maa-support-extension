@@ -71,3 +71,10 @@ npx @nekosu/maa-tools init
 
 - CLI 不依赖 VSCode
 - 配置通过 TypeScript 文件表达，支持条件类型和辅助函数
+
+## MAA 日志目录
+
+`check` 与 `test` 均通过 `maa.Global.log_dir` 设置 MaaFramework 日志输出目录，将其与工作区文件隔离，避免 MaaFramework 的日志轮转清理波及仓库内的 png 等图片（见 [TODO-23](../../TODO.md)）：
+
+- **`check`**：默认写入 `<cwd>/debug`，可通过配置项 `maaLogDir` 覆盖（保持兼容，默认值由旧版的 `.` 改为 `debug`）
+- **`test`**：经环境变量 `MAAFW_LOG_DIR` 传入 worker，默认 `<cwd>`，各 worker 进程在其下按 `maa-<pool>-<pid>` 子目录隔离

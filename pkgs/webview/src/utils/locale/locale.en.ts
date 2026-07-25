@@ -35,9 +35,10 @@ export default {
   'maa.control.tooltip.open-crop-tool': 'Open the crop tool for image inspection and color picking',
   'maa.control.tooltip.switch-maa-version': 'Switch between different MAA core versions',
   'maa.control.tooltip.toggle-admin': 'Toggle administrator mode for the MAA process',
-  'maa.control.tooltip.toggle-debug': 'Toggle debug mode for verbose logging',
+  'maa.control.tooltip.toggle-debug':
+    'Enable access to the raw image used by each recognition in runtime details',
   'maa.control.tooltip.toggle-save-draw':
-    'Enabling this writes many images to disk and may consume significant disk space',
+    'Save annotated recognition images (draws) to disk; this may create many files and use significant disk space',
   'maa.control.tooltip.activate-shortcuts':
     'Make this VS Code window the sole target for Maa global shortcuts',
   'maa.control.interface.select-interface': 'Select interface',

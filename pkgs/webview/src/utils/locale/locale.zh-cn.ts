@@ -35,8 +35,9 @@ export default {
   'maa.control.tooltip.open-crop-tool': '打开截图工具进行图像检查和取色',
   'maa.control.tooltip.switch-maa-version': '切换不同的 MAA 核心版本',
   'maa.control.tooltip.toggle-admin': '切换 MAA 进程的管理员模式',
-  'maa.control.tooltip.toggle-debug': '切换调试模式以输出详细日志',
-  'maa.control.tooltip.toggle-save-draw': '开启后会有大量图片落盘，并占用较多磁盘空间',
+  'maa.control.tooltip.toggle-debug': '开启后可在运行详情中查看每次识别使用的原始图像（Raw）',
+  'maa.control.tooltip.toggle-save-draw':
+    '将带有识别框和结果标注的可视化图（Draw）保存到磁盘；可能产生大量文件并占用较多空间',
   'maa.control.tooltip.activate-shortcuts': '将当前 VS Code 窗口设为 Maa 全局快捷键的唯一执行目标',
   'maa.control.interface.select-interface': '选择配置',
   'maa.control.resource.resource': '资源',

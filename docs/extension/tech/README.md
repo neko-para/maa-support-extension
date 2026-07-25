@@ -142,10 +142,11 @@ DisposableHelper
 
 ## 日志与存储目录
 
-插件使用 context.storageUri（回退到 context.globalStorageUri）作为存储根目录（下记 storage）：
+插件将项目运行产物与内部存储分开管理：
 
-- **插件自身日志**: storage/mse.log
-- **MAA 日志**: storage/debug/（maafw.log / maa.log）。extension 向 maa-server 传递精确的 `maaLog = <storage>/debug` 路径，maa-server 直接设置 `maa.Global.log_dir = option.maaLog`，日志写入该 `debug` 子目录而非 storage 根目录。这样避免 MaaFramework 以 storage 根目录为日志目录时递归清理其下的 `fixed/*.png`。OpenMaaLog 命令按 maafw.log → maa.log 顺序在 storage/debug/ 下查找。
+- **插件自身日志**: `context.storageUri/mse.log`（无工作区时回退到 `context.globalStorageUri`）
+- **MAA 日志和识别绘图**: 默认写入当前活动 interface 项目的 `debug/`。`maatools.config.mts` 可通过 `cwd` 和 `maaLogDir` 覆盖目录；相对 `cwd` 以工作区根目录为基准，相对 `maaLogDir` 以解析后的项目目录为基准。项目目录不可写或没有活动项目时回退到 `context.storageUri/debug/`。活动项目或配置使解析后的日志目录发生变化时会关闭 maa-server，使下次连接使用新目录。
+- **上传图片副本**: `context.storageUri/fixed/`，与 MAA 日志目录分离，避免 MaaFramework 日志轮转递归清理 PNG。
 - **Native 模块**: context.globalStorageUri/native
 
 ## 构建

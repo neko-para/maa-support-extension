@@ -81,7 +81,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 
 ### 6. MaaFramework 调试图像
 
-- 控制面板工具栏的“保存识别绘图”按钮控制是否将识别绘制图像保存到 `<storage>/debug/vision` 目录，默认关闭
+- 控制面板工具栏的“保存识别绘图”按钮控制是否将识别绘制图像保存到当前 MAA 日志目录的 `vision/` 子目录，默认关闭
 - 控制面板是该选项唯一的用户配置入口，状态保存在当前 VS Code 工作区
 - 启用后可能产生大量图像并占用较多磁盘空间
 - 配置变更会终止当前 MaaFramework 运行实例，并在下次使用时按新配置启动
@@ -120,4 +120,4 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 
 ## MAA 日志与存储目录
 
-插件使用 `context.storageUri`（回退到 `context.globalStorageUri`）作为存储根目录（下记 storage）。extension 向 maa-server 传递精确的 `maaLog = <storage>/debug` 路径，MaaFramework 原生日志（`maafw.log` / `maa.log`）写入该 `debug` 子目录而非 storage 根目录，避免日志轮转清理误删 storage 下的 `fixed/*.png` 等图片。“打开 MAA 日志”命令按 `maafw.log → maa.log` 顺序在 `<storage>/debug` 下查找。
+MaaFramework 原生日志（`maafw.log` / `maa.log`）和识别绘图默认写入当前活动 interface 项目的 `debug/`。`maatools.config.mts` 中的 `cwd`、`maaLogDir` 可覆盖该目录；没有活动项目或项目目录不可写时回退到 `context.storageUri/debug/`（无工作区时再回退到 `context.globalStorageUri/debug/`）。插件自身日志和上传图片副本仍保存在 VS Code storage，Native 模块与跨窗口协调文件仍保存在 global storage。

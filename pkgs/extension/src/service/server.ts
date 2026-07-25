@@ -10,7 +10,7 @@ import {
 } from '@mse/maa-server-proto'
 import { logger } from '@mse/utils'
 
-import { agentService, nativeService, stateService, statusBarService } from '.'
+import { agentService, nativeService, rootService, stateService, statusBarService } from '.'
 import { BaseService, context } from './context'
 import { RpcManager } from './utils/rpc'
 import { WebviewLaunchPanel } from './webview/launch'
@@ -29,6 +29,7 @@ export class ServerService extends BaseService {
   status: boolean
   debugMode: boolean
   saveDraw: boolean
+  maaLogDir: string | null
 
   instMap: Record<string, WebviewLaunchPanel>
 
@@ -48,10 +49,12 @@ export class ServerService extends BaseService {
     this.status = false
     this.debugMode = stateService.state.debugMode ?? true
     this.saveDraw = stateService.state.saveDraw ?? false
+    this.maaLogDir = null
 
     this.instMap = {}
 
     this.rpc.on('connectionLost', () => {
+      this.maaLogDir = null
       this.pushStatus(false)
       statusBarService.showServerStatus('close')
     })
@@ -61,6 +64,32 @@ export class ServerService extends BaseService {
 
   async init() {
     console.log('init ServerService')
+
+    this.defer = rootService.onActiveResourceChanged(() => {
+      void this.handleMaaLogContextChanged()
+    })
+    this.defer = rootService.onConfigChanged(() => {
+      void this.handleMaaLogContextChanged()
+    })
+  }
+
+  private async handleMaaLogContextChanged() {
+    if (!this.maaLogDir) {
+      return
+    }
+
+    try {
+      const nextMaaLogDir = await rootService.resolveMaaLogDir()
+      if (nextMaaLogDir.fsPath === this.maaLogDir) {
+        return
+      }
+    } catch (err) {
+      logger.error(`Failed to resolve changed MAA log directory: ${err}`)
+    }
+
+    this.kill()
+    this.pushStatus(false)
+    statusBarService.showServerStatus('close')
   }
 
   kill() {
@@ -70,6 +99,7 @@ export class ServerService extends BaseService {
     this.instMap = {}
     agentService.stopAll()
     this.rpc.kill()
+    this.maaLogDir = null
     globalThis.maa = undefined
   }
 
@@ -126,11 +156,12 @@ export class ServerService extends BaseService {
 
   async setupServer() {
     statusBarService.showServerStatus('loading~spin')
+    const maaLogDir = await rootService.resolveMaaLogDir()
     if (
       (await nativeService.load()) &&
       (await this.rpc.ensureConnection({
         module: nativeService.activeModulePath,
-        maaLog: vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'debug').fsPath,
+        maaLog: maaLogDir.fsPath,
         debugMode: this.debugMode,
         saveDraw: this.saveDraw
       })) &&
@@ -197,6 +228,7 @@ export class ServerService extends BaseService {
       }
 
       this.pushStatus(true)
+      this.maaLogDir = maaLogDir.fsPath
       statusBarService.showServerStatus('check')
       return true
     } else {

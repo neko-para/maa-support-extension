@@ -1,5 +1,4 @@
 {
-  "maa.command.open-maa-log": "Maa: 打开Maa日志",
   "maa.command.open-ext-log": "Maa: 打开插件日志",
   "maa.command.goto-task": "Maa: 跳转到任务",
   "maa.command.launch-task": "Maa: 执行任务",

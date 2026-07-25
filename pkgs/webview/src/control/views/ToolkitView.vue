@@ -17,11 +17,6 @@ const jumpTargets: {
   tooltip: () => string
 }[] = [
   {
-    label: () => t('maa.control.toolkit.open-maa-log'),
-    target: 'maa-log',
-    tooltip: () => t('maa.control.tooltip.open-maa-log')
-  },
-  {
     label: () => t('maa.control.toolkit.open-ext-log'),
     target: 'ext-log',
     tooltip: () => t('maa.control.tooltip.open-ext-log')

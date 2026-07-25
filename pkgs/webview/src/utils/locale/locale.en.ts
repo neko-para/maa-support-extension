@@ -8,7 +8,6 @@ export default {
   'maa.control.launch': 'Launch',
 
   'maa.control.toolkit.toolkit': 'Toolkit',
-  'maa.control.toolkit.open-maa-log': 'Open Maa Log',
   'maa.control.toolkit.open-ext-log': 'Open Extension Log',
   'maa.control.toolkit.open-crop-tool': 'Open Crop Tool',
   'maa.control.toolkit.switch-maa-version': 'Switch Maa Version',
@@ -32,7 +31,6 @@ export default {
   'maa.control.tooltip.launch': 'Start executing the configured task pipeline',
   'maa.control.tooltip.eval-task': 'Evaluate the current task pipeline (beta)',
   'maa.control.tooltip.eval-list': 'Evaluate an expression against the current task (beta)',
-  'maa.control.tooltip.open-maa-log': 'Open the MAA debug log directory in File Explorer',
   'maa.control.tooltip.open-ext-log': 'Open the extension log directory in File Explorer',
   'maa.control.tooltip.open-crop-tool': 'Open the crop tool for image inspection and color picking',
   'maa.control.tooltip.switch-maa-version': 'Switch between different MAA core versions',

@@ -8,7 +8,6 @@ export default {
   'maa.control.launch': '执行',
 
   'maa.control.toolkit.toolkit': '工具',
-  'maa.control.toolkit.open-maa-log': '打开Maa日志',
   'maa.control.toolkit.open-ext-log': '打开插件日志',
   'maa.control.toolkit.open-crop-tool': '打开截图工具',
   'maa.control.toolkit.switch-maa-version': '切换Maa版本',
@@ -32,7 +31,6 @@ export default {
   'maa.control.tooltip.launch': '开始执行配置好的任务流程',
   'maa.control.tooltip.eval-task': '计算当前任务流程（测试功能）',
   'maa.control.tooltip.eval-list': '对当前任务计算表达式（测试功能）',
-  'maa.control.tooltip.open-maa-log': '在文件浏览器中打开 MAA 调试日志目录',
   'maa.control.tooltip.open-ext-log': '在文件浏览器中打开插件日志目录',
   'maa.control.tooltip.open-crop-tool': '打开截图工具进行图像检查和取色',
   'maa.control.tooltip.switch-maa-version': '切换不同的 MAA 核心版本',

@@ -43,12 +43,12 @@ src/
 4. index.ts → initMaa()         # 动态 import(module) → 加载 MaaFramework
                                  #   设置 maa.Global.debug_mode
                                  #   设置 maa.Global.log_dir = option.maaLog
-                                 #   （精确日志目录，由 Host 传入 <storage>/debug）
+                                 #   （精确日志目录，由 Host 按活动项目解析并传入）
 ```
 
 ## MAA 日志目录
 
-`initMaa()` 直接设置 `maa.Global.log_dir = option.maaLog`。Host（extension）传入精确的 `<storage>/debug` 路径作为 `maaLog`，而非 storage 根目录；MAA 原生日志（`maafw.log` 等）写入该 `debug` 子目录。这样避免 MaaFramework 以 storage 根目录为日志目录时递归清理其下的 `fixed/*.png`。
+`initMaa()` 直接设置 `maa.Global.log_dir = option.maaLog`。Host（extension）默认传入当前活动 interface 项目的 `debug/`，并支持 `maatools.config.mts` 的 `cwd`、`maaLogDir` 覆盖；项目目录不可写或没有活动项目时回退到 VS Code storage 的 `debug/`。MAA 原生日志（`maafw.log` 等）与识别绘图写入这个精确目录，上传图片副本则保留在独立的 storage `fixed/` 中，避免日志轮转误删。
 
 ## 依赖关系
 

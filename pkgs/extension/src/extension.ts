@@ -53,32 +53,6 @@ export async function activate(context: vscode.ExtensionContext) {
   statusBarService.showMaaStatus(nativeService.version)
 
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
-
-  const logPath = context.storageUri ?? context.globalStorageUri
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(commands.OpenMaaLog, async () => {
-      const maaLogCandidates = ['maafw.log', 'maa.log'].map(name =>
-        vscode.Uri.joinPath(logPath, 'debug', name)
-      )
-      for (const maaLogFile of maaLogCandidates) {
-        try {
-          const doc = await vscode.workspace.openTextDocument(maaLogFile)
-          await vscode.window.showTextDocument(doc)
-          return
-        } catch {
-          // Continue trying the next candidate.
-        }
-      }
-
-      vscode.window.showErrorMessage(
-        t(
-          'maa.core.cannot-find-log',
-          maaLogCandidates.map(candidate => candidate.fsPath).join(', ')
-        )
-      )
-    })
-  )
 }
 
 export function deactivate() {}

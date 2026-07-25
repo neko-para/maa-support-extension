@@ -39,7 +39,6 @@ export type NativeSelectOption = {
   subtitle?: string
 }
 export type ToolkitJumpTarget =
-  | 'maa-log'
   | 'ext-log'
   | 'crop-tool'
   | 'switch-maa-ver'

@@ -1,3 +1,6 @@
+import { constants } from 'node:fs'
+import { access, mkdir } from 'node:fs/promises'
+import * as path from 'node:path'
 import * as vscode from 'vscode'
 
 import { logger } from '@mse/utils'
@@ -7,7 +10,7 @@ import type { FullConfig } from '@nekosu/maa-tools'
 import { stateService } from '.'
 import { loadConfig } from '../utils/config'
 import { type ResourceRoot, locateResourceRoot } from '../utils/fs'
-import { BaseService } from './context'
+import { BaseService, context } from './context'
 
 export class RootService extends BaseService {
   resourceRoots: ResourceRoot[] = []
@@ -143,6 +146,39 @@ export class RootService extends BaseService {
         logger.error(`${err}`)
       }
     }
+  }
+
+  private getPreferredMaaLogDir(): vscode.Uri | null {
+    if (!this.activeResource) {
+      return null
+    }
+
+    const configuredCwd = this.config?.cwd?.trim()
+    const projectDir = configuredCwd
+      ? path.resolve(this.activeResource.workspace.fsPath, configuredCwd)
+      : this.activeResource.dirUri.fsPath
+    const configuredLogDir = this.config?.maaLogDir?.trim() || 'debug'
+    return vscode.Uri.file(path.resolve(projectDir, configuredLogDir))
+  }
+
+  async resolveMaaLogDir(): Promise<vscode.Uri> {
+    const fallback = vscode.Uri.joinPath(context.storageUri ?? context.globalStorageUri, 'debug')
+    const preferred = this.getPreferredMaaLogDir()
+    const candidates =
+      preferred && preferred.fsPath !== fallback.fsPath ? [preferred, fallback] : [fallback]
+
+    for (const candidate of candidates) {
+      try {
+        await mkdir(candidate.fsPath, { recursive: true })
+        await access(candidate.fsPath, constants.W_OK)
+        logger.info(`MAA log directory: ${candidate.fsPath}`)
+        return candidate
+      } catch (err) {
+        logger.warn(`Cannot use MAA log directory ${candidate.fsPath}: ${err}`)
+      }
+    }
+
+    throw new Error('No writable MAA log directory is available')
   }
 
   relativePathToRoot(uri: vscode.Uri, sub = '', root?: vscode.Uri) {

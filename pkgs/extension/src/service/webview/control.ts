@@ -71,9 +71,6 @@ export class WebviewControlService extends BaseService {
         }
         case 'toolkitJump':
           switch (data.target) {
-            case 'maa-log':
-              await vscode.commands.executeCommand(commands.OpenMaaLog)
-              break
             case 'ext-log':
               await vscode.commands.executeCommand(commands.OpenExtLog)
               break

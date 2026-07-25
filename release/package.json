@@ -21,10 +21,6 @@
   "contributes": {
     "commands": [
       {
-        "title": "%maa.command.open-maa-log%",
-        "command": "maa.open-maa-log"
-      },
-      {
         "title": "%maa.command.open-ext-log%",
         "command": "maa.open-ext-log"
       },

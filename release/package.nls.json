@@ -1,5 +1,4 @@
 {
-  "maa.command.open-maa-log": "Maa: open maa log",
   "maa.command.open-ext-log": "Maa: open extension log",
   "maa.command.goto-task": "Maa: goto task",
   "maa.command.launch-task": "Maa: launch task",

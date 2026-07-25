@@ -17,7 +17,7 @@ import { isMaaAssistantArknights } from '../../utils/fs'
 import { getTooltipDisabled } from '../../utils/settings'
 import { context } from '../context'
 import type { IpcType } from '../server'
-import { WebviewCropPanel } from './crop'
+import { openCropPanel } from './crop'
 import { isLaunchDev } from './dev'
 
 export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, LaunchWebToHost> {
@@ -137,18 +137,10 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
         this.pushState()
         break
       case 'openCrop': {
-        const panel = new WebviewCropPanel(this.ipc, 'Maa Crop')
-        await panel.init()
-        panel.send({
-          command: 'setImage',
-          image: data.image
+        await openCropPanel(this.ipc, {
+          image: data.image,
+          detail: data.detail
         })
-        if (data.detail) {
-          panel.send({
-            command: 'setRecoDetail',
-            detail: data.detail
-          })
-        }
         break
       }
       case 'gotoTask':

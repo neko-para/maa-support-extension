@@ -15,6 +15,37 @@ import type { IpcType } from '../server'
 import { toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'
 
+export interface OpenCropPayload {
+  image?: string
+  detail?: maa.RecoDetailWithoutDraws
+}
+
+export interface OpenCropResult {
+  opened: true
+  imageAccepted: boolean
+  detailAccepted: boolean
+}
+
+export async function openCropPanel(ipc: IpcType, payload?: OpenCropPayload) {
+  const panel = new WebviewCropPanel(ipc, 'Maa Crop')
+  await panel.init()
+
+  if (typeof payload?.image === 'string' && payload.image.trim()) {
+    panel.send({
+      command: 'setImage',
+      image: payload.image
+    })
+  }
+  if (payload?.detail && typeof payload.detail === 'object') {
+    panel.send({
+      command: 'setRecoDetail',
+      detail: payload.detail
+    })
+  }
+
+  return panel
+}
+
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
   ipc: IpcType
   private configChangedDisposable: vscode.Disposable

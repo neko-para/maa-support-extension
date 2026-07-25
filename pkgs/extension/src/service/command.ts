@@ -23,7 +23,7 @@ import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { autoConvertRangeLocation, convertRange } from './language/utils'
 import type { ShortcutCommand } from './shortcut'
-import { WebviewCropPanel } from './webview/crop'
+import { type OpenCropPayload, type OpenCropResult, openCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
   constructor() {
@@ -112,12 +112,20 @@ export class CommandService extends BaseService {
       })
     })
 
-    this.defer = vscode.commands.registerCommand(commands.OpenCrop, async () => {
-      const ipc = await serverService.ensureServer()
-      if (ipc) {
-        new WebviewCropPanel(ipc, 'Maa Crop').init()
+    this.defer = vscode.commands.registerCommand(
+      commands.OpenCrop,
+      async (payload?: OpenCropPayload): Promise<OpenCropResult | undefined> => {
+        const ipc = await serverService.ensureServer()
+        if (ipc) {
+          await openCropPanel(ipc, payload)
+          return {
+            opened: true,
+            imageAccepted: typeof payload?.image === 'string' && payload.image.trim().length > 0,
+            detailAccepted: !!payload?.detail && typeof payload.detail === 'object'
+          }
+        }
       }
-    })
+    )
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async (task?: string) => {
       await interfaceService.interfaceBundle?.flush()

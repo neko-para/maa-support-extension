@@ -69,6 +69,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 模板匹配
 - 任务识别测试
 - 识别结果详情查看
+- `maa.open-crop` 命令可由其他 VS Code 插件调用；可选参数 `{ image, detail }` 中，`image` 为 data URL，`detail` 为 `maa.RecoDetailWithoutDraws`。省略参数时仍打开空白裁剪工具；成功时返回 `{ opened, imageAccepted, detailAccepted }`
 
 ### 5. MaaFramework 版本管理
 

@@ -23,6 +23,7 @@ import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { autoConvertRangeLocation, convertRange } from './language/utils'
 import type { ShortcutCommand } from './shortcut'
+import { toPngDataUrl } from './utils/png'
 import { type OpenCropPayload, type OpenCropResult, openCropPanel } from './webview/crop'
 
 export class CommandService extends BaseService {
@@ -114,7 +115,13 @@ export class CommandService extends BaseService {
 
     this.defer = vscode.commands.registerCommand(
       commands.OpenCrop,
-      async (payload?: OpenCropPayload): Promise<OpenCropResult | undefined> => {
+      async (payload?: OpenCropPayload | vscode.Uri): Promise<OpenCropResult | undefined> => {
+        if (payload && 'fsPath' in payload) {
+          payload = {
+            image: toPngDataUrl(await vscode.workspace.fs.readFile(payload))
+          }
+        }
+
         const ipc = await serverService.ensureServer()
         if (ipc) {
           await openCropPanel(ipc, payload)

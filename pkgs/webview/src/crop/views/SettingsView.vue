@@ -18,11 +18,6 @@ import * as settingsSt from '../states/settings'
     ></settings-switch>
 
     <settings-input
-      :inst="settingsSt.backgroundFill"
-      :title="t('maa.crop.settings.background-color')"
-      isColor
-    ></settings-input>
-    <settings-input
       :inst="settingsSt.selectFill"
       :title="t('maa.crop.settings.select-color')"
       isColor

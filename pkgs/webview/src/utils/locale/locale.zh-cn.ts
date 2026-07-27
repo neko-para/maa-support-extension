@@ -135,7 +135,6 @@ export default {
   'maa.crop.settings.saving-file-with-roi': '保存时文件名中附带ROI',
   'maa.crop.settings.with-roi': '附带ROI',
   'maa.crop.settings.without-roi': '不附带ROI',
-  'maa.crop.settings.background-color': '背景色',
   'maa.crop.settings.select-color': '选中色',
   'maa.crop.settings.select-opacity': '选中透明度',
   'maa.crop.settings.select-outline-only': '仅显示轮廓',

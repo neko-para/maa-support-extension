@@ -44,6 +44,9 @@ canvasSt.setup(canvasSizeEl, canvasEl)
                 position: 'absolute',
                 left: 0,
                 top: 0,
+                outline:
+                  '1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent))',
+                outlineOffset: '-1px',
                 cursor: controlSt.cursor.value
               }"
               @wheel.prevent="controlSt.onWheel"

@@ -10,6 +10,7 @@ import {
   watch
 } from 'vue'
 
+import { editorBackgroundColor } from '../../utils/theme'
 import { Box, Pos, Size, Viewport } from '../utils/2d'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
@@ -48,7 +49,7 @@ export function useDrawStep(step: DrawStep) {
 export function draw(ctx: CanvasRenderingContext2D) {
   ctx.reset()
 
-  ctx.fillStyle = settingsSt.backgroundFill.eff
+  ctx.fillStyle = editorBackgroundColor.value
   ctx.fillRect(0, 0, ...size.value.flat())
 
   if (imageSt.element.value) {

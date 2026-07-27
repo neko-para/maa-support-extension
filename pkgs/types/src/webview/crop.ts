@@ -2,7 +2,6 @@ import type { HostStateBase } from './base'
 
 export type CropSettings = {
   saveAddRoiInfo?: boolean
-  backgroundFill?: string
   selectFill?: string
   selectOpacity?: number
   selectOutlineOnly?: boolean

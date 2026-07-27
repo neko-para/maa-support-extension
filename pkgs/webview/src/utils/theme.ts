@@ -1,6 +1,8 @@
 import { type GlobalTheme, type GlobalThemeOverrides, darkTheme, lightTheme } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
+export const editorBackgroundColor = ref('white')
+
 export function useTheme(type: 'view' | 'panel') {
   const loaded = ref<boolean>(false)
 
@@ -68,6 +70,8 @@ export function useTheme(type: 'view' | 'panel') {
       document.body.className.indexOf('vscode-high-contrast') !== -1
     const isDark = document.body.className.indexOf('vscode-dark') !== -1
 
+    editorBackgroundColor.value =
+      getVar('--vscode-editor-background') || (isDark ? '#1e1e1e' : 'white')
     theme.value = isLight ? lightTheme : darkTheme
     loaded.value = isLight || isDark
   }

@@ -139,7 +139,6 @@ export default {
   'maa.crop.settings.saving-file-with-roi': 'Add ROI in saved file name',
   'maa.crop.settings.with-roi': 'With ROI',
   'maa.crop.settings.without-roi': 'Without ROI',
-  'maa.crop.settings.background-color': 'Background color',
   'maa.crop.settings.select-color': 'Selected color',
   'maa.crop.settings.select-opacity': 'Selected opacity',
   'maa.crop.settings.select-outline-only': 'Outline only',

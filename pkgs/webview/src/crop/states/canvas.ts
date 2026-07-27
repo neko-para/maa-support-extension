@@ -1,4 +1,14 @@
-import { type ShallowRef, onBeforeUnmount, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  type ReactiveEffectRunner,
+  type ShallowRef,
+  effect,
+  onMounted,
+  onUnmounted,
+  ref,
+  shallowReactive,
+  stop,
+  watch
+} from 'vue'
 
 import { Box, Pos, Size, Viewport } from '../utils/2d'
 import * as controlSt from './control'
@@ -13,7 +23,7 @@ let dashOffset = 0
 
 export type DrawStep = (ctx: CanvasRenderingContext2D, vp: Viewport) => void
 
-export const drawSteps: DrawStep[] = []
+export const drawSteps = shallowReactive<DrawStep[]>([])
 
 export function addDrawStep(step: DrawStep): () => void {
   drawSteps.push(step)
@@ -56,16 +66,8 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ctx.save()
       ctx.globalAlpha = 0.5
       ctx.globalCompositeOperation = 'source-over'
-      const tempCanvas = document.createElement('canvas')
-      tempCanvas.width = maskCanvas.width
-      tempCanvas.height = maskCanvas.height
-      const tempCtx = tempCanvas.getContext('2d')!
-      tempCtx.drawImage(maskCanvas, 0, 0)
-      tempCtx.globalCompositeOperation = 'source-in'
-      tempCtx.fillStyle = 'rgb(0, 255, 0)'
-      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height)
       ctx.drawImage(
-        tempCanvas,
+        maskCanvas,
         0,
         0,
         ...imageSt.size.value.flat(),
@@ -258,14 +260,43 @@ export function draw(ctx: CanvasRenderingContext2D) {
   ctx.moveTo(0, controlSt.current.value.y)
   ctx.lineTo(size.value.w, controlSt.current.value.y)
   ctx.stroke()
+
+  const cropSize = controlSt.cropBox.value.size
+  return settingsSt.selectOutlineOnly.eff && Math.abs(cropSize.w) > 0 && Math.abs(cropSize.h) > 0
 }
 
 export function setup(
   sizeEl: Readonly<ShallowRef<HTMLDivElement | null>>,
   canvasEl: Readonly<ShallowRef<HTMLCanvasElement | null>>
 ) {
-  let resizeObs: ResizeObserver
-  let drawTimer: ReturnType<typeof setInterval>
+  let resizeObs: ResizeObserver | undefined
+  let drawRunner: ReactiveEffectRunner<void> | undefined
+  let drawFrame: number | undefined
+  let animate = false
+
+  const requestDraw = () => {
+    if (drawFrame !== undefined || document.hidden) {
+      return
+    }
+    drawFrame = requestAnimationFrame(() => {
+      drawFrame = undefined
+      drawRunner?.()
+      if (animate && document.hasFocus()) {
+        requestDraw()
+      }
+    })
+  }
+
+  const onVisibilityChange = () => {
+    if (document.hidden) {
+      if (drawFrame !== undefined) {
+        cancelAnimationFrame(drawFrame)
+        drawFrame = undefined
+      }
+    } else {
+      requestDraw()
+    }
+  }
 
   watch(
     () => canvasEl.value,
@@ -277,25 +308,41 @@ export function setup(
         size.value.set(rec.width, rec.height)
         canvasEl.value!.width = rec.width
         canvasEl.value!.height = rec.height
-        draw(ctx)
+        requestDraw()
       }
       resizeObs = new ResizeObserver(resize)
       resizeObs.observe(sizeEl.value!)
       resize()
-      drawTimer = setInterval(() => draw(ctx), 20)
+
+      drawRunner = effect(
+        () => {
+          animate = draw(ctx)
+        },
+        {
+          scheduler: requestDraw
+        }
+      )
+      if (animate) {
+        requestDraw()
+      }
     },
     {
       once: true
     }
   )
 
-  onBeforeUnmount(() => {
-    resizeObs.unobserve(sizeEl.value!)
-  })
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  window.addEventListener('focus', requestDraw)
 
   onUnmounted(() => {
-    if (drawTimer) {
-      clearInterval(drawTimer)
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    window.removeEventListener('focus', requestDraw)
+    resizeObs?.disconnect()
+    if (drawFrame !== undefined) {
+      cancelAnimationFrame(drawFrame)
+    }
+    if (drawRunner) {
+      stop(drawRunner)
     }
   })
 }

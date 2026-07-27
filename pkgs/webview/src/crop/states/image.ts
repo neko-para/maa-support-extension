@@ -32,7 +32,7 @@ export async function set(url: string) {
     data.value = url
     element.value = img
     greenMaskSt.drawing.value = false
-    greenMaskSt.clear()
+    greenMaskSt.reset()
     pickSt.clearSamplePoints()
   } catch (_err) {
     data.value = null

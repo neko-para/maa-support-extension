@@ -99,6 +99,12 @@ Vite (vite.config.ts)
   └── output: ../../release/webview/
 ```
 
+## Crop Canvas 渲染调度
+
+Crop Canvas 采用按需渲染：Vue reactive effect 跟踪 `draw()` 读取的图像、视口、选框、设置和识别结果等状态，状态变更后由 `requestAnimationFrame` 合并到下一浏览器帧绘制。画面静止时不重绘；仅获得焦点的轮廓选区虚线动画会连续请求帧。Webview 隐藏时取消待处理帧，恢复可见后主动补绘。
+
+绿色蒙版直接以绿色像素保存在独立 Canvas 中，并通过 `triggerRef()` 通知主 Canvas 失效；主绘制流程直接叠加该 Canvas，避免每帧创建原图尺寸的临时 Canvas。切换图像时会释放旧蒙版及其历史记录。
+
 ## 依赖关系
 
 ### 工作区依赖
@@ -131,4 +137,5 @@ Vite (vite.config.ts)
 | `forward.html` 代理         | 实现 Vite HMR 在 VS Code webview 沙箱中运行      |
 | `useIpc()` composable       | 统一的类型安全 IPC 抽象                          |
 | `MutationObserver` 主题同步 | 实时响应 VS Code 主题变化                        |
+| 按需 Canvas + rAF 调度      | 合并高频交互绘制，静止或隐藏时停止无效重绘       |
 | Prettier 在线格式化         | `JsonCode.vue` 实时美化 JSON 显示                |

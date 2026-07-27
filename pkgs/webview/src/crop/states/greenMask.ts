@@ -1,4 +1,4 @@
-import { ref, shallowRef } from 'vue'
+import { ref, shallowRef, triggerRef } from 'vue'
 
 import * as imageSt from './image'
 
@@ -27,7 +27,15 @@ export function clear() {
   if (maskCanvas.value && maskCtx.value) {
     saveHistory()
     maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
+    triggerRef(maskCanvas)
   }
+}
+
+export function reset() {
+  maskCanvas.value = null
+  maskCtx.value = null
+  history.length = 0
+  isDrawingStroke.value = false
 }
 
 function saveHistory() {
@@ -49,6 +57,7 @@ export function undo() {
   if (history.length > 0 && maskCanvas.value && maskCtx.value) {
     const imageData = history.pop()!
     maskCtx.value.putImageData(imageData, 0, 0)
+    triggerRef(maskCanvas)
   }
 }
 
@@ -73,7 +82,7 @@ export function drawAt(x: number, y: number) {
     ctx.fill()
     ctx.restore()
   } else {
-    ctx.fillStyle = 'rgba(0, 0, 0, 1)'
+    ctx.fillStyle = 'rgb(0, 255, 0)'
     ctx.beginPath()
     ctx.arc(x, y, radius, 0, Math.PI * 2)
     ctx.fill()
@@ -92,6 +101,7 @@ export function drawAt(x: number, y: number) {
     }
     ctx.putImageData(imageData, left, top)
   }
+  triggerRef(maskCanvas)
 }
 
 const isDrawingStroke = ref(false)

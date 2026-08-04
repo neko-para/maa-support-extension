@@ -10,8 +10,10 @@ export async function buildChain(folders) {
     const folder = folders.shift()
     console.log('build', folder)
 
+    const cwd = path.resolve(import.meta.dirname, '..', folder)
     await build({
-      config: path.resolve(import.meta.dirname, '..', folder, 'tsdown.config.mts')
+      cwd,
+      config: true
     })
   }
 }
@@ -25,9 +27,11 @@ export async function watchChain(folders) {
     const folder = folders.shift()
     console.log('watch', folder)
 
+    const cwd = path.resolve(import.meta.dirname, '..', folder)
     const { promise, resolve } = Promise.withResolvers()
     build({
-      config: path.resolve(import.meta.dirname, '..', folder, 'tsdown.config.mts'),
+      cwd,
+      config: true,
       watch: true,
       onSuccess: resolve
     })

@@ -1,4 +1,4 @@
-import type { HostToWeb, ImplType, WebToHost } from '@mse/types'
+import type { HostToWeb, ImplType, WebToHost } from '@nekosu/maa-types'
 
 export function useIpc<ToWebImpl extends ImplType, ToHostImpl extends ImplType>() {
   type ToWeb = HostToWeb<ToWebImpl>

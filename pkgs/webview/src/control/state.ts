@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue'
 
-import type { ControlHostState } from '@mse/types'
 import {
   type ControllerRuntime,
   type ControllerRuntimeBase,
@@ -9,6 +8,7 @@ import {
   buildControllerRuntime,
   buildResourceRuntime
 } from '@nekosu/maa-pipeline-manager/logic'
+import type { ControlHostState } from '@nekosu/maa-types'
 
 export const hostState = ref<ControlHostState>({})
 export const interfaceJson = ref<Interface>({})

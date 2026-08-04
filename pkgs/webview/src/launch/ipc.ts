@@ -1,4 +1,4 @@
-import type { LaunchHostToWeb, LaunchWebToHost } from '@mse/types'
+import type { LaunchHostToWeb, LaunchWebToHost } from '@nekosu/maa-types'
 
 import { useIpc } from '../utils/ipc'
 

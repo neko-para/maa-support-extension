@@ -2,7 +2,7 @@
 import { NButton, NCard, NFlex, NText } from 'naive-ui'
 import { ref } from 'vue'
 
-import type { ToolkitJumpTarget } from '@mse/types'
+import type { ToolkitJumpTarget } from '@nekosu/maa-types'
 
 import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'

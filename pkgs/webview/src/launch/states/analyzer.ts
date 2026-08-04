@@ -1,4 +1,4 @@
-import type { RealtimeEndParams, RealtimeStartParams } from '@mse/types'
+import type { RealtimeEndParams, RealtimeStartParams } from '@nekosu/maa-types'
 
 import { ipc } from '../ipc'
 

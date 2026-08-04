@@ -3,15 +3,15 @@ import type { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
+import { WebviewProvider, logger, provideWebview } from '@mse/utils'
+import { locale, t } from '@nekosu/maa-locale'
+import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 import type {
   ControlHostState,
   ControlHostToWeb,
   ControlWebToHost,
   InterfaceRevealOption
-} from '@mse/types'
-import { WebviewProvider, logger, provideWebview } from '@mse/utils'
-import { locale, t } from '@nekosu/maa-locale'
-import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-types'
 
 import {
   interfaceService,

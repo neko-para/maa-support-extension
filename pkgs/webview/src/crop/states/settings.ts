@@ -1,6 +1,6 @@
 import { computed, reactive } from 'vue'
 
-import type { CropSettings } from '@mse/types'
+import type { CropSettings } from '@nekosu/maa-types'
 
 import { ipc } from '../ipc'
 import { hostState } from '../state'

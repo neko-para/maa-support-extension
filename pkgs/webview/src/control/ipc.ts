@@ -1,4 +1,4 @@
-import type { ControlHostToWeb, ControlWebToHost } from '@mse/types'
+import type { ControlHostToWeb, ControlWebToHost } from '@nekosu/maa-types'
 
 import { useIpc } from '../utils/ipc'
 

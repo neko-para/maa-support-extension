@@ -11,7 +11,7 @@
     "winston-transport": "^4.9.0"
   },
   "devDependencies": {
-    "@mse/types": "workspace:*",
+    "@nekosu/maa-types": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.5",
     "@types/triple-beam": "^1.3.5",

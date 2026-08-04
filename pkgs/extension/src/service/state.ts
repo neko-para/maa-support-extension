@@ -1,4 +1,4 @@
-import type { CropSettings, EvalTaskConfig } from '@mse/types'
+import type { CropSettings, EvalTaskConfig } from '@nekosu/maa-types'
 
 import { BaseService, context } from './context'
 

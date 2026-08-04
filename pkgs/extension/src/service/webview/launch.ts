@@ -1,15 +1,15 @@
 import * as vscode from 'vscode'
 
+import { WebviewPanelProvider } from '@mse/utils'
+import { locale } from '@nekosu/maa-locale'
+import type { TaskName } from '@nekosu/maa-pipeline-manager'
 import type {
   LaunchHostState,
   LaunchHostToWeb,
   LaunchWebToHost,
   RealtimeEndReason,
   WebToHost
-} from '@mse/types'
-import { WebviewPanelProvider } from '@mse/utils'
-import { locale } from '@nekosu/maa-locale'
-import type { TaskName } from '@nekosu/maa-pipeline-manager'
+} from '@nekosu/maa-types'
 
 import { interfaceService, nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'

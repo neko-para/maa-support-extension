@@ -3,7 +3,7 @@ import { NButton, NCard, NFlex, NPopselect } from 'naive-ui'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
 
-import type { NativeSelectOption } from '@mse/types'
+import type { NativeSelectOption } from '@nekosu/maa-types'
 
 import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'

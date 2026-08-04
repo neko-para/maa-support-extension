@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 
+import { logger } from '@mse/utils'
 import {
   type HostToSubApis,
   type MarkApis,
@@ -7,8 +8,7 @@ import {
   hostToSubReq,
   logNoti,
   subToHostReq
-} from '@mse/maa-server-proto'
-import { logger } from '@mse/utils'
+} from '@nekosu/maa-server-proto'
 
 import { agentService, nativeService, rootService, stateService, statusBarService } from '.'
 import { BaseService, context } from './context'

@@ -1,17 +1,30 @@
 {
-  "name": "@mse/maa-server-proto",
+  "name": "@nekosu/maa-server-proto",
+  "version": "0.1.0",
   "type": "module",
-  "main": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "repository": {
+    "type": "github",
+    "url": "git+https://github.com/neko-para/maa-support-extension.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "lint": "tsc -p . --noEmit"
   },
   "dependencies": {
+    "@nekosu/maa-pipeline-manager": "workspace:*",
+    "@nekosu/maa-types": "workspace:*",
     "vscode-jsonrpc": "^8.2.1"
   },
   "devDependencies": {
     "@maaxyz/maa-node": "5.12.2",
-    "@mse/types": "workspace:*",
-    "@nekosu/maa-pipeline-manager": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.5",
     "typescript": "^5.9.3"

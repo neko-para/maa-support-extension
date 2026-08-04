@@ -6,7 +6,7 @@ import {
   type SubToHostApis,
   hostToSubReq,
   subToHostReq
-} from '@mse/maa-server-proto'
+} from '@nekosu/maa-server-proto'
 
 export let ipc: MarkApis<HostToSubApis, SubToHostApis>
 

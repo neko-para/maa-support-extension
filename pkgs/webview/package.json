@@ -6,7 +6,7 @@
   },
   "devDependencies": {
     "@maaxyz/maa-node": "5.12.2",
-    "@mse/types": "workspace:*",
+    "@nekosu/maa-types": "workspace:*",
     "@nekosu/maa-pipeline-manager": "workspace:*",
     "@types/node": "^25.3.5",
     "@types/vscode-webview": "^1.57.5",

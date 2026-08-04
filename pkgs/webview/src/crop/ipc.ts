@@ -1,4 +1,4 @@
-import type { CropHostToWeb, CropWebToHost } from '@mse/types'
+import type { CropHostToWeb, CropWebToHost } from '@nekosu/maa-types'
 
 import { useIpc } from '../utils/ipc'
 

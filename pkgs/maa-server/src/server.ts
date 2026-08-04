@@ -1,7 +1,7 @@
 import * as net from 'node:net'
 import * as rpc from 'vscode-jsonrpc/node'
 
-import { initNoti, logNoti, shutdownNoti } from '@mse/maa-server-proto'
+import { initNoti, logNoti, shutdownNoti } from '@nekosu/maa-server-proto'
 
 import { ipc, setupIpc } from './apis'
 import {

@@ -3,8 +3,8 @@ import * as net from 'node:net'
 import { v4 } from 'uuid'
 import * as rpc from 'vscode-jsonrpc/node'
 
-import { initNoti, shutdownNoti } from '@mse/maa-server-proto'
 import { logger } from '@mse/utils'
+import { initNoti, shutdownNoti } from '@nekosu/maa-server-proto'
 
 import { ProcessManager } from './process'
 import { makePromise } from './promise'

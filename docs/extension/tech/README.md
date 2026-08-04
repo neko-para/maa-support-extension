@@ -104,8 +104,8 @@ DisposableHelper
 
 | 包                             | 角色                               |
 | ------------------------------ | ---------------------------------- |
-| `@mse/maa-server-proto`        | JSON-RPC 协议类型                  |
-| `@mse/types`                   | 前后端共享类型                     |
+| `@nekosu/maa-server-proto`     | JSON-RPC 协议类型                  |
+| `@nekosu/maa-types`            | 前后端共享类型                     |
 | `@mse/utils`                   | 通用工具 (WebviewProvider, logger) |
 | `@nekosu/maa-locale`           | 国际化                             |
 | `@nekosu/maa-pipeline-manager` | 核心解析引擎                       |

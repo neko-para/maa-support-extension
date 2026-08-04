@@ -4,7 +4,7 @@
 
 ## 包标识
 
-- **npm 包名**: `@mse/maa-server`
+- **npm 包名**: `@nekosu/maa-server`
 - **类型**: MaaFramework 代理进程
 
 ## 目标用户
@@ -63,4 +63,4 @@ VSCode 插件进程可能无法以管理员权限运行，而某些 MaaFramework
 - **启动方式**: `node server.mjs <base64(json_options)>`
 - **传输层**: TCP socket (`127.0.0.1:{port}`)
 - **RPC 协议**: JSON-RPC (via `vscode-jsonrpc`)
-- **协议定义**: [@mse/maa-server-proto](../maa-server-proto/models/)
+- **协议定义**: [@nekosu/maa-server-proto](../maa-server-proto/models/)

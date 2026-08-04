@@ -30,7 +30,7 @@ src/
 │             │ ←── shutdownNoti   │             │
 └─────────────┘                    └─────────────┘
          │                                  │
-         └──── @mse/maa-server-proto ──────┘
+         └──── @nekosu/maa-server-proto ───┘
               (共享类型和 channel 常量)
 ```
 
@@ -40,7 +40,7 @@ src/
 
 | 包                             | 角色                                                 |
 | ------------------------------ | ---------------------------------------------------- |
-| `@mse/types`                   | 共享类型                                             |
+| `@nekosu/maa-types`            | 共享类型                                             |
 | `@nekosu/maa-pipeline-manager` | 运行时类型 (`ControllerRuntime`, `InterfaceRuntime`) |
 
 ### 外部依赖

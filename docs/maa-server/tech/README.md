@@ -56,8 +56,8 @@ src/
 
 | 包                             | 角色                                                 |
 | ------------------------------ | ---------------------------------------------------- |
-| `@mse/maa-server-proto`        | 协议类型和 RPC channel 定义                          |
-| `@mse/types`                   | 共享类型                                             |
+| `@nekosu/maa-server-proto`     | 协议类型和 RPC channel 定义                          |
+| `@nekosu/maa-types`            | 共享类型                                             |
 | `@nekosu/maa-pipeline-manager` | 运行时类型 (`ControllerRuntime`, `InterfaceRuntime`) |
 
 ### 外部依赖

@@ -19,7 +19,7 @@ class WebviewProvider<ToWebImpl, ToHostImpl>
   implements vscode.WebviewViewProvider { ... }
 ```
 
-类型安全的 IPC postMessage 桥，消费 [@mse/types](../types/models/) 的协议类型。
+类型安全的 IPC postMessage 桥，消费 [@nekosu/maa-types](../types/models/) 的协议类型。
 
 ### 自定义 Winston Transport
 

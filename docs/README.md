@@ -45,10 +45,10 @@ VSCode 插件 + CLI 工具的 pnpm monorepo，服务于 MaaFramework 和 MaaAssi
 | 包                                   | 说明                  | 文档                                                       |
 | ------------------------------------ | --------------------- | ---------------------------------------------------------- |
 | `@nekosu/maa-locale`                 | 共享国际化文案        | [maa-locale/](maa-locale/)                                 |
-| `@mse/maa-server`                    | MaaFramework 代理进程 | [maa-server/](maa-server/)                                 |
-| `@mse/maa-server-proto`              | 通信协议定义          | [maa-server-proto/](maa-server-proto/)                     |
+| `@nekosu/maa-server`                 | MaaFramework 代理进程 | [maa-server/](maa-server/)                                 |
+| `@nekosu/maa-server-proto`           | 通信协议定义          | [maa-server-proto/](maa-server-proto/)                     |
 | `@nekosu/maa-version-manager`        | MaaFramework 版本管理 | [maa-version-manager/](maa-version-manager/)               |
-| `@mse/types`                         | 共享类型和协议        | [types/](types/)                                           |
+| `@nekosu/maa-types`                  | 共享类型和协议        | [types/](types/)                                           |
 | `@mse/utils`                         | 插件通用工具          | [utils/](utils/)                                           |
 | `@nekosu/prettier-plugin-maafw-sort` | Prettier 排序插件     | [prettier-plugin-maafw-sort/](prettier-plugin-maafw-sort/) |
 

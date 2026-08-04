@@ -87,5 +87,5 @@ Webview 独立的 locale 系统（复制了 `@nekosu/maa-locale` 的 `t()` / `Co
 
 - 所有 Webview 代码在浏览器沙箱中运行
 - 不直接访问 Node.js API
-- 通过 `@mse/types` 的类型协议与 host 通信
+- 通过 `@nekosu/maa-types` 的类型协议与 host 通信
 - 使用 `Buffer` polyfill 兼容引用的节点类型

@@ -19,7 +19,7 @@
 
 例外：
 
-- `@mse/types`、`@mse/utils`：不构建，由消费方 bundler 直接链接 TypeScript 源码（不对外发布）
+- `@mse/utils`：不构建，由消费方 bundler 直接链接 TypeScript 源码（不对外发布）
 - `@mse/webview`：使用 Vite 构建（浏览器环境）
 
 ## 依赖管理
@@ -35,7 +35,7 @@
 | `@nekosu/*` | 对外发布 | npm        |
 | `@mse/*`    | 内部专用 | 不对外发布 |
 
-**约束**: 对外发布到 npm 的 `@nekosu/*` 包不得依赖 `@mse/*` 包。
+**约束**: 对外发布到 npm 的 @nekosu/_ 包不得依赖 @mse/_ 包。@mse/types、@mse/maa-server-proto、@mse/maa-server 已迁移至 @nekosu/\*（@nekosu/maa-types、@nekosu/maa-server-proto、@nekosu/maa-server）并发布，供跨编辑器核心层复用。
 
 ## 包结构约定
 

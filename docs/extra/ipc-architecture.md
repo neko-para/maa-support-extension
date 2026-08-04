@@ -14,12 +14,12 @@
 │                                                                              │
 │  ┌──────────┐    postMessage     ┌──────────────────┐                        │
 │  │ extension │◄─────────────────►│    webview        │                        │
-│  │  (Host)   │  @mse/types        │  (Vue App)       │                        │
+│  │  (Host)   │  @nekosu/maa-types│  (Vue App)       │                        │
 │  └─────┬─────┘                    └──────────────────┘                        │
 │        │                                                                      │
 │        ├──────────────────────────────────────────┐                           │
 │        │ TCP JSON-RPC (vscode-jsonrpc)             │ child_process.spawn       │
-│        │ @mse/maa-server-proto                     │ (PI_* 环境变量)            │
+│        │ @nekosu/maa-server-proto                  │ (PI_* 环境变量)            │
 │        │                                          │                            │
 │  ┌─────▼─────┐                              ┌─────▼──────────┐                │
 │  │ maa-server│  (独立进程, 可提权)             │  Agent 子进程    │                │
@@ -34,7 +34,7 @@
 
 ## Channel 1: Extension ↔ Webview (postMessage)
 
-### 协议定义: [@mse/types](../types/models/)
+### 协议定义: [@nekosu/maa-types](../types/models/)
 
 - **传输层**: VS Code Webview postMessage API
 - **消息格式**: JSON 对象，`command` 字段判别
@@ -51,7 +51,7 @@
 
 ## Channel 2: Extension ↔ Maa Server (TCP JSON-RPC)
 
-### 协议定义: [@mse/maa-server-proto](../maa-server-proto/models/)
+### 协议定义: [@nekosu/maa-server-proto](../maa-server-proto/models/)
 
 - **传输层**: TCP socket (`127.0.0.1:{port}`)
 - **RPC 框架**: `vscode-jsonrpc`
@@ -69,7 +69,7 @@
 
 ### Proxy 模式
 
-`@mse/extension` 和 `@mse/maa-server` 均使用 JavaScript `Proxy` 实现类型安全的 IPC：
+`@mse/extension` 和 `@nekosu/maa-server` 均使用 JavaScript `Proxy` 实现类型安全的 IPC：
 
 ```typescript
 // Host 端

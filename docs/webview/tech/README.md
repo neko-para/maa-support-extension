@@ -113,7 +113,7 @@ Crop Canvas 采用按需渲染：Vue reactive effect 跟踪 `draw()` 读取的�
 
 | 包                             | 角色                                    |
 | ------------------------------ | --------------------------------------- |
-| `@mse/types`                   | IPC 协议类型                            |
+| `@nekosu/maa-types`            | IPC 协议类型                            |
 | `@nekosu/maa-pipeline-manager` | 运行时构建（仅在 control panel 中使用） |
 
 ### 外部依赖

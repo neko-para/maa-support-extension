@@ -4,13 +4,13 @@
 
 ## 包标识
 
-- **npm 包名**: `@mse/maa-server-proto`
+- **npm 包名**: `@nekosu/maa-server-proto`
 - **类型**: 通信协议定义库
 
 ## 目标用户
 
 - `@mse/extension` — 插件端使用此协议与 server 通信
-- `@mse/maa-server` — server 端实现此协议
+- `@nekosu/maa-server` — server 端实现此协议
 
 ## 核心能力
 

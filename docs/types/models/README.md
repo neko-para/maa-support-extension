@@ -4,15 +4,15 @@
 
 ## 包标识
 
-- **npm 包名**: `@mse/types`
+- **npm 包名**: `@nekosu/maa-types`
 - **类型**: 共享类型和协议定义
 
 ## 目标用户
 
 - `@mse/extension` — 插件 host 端
 - `@mse/webview` — 插件 webview 端
-- `@mse/maa-server` — server 端
-- `@mse/maa-server-proto` — 协议定义端
+- `@nekosu/maa-server` — server 端
+- `@nekosu/maa-server-proto` — 协议定义端
 - `@mse/utils` — 工具端
 
 ## 核心能力
@@ -53,5 +53,5 @@ Crop 协议的 `CropSettings` 仅同步用户可配置的裁剪交互和可视�
 ## 抽象边界
 
 - **纯类型库**，零运行时代码（`LogCategory` 类型除外）
-- 不进行构建（`"main": "./src/index.ts"`，由消费方打包器直接处理）
+- 通过 tsdown 构建为 ESM + dts，发布到 npm
 - 使用 `@maaxyz/maa-node` 和 `@nekosu/maa-pipeline-manager` 类型但不转发

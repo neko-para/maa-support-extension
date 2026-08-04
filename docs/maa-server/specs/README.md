@@ -32,7 +32,7 @@ const { promise, resolve, reject } = makePromise<Type>()
 
 ## 外部接口
 
-本包不暴露 API 给其他包。它的"接口"是 JSON-RPC 协议，定义在 [@mse/maa-server-proto](../maa-server-proto/models/)。
+本包不暴露 API 给其他包。它的"接口"是 JSON-RPC 协议，定义在 [@nekosu/maa-server-proto](../maa-server-proto/models/)。
 
 详见源码：
 

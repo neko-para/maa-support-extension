@@ -70,17 +70,17 @@
 | 包                             | 依赖                                          |
 | ------------------------------ | --------------------------------------------- |
 | `@nekosu/maa-pipeline-manager` | ← `maa-tasker`, `maa-locale`                  |
-| `@mse/types`                   | ← `maa-pipeline-manager`, `maa-node`          |
-| `@mse/maa-server-proto`        | ← `types`, `maa-pipeline-manager`, `maa-node` |
+| `@nekosu/maa-types`            | ← `maa-pipeline-manager`, `maa-node`          |
+| `@nekosu/maa-server-proto`     | ← `types`, `maa-pipeline-manager`, `maa-node` |
 | `@nekosu/maa-version-manager`  | (零内部依赖)                                  |
 
 ### 第 3 层：应用和工具
 
-| 包                  | 依赖                                                          |
-| ------------------- | ------------------------------------------------------------- |
-| `@nekosu/maa-tools` | ← `maa-pipeline-manager`, `maa-locale`, `maa-version-manager` |
-| `@mse/maa-server`   | ← `maa-server-proto`, `types`, `maa-pipeline-manager`         |
-| `@mse/utils`        | ← `types`                                                     |
+| 包                   | 依赖                                                          |
+| -------------------- | ------------------------------------------------------------- |
+| `@nekosu/maa-tools`  | ← `maa-pipeline-manager`, `maa-locale`, `maa-version-manager` |
+| `@nekosu/maa-server` | ← `maa-server-proto`, `types`, `maa-pipeline-manager`         |
+| `@mse/utils`         | ← `types`                                                     |
 
 ### 第 4 层：最终用户
 
@@ -97,7 +97,8 @@
 1. simple-parser (第 0 层)
 2. maa-tasker    (第 1 层)
 3. maa-version-manager, maa-pipeline-manager, maa-locale (第 2 层，并行)
-4. maa-server, maa-tools, extension (第 3-4 层，并行)
-5. prettier-plugin-maafw-sort (独立，第 0 层)
-6. webview (Vite 独立构建)
+4. types, maa-server-proto (第 2 层)
+5. maa-server, maa-tools, extension, utils (第 3-4 层)
+6. prettier-plugin-maafw-sort (独立，第 0 层)
+7. webview (Vite 独立构建)
 ```

@@ -48,7 +48,7 @@ observer.observe(document.body, { attributes: true })
 
 ## 外部接口
 
-三个应用各自通过 `@mse/types` 的协议类型与 host 通信。
+三个应用各自通过 `@nekosu/maa-types` 的协议类型与 host 通信。
 
 详见源码目录：
 

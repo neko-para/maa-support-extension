@@ -34,7 +34,7 @@
 
 - 支持开发模式（Vite HMR via `forward.html` iframe 代理）
 - 支持生产模式（静态 HTML 加载）
-- 泛型参数支持 `@mse/types` 的 IPC 类型
+- 泛型参数支持 `@nekosu/maa-types` 的 IPC 类型
 
 ### 3. 开发模式代理
 

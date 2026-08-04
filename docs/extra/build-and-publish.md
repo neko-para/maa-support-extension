@@ -19,8 +19,9 @@ npm run build
        ① simple-parser
        ② maa-tasker
        ③ maa-version-manager, maa-pipeline-manager, maa-locale (并行)
-       ④ maa-server, maa-tools, extension (并行)
-       ⑤ prettier-plugin-maafw-sort
+       ④ types, maa-server-proto (并行)
+       ⑤ maa-server, maa-tools, extension, utils (并行)
+       ⑥ prettier-plugin-maafw-sort
     2. viteBuild: 构建 webview (Vite 多页面)
 ```
 
@@ -32,8 +33,8 @@ npm run build
 - Source map: 启用
 - 打包策略:
   - 大部分包: 完整打包
-  - `@mse/types` 和 `@mse/utils`: 无需构建（由消费方打包器直接处理）
-  - `@mse/maa-server`: `@maaxyz/maa-node` 不打包（运行时动态导入）
+  - `@mse/utils`: 无需构建（由消费方打包器直接处理）
+  - `@nekosu/maa-server`: `@maaxyz/maa-node` 不打包（运行时动态导入）；tsdown 输出到 `dist/`，`scripts/build.mjs` 再拷贝到 `release/server/`
 
 ### MaaFramework 基线版本
 
@@ -50,17 +51,20 @@ npm run build
 发布顺序由 CI 脚本硬编码（按依赖顺序）：
 
 ```
-simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipeline-manager → maa-tools → prettier-plugin-maafw-sort
+simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipeline-manager → maa-types → maa-server-proto → maa-server → maa-tools → prettier-plugin-maafw-sort
 ```
 
 | 包                           | npm 名                               |
 | ---------------------------- | ------------------------------------ |
-| `maa-locale`                 | `@nekosu/maa-locale`                 |
-| `maa-pipeline-manager`       | `@nekosu/maa-pipeline-manager`       |
-| `maa-tasker`                 | `@nekosu/maa-tasker`                 |
-| `maa-tools`                  | `@nekosu/maa-tools`                  |
-| `maa-version-manager`        | `@nekosu/maa-version-manager`        |
 | `simple-parser`              | `@nekosu/simple-parser`              |
+| `maa-tasker`                 | `@nekosu/maa-tasker`                 |
+| `maa-locale`                 | `@nekosu/maa-locale`                 |
+| `maa-version-manager`        | `@nekosu/maa-version-manager`        |
+| `maa-pipeline-manager`       | `@nekosu/maa-pipeline-manager`       |
+| `types`                      | `@nekosu/maa-types`                  |
+| `maa-server-proto`           | `@nekosu/maa-server-proto`           |
+| `maa-server`                 | `@nekosu/maa-server`                 |
+| `maa-tools`                  | `@nekosu/maa-tools`                  |
 | `prettier-plugin-maafw-sort` | `@nekosu/prettier-plugin-maafw-sort` |
 
 > **历史设计问题**: 当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动更新。发布流程未自动传递版本变更。
@@ -80,14 +84,11 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 ### 内部包（`@mse/*` 作用域）
 
-| 包                 | 说明                                      |
-| ------------------ | ----------------------------------------- |
-| `types`            | 仅内部消费，无 `publishConfig`            |
-| `utils`            | 仅内部消费，无 `publishConfig`            |
-| `webview`          | 随 extension 发布                         |
-| `maa-server`       | 随 extension 发布                         |
-| `maa-server-proto` | 随 extension 发布                         |
-| `extension`        | 发布到 VSCode Marketplace (`maa-support`) |
+| 包          | 说明                                      |
+| ----------- | ----------------------------------------- |
+| `utils`     | 仅内部消费，无 `publishConfig`            |
+| `webview`   | 随 extension 发布                         |
+| `extension` | 发布到 VSCode Marketplace (`maa-support`) |
 
 ## 开发模式
 

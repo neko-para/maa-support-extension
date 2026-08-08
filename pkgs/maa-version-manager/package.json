@@ -16,7 +16,8 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "node --test test/index.test.ts"
   },
   "dependencies": {
     "pacote": "^21.4.0",

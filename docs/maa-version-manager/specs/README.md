@@ -17,7 +17,7 @@ async fetchAllVersions(minimumVersion) {
   const unlock = await this.lock()
   if (!unlock) return []
   try { /* 操作 */ }
-  finally { unlock() }
+  finally { await unlock() }
 }
 ```
 
@@ -29,7 +29,7 @@ async fetchAllVersions(minimumVersion) {
 
 ### 原子安装
 
-先下载到临时目录，最后 `fs.rename()` 原子移动到目标目录。
+临时目录必须创建在 `install/` 下，使最终 `fs.rename()` 不跨文件系统。主包、平台二进制包和 `timestamp` 全部写入 staging 后才可提交。所有异常路径必须在 `finally` 中清理 staging 并释放文件锁。
 
 ## 外部接口
 

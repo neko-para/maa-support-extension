@@ -65,6 +65,9 @@ jobs:
         run: |
           npm run lint
 
+      - name: Test
+        run: pnpm test
+
       - name: Package extension
         shell: bash
         run: |

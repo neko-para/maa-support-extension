@@ -22,6 +22,15 @@
 - `@mse/utils`：不构建，由消费方 bundler 直接链接 TypeScript 源码（不对外发布）
 - `@mse/webview`：使用 Vite 构建（浏览器环境）
 
+## 测试
+
+- **根命令**: `pnpm test` 递归执行所有声明 `test` 脚本的 workspace 包
+- **Node.js 包**: 优先使用 Node.js 24 内置的 `node:test`，测试放在包内 `test/**/*.test.ts`
+- **类型检查**: 测试文件应纳入对应包的 `tsconfig.json`
+- **隔离性**: 文件系统测试使用系统临时目录，不读写用户的真实缓存；网络和原生绑定边界通过可覆盖方法或适配器隔离
+
+首批测试覆盖 `@nekosu/maa-version-manager` 的事务化安装、失败回滚和文件锁释放。VSCode Extension 和 Webview 等需要特殊运行时的包，可保留包级测试适配，但统一由根 `pnpm test` 编排。
+
 ## 依赖管理
 
 - **workspace 依赖**: 使用 `workspace:*` 协议

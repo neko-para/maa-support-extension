@@ -52,6 +52,37 @@ export class MaaVersionManager {
     return path.join(this.installPath, version, 'node_modules')
   }
 
+  private loaderFolder(versionFolder: string) {
+    return path.join(versionFolder, 'node_modules', '@maaxyz', 'maa-node')
+  }
+
+  private binaryFolder(versionFolder: string) {
+    return path.join(
+      versionFolder,
+      'node_modules',
+      '@maaxyz',
+      `maa-node-${process.platform}-${process.arch}`
+    )
+  }
+
+  private isPrepared(versionFolder: string) {
+    return (
+      existsSync(path.join(versionFolder, 'timestamp')) &&
+      existsSync(this.loaderFolder(versionFolder)) &&
+      existsSync(this.binaryFolder(versionFolder))
+    )
+  }
+
+  protected async extract(packageSpec: string, destination: string) {
+    await pacote.extract(packageSpec, destination, {
+      registry: this.registry
+    })
+  }
+
+  protected async commitInstall(stagingFolder: string, versionFolder: string) {
+    await fs.rename(stagingFolder, versionFolder)
+  }
+
   async fetchAllLocalVersions() {
     const release = await this.lock()
     if (!release) {
@@ -116,55 +147,61 @@ export class MaaVersionManager {
       return false
     }
 
-    if (existsSync(versionFolder)) {
-      await fs.writeFile(path.join(versionFolder, 'timestamp'), Date.now().toString())
-      await release()
-      return true
-    }
+    let stagingFolder: string | null = null
+    let progressStarted = false
 
-    progress('prepare-folder')
-
-    const loaderTemp = await fs.mkdtemp(path.join(this.downloadPath, 'loader-'))
-    const binaryTemp = await fs.mkdtemp(path.join(this.downloadPath, 'binary-'))
-
-    progress('download-scripts')
-
-    await pacote.extract(`@maaxyz/maa-node@${version}`, loaderTemp, {
-      registry: this.registry
-    })
-
-    progress('download-binary')
-
-    await pacote.extract(
-      `@maaxyz/maa-node-${process.platform}-${process.arch}@${version}`,
-      binaryTemp,
-      {
-        registry: this.registry
+    try {
+      if (this.isPrepared(versionFolder)) {
+        await fs.writeFile(path.join(versionFolder, 'timestamp'), Date.now().toString())
+        return true
       }
-    )
 
-    progress('move-folders')
+      if (existsSync(versionFolder)) {
+        await fs.rm(versionFolder, { recursive: true, force: true })
+      }
 
-    await fs.mkdir(path.join(versionFolder, 'node_modules', '@maaxyz'), {
-      recursive: true
-    })
-    await fs.writeFile(path.join(versionFolder, 'timestamp'), Date.now().toString())
+      progress('prepare-folder')
+      progressStarted = true
 
-    await fs.rename(loaderTemp, path.join(versionFolder, 'node_modules', '@maaxyz', 'maa-node'))
-    await fs.rename(
-      binaryTemp,
-      path.join(
-        versionFolder,
-        'node_modules',
-        '@maaxyz',
-        `maa-node-${process.platform}-${process.arch}`
+      stagingFolder = await fs.mkdtemp(path.join(this.installPath, '.prepare-'))
+      await fs.mkdir(path.join(stagingFolder, 'node_modules', '@maaxyz'), { recursive: true })
+
+      progress('download-scripts')
+      const loaderFolder = this.loaderFolder(stagingFolder)
+      await fs.mkdir(loaderFolder)
+      await this.extract(`@maaxyz/maa-node@${version}`, loaderFolder)
+
+      progress('download-binary')
+      const binaryFolder = this.binaryFolder(stagingFolder)
+      await fs.mkdir(binaryFolder)
+      await this.extract(
+        `@maaxyz/maa-node-${process.platform}-${process.arch}@${version}`,
+        binaryFolder
       )
-    )
 
-    progress('finish')
+      progress('move-folders')
+      await fs.writeFile(path.join(stagingFolder, 'timestamp'), Date.now().toString())
+      await this.commitInstall(stagingFolder, versionFolder)
+      stagingFolder = null
 
-    release()
-    return true
+      return true
+    } catch {
+      return false
+    } finally {
+      try {
+        if (stagingFolder) {
+          await fs.rm(stagingFolder, { recursive: true, force: true })
+        }
+      } finally {
+        try {
+          if (progressStarted) {
+            progress('finish')
+          }
+        } finally {
+          await release()
+        }
+      }
+    }
   }
 
   async cleanUnused(skipVersions: string[] = []) {

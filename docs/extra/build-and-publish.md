@@ -40,6 +40,12 @@ npm run build
 
 `scripts/.maaver` 记录插件预装的 MaaFramework 版本。更新时必须同步 7 个相关 workspace 包中 `@maaxyz/maa-node` 的精确 devDependency 版本及 `pnpm-lock.yaml`，确保预装运行时、动态下载 fallback 和编译类型保持一致。`scripts/updateMaa.sh` 用于执行这项同步。
 
+## 验证流程
+
+- `pnpm lint` 执行所有包的类型检查和全局 ESLint
+- `pnpm test` 递归执行所有提供 `test` 脚本的包
+- Release CI 在打包和发布前同时运行 lint 和测试
+
 ## 包发布
 
 发布流程由 [.github/workflows/release.yml](../../.github/workflows/release.yml) 驱动。
@@ -91,7 +97,7 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
    - `vsce publish` 发布到 VSCode Marketplace
    - `ovsx publish` 发布到 Open VSX；Open VSX 根据 `.vsix` 中的标记将版本识别为正式版或预发布版，上传时无需再次传入 `--pre-release`
 
-非 tag 推送（分支提交）仅构建和 lint，不发布。
+非 tag 推送（分支提交）仅构建、lint 和测试，不发布。
 
 ### 内部包（`@mse/*` 作用域）
 

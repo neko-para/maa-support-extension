@@ -18,9 +18,9 @@ src/index.ts  (MaaVersionManager 类)
 
 ```
 root/
-├── download/         # 下载临时目录
-│   └── .lock         # proper-lockfile 锁文件
-└── install/          # 已安装版本
+├── download/         # 兼容保留的下载工作目录
+└── install/          # 已安装版本和同文件系统 staging
+    ├── .prepare-*/   # 未提交的安装临时目录
     └── {version}/
         ├── node_modules/@maaxyz/
         │   ├── maa-node/       # JavaScript 脚本
@@ -31,15 +31,13 @@ root/
 ### 安装流程
 
 ```
-1. lock() → 获取文件锁
-2. 从 registry 下载 @maaxyz/maa-node@version
-3. 解压到 download/scripts/
-4. 从 registry 下载 @maaxyz/maa-node-{platform}-{arch}@version
-5. 解压到 download/binary/
-6. rename download/scripts → install/{version}/node_modules/@maaxyz/maa-node
-7. rename download/binary → install/{version}/node_modules/@maaxyz/maa-node-{platform}-{arch}
-8. 写入 timestamp 文件
-9. unlock() → 释放文件锁
+1. `lock()` 获取文件锁
+2. 检查最终目录中的 `timestamp`、主包和平台二进制包；完整则仅刷新时间戳
+3. 删除同版本的旧半成品，在 `install/.prepare-*` 创建 staging 目录
+4. 将 `@maaxyz/maa-node@version` 和平台二进制包解压到 staging
+5. 在 staging 中写入 `timestamp`
+6. 在同一文件系统内原子 `rename` 为 `install/{version}`
+7. `finally` 清理未提交的 staging，关闭进度并释放文件锁
 ```
 
 ## 依赖关系
@@ -52,10 +50,10 @@ root/
 
 ## 技术选型
 
-| 选择              | 理由                                               |
-| ----------------- | -------------------------------------------------- |
-| `pacote`          | 官方 npm 客户端库，可靠处理 registry 协议          |
-| `proper-lockfile` | 跨平台文件锁，防止并发安装冲突                     |
-| 原子 rename       | 同文件系统内 rename 是原子的，防止安装中断导致损坏 |
-| 7 天 GC           | 平衡磁盘使用和便利性                               |
-| Lock-first 模式   | 允许多进程（多个 VSCode 窗口）安全共享             |
+| 选择                       | 理由                                                       |
+| -------------------------- | ---------------------------------------------------------- |
+| `pacote`                   | 官方 npm 客户端库，可靠处理 registry 协议                  |
+| `proper-lockfile`          | 跨平台文件锁，防止并发安装冲突                             |
+| 同盘 staging + 原子 rename | 临时目录位于 `install/` 下，避免跨设备移动并防止暴露半成品 |
+| 7 天 GC                    | 平衡磁盘使用和便利性                                       |
+| Lock-first 模式            | 允许多进程（多个 VSCode 窗口）安全共享                     |

@@ -9,7 +9,7 @@
 - [ ] **TODO-1** — **包划分不合理**: `@mse/utils` 的功能（WebviewProvider、日志）可能更适合归属到 `@mse/extension`。该包被标注为"历史遗留问题"。
 - [x] **TODO-2** — **包作用域设计**: `@nekosu/*`（对外发布）和 `@mse/*`（内部专用）两个作用域为有意设计。`@mse/types`、`@mse/maa-server-proto`、`@mse/maa-server` 已迁移至 `@nekosu/*`（`@nekosu/maa-types`、`@nekosu/maa-server-proto`、`@nekosu/maa-server`）并发布，供跨编辑器核心层复用。剩余 `@mse/*` 包（`utils`、`webview`、`extension`）仍仅限内部使用。已记录到 [common-tech.md](extra/common-tech.md#包作用域)。
 - [x] **TODO-3** — **依赖归类**: `@mse/*` 内部包（不构建、不发布）全部列为 `devDependencies` 是有意设计——由最终消费者的 bundler 直接链接 TypeScript 源码，无需区分运行时/开发依赖。已迁移至 `@nekosu/*` 的包（`maa-types`、`maa-server-proto`、`maa-server`）改按发布包规则归类：运行时依赖放 `dependencies`，`@maaxyz/maa-node` 放 `devDependencies`。已记录到 [common-tech.md](extra/common-tech.md#依赖管理)。
-- [ ] **TODO-4** — **缺失测试基础设施**: 整个 monorepo 无测试目录、无测试脚本、无测试框架。需要确定测试策略、优先测试的包以及统一测试框架。
+- [x] **TODO-4** — **缺失测试基础设施**: 已建立根 `pnpm test` 递归编排和 CI 测试步骤。Node.js 包优先使用 Node.js 24 内置 `node:test`，测试位于包内 `test/**/*.test.ts` 并纳入类型检查；需要特殊运行时的包保留包级适配。首批测试覆盖 `maa-version-manager` 安装事务。约定已记录到 [common-tech.md](extra/common-tech.md#测试)。
 - [ ] **TODO-5** — **Webview locale 与 @nekosu/maa-locale 代码重复**: Webview 有独立的 locale 系统（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。已确认是历史遗留问题。
 - [ ] **TODO-6** — **基础包版本更新时依赖包需手动升版**: 发布流程未自动传递版本变更。当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动逐个更新。属于历史设计问题。
 
@@ -62,7 +62,7 @@
 ## @nekosu/maa-version-manager
 
 - [ ] **TODO-32** — **可变 registry 状态**: `this.registry` 可变，修改后影响所有后续操作。在并发场景下可能导致混乱。
-- [ ] **TODO-33** — **`fs.rename()` 跨设备风险**: `prepare()` 使用 `rename()` 原子移动文件，若 temp 目录和目标目录不在同一文件系统会失败（实际场景中少见）。
+- [x] **TODO-33** — **`fs.rename()` 跨设备风险**: 安装 staging 已移到 `install/` 目录内，最终 `rename()` 始终在同一文件系统中完成。同时修复了异常时不释放锁、遗留半成品及下次误判已安装的问题；现在会验证两个包与时间戳、失败回滚并在 `finally` 中释放锁。
 - [x] **TODO-34** — **pacote 进度限制**: 已确认这是当前依赖的能力边界。`prepare()` 的 `progress` API 明确提供阶段事件而非下载百分比，限制已记录到 maa-version-manager 产品文档。
 
 ## @nekosu/prettier-plugin-maafw-sort

@@ -26,9 +26,11 @@
 
 - 下载 `@maaxyz/maa-node` 主包（JavaScript 脚本）
 - 下载平台特定的二进制包 (`@maaxyz/maa-node-{platform}-{arch}`)
-- 原子性移动到最终安装目录
+- 在 `install/` 下的临时目录完成解压，再原子提交到最终安装目录
+- 仅当时间戳、主包和平台二进制包均存在时，才复用已安装版本
+- 下载或提交失败时返回 `false`，删除临时/半成品目录并释放文件锁
 
-> **技术限制**: 由于 `pacote` 的限制，`progress` 回调无法获取到下载本身的进度（如百分比）。回调仅报告阶段切换（`prepare-folder` → `download-scripts` → `download-binary` → `move-folders` → `finish`）。
+> **技术限制**: 由于 `pacote` 的限制，`progress` 回调无法获取到下载本身的进度（如百分比）。回调仅报告阶段切换（`prepare-folder` → `download-scripts` → `download-binary` → `move-folders` → `finish`）。`finish` 表示本次尝试结束，成功与否以返回值为准。
 
 ### 3. Registry 管理
 
@@ -43,7 +45,7 @@ registries = {
 
 ### 4. 并发安全
 
-通过 `proper-lockfile` 文件锁保护所有文件系统操作，支持多进程并发访问。
+通过 `proper-lockfile` 文件锁保护所有文件系统操作，支持多进程并发访问。安装流程在成功、失败和回调异常路径上都会尝试释放锁。
 
 ### 5. 垃圾回收
 

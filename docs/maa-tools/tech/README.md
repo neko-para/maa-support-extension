@@ -51,6 +51,8 @@ src/
 
 `CachedContentLoader` 在单次检查中缓存文件读取 Promise，使并发 bundle 共享同一份只读文件内容，避免公共资源文件被重复读取。`InterfaceBundle.stop()` 会完整关闭 interface、import、locale 与 resource watcher，确保 `runCheck()` 作为 API 调用时也能自然退出。
 
+`runCheck()` 不是 watch 模式：它只使用 chokidar 的初始扫描生成待加载文件集，完成诊断后即关闭 watcher，项目变更后仍需重新调用 checker。一次性 snapshot 扫描已用 M9A 和 MaaEnd 验证：诊断输出完全一致，但两项目的中位耗时均增加，所以保留 chokidar 的初始扫描实现。
+
 ### test 流程
 
 ```

@@ -103,6 +103,8 @@ src/
 
 `ContentJson` 构造函数只初始化状态，由所属 bundle 显式调用 `load()`，避免构造时的异步加载与调用方加载发生竞争并创建重复 watcher。`InterfaceBundle.stop()` 负责关闭 interface、import、locale 和 resource 的全部 watcher。
 
+CLI checker 虽然是一次性消费者，仍复用 `FsContentWatcher` 的首次扫描和 `ready` 边界加载文件，并在该检查任务结束时立即 `stop()`。曾尝试使用专用的一次性 `fs.readdir()` snapshot 实现；M9A 和 MaaEnd 的输出与现有实现逐字一致，但最佳实验中位数仍分别从 4.874 秒增至 5.130 秒、从 6.298 秒增至 6.816 秒。因此保留 chokidar 的成熟递归扫描，不另行维护 snapshot 分支。
+
 `InterfaceBundle.resolvePaths(controller, resource)` 是无状态路径解析入口；`switchActive()` 和 `updatePaths()` 复用该结果更新活动 bundle。批处理消费者可先计算所有组合的路径，在独立 bundle 中并发处理，而无需并发修改同一个 `InterfaceBundle` 的 active 状态。
 
 ## 依赖关系

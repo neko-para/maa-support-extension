@@ -44,7 +44,7 @@
 
 - [ ] **TODO-22** — **Node.js API 耦合**: 模块深度依赖 Node.js API（`fs`、`path`），导致无法在 browser 环境使用。`IContentLoader` / `IContentWatcher` 等抽象接口未能真正解耦底层实现。这是设计失误。
 - [x] **TODO-23** — **已知罕见 Bug——文件被删除**: checker 执行时，有概率错误删除所有图片文件。代码层面没有任何删除操作，但理论上不应该发生。实际情况是将日志目录设置为工作区根目录后，MaaFramework 会递归清理上次更新时间在7天以上的 png 文件。
-- [ ] **TODO-24** — **事件驱动导致 checker 使用困难**: 事件驱动架构是历史遗留问题，checker 需要同步的一次性结果而非持续的变更事件流。
+- [x] **TODO-24** — **事件驱动导致 checker 使用困难**: checker 目前只复用 chokidar 的初始扫描与 `ready` 边界，诊断完成后会立即关闭 watcher，并不提供文件变化后的持续重检。已实作一次性 snapshot 扫描并在 M9A、MaaEnd 上对比：输出逐字一致，但最佳 snapshot 中位耗时仍由 4.874/6.298 秒增至 5.130/6.816 秒。因此撤销 snapshot 实现，保留 chokidar 的成熟递归扫描，结论记录于 `maa-pipeline-manager` 和 `maa-tools` 技术文档。
 - [ ] **TODO-25** — **自定义解析器局限性**: 自定义 reco/action 解析器无法转发 `pipeline_override` 格式内容，且 AST 产物与标准解析完全隔离。设计失误。
 - [ ] **TODO-26** — **格式切换实验性功能**: `toggleMode()` 会丢失注释，官方推荐使用其他方法迁移。
 - [x] **TODO-27** — **jsonc-parser 父指针剥离**: `shrinkParent()` 使用 `delete` 操作修改 `readonly` 属性。已确认是预期行为——AST 在多处缓存，剥离 parent 指针优化内存占用。代码不依赖 parent 指针，`deepWriteable` 断言是必要的实现手段。

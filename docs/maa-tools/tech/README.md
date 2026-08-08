@@ -39,11 +39,17 @@ src/
 ```
 1. loadConfig(configPath) → FullConfig
 2. setupMaa(cfg) → 下载/加载 MaaFramework
-3. 创建 InterfaceBundle (FsContentLoader + FsContentWatcher)
-4. 遍历 controller×resource 组合
-5. performDiagnostic(bundle, options)
-6. 按 mode 输出诊断
+3. 创建发现用 InterfaceBundle，解析 controller×resource 组合的最终资源路径
+4. 按有序路径列表合并等价组合
+5. 按 `check.job`（默认 `min(4, availableParallelism)`）启动并发任务
+6. 每个任务创建隔离的 InterfaceBundle 和 `maa.Resource`，共享只读文件内容缓存
+7. 在任务内执行 `performDiagnostic()`，并按路径顺序执行 `post_bundle()`
+8. 收集全部结果后按发现顺序格式化并输出诊断
 ```
+
+并发调度在同一 Node.js 进程内完成，以兼容 `maatools.config.mts` 中不可序列化的自定义 parser 函数。每个任务拥有独立的可变 bundle 状态和 MaaFramework Resource；同一资源组内的多个路径仍顺序加载，保持资源覆盖语义。不同 controller/resource 组合若解析为完全相同的有序路径列表，只检查一次，输出标题会列出所有等价组合。
+
+`CachedContentLoader` 在单次检查中缓存文件读取 Promise，使并发 bundle 共享同一份只读文件内容，避免公共资源文件被重复读取。`InterfaceBundle.stop()` 会完整关闭 interface、import、locale 与 resource watcher，确保 `runCheck()` 作为 API 调用时也能自然退出。
 
 ### test 流程
 
@@ -90,5 +96,6 @@ src/
 | -------------------------------- | ----------------------------------------------------------------------------------- |
 | `jiti` 配置加载                  | TypeScript 配置文件，IDE 类型检查                                                   |
 | `workerpool`                     | 多进程并行，隔离 MAA 实例                                                           |
+| check 进程内有限并发             | 保留自定义 parser 函数，并通过隔离 bundle/Resource 避免可变状态竞争                 |
 | 三态输出模式                     | 统一 CLI/CI/API 消费                                                                |
 | devDependency 作为 fallback 版本 | 从 devDeps 读取 `@maaxyz/maa-node`，使默认运行时版本与编译/类型检查版本保持单一来源 |

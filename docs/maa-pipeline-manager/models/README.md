@@ -6,7 +6,7 @@
 
 - **npm 包名**: `@nekosu/maa-pipeline-manager`
 - **类型**: 核心语法解析支持库
-- **版本**: 1.0.11
+- **版本**: 1.0.12
 
 > **已知设计失误**: 模块内依赖了 Node.js 的能力（如 `fs`、`path`），导致无法在 browser 环境中使用。即使做了 `IContentLoader` / `IContentWatcher` 等 FS 层抽象接口，底层实现仍然深度耦合 Node API。
 >
@@ -70,6 +70,7 @@
 - `FsContentLoader` / `FsContentWatcher` — 文件读写和 chokidar 监视
 - `ContentJson<T>` — 带 debounce flush 的 JSON/JSONC 文件监视
 - `Bundle` / `BundleManager` — pipeline 资源目录管理
+- `InterfaceBundle.resolvePaths(controller, resource)` — 在不切换 active 状态的情况下计算有序资源路径，供批处理消费者规划隔离任务
 
 ### 6. 诊断引擎
 

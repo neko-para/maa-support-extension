@@ -6,7 +6,7 @@
 
 - **npm 包名**: `@nekosu/maa-tools`
 - **类型**: CLI 检查器和测试工具
-- **版本**: 1.0.24
+- **版本**: 1.0.25
 
 ## 目标用户
 
@@ -23,9 +23,24 @@ npx @nekosu/maa-tools check [config-path]
 ```
 
 - 加载 interface bundle
-- 遍历所有 controller/resource 组合
-- 运行 [@nekosu/maa-pipeline-manager](../maa-pipeline-manager/models/) 诊断引擎
+- 遍历所有 controller/resource 组合，并合并最终资源路径顺序完全相同的等价组合
+- 对每组唯一资源路径使用隔离的 interface bundle 和 MaaFramework Resource，并发运行 [@nekosu/maa-pipeline-manager](../../maa-pipeline-manager/models/) 诊断引擎与原生资源加载校验
 - 应用用户配置的严重级别覆盖
+- 按资源组发现顺序输出结果，不受并发完成顺序影响
+
+`check.job` 控制最大并发资源组数，必须为大于等于 1 的整数；默认值为 CPU 可用并行度与 4 中的较小值。设置为 `1` 可关闭并发，但仍会合并等价资源组合。
+
+```ts
+const config: FullConfig = {
+  // ...
+  check: {
+    job: 4,
+    override: {
+      'dynamic-image': 'ignore'
+    }
+  }
+}
+```
 
 支持三种输出模式：
 

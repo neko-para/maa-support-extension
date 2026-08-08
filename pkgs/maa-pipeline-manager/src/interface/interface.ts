@@ -201,6 +201,10 @@ export class InterfaceBundle extends EventEmitter<{
 
   stop() {
     this.content.stop()
+    for (const content of this.imports) {
+      content.stop()
+    }
+    this.langBundle.stop()
     for (const bundle of this.bundles) {
       bundle.stop()
     }
@@ -257,13 +261,13 @@ export class InterfaceBundle extends EventEmitter<{
       .map(info => info.name)
   }
 
-  updatePaths() {
+  resolvePaths(controller: string, resource: string) {
     const ctrlInfo = this.info.decls
       .filter(decl => decl.type === 'interface.controller')
-      .find(info => info.name === this.activeController)
+      .find(info => info.name === controller)
     const resInfo = this.info.decls
       .filter(decl => decl.type === 'interface.resource')
-      .find(info => info.name === this.activeResource)
+      .find(info => info.name === resource)
 
     const finalPaths: RelativePath[] = []
     if (resInfo) {
@@ -272,7 +276,13 @@ export class InterfaceBundle extends EventEmitter<{
     if (ctrlInfo) {
       finalPaths.push(...ctrlInfo.attachs)
     }
-    // 这里没去重, 主要是去重的定义不清晰; 之后看有说法再改
+    // 不合并单个组合内的重复路径：路径顺序参与资源覆盖语义，路径等价规则也尚未明确。
+
+    return finalPaths
+  }
+
+  updatePaths() {
+    const finalPaths = this.resolvePaths(this.activeController, this.activeResource)
 
     if (finalPaths.length > 0) {
       if (JSON.stringify(this.paths) === JSON.stringify(finalPaths)) {

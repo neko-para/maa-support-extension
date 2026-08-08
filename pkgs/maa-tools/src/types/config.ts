@@ -23,6 +23,8 @@ export type BaseConfig = {
 }
 
 export type CheckConfig = {
+  /** Maximum number of controller/resource path sets checked concurrently. */
+  job?: number
   override?: Partial<Record<DiagnosticType, 'ignore' | 'warning' | 'error'>>
 }
 

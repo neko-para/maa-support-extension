@@ -54,7 +54,7 @@ src/
 ├── content/                  # 文件系统抽象
 │   ├── loader.ts             # IContentLoader + FsContentLoader
 │   ├── watch.ts              # IContentWatcher + FsContentWatcher
-│   └── json.ts               # ContentJson<T>: JSON/JSONC 文件监视
+│   └── json.ts               # ContentJson<T>: 显式 load/stop 的 JSON/JSONC 文件监视
 ├── bundle/                   # Pipeline 包管理
 │   ├── manager.ts            # BundleManager: 文件事件合并和分发
 │   └── bundle.ts             # Bundle: pipeline 资源目录管理
@@ -100,6 +100,10 @@ src/
                 ▼              ▼
        performDiagnostic()   buildTaskRuntime()
 ```
+
+`ContentJson` 构造函数只初始化状态，由所属 bundle 显式调用 `load()`，避免构造时的异步加载与调用方加载发生竞争并创建重复 watcher。`InterfaceBundle.stop()` 负责关闭 interface、import、locale 和 resource 的全部 watcher。
+
+`InterfaceBundle.resolvePaths(controller, resource)` 是无状态路径解析入口；`switchActive()` 和 `updatePaths()` 复用该结果更新活动 bundle。批处理消费者可先计算所有组合的路径，在独立 bundle 中并发处理，而无需并发修改同一个 `InterfaceBundle` 的 active 状态。
 
 ## 依赖关系
 

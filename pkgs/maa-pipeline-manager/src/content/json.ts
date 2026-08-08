@@ -35,8 +35,6 @@ export class ContentJson<T = any> {
     this.duringFlush = false
     this.flushResolve = []
     this.needFlush = false
-
-    this.load()
   }
 
   async load() {

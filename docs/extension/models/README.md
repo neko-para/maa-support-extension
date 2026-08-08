@@ -5,7 +5,7 @@
 ## 包标识
 
 - **npm 包名**: `@mse/extension`
-- **发布名称**: `maa-support` (VSCode Marketplace, publisher `nekosu`)
+- **发布名称**: `nekosu.maa-support`（VSCode Marketplace 和 Open VSX）
 - **类型**: VSCode 插件
 
 ## 目标用户

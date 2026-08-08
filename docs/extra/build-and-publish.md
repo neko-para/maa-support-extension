@@ -73,22 +73,33 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 **构建产物目录**: `release/` — 插件打包根目录。`package.json`、`README.md`、`images/`、`out/`（编译后的扩展代码）、`webview/`（Vite 构建产物）、`server/`（maa-server）等均位于此目录。修改插件的 `contributes`（命令、配置项、视图等）或 `engines` 等清单字段时，应修改 `release/package.json`，而非源码 `pkgs/extension/package.json`。
 
+**发布目标**: VSCode Marketplace 和 Open VSX，扩展标识均为 `nekosu.maa-support`。两个市场复用同一个 `.vsix` 构建产物，并通过相互独立的 CI job 发布，单个市场发布失败不会阻止另一个市场的发布 job 启动。
+
+**CI secrets**:
+
+| Secret       | 用途                              |
+| ------------ | --------------------------------- |
+| `VSCE_TOKEN` | 发布到 VSCode Marketplace         |
+| `OVSX_PAT`   | 发布到 Open VSX 的 Personal Token |
+
 **方法**: 推送格式为 `v*` 的 git tag（正式版）或 `p*` 的 tag（预发布版）。CI 触发后：
 
 1. 从 tag 名提取版本号（去 `v`/`p` 前缀）
 2. 写入 `release/package.json` 的 `version`
-3. `vsce package` 打包为 `.vsix`
-4. `vsce publish` 发布到 VSCode Marketplace
+3. `vsce package` 打包为 `.vsix`；`v*` tag 生成正式版，`p*` tag 通过 `--pre-release` 写入预发布标记
+4. 下载同一构建产物，并行执行：
+   - `vsce publish` 发布到 VSCode Marketplace
+   - `ovsx publish` 发布到 Open VSX；Open VSX 根据 `.vsix` 中的标记将版本识别为正式版或预发布版，上传时无需再次传入 `--pre-release`
 
 非 tag 推送（分支提交）仅构建和 lint，不发布。
 
 ### 内部包（`@mse/*` 作用域）
 
-| 包          | 说明                                      |
-| ----------- | ----------------------------------------- |
-| `utils`     | 仅内部消费，无 `publishConfig`            |
-| `webview`   | 随 extension 发布                         |
-| `extension` | 发布到 VSCode Marketplace (`maa-support`) |
+| 包          | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| `utils`     | 仅内部消费，无 `publishConfig`                               |
+| `webview`   | 随 extension 发布                                            |
+| `extension` | 发布到 VSCode Marketplace 和 Open VSX (`nekosu.maa-support`) |
 
 ## 开发模式
 

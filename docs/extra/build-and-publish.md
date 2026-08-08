@@ -52,7 +52,22 @@ npm run build
 
 ### 发布 npm 包（`@nekosu/*` 作用域）
 
-**方法**: 手动更新对应包的 `package.json` 中的 `version` 字段，提交到 `main` 分支。CI 检测到新版本号（npm registry 中不存在）后自动执行 `pnpm publish`。
+**方法**: 使用根目录的联动升版脚本，再将所有变更的 `package.json` 一起提交到 `main` 分支。CI 检测到新版本号（npm registry 中不存在）后自动执行 `pnpm publish`。
+
+```bash
+# 默认只预览，不修改文件
+pnpm version-packages maa-tasker=minor
+
+# 应用计划
+pnpm version-packages --write maa-tasker=minor
+
+# 也可指定完整包名和精确新版本
+pnpm version-packages --write @nekosu/maa-version-manager=1.1.0
+```
+
+脚本接受 `major`、`minor`、`patch` 或高于当前版本的稳定 SemVer。显式指定的包按请求升版；通过 `dependencies` 使用 `workspace:*` 依赖它的所有直接和传递公开包自动升 patch。多个基础包可在同一次命令中指定，依赖方只升版一次。
+
+`pnpm publish` 会把发布包中的 `workspace:*` 转换为当前 workspace 包的精确版本，因此依赖方必须以新版本重新发布。联动脚本只跟踪对外发布包的运行时 `dependencies`；`devDependencies` 和不发布的 `@mse/*` 包不触发版本传播。
 
 发布顺序由 CI 脚本硬编码（按依赖顺序）：
 
@@ -73,7 +88,7 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 | `maa-tools`                  | `@nekosu/maa-tools`                  |
 | `prettier-plugin-maafw-sort` | `@nekosu/prettier-plugin-maafw-sort` |
 
-> **历史设计问题**: 当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动更新。发布流程未自动传递版本变更。
+联动升版计划按依赖拓扑顺序输出，与 CI 的发布顺序一致；运行 `--write` 后应检查计划中的所有包都在同一次提交中。
 
 ### 发布 VSCode 插件
 

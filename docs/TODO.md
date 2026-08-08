@@ -11,7 +11,7 @@
 - [x] **TODO-3** — **依赖归类**: `@mse/*` 内部包（不构建、不发布）全部列为 `devDependencies` 是有意设计——由最终消费者的 bundler 直接链接 TypeScript 源码，无需区分运行时/开发依赖。已迁移至 `@nekosu/*` 的包（`maa-types`、`maa-server-proto`、`maa-server`）改按发布包规则归类：运行时依赖放 `dependencies`，`@maaxyz/maa-node` 放 `devDependencies`。已记录到 [common-tech.md](extra/common-tech.md#依赖管理)。
 - [x] **TODO-4** — **缺失测试基础设施**: 已建立根 `pnpm test` 递归编排和 CI 测试步骤。Node.js 包优先使用 Node.js 24 内置 `node:test`，测试位于包内 `test/**/*.test.ts` 并纳入类型检查；需要特殊运行时的包保留包级适配。首批测试覆盖 `maa-version-manager` 安装事务。约定已记录到 [common-tech.md](extra/common-tech.md#测试)。
 - [ ] **TODO-5** — **Webview locale 与 @nekosu/maa-locale 代码重复**: Webview 有独立的 locale 系统（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。已确认是历史遗留问题。
-- [ ] **TODO-6** — **基础包版本更新时依赖包需手动升版**: 发布流程未自动传递版本变更。当更新基础包（如 `maa-tasker`）时，依赖它的包（`maa-pipeline-manager` → `maa-tools`）的版本号需手动逐个更新。属于历史设计问题。
+- [x] **TODO-6** — **基础包版本更新时依赖包需手动升版**: 已新增 `pnpm version-packages`。显式包按 `major`/`minor`/`patch` 或精确稳定版本升版，所有通过运行时 `workspace:*` 依赖它的直接和传递公开包自动升 patch，并按依赖拓扑顺序输出。默认只预览，`--write` 才修改所有相关 manifest。使用方式已记录到 [build-and-publish.md](extra/build-and-publish.md#发布-npm-包nekosu-作用域)。
 
 ## @mse/extension
 

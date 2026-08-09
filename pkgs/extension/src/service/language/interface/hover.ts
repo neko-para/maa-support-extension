@@ -1,5 +1,7 @@
 import * as vscode from 'vscode'
 
+import { findDeclRef } from '@nekosu/maa-pipeline-manager'
+
 import { InterfaceLanguageProvider } from './base'
 
 export class InterfaceHoverProvider
@@ -13,8 +15,8 @@ export class InterfaceHoverProvider
   }
 
   async provideHover(
-    _document: vscode.TextDocument,
-    _position: vscode.Position,
+    document: vscode.TextDocument,
+    position: vscode.Position,
     _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
     const index = await this.flushIndex()
@@ -22,11 +24,16 @@ export class InterfaceHoverProvider
       return null
     }
 
-    // const offset = document.offsetAt(position)
-    // const ref = findDeclRef(
-    //   index.refs.filter(ref => ref.file === document.uri.fsPath),
-    //   offset
-    // )
+    const offset = document.offsetAt(position)
+    const ref = findDeclRef(
+      index.layer.extraRefs.filter(ref => ref.file === document.uri.fsPath),
+      offset
+    )
+
+    if (ref?.type === 'task.locale') {
+      const hover = await this.getLocaleHover(ref.target)
+      return hover ? new vscode.Hover(hover) : null
+    }
 
     return null
   }

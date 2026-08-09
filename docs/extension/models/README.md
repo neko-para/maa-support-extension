@@ -23,7 +23,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - **跳转定义**：从任务引用跳转到任务声明
 - **查找引用**：查找任务在 pipeline 中的所有引用位置
 - **自动补全**：任务名、图片路径、locale key 的上下文补全
-- **悬停提示**：显示任务文档、resolved locale 值
+- **悬停提示**：显示任务文档，以及 interface/pipeline 中的 resolved locale 值
 - **内联提示**：显示 locale 翻译值和任务文档
 - **Code Lens**：切换 resource/locale 的快捷操作
 - **诊断**：任务验证、图片路径验证、配置冲突检测

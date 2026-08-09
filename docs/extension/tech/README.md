@@ -100,12 +100,11 @@ DisposableHelper
 `service/index.ts` 是唯一 composition root，负责按以下阶段启动服务：
 
 1. 初始化 VS Code extension context
-2. 构造全部核心服务
-3. 按构造依赖顺序通过 `registerServices()` 增量发布到 `service/registry.ts`，确保后续服务构造函数读取到已初始化依赖
-4. 构造依赖核心服务的 Language/Webview Provider
-5. 按显式顺序执行各服务的异步 `init()`
+2. 按构造依赖顺序创建核心服务，每个服务构造完成后立即通过 `registerServices()` 增量发布到 `service/registry.ts`
+3. 构造依赖核心服务的 Language/Webview Provider
+4. 按显式顺序执行各服务的异步 `init()`
 
-服务实现只从 `registry.ts` 读取其他单例，不得反向导入 `index.ts`。registry 对实现类全部使用 `import type`，编译后没有指向服务实现的运行时依赖，因此不会形成 `index → implementation → index` 的 ESM 环。架构测试使用 TypeScript AST 检查这两项约束。
+服务实现只从 `registry.ts` 读取其他单例，不得反向导入 `index.ts`。每个核心服务在后续服务开始构造前完成发布，保证构造函数读取的前置依赖已经存在。registry 对实现类全部使用 `import type`，编译后没有指向服务实现的运行时依赖，因此不会形成 `index → implementation → index` 的 ESM 环。架构测试使用 TypeScript AST 检查这些约束。
 
 当前服务均服从 VS Code extension 的单实例生命周期，且 Server/Agent 等领域存在双向协作；引入第三方 DI 容器不会消除这些领域关系。类型化 registry 加显式 composition root 已覆盖初始化顺序和运行时模块环问题，因此不增加 DI 框架。
 

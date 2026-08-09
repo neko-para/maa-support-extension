@@ -10,7 +10,7 @@
 - [x] **TODO-2** — **包作用域设计**: `@nekosu/*`（对外发布）和 `@mse/*`（内部专用）两个作用域为有意设计。`@mse/types`、`@mse/maa-server-proto`、`@mse/maa-server` 已迁移至 `@nekosu/*`（`@nekosu/maa-types`、`@nekosu/maa-server-proto`、`@nekosu/maa-server`）并发布，供跨编辑器核心层复用。剩余 `@mse/*` 包（`utils`、`webview`、`extension`）仍仅限内部使用。已记录到 [common-tech.md](extra/common-tech.md#包作用域)。
 - [x] **TODO-3** — **依赖归类**: `@mse/*` 内部包（不构建、不发布）全部列为 `devDependencies` 是有意设计——由最终消费者的 bundler 直接链接 TypeScript 源码，无需区分运行时/开发依赖。已迁移至 `@nekosu/*` 的包（`maa-types`、`maa-server-proto`、`maa-server`）改按发布包规则归类：运行时依赖放 `dependencies`，`@maaxyz/maa-node` 放 `devDependencies`。已记录到 [common-tech.md](extra/common-tech.md#依赖管理)。
 - [x] **TODO-4** — **缺失测试基础设施**: 已建立根 `pnpm test` 递归编排和 CI 测试步骤。Node.js 包优先使用 Node.js 24 内置 `node:test`，测试位于包内 `test/**/*.test.ts` 并纳入类型检查；需要特殊运行时的包保留包级适配。首批测试覆盖 `maa-version-manager` 安装事务。约定已记录到 [common-tech.md](extra/common-tech.md#测试)。
-- [ ] **TODO-5** — **Webview locale 与 @nekosu/maa-locale 代码重复**: Webview 有独立的 locale 系统（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。已确认是历史遗留问题。
+- [x] **TODO-5** — **Webview locale 与 @nekosu/maa-locale 代码重复**: 已确认两套 locale 是有意的运行时边界。Webview 的 164 个 UI key 与 `@nekosu/maa-locale` 的 125 个 host/checker key 无精确交集，且前者依赖 Vue `ref`/`computed` 响应式切换，后者使用适合扩展与 CLI 的模块级状态。仅 `t()` 占位符替换和 `CountBrace` 约十几行模式相同，为此增加公开包与浏览器 UI 的耦合收益不足。结论记录于 [locale-system.md](extra/locale-system.md)。
 - [x] **TODO-6** — **基础包版本更新时依赖包需手动升版**: 已新增 `pnpm version-packages`。显式包按 `major`/`minor`/`patch` 或精确稳定版本升版，所有通过运行时 `workspace:*` 依赖它的直接和传递公开包自动升 patch，并按依赖拓扑顺序输出。默认只预览，`--write` 才修改所有相关 manifest。使用方式已记录到 [build-and-publish.md](extra/build-and-publish.md#发布-npm-包nekosu-作用域)。
 
 ## @mse/extension
@@ -27,7 +27,7 @@
 
 ## @mse/webview
 
-- [ ] **TODO-16** — **独立的 locale 系统**: Webview 有自己的 locale 文件（`src/utils/locale/`），复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式。两套系统字典不共享。
+- [x] **TODO-16** — **独立的 locale 系统**: 与 TODO-5 是同一问题，已合并审查。Webview 字典只服务浏览器端 Vue UI，`@nekosu/maa-locale` 字典服务 extension host、pipeline-manager 和 checker；两者没有需要同步的相同 key，因此保留独立字典和状态模型。
 - [ ] **TODO-17** — **模拟 `globalThis.maa`**: control panel 的 `state.ts` 使用 Proxy 创建伪造的 `maa` global，始终返回 `'0'`。这是一个 hack 使 pipeline manager 代码在无原生绑定的情况下加载。
 - [ ] **TODO-18** — **全量 State 同步性能问题**: ControlPanel 全量同步 State 时，interface 对象可能过大，导致 Vue 响应式对象重建延迟严重。高频率修改（text input）有临时 debounce 策略。预期改进：将 interface 隔离出主 state；或使用增量同步。但 state 由 utils 模块的固定能力管理，且 interface 从文件全量 parse，难以增量优化。
 - [x] **TODO-19** — **immer 依赖未实际使用**: 已确认代码中没有 `immer` 引用，现已从 Webview 依赖及技术文档中移除。

@@ -75,13 +75,13 @@
 
 ### 国际化
 
-Webview 独立的 locale 系统（复制了 `@nekosu/maa-locale` 的 `t()` / `CountBrace` 模式）：
+Webview 使用独立的响应式 locale 系统：
 
 - `locale.zh-cn.ts` — 简体中文字典
 - `locale.en.ts` — 英文字典
 - 响应式 locale 切换（`vscodeLocale` ref）
 
-> 这是历史遗留问题。参见 [extra/locale-system.md](../extra/locale-system.md)。
+该字典只包含 Webview UI 文案，与 host/checker 使用的 `@nekosu/maa-locale` 没有相同 key；独立边界及重新评估条件参见 [locale-system.md](../../extra/locale-system.md)。
 
 ## 抽象边界
 

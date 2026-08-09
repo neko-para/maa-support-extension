@@ -43,3 +43,7 @@ function t<K extends LocaleIndex>(key: K, ...args: CountArgs<K>): string {
 | `as const` 字典         | 保留字面量类型以支持条件类型推断 |
 | 条件类型 (`CountBrace`) | 编译期参数数量验证，零运行时开销 |
 | 模块级单例              | 适合插件和 CLI 的单例场景        |
+
+## 与 Webview locale 的边界
+
+本包只承载 extension host、pipeline-manager 和 checker 共享的文案及模块级 locale 状态。Vue Webview 需要响应式 locale，且 UI 字典与本包没有相同 key，因此保留位于 `@mse/webview` 内的独立实现，不将 Vue UI 文案纳入本公开包的版本传播。完整结论见 [locale-system.md](../../extra/locale-system.md)。

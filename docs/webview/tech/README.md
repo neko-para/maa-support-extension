@@ -107,6 +107,10 @@ Crop Canvas 采用按需渲染：Vue reactive effect 跟踪 `draw()` 读取的�
 
 `theme.ts` 将 `--vscode-editor-background` 解析为 Canvas 可直接使用的颜色字符串，并通过 `editorBackgroundColor` ref 共享；主题变化时该 ref 更新并触发 Crop Canvas 重绘。用户不能为 Crop Canvas 单独配置背景色。
 
+## Locale 状态
+
+Webview 的 `utils/locale` 使用 Vue `ref` 保存 VS Code locale，并通过 `computed` 选择字典，使 control、launch、crop 三个应用在 host state 更新后响应式重绘。其字典只包含浏览器 UI 文案，与 `@nekosu/maa-locale` 没有相同 key；后者的模块级状态面向 extension host 和 CLI，因此不作为 Webview 依赖。完整边界见 [locale-system.md](../../extra/locale-system.md)。
+
 ## 依赖关系
 
 ### 工作区依赖

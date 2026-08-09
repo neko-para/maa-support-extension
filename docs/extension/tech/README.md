@@ -98,6 +98,14 @@ DisposableHelper
 
 该机制只转移快捷键命令的执行目标，不终止其他窗口中已经运行的 Maa 实例。
 
+## 固定项目路径约定
+
+以下路径是插件与项目、工具链之间的固定约定，不提供额外配置项：
+
+- 工作区根目录存在 `src/MaaCore` 时，可靠地识别为 MaaAssistantArknights 项目并启用 MAA 兼容模式
+- 每个 interface 项目的 `config/maa_pi_config.json` 保存该项目的插件配置
+- 工作区根目录的 `maatools.config.mts` 是 maa-tools 配置入口；插件同时监视该文件的变更
+
 ## 依赖关系
 
 ### 工作区依赖

@@ -173,12 +173,9 @@ Pipeline 体系比 Interface 体系更复杂：需要处理层级化 Layer 结�
 
 **触发**：仅在有 Selection（非普通 Range）时处理。
 
-| 光标位置          | 操作                                | Kind              |
-| ----------------- | ----------------------------------- | ----------------- |
-| `task.decl`       | "切换为 V1 格式" / "切换为 V2 格式" | `RefactorRewrite` |
-| `task.can_locale` | "提取到 locale"                     | `RefactorExtract` |
-
-**格式切换**：找到 task 的 prop 和 data 范围 → `layer.toggleMode(1/2, info, indent)` → `WorkspaceEdit.replace`
+| 光标位置          | 操作            | Kind              |
+| ----------------- | --------------- | ----------------- |
+| `task.can_locale` | "提取到 locale" | `RefactorExtract` |
 
 **Locale 提取**：
 

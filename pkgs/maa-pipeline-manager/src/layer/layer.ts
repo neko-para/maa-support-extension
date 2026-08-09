@@ -342,6 +342,9 @@ export class LayerInfo {
       .join(' ')
   }
 
+  /**
+   * @deprecated This rebuilds the complete task from its AST and cannot preserve JSONC comments.
+   */
   toggleMode(mode: 1 | 2, info: LayerTaskInfo, indent = '    ') {
     const parts = info.info.parts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

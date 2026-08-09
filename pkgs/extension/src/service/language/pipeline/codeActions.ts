@@ -113,59 +113,21 @@ export class PipelineCodeActionsProvider
     const [layer, file] = layerInfo
 
     const offset = document.offsetAt(range.active)
-    const decls = layer.mergedDecls.filter(decl => decl.file === file)
     const refs = layer.mergedRefs.filter(ref => ref.file === file)
-    const decl = findDeclRef(decls, offset)
     const ref = findDeclRef(refs, offset)
 
-    if (decl) {
-      if (decl.type === 'task.decl') {
-        const info = layer.tasks[decl.task].find(info => info.file === file)
-        if (!info) {
-          return []
-        }
-
-        const doc = await vscode.workspace.openTextDocument(info.file)
-        const propPos = doc.positionAt(info.prop.offset)
-        const indent = doc.getText(new vscode.Range(new vscode.Position(propPos.line, 0), propPos))
-
-        const replaceRange = new vscode.Range(
-          propPos,
-          doc.positionAt(info.data.offset + info.data.length)
-        )
-
-        const editToV1 = new vscode.WorkspaceEdit()
-        editToV1.replace(doc.uri, replaceRange, layer.toggleMode(1, info, indent))
-        const actionToV1 = new vscode.CodeAction(
-          t('maa.pipeline.codeaction.switch-to-v1'),
-          vscode.CodeActionKind.RefactorRewrite
-        )
-        actionToV1.edit = editToV1
-
-        const editToV2 = new vscode.WorkspaceEdit()
-        editToV2.replace(doc.uri, replaceRange, layer.toggleMode(2, info, indent))
-        const actionToV2 = new vscode.CodeAction(
-          t('maa.pipeline.codeaction.switch-to-v2'),
-          vscode.CodeActionKind.RefactorRewrite
-        )
-        actionToV2.edit = editToV2
-
-        return [actionToV1, actionToV2]
+    if (ref?.type === 'task.can_locale') {
+      const action = new vscode.CodeAction(
+        t('maa.pipeline.codeaction.extract-locale'),
+        vscode.CodeActionKind.RefactorExtract
+      )
+      action.command = {
+        title: t('maa.pipeline.codeaction.extract-locale'),
+        command: commands.LocaleExtract,
+        arguments: [intBundle, document, ref]
       }
-    } else if (ref) {
-      if (ref.type === 'task.can_locale') {
-        const action = new vscode.CodeAction(
-          t('maa.pipeline.codeaction.extract-locale'),
-          vscode.CodeActionKind.RefactorExtract
-        )
-        action.command = {
-          title: t('maa.pipeline.codeaction.extract-locale'),
-          command: commands.LocaleExtract,
-          arguments: [intBundle, document, ref]
-        }
 
-        return [action]
-      }
+      return [action]
     }
     return []
   }

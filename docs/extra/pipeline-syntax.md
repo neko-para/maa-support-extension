@@ -51,6 +51,7 @@
 - 均为 MaaFramework 官方支持的语法，**无依赖关系**
 - 同一 pipeline 文件中 V1 和 V2 格式可**同时存在**（不同任务可使用不同格式）
 - `maa-pipeline-manager` 通过 `splitNode()` 自动识别两种格式
+- 两种格式无需统一迁移；插件不提供会重写整个任务并丢失 JSONC 注释的自动转换
 
 ## MaaAssistantArknights 语法
 

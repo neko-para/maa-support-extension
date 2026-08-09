@@ -42,6 +42,10 @@ type ImageRelativePath = string & { __brand: 'ImageRelativePath' }
 
 `LayerInfo.mergedDecls` / `mergedRefs` 使用懒计算 + `dirty` 失效策略。
 
+### 源码保真编辑
+
+不得使用已弃用的 `LayerInfo.toggleMode()` 实现编辑器操作。该方法只有去除 parent 后的 JSON AST，没有原始文本，重新序列化时无法保留 JSONC 注释；需要源码保真的转换必须基于调用方持有的原始文档执行局部编辑。
+
 ### 可辨识联合类型
 
 所有声明和引用类型使用 `type` 字段作为判别键——parser 下每种 ref 和 decl 均有独立的类型变体。

@@ -30,8 +30,11 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - **文档链接**：在 pipeline 文件中提供可点击的资源路径链接
 - **工作区符号**：跨文件搜索任务定义
 - **文档颜色**：任务中的颜色值可视化
+- **Code Action**：将可本地化文本提取到 locale 文件
 
 > 注意：pipeline JSON 的静态语法分析（schema 验证）由官方 JSON Schema 实现，不属于本插件的业务。
+
+插件不提供 MaaFramework Pipeline V1/V2 自动转换：两种格式可由 MaaFramework 兼容并在同一 pipeline 中共存，而整任务重写会丢失 JSONC 注释。
 
 ### 2. 控制面板（Webview）
 

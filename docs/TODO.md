@@ -29,7 +29,7 @@
 
 - [x] **TODO-16** — **独立的 locale 系统**: 与 TODO-5 是同一问题，已合并审查。Webview 字典只服务浏览器端 Vue UI，`@nekosu/maa-locale` 字典服务 extension host、pipeline-manager 和 checker；两者没有需要同步的相同 key，因此保留独立字典和状态模型。
 - [x] **TODO-17** — **模拟 `globalThis.maa`**: 已移除 control panel 对 `globalThis.maa` 的 Proxy 修改。`buildControllerRuntime()` 现在支持显式注入其依赖的三组 MaaFramework 常量；Webview 使用完整、受类型检查的占位常量表完成配置完整性检查，真实启动仍由 extension host 使用原生常量重建 runtime。未来新增常量依赖时会产生类型错误，不再被“任意属性均返回 `'0'`”静默掩盖。
-- [ ] **TODO-18** — **全量 State 同步性能问题**: ControlPanel 全量同步 State 时，interface 对象可能过大，导致 Vue 响应式对象重建延迟严重。高频率修改（text input）有临时 debounce 策略。预期改进：将 interface 隔离出主 state；或使用增量同步。但 state 由 utils 模块的固定能力管理，且 interface 从文件全量 parse，难以增量优化。
+- [x] **TODO-18** — **全量 State 同步性能问题**: 已确认 `interfaceJson` 自 2026-03 的配置格式重构起便通过独立的 `updateInterface` 消息同步，配置修改和常规服务状态变化只发送较小的 `hostState`；仅 interface 或 import 变化时重发合并后的 interface，无需为低频的文件全量 parse 引入增量协议。Webview 现使用 `shallowRef` 保存两份不可变 IPC 快照，替换整体时触发更新，但不再为 interface 和任务配置创建深层响应式代理。文本型任务选项继续以 500ms debounce 合并高频配置写入。
 - [x] **TODO-19** — **immer 依赖未实际使用**: 已确认代码中没有 `immer` 引用，现已从 Webview 依赖及技术文档中移除。
 
 ## @nekosu/maa-server-proto

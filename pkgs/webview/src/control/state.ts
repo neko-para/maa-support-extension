@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, shallowRef } from 'vue'
 
 import {
   type ControllerRuntime,
@@ -11,8 +11,8 @@ import {
 } from '@nekosu/maa-pipeline-manager/logic'
 import type { ControlHostState } from '@nekosu/maa-types'
 
-export const hostState = ref<ControlHostState>({})
-export const interfaceJson = ref<Interface>({})
+export const hostState = shallowRef<ControlHostState>({})
+export const interfaceJson = shallowRef<Interface>({})
 
 // The control panel only checks whether a runtime can be built. The extension host rebuilds it
 // with native constants before launch, so these values must be complete but need not be native.

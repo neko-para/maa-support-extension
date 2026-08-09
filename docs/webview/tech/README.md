@@ -11,7 +11,7 @@ src/
 ├── control/                # 控制面板应用
 │   ├── main.ts             # Vue app 入口
 │   ├── App.vue             # 根组件 (Naive UI config provider)
-│   ├── state.ts            # 响应式状态 (hostState, interfaceJson)
+│   ├── state.ts            # 浅响应式 IPC 快照 (hostState, interfaceJson)
 │   │                       #   + computed runtimes via pipeline-manager/logic
 │   ├── ipc.ts              # Typed IPC: useIpc<ControlHostToWeb, ControlWebToHost>()
 │   ├── views/              # 主视图
@@ -106,6 +106,12 @@ Crop Canvas 采用按需渲染：Vue reactive effect 跟踪 `draw()` 读取的�
 绿色蒙版直接以绿色像素保存在独立 Canvas 中，并通过 `triggerRef()` 通知主 Canvas 失效；主绘制流程直接叠加该 Canvas，避免每帧创建原图尺寸的临时 Canvas。切换图像时会释放旧蒙版及其历史记录。
 
 `theme.ts` 将 `--vscode-editor-background` 解析为 Canvas 可直接使用的颜色字符串，并通过 `editorBackgroundColor` ref 共享；主题变化时该 ref 更新并触发 Crop Canvas 重绘。用户不能为 Crop Canvas 单独配置背景色。
+
+## Control Panel 状态同步
+
+Control Panel 将低频变化但可能较大的 `interfaceJson` 与常规 `hostState` 分成 `updateInterface`、`updateState` 两种 IPC 消息。配置修改、服务状态变化等只重发 `hostState`；仅 interface 主文件或 import 变化时才重发合并后的 interface 快照。
+
+Webview 将两份 IPC 数据都视为不可变快照，并使用 `shallowRef` 保存。消息到达时替换整个 `.value` 以触发视图更新，不对 interface、任务配置等嵌套对象创建深层响应式代理。组件不得直接修改快照；所有配置变更通过 IPC 交给 extension host，等待下一份快照回传。文本型任务选项保留 500ms debounce，以合并高频输入产生的配置写入和 state 回传。
 
 ## Locale 状态
 

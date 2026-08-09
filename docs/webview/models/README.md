@@ -29,7 +29,7 @@
 
 控制器配置完整性检查会向 pipeline manager 显式注入一份浏览器占位常量表。该表只用于判断 runtime 能否构建，不参与启动；真正执行时由 extension host 使用 MaaFramework 原生常量重新构建 runtime。常量表完整枚举当前依赖的 Win32/Gamepad 常量，使依赖新增时由类型检查暴露，不修改 `globalThis.maa`。
 
-> **已知性能问题**: 全量同步 State 时，interface 对象可能过大，导致 Vue 响应式对象重建延迟严重。针对高频率修改（如 text input），实现了临时性的 debounce 策略来缓解。预期改进方向：将 interface 文件隔离出主 state；或使用更精确的状态同步方案。但目前 state 由 utils 模块提供的固定能力管理，且 interface 对象是从文件全量 parse 而来，无法通过文件编辑信息增量优化。
+控制面板将 interface 元数据与常规 host state 分开同步，并把两者作为浅响应式的只读快照；配置修改不会重复传输 interface。文本型任务选项会合并高频输入，避免连续写入配置并回传 state。
 
 ### 2. Crop Tool（裁剪工具）
 

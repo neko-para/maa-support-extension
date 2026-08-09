@@ -25,6 +25,7 @@ import { PipelineInlayHintsProvider } from './language/pipeline/inlayHint'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSymbol'
 import { LaunchService } from './launch'
+import { MpeService } from './mpe'
 import { NativeService } from './native'
 import { registerServices } from './registry'
 import { RootService } from './root'
@@ -58,21 +59,28 @@ export let webviewControlService: WebviewControlService
 export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
 
-  const services = {
-    stateService: new StateService(),
-    nativeService: new NativeService(),
-    serverService: new ServerService(),
-    shortcutService: new ShortcutService(),
-    rootService: new RootService(),
-    interfaceService: new InterfaceService(),
-    launchService: new LaunchService(),
-    debugService: new DebugService(),
-    commandService: new CommandService(),
-    diagnosticService: new DiagnosticService(),
-    statusBarService: new StatusBarService(),
-    agentService: new AgentService()
+  const services = {} as import('./registry').ServiceRegistry
+  const publish = <K extends keyof import('./registry').ServiceRegistry>(
+    name: K,
+    service: import('./registry').ServiceRegistry[K]
+  ) => {
+    services[name] = service
+    registerServices({ [name]: service })
   }
-  registerServices(services)
+
+  publish('stateService', new StateService())
+  publish('nativeService', new NativeService())
+  publish('statusBarService', new StatusBarService())
+  publish('serverService', new ServerService())
+  publish('shortcutService', new ShortcutService())
+  publish('rootService', new RootService())
+  publish('diagnosticService', new DiagnosticService())
+  publish('interfaceService', new InterfaceService())
+  publish('launchService', new LaunchService())
+  publish('debugService', new DebugService())
+  publish('commandService', new CommandService())
+  publish('agentService', new AgentService())
+  publish('mpeService', new MpeService())
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),
@@ -110,6 +118,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await services.diagnosticService.init()
   await services.statusBarService.init()
   await services.agentService.init()
+  await services.mpeService.init()
 
   for (const service of pipelineLanguageServices) {
     await service.init()

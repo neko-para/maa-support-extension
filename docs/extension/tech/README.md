@@ -29,6 +29,7 @@ src/
     ├── shortcut.ts           # ShortcutService — 全局快捷键目标租约和跨窗口请求转发
     ├── native.ts             # NativeService — MaaFramework 二进制管理
     ├── server.ts             # ServerService — RPC 连接管理
+    ├── mpe.ts                # MPE iframe 面板、握手、同步与保存桥接
     ├── root.ts               # RootService — 资源根目录扫描
     ├── interface.ts          # InterfaceService — 接口包管理
     ├── launch.ts             # LaunchService — 任务启动编排

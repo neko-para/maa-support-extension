@@ -24,6 +24,8 @@ export const commands = {
 
   DebugQueryLocation: 'maa.debug.query-location',
 
+  OpenMpe: 'maa.open-mpe',
+
   FindTaskRef: 'maa.private.find-task-ref',
   TriggerCompletion: 'maa.private.trigger-completion',
   LocaleExtract: 'maa.private.locale-extract'

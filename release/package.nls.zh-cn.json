@@ -11,9 +11,11 @@
   "maa.command.reveal-control-panel": "Maa: 展示控制面板",
   "maa.command.native.select-maa": "Maa: 选择 MaaFramework 版本",
   "maa.command.native.select-registry": "Maa: 选择下载源",
+  "maa.command.open-mpe": "在 MPE 中打开",
   "maa.view.control-panel.title": "Maa 控制面板",
   "maa.setting.output-level": "Maa 输出面板日志等级 (重启生效)",
   "maa.setting.agent-timeout": "Maa Agent启动超时时间 (ms), 使用 -1 来禁用.",
   "maa.setting.launch-analyzer-url": "Maa Launch 面板中 Analyzer iframe 的地址。",
-  "maa.setting.webview-tooltip": "关闭 webview 面板中的悬停工具提示。"
+  "maa.setting.webview-tooltip": "关闭 webview 面板中的悬停工具提示。",
+  "maa.setting.pipeline-editor-url": "MaaPipelineEditor iframe 地址（必须使用 HTTPS；本机开发可使用 localhost HTTP）。"
 }

@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "lint": "tsc -p . --noEmit",
-    "test": "node --test test/evalIssues.test.ts test/serviceArchitecture.test.ts"
+    "test": "node --test test/evalIssues.test.ts test/mpe.test.ts test/serviceArchitecture.test.ts"
   },
   "devDependencies": {
     "@jimp/core": "^1.6.0",

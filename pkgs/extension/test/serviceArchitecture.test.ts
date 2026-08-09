@@ -62,6 +62,16 @@ test('registry publishes the composed service instances', () => {
   assert.equal(agentService, services.agentService)
 })
 
+test('incremental registration preserves services published earlier', () => {
+  const state = { name: 'state' }
+  const native = { name: 'native' }
+
+  registerServices({ stateService: state } as unknown as Partial<ServiceRegistry>)
+  registerServices({ nativeService: native } as unknown as Partial<ServiceRegistry>)
+
+  assert.equal(stateService, state)
+})
+
 test('service implementations do not import the composition root', async () => {
   const violations: string[] = []
 

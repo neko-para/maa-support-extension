@@ -114,6 +114,10 @@ DisposableHelper
 - 后续启动任务、截图或其他需要服务端的操作会调用 `ServerService.ensureServer()`，重新启动 maa-server 并建立连接
 - 断线意味着子进程内的 Maa 运行实例已经丢失，重新连接不会也无法恢复原任务，因此断线后不立即启动空闲子进程
 
+## MaaFramework Registry 状态
+
+`NativeService` 从 global state 读取镜像类型，并在构造 `MaaVersionManager` 时注入对应 registry。服务公开的 `registry` 访问器直接代理 manager，镜像选择命令不维护第二份运行时状态；manager 再为每次查询和安装捕获操作级快照。
+
 ## 命令归属
 
 VS Code 命令按是否跨领域编排划分归属：

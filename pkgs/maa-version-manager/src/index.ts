@@ -27,9 +27,9 @@ export class MaaVersionManager {
     return path.join(this.root, 'install')
   }
 
-  constructor(root: string) {
+  constructor(root: string, registry: string = MaaVersionManager.registries.npm) {
     this.root = root
-    this.registry = MaaVersionManager.registries.npm
+    this.registry = registry
   }
 
   async init() {
@@ -73,9 +73,9 @@ export class MaaVersionManager {
     )
   }
 
-  protected async extract(packageSpec: string, destination: string) {
+  protected async extract(packageSpec: string, destination: string, registry = this.registry) {
     await pacote.extract(packageSpec, destination, {
-      registry: this.registry
+      registry
     })
   }
 
@@ -97,6 +97,7 @@ export class MaaVersionManager {
   }
 
   async fetchAllVersions(minimumVersion: string) {
+    const registry = this.registry
     const release = await this.lock()
     if (!release) {
       return []
@@ -104,7 +105,7 @@ export class MaaVersionManager {
 
     try {
       const result = await pacote.packument('@maaxyz/maa-node', {
-        registry: this.registry
+        registry
       })
       await release()
       return Object.entries(result.versions).filter(([ver]) => {
@@ -117,6 +118,7 @@ export class MaaVersionManager {
   }
 
   async fetchLatest(): Promise<(pacote.AbbreviatedManifest & pacote.ManifestResult) | null> {
+    const registry = this.registry
     const release = await this.lock()
     if (!release) {
       return null
@@ -124,7 +126,7 @@ export class MaaVersionManager {
 
     try {
       const result = await pacote.manifest('@maaxyz/maa-node@latest', {
-        registry: this.registry
+        registry
       })
       await release()
       return result
@@ -140,6 +142,7 @@ export class MaaVersionManager {
       msg: 'prepare-folder' | 'download-scripts' | 'download-binary' | 'move-folders' | 'finish'
     ) => void
   ) {
+    const registry = this.registry
     const versionFolder = this.versionFolder(version)
 
     const release = await this.lock()
@@ -169,14 +172,15 @@ export class MaaVersionManager {
       progress('download-scripts')
       const loaderFolder = this.loaderFolder(stagingFolder)
       await fs.mkdir(loaderFolder)
-      await this.extract(`@maaxyz/maa-node@${version}`, loaderFolder)
+      await this.extract(`@maaxyz/maa-node@${version}`, loaderFolder, registry)
 
       progress('download-binary')
       const binaryFolder = this.binaryFolder(stagingFolder)
       await fs.mkdir(binaryFolder)
       await this.extract(
         `@maaxyz/maa-node-${process.platform}-${process.arch}@${version}`,
-        binaryFolder
+        binaryFolder,
+        registry
       )
 
       progress('move-folders')

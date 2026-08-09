@@ -71,6 +71,8 @@ worker 进程从环境变量一次性加载资源，因此不同有序路径组�
 
 `loadMaa(modulePath, logDir)` 直接设置 `maa.Global.log_dir = logDir`，保留 `cfg.maaLogDir` 配置字段及其兼容性，不重命名、不引入 `config_init_option`。
 
+`setupMaa(cfg)` 在构造 `MaaVersionManager` 时同时注入 `maaCache` 和 `maaMirror`，使一次版本查询/安装从启动起使用确定的 registry。
+
 - **check 流程**：未显式配置 `maaLogDir` 时默认 `debug`，即日志写入 `<cwd>/debug/`，避免以工作区根目录为日志目录时 MaaFramework 递归清理仓库内旧 PNG（TODO-23）。
 - **test 流程**：保留原默认 `.`（cwd 根目录），通过 `MAAFW_LOG_DIR` 环境变量传入，worker 在其下按 pool/pid 建子目录隔离。
 

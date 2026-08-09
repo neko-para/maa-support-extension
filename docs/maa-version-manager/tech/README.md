@@ -31,14 +31,19 @@ root/
 ### 安装流程
 
 ```
-1. `lock()` 获取文件锁
-2. 检查最终目录中的 `timestamp`、主包和平台二进制包；完整则仅刷新时间戳
-3. 删除同版本的旧半成品，在 `install/.prepare-*` 创建 staging 目录
-4. 将 `@maaxyz/maa-node@version` 和平台二进制包解压到 staging
-5. 在 staging 中写入 `timestamp`
-6. 在同一文件系统内原子 `rename` 为 `install/{version}`
-7. `finally` 清理未提交的 staging，关闭进度并释放文件锁
+1. 在首次 `await` 前捕获当前 registry
+2. `lock()` 获取文件锁
+3. 检查最终目录中的 `timestamp`、主包和平台二进制包；完整则仅刷新时间戳
+4. 删除同版本的旧半成品，在 `install/.prepare-*` 创建 staging 目录
+5. 使用同一 registry 快照将 `@maaxyz/maa-node@version` 和平台二进制包解压到 staging
+6. 在 staging 中写入 `timestamp`
+7. 在同一文件系统内原子 `rename` 为 `install/{version}`
+8. `finally` 清理未提交的 staging，关闭进度并释放文件锁
 ```
+
+### Registry 状态
+
+构造函数负责注入初始 registry，公开的 `registry` 属性保留运行时切换能力。所有使用网络的公开操作在入口处捕获该值，再等待锁并执行请求；因此一次操作只依赖一个不可变快照，切换 registry 仅影响之后开始的操作。
 
 ## 依赖关系
 
@@ -57,3 +62,4 @@ root/
 | 同盘 staging + 原子 rename | 临时目录位于 `install/` 下，避免跨设备移动并防止暴露半成品 |
 | 7 天 GC                    | 平衡磁盘使用和便利性                                       |
 | Lock-first 模式            | 允许多进程（多个 VSCode 窗口）安全共享                     |
+| 操作级 registry 快照       | 防止运行时切换镜像使同一查询或安装混用不同来源             |

@@ -10,12 +10,20 @@ import { MaaVersionManager } from '../src/index.ts'
 const version = '1.2.3'
 
 class TestVersionManager extends MaaVersionManager {
-  extracts: string[] = []
+  extracts: { packageSpec: string; registry: string }[] = []
   failExtractAt = 0
   failCommit = false
+  registryAfterFirstExtract: string | null = null
 
-  protected override async extract(packageSpec: string, destination: string) {
-    this.extracts.push(packageSpec)
+  protected override async extract(
+    packageSpec: string,
+    destination: string,
+    registry = this.registry
+  ) {
+    this.extracts.push({ packageSpec, registry })
+    if (this.extracts.length === 1 && this.registryAfterFirstExtract) {
+      this.registry = this.registryAfterFirstExtract
+    }
     if (this.extracts.length === this.failExtractAt) {
       throw new Error('extract failed')
     }
@@ -31,13 +39,13 @@ class TestVersionManager extends MaaVersionManager {
   }
 }
 
-async function createManager(t: test.TestContext) {
+async function createManager(t: test.TestContext, registry?: string) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'maa-version-manager-'))
   t.after(async () => {
     await fs.rm(root, { recursive: true, force: true })
   })
 
-  const manager = new TestVersionManager(root)
+  const manager = new TestVersionManager(root, registry)
   await manager.init()
   return manager
 }
@@ -87,6 +95,20 @@ test('installs a complete version atomically and reuses it', async t => {
   assert.deepEqual(progress, [])
   assert.equal(manager.extracts.length, 2)
   await assertNoStagingFolders(manager)
+})
+
+test('uses one registry snapshot for both package downloads', async t => {
+  const initialRegistry = 'https://registry.example/initial'
+  const nextRegistry = 'https://registry.example/next'
+  const manager = await createManager(t, initialRegistry)
+  manager.registryAfterFirstExtract = nextRegistry
+
+  assert.equal(await manager.prepare(version, () => {}), true)
+  assert.deepEqual(
+    manager.extracts.map(extract => extract.registry),
+    [initialRegistry, initialRegistry]
+  )
+  assert.equal(manager.registry, nextRegistry)
 })
 
 test('rolls back an extraction failure and releases the lock', async t => {

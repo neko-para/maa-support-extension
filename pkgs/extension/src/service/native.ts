@@ -24,12 +24,19 @@ function fixMinimumVersion(ver: string) {
 }
 
 export class NativeService extends BaseService {
-  registry: string
   version: string
 
   prepared: boolean
 
   manager: MaaVersionManager
+
+  get registry() {
+    return this.manager.registry
+  }
+
+  set registry(value: string) {
+    this.manager.registry = value
+  }
 
   versionChanged = new vscode.EventEmitter<void>()
   get onVersionChanged() {
@@ -40,13 +47,14 @@ export class NativeService extends BaseService {
     super()
     console.log('construct NativeService')
 
-    this.registry = MaaVersionManager.registries[this.registryType ?? defaultRegistryType]
+    const registry = MaaVersionManager.registries[this.registryType ?? defaultRegistryType]
     this.version = this.explicitVersion ?? defaultMaaVersion
 
     this.prepared = false
 
     this.manager = new MaaVersionManager(
-      vscode.Uri.joinPath(context.globalStorageUri, 'native').fsPath
+      vscode.Uri.joinPath(context.globalStorageUri, 'native').fsPath,
+      registry
     )
   }
 

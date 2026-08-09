@@ -31,6 +31,10 @@ async fetchAllVersions(minimumVersion) {
 
 临时目录必须创建在 `install/` 下，使最终 `fs.rename()` 不跨文件系统。主包、平台二进制包和 `timestamp` 全部写入 staging 后才可提交。所有异常路径必须在 `finally` 中清理 staging 并释放文件锁。
 
+### Registry 快照
+
+需要访问 npm registry 的公开操作必须在首次 `await` 前捕获 `this.registry`，之后只使用该快照。`prepare()` 必须把同一快照传给主包和平台二进制包的下载，禁止一次安装因并发切换配置而混用来源。
+
 ## 外部接口
 
 `MaaVersionManager` 类定义在 [src/index.ts](../../../pkgs/maa-version-manager/src/index.ts)。

@@ -78,7 +78,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 ### 5. MaaFramework 版本管理
 
 - 从 npm registry 下载 `@maaxyz/maa-node` 各版本
-- 支持 registry 镜像切换（npm/cnpm）
+- 支持 registry 镜像切换（npm/cnpm）；选择会直接作用于后续版本查询和下载，已经开始的操作继续使用启动时的镜像
 - 在已安装版本间切换
 - 自动清理过期版本（7 天未使用）
 - 通过状态栏显示当前版本和连接状态

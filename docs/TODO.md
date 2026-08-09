@@ -61,7 +61,7 @@
 
 ## @nekosu/maa-version-manager
 
-- [ ] **TODO-32** — **可变 registry 状态**: `this.registry` 可变，修改后影响所有后续操作。在并发场景下可能导致混乱。
+- [x] **TODO-32** — **可变 registry 状态**: 保留可写 `registry` 以兼容调用方，但远程查询和安装会在首次 `await` 前捕获操作级快照；一次安装的主包与平台二进制包使用同一来源，运行中的操作不受并发切换影响。构造函数支持注入初始 registry，extension 和 maa-tools 均在创建 manager 时传入；同时修复 extension 只更新界面侧镜像状态、实际下载器仍使用默认 npm 的问题。
 - [x] **TODO-33** — **`fs.rename()` 跨设备风险**: 安装 staging 已移到 `install/` 目录内，最终 `rename()` 始终在同一文件系统中完成。同时修复了异常时不释放锁、遗留半成品及下次误判已安装的问题；现在会验证两个包与时间戳、失败回滚并在 `finally` 中释放锁。
 - [x] **TODO-34** — **pacote 进度限制**: 已确认这是当前依赖的能力边界。`prepare()` 的 `progress` API 明确提供阶段事件而非下载百分比，限制已记录到 maa-version-manager 产品文档。
 

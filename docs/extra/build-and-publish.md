@@ -69,6 +69,8 @@ pnpm version-packages --write @nekosu/maa-version-manager=1.1.0
 
 `pnpm publish` 会把发布包中的 `workspace:*` 转换为当前 workspace 包的精确版本，因此依赖方必须以新版本重新发布。联动脚本只跟踪对外发布包的运行时 `dependencies`；`devDependencies` 和不发布的 `@mse/*` 包不触发版本传播。
 
+`@nekosu/maa-locale` 的纯翻译修订升 patch，新增 key 或语言升 minor，删除/重命名 key、删除语言或改变占位参数契约升 major。具体规则见 [Maa Locale 产品定义](../maa-locale/models/README.md#版本语义)。例如 `pnpm version-packages maa-locale=patch` 会同时安排所有精确依赖旧版本 locale 的公开运行时消费者重新发布。自动传播的 patch 是最低级别；若依赖方的公开 API 也发生不兼容变化，需在同一命令中显式指定该包的 major/minor 升版。
+
 发布顺序由 CI 脚本硬编码（按依赖顺序）：
 
 ```

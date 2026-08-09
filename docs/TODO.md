@@ -38,7 +38,7 @@
 
 ## @nekosu/maa-locale
 
-- [ ] **TODO-21** — **设计失误——版本语义不清**: 本意是避免插件和 checker 的文案不一致，但直接发布到 npm 导致版本更新不明确——文案的变更难以通过语义化版本传达。
+- [x] **TODO-21** — **设计失误——版本语义不清**: 已明确 locale 的 SemVer 契约：纯翻译修订升 patch，新增 key/语言升 minor，删除或重命名 key、删除语言、改变占位参数契约升 major；最终本地化文本不作为机器可解析的稳定 API。`version-packages` 已验证会为所有使用精确版本的公开运行时消费者传播最低 patch 升版，更高级别的依赖方 API 变化需显式声明。新增包级测试校验中英文字典 key 与占位编号集合一致。
 
 ## @nekosu/maa-pipeline-manager
 

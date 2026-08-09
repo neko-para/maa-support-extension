@@ -30,6 +30,7 @@ API 定义在 [src/index.ts](../../../pkgs/maa-locale/src/index.ts)：
 
 - `t(key, ...args)` — 翻译函数
 - `setLocale(locale)` — 语言切换
-- `LocaleType`, `LocaleIndex` — 类型导出
+- `locale` — 当前语言
+- `LocaleType`、函数类型 `t` — 类型导出
 
 详见源码。

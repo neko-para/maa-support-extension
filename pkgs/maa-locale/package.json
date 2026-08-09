@@ -16,10 +16,12 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "node --test test/index.test.ts"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^25.3.5",
     "typescript": "^5.9.3"
   }
 }

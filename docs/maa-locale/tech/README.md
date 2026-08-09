@@ -10,8 +10,9 @@
 src/
 ├── index.ts          # 入口: setLocale(), t(), locale
 ├── locale.zh-cn.ts   # 简体中文字典 (as const)
-├── locale.en.ts      # 英文字典 (as const)
-└── local.d.ts        # LocaleIndex 类型
+└── locale.en.ts      # 英文字典 (as const)
+test/
+└── index.test.ts     # key 集合与占位参数契约一致性
 ```
 
 ## 设计
@@ -43,6 +44,8 @@ function t<K extends LocaleIndex>(key: K, ...args: CountArgs<K>): string {
 | `as const` 字典         | 保留字面量类型以支持条件类型推断 |
 | 条件类型 (`CountBrace`) | 编译期参数数量验证，零运行时开销 |
 | 模块级单例              | 适合插件和 CLI 的单例场景        |
+
+英文词典定义 `t()` 接受的 key 与参数数量，中英文 key 完整性由 TypeScript 赋值检查和包级测试共同保证。测试还比较每个 key 的占位编号集合，允许翻译按语言语序重新排列占位符，但阻止漏传、新增或误写参数编号。版本兼容规则见[产品定义](../models/README.md#版本语义)。
 
 ## 与 Webview locale 的边界
 

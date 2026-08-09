@@ -1,6 +1,7 @@
 {
   "extends": ["@tsconfig/node24/tsconfig.json"],
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "module": "ES2022",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -8,5 +9,5 @@
     "verbatimModuleSyntax": true,
     "types": ["@maaxyz/maa-node", "@types/node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

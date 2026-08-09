@@ -57,7 +57,7 @@
 ## @nekosu/maa-tools
 
 - [x] **TODO-30** — **devDependency 作为 fallback**: 已确认从 `pkg.devDependencies['@maaxyz/maa-node']` 读取默认版本是有意设计，使运行时下载版本与编译/类型检查版本保持单一来源，避免额外常量发生漂移。
-- [ ] **TODO-31** — **workerpool 缓存抖动**: test runner 按 `controller-resource` hash key 缓存 worker pool，若组合频繁变化会导致重复创建/销毁。
+- [x] **TODO-31** — **workerpool 缓存抖动**: 原实现已先排序 controller/resource，相同组合通常连续，因此原条目所述的同键频繁抖动并不准确；实际缺口是名称拼接键可能碰撞，且不同组合解析出相同有序资源路径时仍会重复建池。现改为先生成稳定结果槽位，再按完整有序资源路径列表的结构键合并执行计划；每个唯一路径组只创建一个 pool，结束或异常时立即释放，最终报告仍保持 controller/resource 排序。
 
 ## @nekosu/maa-version-manager
 

@@ -11,6 +11,7 @@ import { joinPath } from '@nekosu/maa-pipeline-manager'
 import type { FullConfig } from '../types/config'
 import { loadBundle } from '../utils/bundle'
 import { setupMaa } from '../utils/maa'
+import { compareTestCases, groupResourcePlans } from './schedule'
 import type { GroupRecoResult, RecoJob, RecoResult } from './types'
 import { checkRect } from './utils'
 
@@ -23,6 +24,13 @@ function splitChunk<T>(arr: T[], size: number) {
     curr = next
   }
   return result
+}
+
+type TestPlan = {
+  allImages: { image: string; imageRaw: string }[]
+  allNodes: string[]
+  resourcePaths: string[]
+  groupResult: GroupRecoResult
 }
 
 export async function runTest(cfg: FullConfig) {
@@ -57,12 +65,7 @@ export async function runTest(cfg: FullConfig) {
     allTestCases = await allTestCases()
   }
 
-  allTestCases.sort((a, b) => {
-    return (
-      a.configs.controller.localeCompare(b.configs.controller) * 2 +
-      a.configs.resource.localeCompare(b.configs.resource)
-    )
-  })
+  allTestCases = [...allTestCases].sort(compareTestCases)
 
   const taskCount = allTestCases
     .map(testCase => {
@@ -78,115 +81,113 @@ export async function runTest(cfg: FullConfig) {
 
   const maxNodePerJob = cfg.test.maxNodePerJob ?? 50
 
-  let poolCache: workerpool.Pool | null = null
-  let poolHashKey: string = ''
+  const plans: TestPlan[] = []
 
-  for (const testCases of allTestCases) {
-    const name =
-      testCases.configs.name ?? `${testCases.configs.controller}:${testCases.configs.resource}`
+  try {
+    for (const testCases of allTestCases) {
+      const name =
+        testCases.configs.name ?? `${testCases.configs.controller}:${testCases.configs.resource}`
 
-    const allImages = testCases.cases
-      .map(c => ({
-        image: path.resolve(
-          cfg.cwd ?? process.cwd(),
-          cfg.test!.casesCwd ?? '.',
-          testCases.configs.imageRoot ?? '.',
-          c.image
-        ),
-        imageRaw: c.image
-      }))
-      .filter(({ image, imageRaw }) => {
-        if (!existsSync(image)) {
-          if (cfg.mode === 'github') {
-            coreWarning(`${name} ${imageRaw} not exists, ignored`)
+      const allImages = testCases.cases
+        .map(c => ({
+          image: path.resolve(
+            cfg.cwd ?? process.cwd(),
+            cfg.test!.casesCwd ?? '.',
+            testCases.configs.imageRoot ?? '.',
+            c.image
+          ),
+          imageRaw: c.image
+        }))
+        .filter(({ image, imageRaw }) => {
+          if (!existsSync(image)) {
+            if (cfg.mode === 'github') {
+              coreWarning(`${name} ${imageRaw} not exists, ignored`)
+            } else {
+              console.log(`${name} ${imageRaw} not exists, ignored`)
+            }
+            return false
           } else {
-            console.log(`${name} ${imageRaw} not exists, ignored`)
+            return true
           }
-          return false
-        } else {
-          return true
-        }
-      })
-    const allNodes = [
-      ...new Set(
-        testCases.cases
-          .map(c => c.hits.map(hit => (typeof hit === 'string' ? hit : hit.node)).flat())
-          .flat()
-      )
-    ]
-
-    await bundle.switchActive(testCases.configs.controller, testCases.configs.resource)
-    const resourcePaths = bundle.paths.map(folder => joinPath(bundle.root, folder))
-
-    const newHashKey = `${testCases.configs.controller}-${testCases.configs.resource}`
-    if (newHashKey !== poolHashKey) {
-      await poolCache?.terminate()
-      if (poolCache) {
-        console.log('pool cache mismatched, dropped')
-      }
-      poolCache = null
-    }
-
-    if (!poolCache) {
-      poolCache = workerpool.pool(path.join(import.meta.dirname, 'test', 'worker.mjs'), {
-        maxWorkers: cfg.test.job ?? os.cpus().length / 4,
-        workerType: 'process',
-        forkOpts: {
-          env: {
-            MAAFW_MODULE_PATH: modulePath,
-            MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
-            MAAFW_LOG_DIR: path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? '.'),
-            MAAFW_RESOURCE_PATHS: resourcePaths.join(path.delimiter),
-            MAATOOLS_POOL_ID: newHashKey
-          }
-        }
-      })
-      poolHashKey = newHashKey
-      console.log('pool created, hashkey', poolHashKey)
-    }
-
-    const tasks: Promise<void>[] = []
-    const scheduleJob = (job: RecoJob, result: RecoResult[]) => {
-      const task = poolCache!
-        .exec<(job: RecoJob) => RecoResult[]>('performReco', [job])
-        .then(res => res)
-        .catch(err => {
-          console.log(err)
-          return []
         })
-        .then(res => {
-          finished += res.length
-          result.push(...res)
-          process.stderr.write(
-            `${((finished * 100) / taskCount).toFixed(2)}% ${finished} / ${taskCount}\r`
-          )
-        })
-      tasks.push(task)
-    }
-
-    const groupResult: GroupRecoResult = {
-      cases: testCases,
-      result: []
-    }
-    result.push(groupResult)
-    for (const { image, imageRaw } of allImages) {
-      const nodesChunks = splitChunk(allNodes, maxNodePerJob)
-      for (const nodes of nodesChunks) {
-        scheduleJob(
-          {
-            nodes,
-            imagePath: image,
-            imagePathRaw: imageRaw
-          },
-          groupResult.result
+      const allNodes = [
+        ...new Set(
+          testCases.cases
+            .map(c => c.hits.map(hit => (typeof hit === 'string' ? hit : hit.node)).flat())
+            .flat()
         )
-      }
-    }
+      ]
 
-    await Promise.all(tasks)
+      const resourcePaths = bundle
+        .resolvePaths(testCases.configs.controller, testCases.configs.resource)
+        .map(folder => joinPath(bundle.root, folder))
+      const groupResult: GroupRecoResult = {
+        cases: testCases,
+        result: []
+      }
+      result.push(groupResult)
+      plans.push({ allImages, allNodes, resourcePaths, groupResult })
+    }
+  } finally {
+    bundle.stop()
   }
 
-  await poolCache?.terminate()
+  for (const [poolIndex, group] of groupResourcePlans(plans).entries()) {
+    const pool = workerpool.pool(path.join(import.meta.dirname, 'test', 'worker.mjs'), {
+      maxWorkers: cfg.test.job ?? os.cpus().length / 4,
+      workerType: 'process',
+      forkOpts: {
+        env: {
+          MAAFW_MODULE_PATH: modulePath,
+          MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
+          MAAFW_LOG_DIR: path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? '.'),
+          MAAFW_RESOURCE_PATHS: group[0].resourcePaths.join(path.delimiter),
+          MAATOOLS_POOL_ID: String(poolIndex)
+        }
+      }
+    })
+
+    try {
+      for (const { allImages, allNodes, groupResult } of group) {
+        const tasks: Promise<void>[] = []
+        const scheduleJob = (job: RecoJob, result: RecoResult[]) => {
+          const task = pool
+            .exec<(job: RecoJob) => RecoResult[]>('performReco', [job])
+            .then(res => res)
+            .catch(err => {
+              console.log(err)
+              return []
+            })
+            .then(res => {
+              finished += res.length
+              result.push(...res)
+              process.stderr.write(
+                `${((finished * 100) / taskCount).toFixed(2)}% ${finished} / ${taskCount}\r`
+              )
+            })
+          tasks.push(task)
+        }
+
+        for (const { image, imageRaw } of allImages) {
+          const nodesChunks = splitChunk(allNodes, maxNodePerJob)
+          for (const nodes of nodesChunks) {
+            scheduleJob(
+              {
+                nodes,
+                imagePath: image,
+                imagePathRaw: imageRaw
+              },
+              groupResult.result
+            )
+          }
+        }
+
+        await Promise.all(tasks)
+      }
+    } finally {
+      await pool.terminate()
+    }
+  }
 
   let failed = false
   const errorDetails: RecoResult[] = []

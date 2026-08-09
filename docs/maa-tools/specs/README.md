@@ -27,6 +27,10 @@ type OutputMode = 'stdio' | 'github' | 'json'
 
 CLI 将其映射为进程退出码。
 
+### Test Worker 隔离键
+
+识别测试的 worker pool 必须按解析后的完整有序资源路径列表隔离，使用数组的结构化序列化作为内部键。不得拼接 controller/resource 名称作为缓存键，因为名称组合可能碰撞，也无法识别路径等价的不同配置。执行计划可按资源组重排，但结果槽位和最终报告必须保持稳定的 controller/resource 顺序。
+
 ### 配置类型
 
 使用交集类型组合配置：

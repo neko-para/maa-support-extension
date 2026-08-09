@@ -23,7 +23,8 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "node --test test/schedule.test.ts"
   },
   "dependencies": {
     "@actions/core": "^3.0.0",

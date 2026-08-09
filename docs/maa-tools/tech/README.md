@@ -59,11 +59,13 @@ src/
 1. loadConfig(configPath) → FullConfig
 2. setupMaa(cfg) → 下载/加载 MaaFramework
 3. 加载所有测试用例
-4. 创建 workerpool (按 controller+resource hash 分组)
-5. 分发 RecoJob 到 worker 进程
+4. 解析每个 controller/resource 的有序资源路径，并合并路径完全相同的等价配置
+5. 每组创建一个 workerpool，分发该组的 RecoJob 后立即释放
 6. Worker: loadMaa() → setupInstance() → performReco()
-7. 收集结果, 按 mode 输出
+7. 收集结果，按原 controller/resource 排序和 mode 输出
 ```
+
+worker 进程从环境变量一次性加载资源，因此不同有序路径组不能共享同一个 pool。调度器先创建保持报告顺序的结果槽位，再按 `JSON.stringify(resourcePaths)` 的结构键聚合执行计划；相同路径即使来自不同 controller/resource 也只创建一次 pool，路径顺序不同则保持隔离。任一组结束或抛错时均在 `finally` 中终止 pool，同时发现用 `InterfaceBundle` 在规划完成后关闭全部 watcher。
 
 ## MAA 日志目录
 

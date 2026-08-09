@@ -112,7 +112,8 @@ export class InterfaceBundle extends EventEmitter<{
         parseInterface(this.content.node, this.info, {
           maa: this.maa,
           file: this.file,
-          import: false
+          import: false,
+          parser: this.parser
         })
       }
 
@@ -354,7 +355,8 @@ export class InterfaceBundle extends EventEmitter<{
           parseInterface(node, this.info, {
             maa: this.maa,
             file: full,
-            import: true
+            import: true,
+            parser: this.parser
           })
         }
         this.emit('slaveInterfaceChanged')

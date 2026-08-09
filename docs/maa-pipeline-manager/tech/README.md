@@ -119,6 +119,8 @@ CLI checker 虽然是一次性消费者，仍复用 `FsContentWatcher` 的首次
 
 `InterfaceBundle.resolvePaths(controller, resource)` 是无状态路径解析入口；`switchActive()` 和 `updatePaths()` 复用该结果更新活动 bundle。批处理消费者可先计算所有组合的路径，在独立 bundle 中并发处理，而无需并发修改同一个 `InterfaceBundle` 的 active 状态。
 
+`InterfaceBundle` 将同一个 `ParserConfig` 传给资源 bundle、主 interface 和 import interface。`pipeline_override` 随后复用标准 `parseTask()`，因此自定义 reco/action parser 的引用产物会与标准引用进入同一个 `TaskInfo` 和 `LayerInfo` 数据流。
+
 ## 依赖关系
 
 ### 工作区依赖

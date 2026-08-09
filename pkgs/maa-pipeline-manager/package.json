@@ -21,7 +21,7 @@
   },
   "scripts": {
     "lint": "tsc -p . --noEmit",
-    "test": "node --test test/browser.test.ts"
+    "test": "node --test test/browser.test.ts test/custom-parser.test.ts"
   },
   "dependencies": {
     "@nekosu/maa-locale": "workspace:*",

@@ -49,7 +49,7 @@
 
 支持通过 `ParserConfig` 注入自定义的 recognition 和 action 解析器，使外部消费者可以为自定义识别/操作类型提取特定的参数引用。
 
-> **已知局限性**: 自定义解析器无法转发 `pipeline_override` 格式的内容，且其 AST 产物与标准解析的产物完全隔离。这是设计失误。
+自定义解析器同时应用于资源 pipeline、主 interface 和 import interface 中的 `pipeline_override`。其结果以 `task.custom_task`、`task.custom_anchor`、`task.custom_template` 判别类型保留自定义解析元数据，但与标准引用共同进入 `TaskInfo.refs`、`LayerInfo`、诊断和语言功能数据流。
 
 ### 4. 分层任务存储
 

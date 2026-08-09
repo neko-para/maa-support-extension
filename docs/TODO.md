@@ -45,7 +45,7 @@
 - [x] **TODO-22** — **Node.js API 耦合**: 已明确为双入口运行时边界，而非让文件编排层伪装成通用浏览器模块。主入口的 Bundle/InterfaceBundle 建模真实目录树，有意依赖 `node:path`、`node:events`、Node 事件循环及 chokidar；loader/watcher 接口只替换 Node host 内的内容与事件来源。Webview 实际只使用无 I/O 的 `./logic` 子路径，该入口已实测可在无 Node polyfill 时以 browser platform 打包，并新增包级构建测试防止未来越界依赖。
 - [x] **TODO-23** — **已知罕见 Bug——文件被删除**: 已确认与 watcher 或插件/checker 并发无关。根因是 MaaFramework 所依赖的日志组件存在轮转清理缺陷：当 `maa.Global.log_dir` 指向工作区或包含业务图片的上级目录时，会递归删除其中较旧的 PNG。现已让 checker 和 extension 始终使用独立的 `debug/` 日志目录，并将上传图片放在单独的 `storage/fixed/`，使日志轮转无法触及工作区和业务图片。
 - [x] **TODO-24** — **事件驱动导致 checker 使用困难**: checker 目前只复用 chokidar 的初始扫描与 `ready` 边界，诊断完成后会立即关闭 watcher，并不提供文件变化后的持续重检。已实作一次性 snapshot 扫描并在 M9A、MaaEnd 上对比：输出逐字一致，但最佳 snapshot 中位耗时仍由 4.874/6.298 秒增至 5.130/6.816 秒。因此撤销 snapshot 实现，保留 chokidar 的成熟递归扫描，结论记录于 `maa-pipeline-manager` 和 `maa-tools` 技术文档。
-- [ ] **TODO-25** — **自定义解析器局限性**: 自定义 reco/action 解析器无法转发 `pipeline_override` 格式内容，且 AST 产物与标准解析完全隔离。设计失误。
+- [x] **TODO-25** — **自定义解析器局限性**: 已修复 `InterfaceBundle` 在主 interface 和 import interface 解析时遗漏 `ParserConfig` 的问题，`pipeline_override` 现可调用自定义 reco/action parser。后半项经核对已不符合当前实现：自定义引用虽使用独立的 `task.custom_*` 判别类型保留名称、来源和缺失策略，但与标准引用共同存入 `TaskInfo.refs`，并参与 Layer 合并、诊断和语言功能，不是隔离的 AST 产物。
 - [ ] **TODO-26** — **格式切换实验性功能**: `toggleMode()` 会丢失注释，官方推荐使用其他方法迁移。
 - [x] **TODO-27** — **jsonc-parser 父指针剥离**: `shrinkParent()` 使用 `delete` 操作修改 `readonly` 属性。已确认是预期行为——AST 在多处缓存，剥离 parent 指针优化内存占用。代码不依赖 parent 指针，`deepWriteable` 断言是必要的实现手段。
 - [x] **TODO-28** — **`buildTree` 丢失位置信息**: 从 jsonc-parser AST 重建纯 JS 对象时丢失了位置/偏移信息。已确认是有意设计——`buildTree` 用于求值/合并/存储上下文，生成轻量 plain object；诊断走原始 AST Node（保留位置）。两者分工明确。

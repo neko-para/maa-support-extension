@@ -46,6 +46,8 @@ type ImageRelativePath = string & { __brand: 'ImageRelativePath' }
 
 所有声明和引用类型使用 `type` 字段作为判别键——parser 下每种 ref 和 decl 均有独立的类型变体。
 
+自定义 reco/action parser 产出的引用使用 `task.custom_*` 判别类型，以保留自定义处理器名称、reco/action 来源和缺失策略；这些引用仍必须与标准引用写入同一个 `TaskInfo.refs`，并参与 Layer 合并、诊断和语言功能。所有 `InterfaceBundle` 解析入口（主文件与 import）都必须转发当前 `ParserConfig`。
+
 ### 接口+实现分离
 
 Content loader/watcher 使用接口抽象，以支持 Node.js host 内的测试注入和内容源替换。该接口不代表完整文件编排层可运行于浏览器。

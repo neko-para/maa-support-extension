@@ -23,7 +23,7 @@
 - [x] **TODO-12** — **InterfaceHoverProvider 是 no-op**: 已恢复 interface 本地化引用的悬停内容。历史实现读取 `InterfaceInfo.refs`；locale 解析重构将这些引用迁移到 `InterfaceInfo.layer.extraRefs` 时，旧逻辑被注释但 Provider 仍继续注册。现在按当前索引结构查找 `task.locale`，并复用各语言 resolved value 表格。
 - [x] **TODO-13** — **Admin 模式仅 Windows**: 已确认为有意的平台边界。Admin 模式用于 Windows UAC/进程完整性等级；macOS 的系统授权及 Linux 的 udev/用户组权限不应通过插件以 root 启动 maa-server 处理。控制面板在非 Windows 平台不暴露该开关。
 - [x] **TODO-14** — **CommandService 职责混杂**: 已确认当前分工是有意的应用层边界：仅由单一领域拥有的命令由对应服务注册（如 NativeService、StatusBarService、PipelineCodeActionsProvider），需要协调多个服务并处理 VS Code UI 的命令集中在 CommandService。核心操作已下沉到 InterfaceService、LaunchService、ServerService 等；继续按命令拆分会分散 UI 编排并加重模块级循环依赖，因此不做机械重构。命令归属约定已记录到 extension 技术文档。
-- [ ] **TODO-15** — **VSCode 命令命名未统一设计**: 命令命名空间缺乏一致的层级结构，属于历史遗留问题。
+- [x] **TODO-15** — **VSCode 命令命名未统一设计**: 已确认现有命令 ID 是兼容性 API，不为统一外观而重命名：`maa.start` 已用于用户快捷键，`maa.open-crop` 也存在跨扩展调用，改名会破坏现有配置和集成。保留 `maa.*`、`maa.pi.*`、`maa.native.*`、`maa.debug.*`、`maa.private.*` 的历史 ID；新增命令统一使用 kebab-case，并按通用公开、明确领域、内部专用三类选择命名空间。规则已记录到 extension 代码规范。
 
 ## @mse/webview
 

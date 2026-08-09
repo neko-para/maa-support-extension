@@ -88,7 +88,7 @@
 
 从 interface 配置和用户选择构建可执行的运行时对象：
 
-- `buildControllerRuntime()` — 构建控制器运行时常量
+- `buildControllerRuntime()` — 构建控制器运行时常量；默认读取 MaaFramework 全局常量，也可通过第三个参数显式注入 `ControllerRuntimeConstants`，供无原生绑定的浏览器预览等环境使用
 - `buildResourceRuntime()` — 构建资源路径运行时
 - `buildOption()` — 解析选项依赖链
 - `buildTaskRuntime()` — 构建带 pipeline override 的任务运行时

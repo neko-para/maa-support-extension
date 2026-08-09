@@ -2,9 +2,16 @@ import { t } from '@nekosu/maa-locale'
 
 import type { ControllerRuntime, ControllerRuntimeBase, Interface, InterfaceConfig } from '../types'
 
+export interface ControllerRuntimeConstants {
+  Win32ScreencapMethod: typeof maa.Win32ScreencapMethod
+  Win32InputMethod: typeof maa.Win32InputMethod
+  GamepadType: typeof maa.GamepadType
+}
+
 export function buildControllerRuntime(
   data: Interface,
-  config: InterfaceConfig
+  config: InterfaceConfig,
+  constants: ControllerRuntimeConstants = maa
 ): ControllerRuntime | string {
   if (config.controller === '$fixed') {
     if (!config.vscFixed) {
@@ -85,13 +92,14 @@ export function buildControllerRuntime(
       args: [
         config.win32.hwnd,
 
-        fixNum(ctrlInfo.win32?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.FramePool,
+        fixNum(ctrlInfo.win32?.screencap, constants.Win32ScreencapMethod) ??
+          constants.Win32ScreencapMethod.FramePool,
 
-        fixNum(ctrlInfo.win32?.mouse, maa.Win32InputMethod) ??
-          maa.Win32InputMethod.SendMessageWithCursorPos,
+        fixNum(ctrlInfo.win32?.mouse, constants.Win32InputMethod) ??
+          constants.Win32InputMethod.SendMessageWithCursorPos,
 
-        fixNum(ctrlInfo.win32?.keyboard, maa.Win32InputMethod) ?? maa.Win32InputMethod.SendMessage
+        fixNum(ctrlInfo.win32?.keyboard, constants.Win32InputMethod) ??
+          constants.Win32InputMethod.SendMessage
       ],
 
       ...baseOption
@@ -128,9 +136,10 @@ export function buildControllerRuntime(
       args: [
         config.gamepad.hwnd,
 
-        fixNum(ctrlInfo.gamepad?.screencap, maa.Win32ScreencapMethod) ??
-          maa.Win32ScreencapMethod.FramePool,
-        fixNum(ctrlInfo.gamepad?.gamepad_type, maa.GamepadType) ?? maa.GamepadType.Xbox360
+        fixNum(ctrlInfo.gamepad?.screencap, constants.Win32ScreencapMethod) ??
+          constants.Win32ScreencapMethod.FramePool,
+        fixNum(ctrlInfo.gamepad?.gamepad_type, constants.GamepadType) ??
+          constants.GamepadType.Xbox360
       ],
 
       ...baseOption

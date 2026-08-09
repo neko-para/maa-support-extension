@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import {
   type ControllerRuntime,
   type ControllerRuntimeBase,
+  type ControllerRuntimeConstants,
   type Interface,
   type ResourceRuntime,
   buildControllerRuntime,
@@ -13,21 +14,39 @@ import type { ControlHostState } from '@nekosu/maa-types'
 export const hostState = ref<ControlHostState>({})
 export const interfaceJson = ref<Interface>({})
 
-globalThis.maa = new Proxy(
-  {},
-  {
-    get() {
-      return new Proxy(
-        {},
-        {
-          get() {
-            return '0'
-          }
-        }
-      )
-    }
+// The control panel only checks whether a runtime can be built. The extension host rebuilds it
+// with native constants before launch, so these values must be complete but need not be native.
+const validationPlaceholder = '0' as maa.Uint64
+
+const controllerRuntimeConstants = {
+  Win32ScreencapMethod: {
+    GDI: validationPlaceholder,
+    FramePool: validationPlaceholder,
+    DXGI_DesktopDup: validationPlaceholder,
+    DXGI_DesktopDup_Window: validationPlaceholder,
+    PrintWindow: validationPlaceholder,
+    ScreenDC: validationPlaceholder,
+    All: validationPlaceholder,
+    Foreground: validationPlaceholder,
+    Background: validationPlaceholder
+  },
+  Win32InputMethod: {
+    Seize: validationPlaceholder,
+    SendMessage: validationPlaceholder,
+    PostMessage: validationPlaceholder,
+    LegacyEvent: validationPlaceholder,
+    PostThreadMessage: validationPlaceholder,
+    SendMessageWithCursorPos: validationPlaceholder,
+    PostMessageWithCursorPos: validationPlaceholder,
+    SendMessageWithWindowPos: validationPlaceholder,
+    PostMessageWithWindowPos: validationPlaceholder,
+    Interception: validationPlaceholder
+  },
+  GamepadType: {
+    Xbox360: validationPlaceholder,
+    DualShock4: validationPlaceholder
   }
-) as typeof maa
+} satisfies ControllerRuntimeConstants
 
 export const ctrlRtBase = computed<ControllerRuntimeBase | null>(() => {
   if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
@@ -51,7 +70,11 @@ export const ctrlRt = computed<{
   if (!interfaceJson.value || !hostState.value.interfaceConfigJson) {
     return {}
   }
-  const rt = buildControllerRuntime(interfaceJson.value, hostState.value.interfaceConfigJson)
+  const rt = buildControllerRuntime(
+    interfaceJson.value,
+    hostState.value.interfaceConfigJson,
+    controllerRuntimeConstants
+  )
   return typeof rt === 'string'
     ? {
         err: rt

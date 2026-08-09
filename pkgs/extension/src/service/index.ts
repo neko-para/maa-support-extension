@@ -26,6 +26,7 @@ import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSymbol'
 import { LaunchService } from './launch'
 import { NativeService } from './native'
+import { registerServices } from './registry'
 import { RootService } from './root'
 import { ServerService } from './server'
 import { ShortcutService } from './shortcut'
@@ -34,19 +35,20 @@ import { StatusBarService } from './statusBar'
 import { WebviewControlService } from './webview/control'
 
 export { context } from './context'
-
-export let stateService: StateService
-export let nativeService: NativeService
-export let serverService: ServerService
-export let shortcutService: ShortcutService
-export let rootService: RootService
-export let interfaceService: InterfaceService
-export let launchService: LaunchService
-export let debugService: DebugService
-export let commandService: CommandService
-export let diagnosticService: DiagnosticService
-export let statusBarService: StatusBarService
-export let agentService: AgentService
+export {
+  agentService,
+  commandService,
+  debugService,
+  diagnosticService,
+  interfaceService,
+  launchService,
+  nativeService,
+  rootService,
+  serverService,
+  shortcutService,
+  stateService,
+  statusBarService
+} from './registry'
 
 export let pipelineLanguageServices: PipelineLanguageProvider[]
 export let interfaceLanguageServices: InterfaceLanguageProvider[]
@@ -56,18 +58,21 @@ export let webviewControlService: WebviewControlService
 export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
 
-  stateService = new StateService()
-  nativeService = new NativeService()
-  serverService = new ServerService()
-  shortcutService = new ShortcutService()
-  rootService = new RootService()
-  interfaceService = new InterfaceService()
-  launchService = new LaunchService()
-  debugService = new DebugService()
-  commandService = new CommandService()
-  diagnosticService = new DiagnosticService()
-  statusBarService = new StatusBarService()
-  agentService = new AgentService()
+  const services = {
+    stateService: new StateService(),
+    nativeService: new NativeService(),
+    serverService: new ServerService(),
+    shortcutService: new ShortcutService(),
+    rootService: new RootService(),
+    interfaceService: new InterfaceService(),
+    launchService: new LaunchService(),
+    debugService: new DebugService(),
+    commandService: new CommandService(),
+    diagnosticService: new DiagnosticService(),
+    statusBarService: new StatusBarService(),
+    agentService: new AgentService()
+  }
+  registerServices(services)
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),
@@ -93,18 +98,18 @@ export async function init(ctx: vscode.ExtensionContext) {
 
   webviewControlService = new WebviewControlService()
 
-  await stateService.init()
-  await nativeService.init()
-  await serverService.init()
-  await shortcutService.init()
-  await rootService.init()
-  await interfaceService.init()
-  await launchService.init()
-  await debugService.init()
-  await commandService.init()
-  await diagnosticService.init()
-  await statusBarService.init()
-  await agentService.init()
+  await services.stateService.init()
+  await services.nativeService.init()
+  await services.serverService.init()
+  await services.shortcutService.init()
+  await services.rootService.init()
+  await services.interfaceService.init()
+  await services.launchService.init()
+  await services.debugService.init()
+  await services.commandService.init()
+  await services.diagnosticService.init()
+  await services.statusBarService.init()
+  await services.agentService.init()
 
   for (const service of pipelineLanguageServices) {
     await service.init()

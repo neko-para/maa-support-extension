@@ -3,9 +3,9 @@ import * as vscode from 'vscode'
 import { t } from '@nekosu/maa-locale'
 import type { InterfaceRuntime } from '@nekosu/maa-pipeline-manager'
 
-import { debugService, interfaceService, serverService } from '.'
 import { logger, loggerChannel } from '../utils/logger'
 import { BaseService } from './context'
+import { debugService, interfaceService, serverService } from './registry'
 import { WebviewLaunchPanel } from './webview/launch'
 
 // export function stopAgent(agent?: vscode.TaskExecution | vscode.DebugSession) {

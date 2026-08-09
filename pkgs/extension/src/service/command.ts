@@ -9,6 +9,12 @@ import {
   shouldStrip
 } from '@nekosu/maa-tasker'
 
+import { commands } from '../command'
+import { getBlockingMissingTasks } from '../utils/evalIssues'
+import { isMaaAssistantArknights } from '../utils/fs'
+import { logger } from '../utils/logger'
+import { BaseService } from './context'
+import { autoConvertRangeLocation, convertRange } from './language/utils'
 import {
   interfaceService,
   launchService,
@@ -16,13 +22,7 @@ import {
   serverService,
   shortcutService,
   stateService
-} from '.'
-import { commands } from '../command'
-import { getBlockingMissingTasks } from '../utils/evalIssues'
-import { isMaaAssistantArknights } from '../utils/fs'
-import { logger } from '../utils/logger'
-import { BaseService } from './context'
-import { autoConvertRangeLocation, convertRange } from './language/utils'
+} from './registry'
 import type { ShortcutCommand } from './shortcut'
 import { toPngDataUrl } from './utils/png'
 import { type OpenCropPayload, type OpenCropResult, openCropPanel } from './webview/crop'

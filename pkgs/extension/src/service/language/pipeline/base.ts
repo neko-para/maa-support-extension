@@ -17,9 +17,9 @@ import {
 } from '@nekosu/maa-pipeline-manager'
 import type { MaaTask } from '@nekosu/maa-tasker'
 
-import { interfaceService, rootService } from '../..'
 import { isMaaAssistantArknights, pipelineSuffix } from '../../../utils/fs'
 import { BaseService } from '../../context'
+import { interfaceService, rootService } from '../../registry'
 
 export class PipelineLanguageProvider extends BaseService {
   provider?: vscode.Disposable

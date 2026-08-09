@@ -35,9 +35,11 @@
 ### 服务模式
 
 - 所有服务继承自 `BaseService` → `DisposableHelper`
-- 服务实例化为模块级单例（`let` 变量），在 `service/index.ts` 中统一创建
+- `service/index.ts` 是唯一 composition root，统一构造全部核心服务、注册后再执行初始化
+- 服务单例的 live bindings 位于 `service/registry.ts`；该模块对实现类只能使用 `import type`
+- 服务实现和 Provider 只能从 registry 获取其他服务，不得导入 `service/index.ts`
 - 服务通过 `constructor()` 同步初始化 + `async init()` 异步初始化
-- 无依赖注入容器，服务间通过模块级变量直接互相引用
+- 不使用第三方依赖注入容器；类型化 registry 负责 extension 单实例生命周期内的服务定位
 - 使用 `vscode.EventEmitter` 进行跨服务通信
 
 ### DisposableHelper.defer 模式

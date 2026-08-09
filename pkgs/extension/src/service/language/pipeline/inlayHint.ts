@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 
 import { type AbsolutePath, extractTaskRef } from '@nekosu/maa-pipeline-manager'
 
-import { interfaceService } from '../..'
+import { interfaceService } from '../../registry'
 import { debounce } from '../../utils/debounce'
 import { PipelineLanguageProvider } from './base'
 

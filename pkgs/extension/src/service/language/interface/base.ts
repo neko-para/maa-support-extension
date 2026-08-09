@@ -8,8 +8,8 @@ import {
   joinPath
 } from '@nekosu/maa-pipeline-manager'
 
-import { interfaceService, rootService } from '../..'
 import { BaseService } from '../../context'
+import { interfaceService, rootService } from '../../registry'
 
 export class InterfaceLanguageProvider extends BaseService {
   provider?: vscode.Disposable

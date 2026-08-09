@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import { interfaceService } from '../..'
+import { interfaceService } from '../../registry'
 import { convertRange } from '../utils'
 import { InterfaceLanguageProvider } from './base'
 

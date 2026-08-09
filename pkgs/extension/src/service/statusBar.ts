@@ -2,10 +2,10 @@ import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
 
-import { nativeService } from '.'
 import packageJson from '../../../../release/package.json'
 import { commands } from '../command'
 import { BaseService } from './context'
+import { nativeService } from './registry'
 
 export class StatusBarService extends BaseService {
   extItem: vscode.StatusBarItem

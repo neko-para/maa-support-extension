@@ -8,8 +8,8 @@ import {
   performDiagnostic
 } from '@nekosu/maa-pipeline-manager'
 
-import { interfaceService, rootService } from '.'
 import { BaseService } from './context'
+import { interfaceService, rootService } from './registry'
 import { debounce } from './utils/debounce'
 import { FlushHelper } from './utils/flush'
 

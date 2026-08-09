@@ -6,11 +6,11 @@ import * as vscode from 'vscode'
 import { type AbsolutePath, type RelativePath, relativePath } from '@nekosu/maa-pipeline-manager'
 import type { FullConfig } from '@nekosu/maa-tools'
 
-import { stateService } from '.'
 import { loadConfig } from '../utils/config'
 import { type ResourceRoot, locateResourceRoot } from '../utils/fs'
 import { logger } from '../utils/logger'
 import { BaseService, context } from './context'
+import { stateService } from './registry'
 
 export class RootService extends BaseService {
   resourceRoots: ResourceRoot[] = []

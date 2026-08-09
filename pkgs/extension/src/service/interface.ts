@@ -18,10 +18,10 @@ import {
   buildTaskRuntime
 } from '@nekosu/maa-pipeline-manager'
 
-import { diagnosticService, rootService, serverService } from '.'
 import { MaaErrorDelegateImpl } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
+import { diagnosticService, rootService, serverService } from './registry'
 import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 
 export class InterfaceService extends BaseService {

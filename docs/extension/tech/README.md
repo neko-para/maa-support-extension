@@ -23,6 +23,7 @@ src/
 │   └── jimp.ts               # 精简 Jimp (PNG + crop)
 └── service/                  # 服务层
     ├── index.ts              # 服务创建和初始化编排
+    ├── registry.ts           # 零运行时实现依赖的服务 live bindings
     ├── context.ts            # DisposableHelper / BaseService 基类
     ├── state.ts              # StateService — 工作区状态持久化
     ├── shortcut.ts           # ShortcutService — 全局快捷键目标租约和跨窗口请求转发
@@ -93,6 +94,20 @@ DisposableHelper
        ├── InterfaceLanguageProvider → Interface*Providers
        └── PipelineLanguageProvider → Pipeline*Providers
 ```
+
+## 服务组合与依赖
+
+`service/index.ts` 是唯一 composition root，负责按以下阶段启动服务：
+
+1. 初始化 VS Code extension context
+2. 构造全部核心服务
+3. 通过 `registerServices()` 一次性发布到 `service/registry.ts`
+4. 构造依赖核心服务的 Language/Webview Provider
+5. 按显式顺序执行各服务的异步 `init()`
+
+服务实现只从 `registry.ts` 读取其他单例，不得反向导入 `index.ts`。registry 对实现类全部使用 `import type`，编译后没有指向服务实现的运行时依赖，因此不会形成 `index → implementation → index` 的 ESM 环。架构测试使用 TypeScript AST 检查这两项约束。
+
+当前服务均服从 VS Code extension 的单实例生命周期，且 Server/Agent 等领域存在双向协作；引入第三方 DI 容器不会消除这些领域关系。类型化 registry 加显式 composition root 已覆盖初始化顺序和运行时模块环问题，因此不增加 DI 框架。
 
 ## 跨窗口全局快捷键
 

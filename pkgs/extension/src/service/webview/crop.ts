@@ -5,13 +5,19 @@ import * as vscode from 'vscode'
 import { locale, t } from '@nekosu/maa-locale'
 import type { CropHostState, CropHostToWeb, CropWebToHost, WebToHost } from '@nekosu/maa-types'
 
-import { interfaceService, launchService, nativeService, rootService, stateService } from '..'
 import { Jimp } from '../../tools/jimp'
 import { imageSuffix, isMaaAssistantArknights } from '../../utils/fs'
 import { logger } from '../../utils/logger'
 import { getTooltipDisabled } from '../../utils/settings'
 import { WebviewPanelProvider } from '../../utils/webview/panel'
 import { context } from '../context'
+import {
+  interfaceService,
+  launchService,
+  nativeService,
+  rootService,
+  stateService
+} from '../registry'
 import type { IpcType } from '../server'
 import { toPngDataUrl } from '../utils/png'
 import { isCropDev } from './dev'

@@ -12,6 +12,13 @@ import type {
   InterfaceRevealOption
 } from '@nekosu/maa-types'
 
+import { commands } from '../../command'
+import { isMaaAssistantArknights } from '../../utils/fs'
+import { logger } from '../../utils/logger'
+import { getTooltipDisabled } from '../../utils/settings'
+import { WebviewProvider, provideWebview } from '../../utils/webview/view'
+import { BaseService, context } from '../context'
+import { convertRange } from '../language/utils'
 import {
   interfaceService,
   launchService,
@@ -20,14 +27,7 @@ import {
   serverService,
   shortcutService,
   stateService
-} from '..'
-import { commands } from '../../command'
-import { isMaaAssistantArknights } from '../../utils/fs'
-import { logger } from '../../utils/logger'
-import { getTooltipDisabled } from '../../utils/settings'
-import { WebviewProvider, provideWebview } from '../../utils/webview/view'
-import { BaseService, context } from '../context'
-import { convertRange } from '../language/utils'
+} from '../registry'
 import { isCtrlDev } from './dev'
 
 export class WebviewControlService extends BaseService {

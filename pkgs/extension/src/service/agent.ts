@@ -7,10 +7,10 @@ import * as vscode from 'vscode'
 
 import { locale } from '@nekosu/maa-locale'
 
-import { nativeService, rootService, serverService } from '.'
 import pkg from '../../../../release/package.json'
 import { logger } from '../utils/logger'
 import { BaseService } from './context'
+import { nativeService, rootService, serverService } from './registry'
 
 type AgentInfo =
   | {

@@ -15,7 +15,7 @@
 
 ## @mse/extension
 
-- [ ] **TODO-7** — **无依赖注入**: 服务通过模块级变量互相引用，存在循环依赖风险（`interface.ts` 导入 `index.ts` 而 `index.ts` 也导出 `interfaceService`）。服务初始化是否需要显式依赖顺序或 DI 容器？
+- [x] **TODO-7** — **无依赖注入**: 已拆分 composition root 与服务注册表。`service/index.ts` 先构造全部核心服务，通过零运行时实现依赖的 `service/registry.ts` 一次性发布 live bindings，再构造 Provider 并按显式顺序执行 `init()`；18 个服务/Provider 不再反向导入 index。当前服务服从 extension 单实例生命周期，完整 DI 容器收益不足，因此保留类型化 registry，并用 TypeScript AST 架构测试禁止实现重新导入 composition root 或让 registry 引入运行时实现依赖。
 - [x] **TODO-8** — **MaaErrorDelegateImpl 静默吞错误**: 已确认这两个回调属于用户手动执行 MaaExpression 求值，而非后台 pipeline 解析诊断；回调也不含可用于编辑器诊断的文件位置。现在会在单次求值中收集并去重，求值失败时提示具体的阻断任务。`warnCannotFindBaseTask` 不直接提示用户：在 MaaAssistantArknights 官方服资源的 3252 个任务中，有 1463 个合法任务名称包含 `@` 但不存在对应后缀基任务；该回调仅用于从失败详情中排除这种非阻断 miss，避免大量误报。
 - [x] **TODO-9** — **硬编码路径假设**: 已确认三处路径均为有意约定，无需配置化：`src/MaaCore` 是可靠的 MaaAssistantArknights 项目标识，`config/maa_pi_config.json` 是插件项目配置的固定路径，工作区根目录的 `maatools.config.mts` 是 maa-tools 的约定配置入口。约定已记录到 extension 技术文档。
 - [x] **TODO-10** — **Proxy IPC 无 `then` 处理**: 已确认 extension 和 maa-server 的 IPC Proxy 均需对 `then` 返回 `undefined`，避免被 `await` / Promise 解析误判为 thenable 并发起错误 RPC。这是必要的 Proxy 兼容处理，已记录到 [ipc-architecture.md](extra/ipc-architecture.md#proxy-模式)。

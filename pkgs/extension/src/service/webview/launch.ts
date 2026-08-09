@@ -10,12 +10,12 @@ import type {
   WebToHost
 } from '@nekosu/maa-types'
 
-import { interfaceService, nativeService, serverService, stateService } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { getTooltipDisabled } from '../../utils/settings'
 import { WebviewPanelProvider } from '../../utils/webview/panel'
 import { context } from '../context'
+import { interfaceService, nativeService, serverService, stateService } from '../registry'
 import type { IpcType } from '../server'
 import { openCropPanel } from './crop'
 import { isLaunchDev } from './dev'

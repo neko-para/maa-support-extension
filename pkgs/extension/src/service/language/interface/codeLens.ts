@@ -2,8 +2,8 @@ import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
 
-import { interfaceService } from '../..'
 import { commands } from '../../../command'
+import { interfaceService } from '../../registry'
 import { debounce } from '../../utils/debounce'
 import { convertRange } from '../utils'
 import { InterfaceLanguageProvider } from './base'

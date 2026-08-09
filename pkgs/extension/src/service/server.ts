@@ -9,9 +9,15 @@ import {
   subToHostReq
 } from '@nekosu/maa-server-proto'
 
-import { agentService, nativeService, rootService, stateService, statusBarService } from '.'
 import { logger } from '../utils/logger'
 import { BaseService, context } from './context'
+import {
+  agentService,
+  nativeService,
+  rootService,
+  stateService,
+  statusBarService
+} from './registry'
 import { RpcManager } from './utils/rpc'
 import { WebviewLaunchPanel } from './webview/launch'
 

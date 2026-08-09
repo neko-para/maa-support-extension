@@ -4,10 +4,10 @@ import * as vscode from 'vscode'
 import { t } from '@nekosu/maa-locale'
 import { MaaVersionManager, type NpmRegistryType } from '@nekosu/maa-version-manager'
 
-import { serverService } from '.'
 import packageJson from '../../package.json'
 import { commands } from '../command'
 import { BaseService, context } from './context'
+import { serverService } from './registry'
 import { makePromise } from './utils/promise'
 
 const defaultRegistryType = 'npm'

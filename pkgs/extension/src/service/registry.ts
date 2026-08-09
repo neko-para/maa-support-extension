@@ -4,6 +4,7 @@ import type { DebugService } from './debug'
 import type { DiagnosticService } from './diagnostic'
 import type { InterfaceService } from './interface'
 import type { LaunchService } from './launch'
+import type { MpeService } from './mpe'
 import type { NativeService } from './native'
 import type { RootService } from './root'
 import type { ServerService } from './server'
@@ -24,6 +25,7 @@ export type ServiceRegistry = {
   diagnosticService: DiagnosticService
   statusBarService: StatusBarService
   agentService: AgentService
+  mpeService: MpeService
 }
 
 export let stateService: StateService
@@ -38,6 +40,7 @@ export let commandService: CommandService
 export let diagnosticService: DiagnosticService
 export let statusBarService: StatusBarService
 export let agentService: AgentService
+export let mpeService: MpeService
 
 export function registerServices(services: Partial<ServiceRegistry>) {
   if (services.stateService) stateService = services.stateService
@@ -52,4 +55,5 @@ export function registerServices(services: Partial<ServiceRegistry>) {
   if (services.diagnosticService) diagnosticService = services.diagnosticService
   if (services.statusBarService) statusBarService = services.statusBarService
   if (services.agentService) agentService = services.agentService
+  if (services.mpeService) mpeService = services.mpeService
 }

@@ -25,6 +25,7 @@ import { PipelineInlayHintsProvider } from './language/pipeline/inlayHint'
 import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSymbol'
 import { LaunchService } from './launch'
+import { MpeService } from './mpe'
 import { NativeService } from './native'
 import { type ServiceRegistry, registerServices } from './registry'
 import { RootService } from './root'
@@ -43,6 +44,7 @@ export {
   interfaceService,
   launchService,
   nativeService,
+  mpeService,
   rootService,
   serverService,
   shortcutService,
@@ -75,7 +77,8 @@ export async function init(ctx: vscode.ExtensionContext) {
     launchService: publish('launchService', new LaunchService()),
     debugService: publish('debugService', new DebugService()),
     commandService: publish('commandService', new CommandService()),
-    agentService: publish('agentService', new AgentService())
+    agentService: publish('agentService', new AgentService()),
+    mpeService: publish('mpeService', new MpeService())
   } satisfies ServiceRegistry
 
   pipelineLanguageServices = [
@@ -114,6 +117,7 @@ export async function init(ctx: vscode.ExtensionContext) {
   await services.diagnosticService.init()
   await services.statusBarService.init()
   await services.agentService.init()
+  await services.mpeService.init()
 
   for (const service of pipelineLanguageServices) {
     await service.init()

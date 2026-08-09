@@ -122,6 +122,20 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 
 > 注意：MaaAssistantArknights 的 pipeline JSON 语法与 MaaFramework V2 存在差异，插件对此的支持有限。
 
+### 11. 外部工具集成：MaaPipelineEditor
+
+对 MaaFramework Pipeline JSON/JSONC 文件提供可编辑的 MaaPipelineEditor（MPE）嵌入面板：
+
+- 可从文件树、编辑器正文、编辑器标题栏或命令面板打开
+- 同一文件复用已有面板，不同文件保持独立的加载、同步和保存状态
+- 初次打开和“从 MSE 同步”读取当前 VS Code `TextDocument` 内容，包含尚未落盘的修改
+- MPE 保存通过 `WorkspaceEdit` 写回原文档，保留 VS Code 的 dirty、undo/redo 和正常保存语义，不直接覆盖磁盘
+- MPE 加载后若源文档被外部编辑，保存时会提示先从 MSE 同步；用户也可以确认使用 MPE 内容强制覆盖
+- MPE iframe 使用 v1.3.0 协议；外部链接由宿主校验后交给 VS Code 打开，文档冲突由 MPE 提供同步/强制覆盖选择
+- MPE 地址可通过 `maa.pipelineEditorUrl` 配置，生产地址要求 HTTPS，本机 localhost 开发地址允许 HTTP
+
+该面板是外部编辑器集成，不改变普通 Pipeline 编辑器、命令和菜单的既有行为。
+
 ## MAA 日志与存储目录
 
 MaaFramework 原生日志（`maafw.log` / `maa.log`）和识别绘图默认写入当前活动 interface 项目的 `debug/`。`maatools.config.mts` 中的 `cwd`、`maaLogDir` 可覆盖该目录；没有活动项目或项目目录不可写时回退到 `context.storageUri/debug/`（无工作区时再回退到 `context.globalStorageUri/debug/`）。插件自身日志和上传图片副本仍保存在 VS Code storage，Native 模块与跨窗口协调文件仍保存在 global storage。

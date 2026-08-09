@@ -7,6 +7,7 @@ import ts from 'typescript'
 import {
   type ServiceRegistry,
   agentService,
+  mpeService,
   nativeService,
   registerServices,
   stateService
@@ -53,7 +54,8 @@ test('registry publishes the composed service instances', () => {
       'commandService',
       'diagnosticService',
       'statusBarService',
-      'agentService'
+      'agentService',
+      'mpeService'
     ].map(name => [name, { name }])
   ) as unknown as ServiceRegistry
 
@@ -61,6 +63,41 @@ test('registry publishes the composed service instances', () => {
 
   assert.equal(stateService, services.stateService)
   assert.equal(agentService, services.agentService)
+  assert.equal(mpeService, services.mpeService)
+})
+
+test('composition root publishes every registered service', async () => {
+  const source = await parse(compositionRoot)
+  const published = new Set<string>()
+
+  function visit(node: ts.Node) {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'publish' &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      published.add(node.arguments[0].text)
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+
+  assert.deepEqual([...published].sort(), [
+    'agentService',
+    'commandService',
+    'debugService',
+    'diagnosticService',
+    'interfaceService',
+    'launchService',
+    'mpeService',
+    'nativeService',
+    'rootService',
+    'serverService',
+    'shortcutService',
+    'stateService',
+    'statusBarService'
+  ])
 })
 
 test('incremental registration preserves services published earlier', () => {
@@ -105,7 +142,8 @@ test('composition root publishes services in construction dependency order', asy
     ['launchService', 'LaunchService'],
     ['debugService', 'DebugService'],
     ['commandService', 'CommandService'],
-    ['agentService', 'AgentService']
+    ['agentService', 'AgentService'],
+    ['mpeService', 'MpeService']
   ])
 })
 

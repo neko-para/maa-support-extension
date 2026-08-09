@@ -23,6 +23,10 @@
   - 执行任务
 - 截取图片 (依赖控制器提供截图能力)
 - 裁剪图片
+- MaaPipelineEditor 图形化编辑 (仅 MaaFramework Pipeline)
+  - 从文件树、编辑器正文或标题栏打开 JSON/JSONC Pipeline
+  - 保存时写回 VS Code 文档并保留撤销和未保存状态
+  - 使用“从 MSE 同步”重新载入当前文档内容
 
 ## For MaaFramework/MaaAssistantArknights project, providing following features:
 
@@ -47,6 +51,10 @@
   - Run tasks
 - Take screenshots (Relying on controllers for screenshot ability)
 - Crop images
+- MaaPipelineEditor graphical editing (MaaFramework Pipeline only)
+  - Open JSON/JSONC Pipeline files from Explorer, the editor context menu, or the editor title bar
+  - Write changes back to the VS Code document while preserving undo and dirty state
+  - Reload the current document with "Sync from MSE"
 
 ## 提供的vscode命令
 
@@ -78,6 +86,8 @@
   - 下载并切换插件自身使用的 MaaFramework.
 - Maa: 选择下载源
   - 选择下载插件自身使用的 MaaFramework 的镜像源.
+- 在 MPE 中打开
+  - 使用 MaaPipelineEditor 编辑当前受支持的 MaaFramework Pipeline 文件.
 
 先在 Maa 控制面板点击“激活全局快捷键”，将当前窗口设为唯一执行目标。VS Code 1.128 及以上可在用户 `keybindings.json` 中将上述任一命令配置为系统级快捷键，例如：
 
@@ -120,6 +130,8 @@ Use Ctrl Shift P (Command Shift P for MacOS) to open command panel and search
   - Download and change the version of MaaFramework used by extension.
 - Maa: select fetch registry
   - Select the mirrors to download MaaFramework used by extension.
+- Maa: open in MaaPipelineEditor
+  - Edit the current supported MaaFramework Pipeline file with MaaPipelineEditor.
 
 First click **Activate Global Shortcuts** in the Maa control panel to make that window the sole command target. With VS Code 1.128 or later, any command above can be configured as an OS-level shortcut in your user `keybindings.json`, for example:
 

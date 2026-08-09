@@ -18,6 +18,7 @@ import { autoConvertRangeLocation, convertRange } from './language/utils'
 import {
   interfaceService,
   launchService,
+  mpeService,
   rootService,
   serverService,
   shortcutService,
@@ -134,6 +135,11 @@ export class CommandService extends BaseService {
         }
       }
     )
+
+    this.defer = vscode.commands.registerCommand(commands.OpenMpe, async (uri?: vscode.Uri) => {
+      const target = uri ?? vscode.window.activeTextEditor?.document.uri
+      return target ? mpeService.open(target) : false
+    })
 
     this.defer = vscode.commands.registerCommand(commands.GotoTask, async (task?: string) => {
       await interfaceService.interfaceBundle?.flush()

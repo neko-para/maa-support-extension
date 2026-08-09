@@ -75,6 +75,10 @@
       {
         "title": "Maa(debug): query location",
         "command": "maa.debug.query-location"
+      },
+      {
+        "title": "%maa.command.open-mpe%",
+        "command": "maa.open-mpe"
       }
     ],
     "viewsContainers": {
@@ -139,6 +143,11 @@
           "type": "boolean",
           "description": "Use refactored pipeline completion provider. Set to false to fall back to legacy completion",
           "default": true
+        },
+        "maa.pipelineEditorUrl": {
+          "type": "string",
+          "description": "%maa.setting.pipeline-editor-url%",
+          "default": "https://mpe.codax.site/stable/"
         }
       }
     },
@@ -148,6 +157,25 @@
           "command": "maa.open-crop",
           "when": "resourceExtname == .png",
           "group": "navigation@100"
+        },
+        {
+          "command": "maa.open-mpe",
+          "when": "resourceExtname =~ /\\.(json|jsonc)$/",
+          "group": "navigation@110"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "maa.open-mpe",
+          "when": "maa.pipelineEditorAvailable",
+          "group": "navigation@110"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "maa.open-mpe",
+          "when": "maa.pipelineEditorAvailable",
+          "group": "navigation@110"
         }
       ]
     },

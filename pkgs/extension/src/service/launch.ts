@@ -1,10 +1,10 @@
 import * as vscode from 'vscode'
 
-import { logger, loggerChannel } from '@mse/utils'
 import { t } from '@nekosu/maa-locale'
 import type { InterfaceRuntime } from '@nekosu/maa-pipeline-manager'
 
 import { debugService, interfaceService, serverService } from '.'
+import { logger, loggerChannel } from '../utils/logger'
 import { BaseService } from './context'
 import { WebviewLaunchPanel } from './webview/launch'
 

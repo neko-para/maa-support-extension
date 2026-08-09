@@ -1,10 +1,10 @@
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
 import { t } from '@nekosu/maa-locale'
 import { MaaErrorDelegate, type MaaTaskExpr } from '@nekosu/maa-tasker'
 
 import { MaaEvalMissingIssueCollector } from './evalIssues'
+import { logger } from './logger'
 
 export class MaaErrorDelegateImpl extends MaaErrorDelegate {
   private readonly missingIssues = new MaaEvalMissingIssueCollector()

@@ -3,13 +3,13 @@ import { access, mkdir } from 'node:fs/promises'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
 import { type AbsolutePath, type RelativePath, relativePath } from '@nekosu/maa-pipeline-manager'
 import type { FullConfig } from '@nekosu/maa-tools'
 
 import { stateService } from '.'
 import { loadConfig } from '../utils/config'
 import { type ResourceRoot, locateResourceRoot } from '../utils/fs'
+import { logger } from '../utils/logger'
 import { BaseService, context } from './context'
 
 export class RootService extends BaseService {

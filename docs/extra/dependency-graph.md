@@ -32,12 +32,12 @@
    │    (CLI 检查器)    │    │   (VSCode 插件)  │  │   (Vue 前端)    │
    └────────────────────┘    └────────┬────────┘  └──────▲──────────┘
                                       │                  │
-                            ┌─────────┼─────────┐        │
-                            │         │         │        │
-                    ┌───────▼──┐ ┌───▼────┐ ┌──▼──────┐ │
-                    │maa-server│ │ types  │ │  utils   │ │
-                    │(代理进程) │ │(类型库)│ │(工具库)  │─┘
-                    └─────┬────┘ └────────┘ └──────────┘
+                            ┌─────────┴─────────┐        │
+                            │                   │        │
+                    ┌───────▼──┐          ┌────▼───┐    │
+                    │maa-server│          │ types  │────┘
+                    │(代理进程) │          │(类型库)│
+                    └─────┬────┘          └────────┘
                           │
                   ┌───────▼────────┐
                   │maa-server-proto│
@@ -80,7 +80,6 @@
 | -------------------- | ------------------------------------------------------------- |
 | `@nekosu/maa-tools`  | ← `maa-pipeline-manager`, `maa-locale`, `maa-version-manager` |
 | `@nekosu/maa-server` | ← `maa-server-proto`, `types`, `maa-pipeline-manager`         |
-| `@mse/utils`         | ← `types`                                                     |
 
 ### 第 4 层：最终用户
 
@@ -98,7 +97,7 @@
 2. maa-tasker    (第 1 层)
 3. maa-version-manager, maa-pipeline-manager, maa-locale (第 2 层，并行)
 4. types, maa-server-proto (第 2 层)
-5. maa-server, maa-tools, extension, utils (第 3-4 层)
+5. maa-server, maa-tools, extension (第 3-4 层)
 6. prettier-plugin-maafw-sort (独立，第 0 层)
 7. webview (Vite 独立构建)
 ```

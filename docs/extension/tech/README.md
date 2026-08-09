@@ -12,8 +12,13 @@ src/
 ├── utils/                    # 扩展级工具
 │   ├── config.ts             # maatools.config.mts 加载 (jiti)
 │   ├── fs.ts                 # 工作区文件系统辅助
+│   ├── logger.ts             # Winston 日志与 VS Code OutputChannel 适配
 │   ├── settings.ts           # VSCode 设置读取
-│   └── eval.ts               # MAA 表达式求值错误代理
+│   ├── eval.ts               # MAA 表达式求值错误代理
+│   └── webview/              # Host 侧 WebviewProvider 与开发模式 iframe 代理
+│       ├── view.ts           # 侧边栏 WebviewViewProvider
+│       ├── panel.ts          # 独立 WebviewPanel
+│       └── forward.html      # Vite HMR 消息桥
 ├── tools/                    # 服务端处理工具
 │   └── jimp.ts               # 精简 Jimp (PNG + crop)
 └── service/                  # 服务层
@@ -118,6 +123,10 @@ DisposableHelper
 
 `NativeService` 从 global state 读取镜像类型，并在构造 `MaaVersionManager` 时注入对应 registry。服务公开的 `registry` 访问器直接代理 manager，镜像选择命令不维护第二份运行时状态；manager 再为每次查询和安装捕获操作级快照。
 
+## 扩展级工具
+
+日志和 Host 侧 WebviewProvider 只由 extension 使用，直接位于 `src/utils/`，不再通过独立 workspace 包转发。`logger.ts` 统一配置 Console、VS Code OutputChannel 和文件 transport；`utils/webview/` 负责生产静态页面加载及开发模式 `forward.html` iframe 消息桥。
+
 ## 命令归属
 
 VS Code 命令按是否跨领域编排划分归属：
@@ -132,17 +141,16 @@ VS Code 命令按是否跨领域编排划分归属：
 
 ### 工作区依赖
 
-| 包                             | 角色                               |
-| ------------------------------ | ---------------------------------- |
-| `@nekosu/maa-server-proto`     | JSON-RPC 协议类型                  |
-| `@nekosu/maa-types`            | 前后端共享类型                     |
-| `@mse/utils`                   | 通用工具 (WebviewProvider, logger) |
-| `@nekosu/maa-locale`           | 国际化                             |
-| `@nekosu/maa-pipeline-manager` | 核心解析引擎                       |
-| `@nekosu/maa-tasker`           | MAA 任务类型和表达式               |
-| `@nekosu/maa-tools`            | `FullConfig` 类型                  |
-| `@nekosu/maa-version-manager`  | MaaFramework 版本管理              |
-| `@nekosu/simple-parser`        | 简单解析器                         |
+| 包                             | 角色                  |
+| ------------------------------ | --------------------- |
+| `@nekosu/maa-server-proto`     | JSON-RPC 协议类型     |
+| `@nekosu/maa-types`            | 前后端共享类型        |
+| `@nekosu/maa-locale`           | 国际化                |
+| `@nekosu/maa-pipeline-manager` | 核心解析引擎          |
+| `@nekosu/maa-tasker`           | MAA 任务类型和表达式  |
+| `@nekosu/maa-tools`            | `FullConfig` 类型     |
+| `@nekosu/maa-version-manager`  | MaaFramework 版本管理 |
+| `@nekosu/simple-parser`        | 简单解析器            |
 
 ### 外部依赖
 
@@ -158,6 +166,7 @@ VS Code 命令按是否跨领域编排划分归属：
 | `uuid`                                            | UUID 生成                  |
 | `source-map-support`                              | 源码映射                   |
 | `@jimp/core`、`@jimp/js-png`、`@jimp/plugin-crop` | 图片裁剪                   |
+| `winston`、`winston-transport`、`triple-beam`     | 结构化日志与 VS Code 输出  |
 
 ## 技术选型
 

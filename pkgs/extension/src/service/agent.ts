@@ -5,11 +5,11 @@ import * as path from 'node:path'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
 import { locale } from '@nekosu/maa-locale'
 
 import { nativeService, rootService, serverService } from '.'
 import pkg from '../../../../release/package.json'
+import { logger } from '../utils/logger'
 import { BaseService } from './context'
 
 type AgentInfo =

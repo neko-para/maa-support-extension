@@ -22,10 +22,6 @@ npm run watch # build模式启动前端, 不可热重载, 使用Run Extension As
 
 前后端公用类型 | common types for both the frontend and backend
 
-### pkgs/utils
-
-后端工具 | backend tools
-
 ### pkgs/locale
 
 国际化文案 | Localization texts

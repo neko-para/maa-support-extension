@@ -2,13 +2,13 @@ import * as os from 'node:os'
 import sms from 'source-map-support'
 import * as vscode from 'vscode'
 
-import { logger, setupLogger } from '@mse/utils'
 import { setLocale, t } from '@nekosu/maa-locale'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
 import { init, nativeService, statusBarService } from './service'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
+import { logger, setupLogger } from './utils/logger'
 
 sms.install()
 

@@ -3,7 +3,6 @@ import type { Node } from 'jsonc-parser'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
-import { WebviewProvider, logger, provideWebview } from '@mse/utils'
 import { locale, t } from '@nekosu/maa-locale'
 import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
 import type {
@@ -24,7 +23,9 @@ import {
 } from '..'
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
+import { logger } from '../../utils/logger'
 import { getTooltipDisabled } from '../../utils/settings'
+import { WebviewProvider, provideWebview } from '../../utils/webview/view'
 import { BaseService, context } from '../context'
 import { convertRange } from '../language/utils'
 import { isCtrlDev } from './dev'

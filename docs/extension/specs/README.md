@@ -52,6 +52,14 @@ this.defer = someDisposable
 
 用于 debounce 批量处理（如诊断扫描）。新 flush 请求在活动 flush 期间被排队，完成后重新执行。
 
+### Webview Provider
+
+Host 侧 Webview 基类位于 `src/utils/webview/`，使用 `@nekosu/maa-types` 的泛型协议约束消息方向。侧边栏使用 `WebviewProvider`，独立面板使用 `WebviewPanelProvider`；开发模式统一通过 `forward.html` 连接 Vite dev server。
+
+### 日志
+
+扩展内所有模块复用 `src/utils/logger.ts` 导出的 `logger`。VS Code OutputChannel 和文件 transport 仅在 `activate()` 中通过 `setupLogger()` 初始化一次；需要直接展示输出频道的服务使用同一模块导出的 `loggerChannel`。
+
 ## 外部接口
 
 本包的主要外部接口为 [VSCode Extension API](https://code.visualstudio.com/api) 的 `activate()` / `deactivate()` 生命周期钩子，以及通过 `package.json` 的 `contributes` 字段注册的命令、视图、语言特性。

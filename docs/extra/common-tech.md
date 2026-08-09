@@ -17,10 +17,7 @@
 - **配置**: 每个包的 `tsdown.config.mts`
 - **不打包例外**: `@maaxyz/maa-node` 始终排除（运行时动态导入）
 
-例外：
-
-- `@mse/utils`：不构建，由消费方 bundler 直接链接 TypeScript 源码（不对外发布）
-- `@mse/webview`：使用 Vite 构建（浏览器环境）
+例外：`@mse/webview` 使用 Vite 构建（浏览器环境）。
 
 ## 测试
 
@@ -35,7 +32,7 @@
 
 - **workspace 依赖**: 使用 `workspace:*` 协议
 - **`@nekosu/*`（发布包）**: 运行时依赖放在 `dependencies`，构建工具和类型放在 `devDependencies`
-- **`@mse/*`（内部包）**: 全部列为 `devDependencies`。这些包不构建也不发布，由最终消费者的 bundler 直接链接 TypeScript 源码，无需区分运行时/开发依赖
+- **`@mse/*`（内部包）**: 不发布到 npm，依赖全部列为 `devDependencies`，由 extension 或 Vite 的最终构建产物打包
 
 ### 包作用域
 

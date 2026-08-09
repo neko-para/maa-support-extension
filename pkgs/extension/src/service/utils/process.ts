@@ -4,8 +4,7 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
-
+import { logger } from '../../utils/logger'
 import { makePromise } from './promise'
 
 export class ProcessManager {

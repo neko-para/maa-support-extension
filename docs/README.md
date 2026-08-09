@@ -49,7 +49,6 @@ VSCode 插件 + CLI 工具的 pnpm monorepo，服务于 MaaFramework 和 MaaAssi
 | `@nekosu/maa-server-proto`           | 通信协议定义          | [maa-server-proto/](maa-server-proto/)                     |
 | `@nekosu/maa-version-manager`        | MaaFramework 版本管理 | [maa-version-manager/](maa-version-manager/)               |
 | `@nekosu/maa-types`                  | 共享类型和协议        | [types/](types/)                                           |
-| `@mse/utils`                         | 插件通用工具          | [utils/](utils/)                                           |
 | `@nekosu/prettier-plugin-maafw-sort` | Prettier 排序插件     | [prettier-plugin-maafw-sort/](prettier-plugin-maafw-sort/) |
 
 ## 跨包文档

@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
+import { logger } from './logger'
 
 export function currentWorkspace() {
   return vscode.workspace.workspaceFolders?.[0]?.uri ?? null

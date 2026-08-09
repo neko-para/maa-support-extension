@@ -1,8 +1,9 @@
 import { createJiti } from 'jiti/static'
 import { existsSync } from 'node:fs'
 
-import { logger } from '@mse/utils'
 import type { FullConfig } from '@nekosu/maa-tools'
+
+import { logger } from './logger'
 
 export async function loadConfig(file: string) {
   if (!existsSync(file)) {

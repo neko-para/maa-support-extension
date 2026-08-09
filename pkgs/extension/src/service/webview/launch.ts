@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 
-import { WebviewPanelProvider } from '@mse/utils'
 import { locale } from '@nekosu/maa-locale'
 import type { TaskName } from '@nekosu/maa-pipeline-manager'
 import type {
@@ -15,6 +14,7 @@ import { interfaceService, nativeService, serverService, stateService } from '..
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
 import { getTooltipDisabled } from '../../utils/settings'
+import { WebviewPanelProvider } from '../../utils/webview/panel'
 import { context } from '../context'
 import type { IpcType } from '../server'
 import { openCropPanel } from './crop'

@@ -20,7 +20,7 @@ npm run build
        ② maa-tasker
        ③ maa-version-manager, maa-pipeline-manager, maa-locale (并行)
        ④ types, maa-server-proto (并行)
-       ⑤ maa-server, maa-tools, extension, utils (并行)
+       ⑤ maa-server, maa-tools, extension (并行)
        ⑥ prettier-plugin-maafw-sort
     2. viteBuild: 构建 webview (Vite 多页面)
 ```
@@ -33,7 +33,6 @@ npm run build
 - Source map: 启用
 - 打包策略:
   - 大部分包: 完整打包
-  - `@mse/utils`: 无需构建（由消费方打包器直接处理）
   - `@nekosu/maa-server`: `@maaxyz/maa-node` 不打包（运行时动态导入）；tsdown 输出到 `dist/`，`scripts/build.mjs` 再拷贝到 `release/server/`
 
 ### MaaFramework 基线版本
@@ -120,7 +119,6 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 | 包          | 说明                                                         |
 | ----------- | ------------------------------------------------------------ |
-| `utils`     | 仅内部消费，无 `publishConfig`                               |
 | `webview`   | 随 extension 发布                                            |
 | `extension` | 发布到 VSCode Marketplace 和 Open VSX (`nekosu.maa-support`) |
 

@@ -13,7 +13,6 @@
 - `@mse/webview` — 插件 webview 端
 - `@nekosu/maa-server` — server 端
 - `@nekosu/maa-server-proto` — 协议定义端
-- `@mse/utils` — 工具端
 
 ## 核心能力
 

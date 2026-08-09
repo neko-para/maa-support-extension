@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
 import { t } from '@nekosu/maa-locale'
 import { type TaskDeclInfo, extractTaskRef } from '@nekosu/maa-pipeline-manager'
 import {
@@ -21,6 +20,7 @@ import {
 import { commands } from '../command'
 import { getBlockingMissingTasks } from '../utils/evalIssues'
 import { isMaaAssistantArknights } from '../utils/fs'
+import { logger } from '../utils/logger'
 import { BaseService } from './context'
 import { autoConvertRangeLocation, convertRange } from './language/utils'
 import type { ShortcutCommand } from './shortcut'

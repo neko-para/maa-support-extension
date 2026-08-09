@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import * as vscode from 'vscode'
 
-import { logger } from '@mse/utils'
-
+import { logger } from '../utils/logger'
 import { BaseService, context } from './context'
 
 export type ShortcutCommand = 'start' | 'toggle-pause' | 'stop' | 'screencap'

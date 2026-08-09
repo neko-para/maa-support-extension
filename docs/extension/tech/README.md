@@ -114,6 +114,16 @@ DisposableHelper
 - 后续启动任务、截图或其他需要服务端的操作会调用 `ServerService.ensureServer()`，重新启动 maa-server 并建立连接
 - 断线意味着子进程内的 Maa 运行实例已经丢失，重新连接不会也无法恢复原任务，因此断线后不立即启动空闲子进程
 
+## 命令归属
+
+VS Code 命令按是否跨领域编排划分归属：
+
+- 单一领域拥有的命令由对应服务或 Provider 注册，例如 MaaFramework 版本选择属于 `NativeService`，控制面板入口属于 `StatusBarService`，locale 提取属于 `PipelineCodeActionsProvider`
+- 需要协调多个服务、处理 Quick Pick、编辑器跳转、临时文档或消息提示的应用层命令由 `CommandService` 集中注册
+- `CommandService` 只负责 VS Code 交互与流程编排；runtime 构建、任务启动、RPC、interface 状态等核心操作仍由对应服务实现
+
+除非某组命令产生可独立复用的领域逻辑，否则不为缩短构造函数而拆分额外服务，避免扩大模块级服务之间的循环依赖。
+
 ## 依赖关系
 
 ### 工作区依赖

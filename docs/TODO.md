@@ -22,7 +22,7 @@
 - [x] **TODO-11** — **无自动重连**: 已确认当前采用按需重连：`connectionLost` 清空连接并更新状态，但不立即重启；下一次功能调用进入 `ServerService.ensureServer()` 时会重新启动 maa-server 并建立连接。断线时子进程内的 Maa 实例状态已经丢失，立即重连也无法恢复原任务，因此无需增加后台重试。连接生命周期已记录到 extension 技术文档。
 - [x] **TODO-12** — **InterfaceHoverProvider 是 no-op**: 已恢复 interface 本地化引用的悬停内容。历史实现读取 `InterfaceInfo.refs`；locale 解析重构将这些引用迁移到 `InterfaceInfo.layer.extraRefs` 时，旧逻辑被注释但 Provider 仍继续注册。现在按当前索引结构查找 `task.locale`，并复用各语言 resolved value 表格。
 - [x] **TODO-13** — **Admin 模式仅 Windows**: 已确认为有意的平台边界。Admin 模式用于 Windows UAC/进程完整性等级；macOS 的系统授权及 Linux 的 udev/用户组权限不应通过插件以 root 启动 maa-server 处理。控制面板在非 Windows 平台不暴露该开关。
-- [ ] **TODO-14** — **CommandService 职责混杂**: VSCode 命令注册直接写在 `CommandService` 构造函数中，而非委托给对应的服务。
+- [x] **TODO-14** — **CommandService 职责混杂**: 已确认当前分工是有意的应用层边界：仅由单一领域拥有的命令由对应服务注册（如 NativeService、StatusBarService、PipelineCodeActionsProvider），需要协调多个服务并处理 VS Code UI 的命令集中在 CommandService。核心操作已下沉到 InterfaceService、LaunchService、ServerService 等；继续按命令拆分会分散 UI 编排并加重模块级循环依赖，因此不做机械重构。命令归属约定已记录到 extension 技术文档。
 - [ ] **TODO-15** — **VSCode 命令命名未统一设计**: 命令命名空间缺乏一致的层级结构，属于历史遗留问题。
 
 ## @mse/webview

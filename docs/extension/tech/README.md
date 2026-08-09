@@ -101,7 +101,7 @@ DisposableHelper
 
 1. 初始化 VS Code extension context
 2. 构造全部核心服务
-3. 通过 `registerServices()` 一次性发布到 `service/registry.ts`
+3. 按构造依赖顺序通过 `registerServices()` 增量发布到 `service/registry.ts`，确保后续服务构造函数读取到已初始化依赖
 4. 构造依赖核心服务的 Language/Webview Provider
 5. 按显式顺序执行各服务的异步 `init()`
 

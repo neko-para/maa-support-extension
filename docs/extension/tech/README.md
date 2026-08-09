@@ -106,6 +106,14 @@ DisposableHelper
 - 每个 interface 项目的 `config/maa_pi_config.json` 保存该项目的插件配置
 - 工作区根目录的 `maatools.config.mts` 是 maa-tools 配置入口；插件同时监视该文件的变更
 
+## maa-server 连接生命周期
+
+插件采用按需重连，而非后台定时重试：
+
+- RPC 连接断开后，`RpcManager` 清空当前连接并发出 `connectionLost`，`ServerService` 将状态栏更新为断开
+- 后续启动任务、截图或其他需要服务端的操作会调用 `ServerService.ensureServer()`，重新启动 maa-server 并建立连接
+- 断线意味着子进程内的 Maa 运行实例已经丢失，重新连接不会也无法恢复原任务，因此断线后不立即启动空闲子进程
+
 ## 依赖关系
 
 ### 工作区依赖

@@ -39,17 +39,17 @@ export let diagnosticService: DiagnosticService
 export let statusBarService: StatusBarService
 export let agentService: AgentService
 
-export function registerServices(services: ServiceRegistry) {
-  stateService = services.stateService
-  nativeService = services.nativeService
-  serverService = services.serverService
-  shortcutService = services.shortcutService
-  rootService = services.rootService
-  interfaceService = services.interfaceService
-  launchService = services.launchService
-  debugService = services.debugService
-  commandService = services.commandService
-  diagnosticService = services.diagnosticService
-  statusBarService = services.statusBarService
-  agentService = services.agentService
+export function registerServices(services: Partial<ServiceRegistry>) {
+  if (services.stateService) stateService = services.stateService
+  if (services.nativeService) nativeService = services.nativeService
+  if (services.serverService) serverService = services.serverService
+  if (services.shortcutService) shortcutService = services.shortcutService
+  if (services.rootService) rootService = services.rootService
+  if (services.interfaceService) interfaceService = services.interfaceService
+  if (services.launchService) launchService = services.launchService
+  if (services.debugService) debugService = services.debugService
+  if (services.commandService) commandService = services.commandService
+  if (services.diagnosticService) diagnosticService = services.diagnosticService
+  if (services.statusBarService) statusBarService = services.statusBarService
+  if (services.agentService) agentService = services.agentService
 }

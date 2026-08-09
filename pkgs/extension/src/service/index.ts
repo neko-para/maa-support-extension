@@ -26,7 +26,7 @@ import { PipelineReferenceProvider } from './language/pipeline/reference'
 import { PipelineWorkspaceSymbolProvider } from './language/pipeline/workspaceSymbol'
 import { LaunchService } from './launch'
 import { NativeService } from './native'
-import { registerServices } from './registry'
+import { type ServiceRegistry, registerServices } from './registry'
 import { RootService } from './root'
 import { ServerService } from './server'
 import { ShortcutService } from './shortcut'
@@ -58,21 +58,25 @@ export let webviewControlService: WebviewControlService
 export async function init(ctx: vscode.ExtensionContext) {
   initContext(ctx)
 
-  const services = {
-    stateService: new StateService(),
-    nativeService: new NativeService(),
-    serverService: new ServerService(),
-    shortcutService: new ShortcutService(),
-    rootService: new RootService(),
-    interfaceService: new InterfaceService(),
-    launchService: new LaunchService(),
-    debugService: new DebugService(),
-    commandService: new CommandService(),
-    diagnosticService: new DiagnosticService(),
-    statusBarService: new StatusBarService(),
-    agentService: new AgentService()
+  const publish = <K extends keyof ServiceRegistry>(name: K, service: ServiceRegistry[K]) => {
+    registerServices({ [name]: service })
+    return service
   }
-  registerServices(services)
+
+  const services = {
+    stateService: publish('stateService', new StateService()),
+    nativeService: publish('nativeService', new NativeService()),
+    statusBarService: publish('statusBarService', new StatusBarService()),
+    serverService: publish('serverService', new ServerService()),
+    shortcutService: publish('shortcutService', new ShortcutService()),
+    rootService: publish('rootService', new RootService()),
+    diagnosticService: publish('diagnosticService', new DiagnosticService()),
+    interfaceService: publish('interfaceService', new InterfaceService()),
+    launchService: publish('launchService', new LaunchService()),
+    debugService: publish('debugService', new DebugService()),
+    commandService: publish('commandService', new CommandService()),
+    agentService: publish('agentService', new AgentService())
+  } satisfies ServiceRegistry
 
   pipelineLanguageServices = [
     new PipelineCodeLensProvider(),

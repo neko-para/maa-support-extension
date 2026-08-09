@@ -45,7 +45,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 上传图片
 - 应用预设配置
 - 切换 MaaFramework 版本
-- 表达式求值（MaaExpression）🄼
+- 表达式求值（MaaExpression）🄼；求值失败时提示去重后的阻断任务。名称包含 `@` 但后缀基任务不存在时仍按普通任务求值，不额外警告
 
 ### 3. 启动面板（Webview）
 

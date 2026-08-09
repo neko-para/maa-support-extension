@@ -19,6 +19,7 @@ import {
   stateService
 } from '.'
 import { commands } from '../command'
+import { getBlockingMissingTasks } from '../utils/evalIssues'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
 import { autoConvertRangeLocation, convertRange } from './language/utils'
@@ -191,9 +192,10 @@ export class CommandService extends BaseService {
       const intBundle = interfaceService.interfaceBundle
       await intBundle.flush(true)
 
+      interfaceService.evalErrorDelegate.reset()
       const result = intBundle.maaEvalTask(task)
       if (!result) {
-        vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+        this.finishMaaEvaluation(false)
         return false
       }
 
@@ -212,7 +214,7 @@ export class CommandService extends BaseService {
                 shouldStrip(TaskExprPropsVirtsMap[prop])
               )
               if (!exprResult) {
-                vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+                this.finishMaaEvaluation(false)
                 return false
               }
               listResult.push(...exprResult)
@@ -237,6 +239,7 @@ export class CommandService extends BaseService {
       }
       content = content.replace('{\n\n', '{\n')
 
+      this.finishMaaEvaluation(true)
       const doc = await vscode.workspace.openTextDocument({
         language: 'jsonc',
         content: `// ${t('maa.eval.json.eval-task')} ${task}\n// ${result.self.task} (${result.self.anchor})\n${content}`
@@ -262,12 +265,14 @@ export class CommandService extends BaseService {
         const intBundle = interfaceService.interfaceBundle
         await intBundle.flush(true)
 
+        interfaceService.evalErrorDelegate.reset()
         const result = intBundle.maaEvalExpr(expr as MaaTaskExpr, host, strip)
         if (!result) {
-          vscode.window.showErrorMessage(t('maa.eval.eval-failed'))
+          this.finishMaaEvaluation(false)
           return false
         }
 
+        this.finishMaaEvaluation(true)
         const doc = await vscode.workspace.openTextDocument({
           language: 'jsonc',
           content: `// ${t('maa.eval.json.eval-list')} ${host}: ${expr}${strip ? ` [${t('maa.eval.json.stripped')}]` : ''}\n${JSON.stringify(result, null, 4)}`
@@ -286,6 +291,20 @@ export class CommandService extends BaseService {
 
   async init() {
     console.log('init CommandService')
+  }
+
+  private finishMaaEvaluation(success: boolean) {
+    const issues = interfaceService.evalErrorDelegate.takeMissingIssues()
+
+    if (!success) {
+      const missingTasks = getBlockingMissingTasks(issues)
+      const detail =
+        missingTasks.length > 0
+          ? ` ${t('maa.pi.error.cannot-find-task', missingTasks.join(', '))}`
+          : ''
+      logger.error(`maa evaluation failed${detail}`)
+      vscode.window.showErrorMessage(`${t('maa.eval.eval-failed')}${detail}`)
+    }
   }
 
   private async routeShortcut(command: ShortcutCommand) {

@@ -4,7 +4,19 @@ import { logger } from '@mse/utils'
 import { t } from '@nekosu/maa-locale'
 import { MaaErrorDelegate, type MaaTaskExpr } from '@nekosu/maa-tasker'
 
+import { MaaEvalMissingIssueCollector } from './evalIssues'
+
 export class MaaErrorDelegateImpl extends MaaErrorDelegate {
+  private readonly missingIssues = new MaaEvalMissingIssueCollector()
+
+  reset() {
+    this.missingIssues.reset()
+  }
+
+  takeMissingIssues() {
+    return this.missingIssues.take()
+  }
+
   taskLoopDetected(tasks: string[]): void {
     vscode.window.showErrorMessage(`${t('maa.eval.loop-detected')} ${tasks.join(' -> ')}`)
   }
@@ -13,12 +25,12 @@ export class MaaErrorDelegateImpl extends MaaErrorDelegate {
     vscode.window.showErrorMessage(`${t('maa.eval.loop-detected')} ${exprs.join(' -> ')}`)
   }
 
-  cannotFindTask(_task: string, _prefix: string[]): void {
-    // logger.error(`cannot find ${task} with parent ${prefix}`)
+  cannotFindTask(task: string, prefix: string[]): void {
+    this.missingIssues.cannotFindTask(task, prefix)
   }
 
-  warnCannotFindBaseTask(_task: string): void {
-    // vscode.window.showWarningMessage(t('maa.eval.cannot-find-task-base', task))
+  warnCannotFindBaseTask(task: string): void {
+    this.missingIssues.warnCannotFindBaseTask(task)
   }
 
   parseExprError(expr: MaaTaskExpr, err: string): void {

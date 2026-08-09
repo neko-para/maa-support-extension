@@ -27,6 +27,7 @@ import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle
   interfaceConfigJson: InterfaceConfig
+  readonly evalErrorDelegate = new MaaErrorDelegateImpl()
 
   get interfaceJson(): Interface {
     if (!this.interfaceBundle?.content.object) {
@@ -157,7 +158,8 @@ export class InterfaceService extends BaseService {
       path.basename(root.interfaceUri.fsPath),
       rootService.config?.parser
     )
-    this.interfaceBundle.evalErrorDelegate = new MaaErrorDelegateImpl()
+    this.evalErrorDelegate.reset()
+    this.interfaceBundle.evalErrorDelegate = this.evalErrorDelegate
     this.interfaceBundle.on('interfaceChanged', () => {
       this.interfaceChanged.fire()
     })

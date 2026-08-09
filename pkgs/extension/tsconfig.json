@@ -3,10 +3,11 @@
   "compilerOptions": {
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "allowArbitraryExtensions": true,
     "types": ["@maaxyz/maa-node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.js"]
+  "include": ["src/**/*.ts", "src/**/*.js", "test/**/*.ts"]
 }

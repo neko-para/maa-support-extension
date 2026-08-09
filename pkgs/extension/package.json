@@ -2,7 +2,8 @@
   "name": "@mse/extension",
   "type": "module",
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "node --test test/evalIssues.test.ts"
   },
   "devDependencies": {
     "@jimp/core": "^1.6.0",

@@ -8,16 +8,13 @@
 - **类型**: 核心语法解析支持库
 - **版本**: 1.0.12
 
-> **已知设计失误**: 模块内依赖了 Node.js 的能力（如 `fs`、`path`），导致无法在 browser 环境中使用。即使做了 `IContentLoader` / `IContentWatcher` 等 FS 层抽象接口，底层实现仍然深度耦合 Node API。
->
-> **已知罕见 Bug**: 在插件和 checker 同时执行时，有概率错误删除所有图片文件（可能还有其他文件）。代码层面没有任何删除操作，怀疑与 watch 库有关，但理论上不应该发生。
-
 ## 目标用户
 
 本包是 monorepo 内部的核心引擎库，直接消费方包括：
 
 - `@mse/extension` — VSCode 插件的所有语言特性
 - `@nekosu/maa-tools` — CLI 检查器的 pipeline 加载和诊断
+- `@mse/webview` — 仅通过 `./logic` 使用浏览器端运行时配置构建
 - 间接消费方：通过 `@nekosu/maa-tools/pm` 子路径导出的外部用户
 
 ## 核心能力
@@ -65,12 +62,14 @@
 
 > **注意**: 格式切换功能是实验性的，会丢失注释。目前官方推荐使用其他方法迁移。
 
-### 5. 文件系统抽象
+### 5. Node.js 内容源抽象
 
 - `FsContentLoader` / `FsContentWatcher` — 文件读写和 chokidar 监视
 - `ContentJson<T>` — 带 debounce flush 的 JSON/JSONC 文件监视
 - `Bundle` / `BundleManager` — pipeline 资源目录管理
 - `InterfaceBundle.resolvePaths(controller, resource)` — 在不切换 active 状态的情况下计算有序资源路径，供批处理消费者规划隔离任务
+
+`IContentLoader` / `IContentWatcher` 用于在 Node.js host 内替换内容来源，例如让 VS Code 未保存文档覆盖磁盘内容；它们不抽象 `Bundle`、`InterfaceBundle` 的文件路径、事件循环和目录监视语义，因此不是通用的浏览器文件系统适配层。
 
 ### 6. 诊断引擎
 
@@ -97,4 +96,9 @@ Select、Switch 和 Checkbox 在用户未提供显式配置时均使用各自的
 
 ## 抽象边界
 
-本包是 **TypeScript 库**，设计目标是无 I/O、无原生依赖。但实际存在 Node.js API 耦合（见顶部设计失误说明）。
+本包提供两个明确的运行时入口：
+
+- `@nekosu/maa-pipeline-manager` — Node.js 入口，包含文件加载、chokidar 监视、路径编排、解析和诊断
+- `@nekosu/maa-pipeline-manager/logic` — 浏览器安全入口，只包含 interface 类型和无 I/O 的 runtime/option 构建
+
+浏览器消费者必须使用 `./logic`，不得从主入口导入。CI 会以 browser platform 实际打包该子路径，防止 Node.js API 越过入口边界。

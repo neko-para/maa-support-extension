@@ -20,7 +20,8 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "node --test test/browser.test.ts"
   },
   "dependencies": {
     "@nekosu/maa-locale": "workspace:*",
@@ -32,6 +33,7 @@
     "@maaxyz/maa-node": "5.12.2",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.5",
+    "esbuild": "^0.27.3",
     "typescript": "^5.9.3"
   }
 }

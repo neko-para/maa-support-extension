@@ -48,7 +48,13 @@ type ImageRelativePath = string & { __brand: 'ImageRelativePath' }
 
 ### 接口+实现分离
 
-Content loader/watcher 使用接口抽象，设计意图是支持测试注入和跨平台替换。
+Content loader/watcher 使用接口抽象，以支持 Node.js host 内的测试注入和内容源替换。该接口不代表完整文件编排层可运行于浏览器。
+
+### 入口约束
+
+- Node.js 消费者需要 parser、bundle、diagnostic 或文件监视时，从包主入口导入。
+- 浏览器消费者只能从 `@nekosu/maa-pipeline-manager/logic` 导入。
+- `logic/` 不得导入 `node:*`、chokidar、content、bundle、interface 编排或其他依赖 Node.js 的模块。
 
 ## 外部接口
 

@@ -4,6 +4,18 @@
 
 本包遵循 [通用技术约定](../extra/common-tech.md)。
 
+## 运行时入口
+
+| 入口                                   | 环境    | 能力                                                          |
+| -------------------------------------- | ------- | ------------------------------------------------------------- |
+| `@nekosu/maa-pipeline-manager`         | Node.js | 文件加载/监视、路径编排、parser、layer、diagnostic 与 runtime |
+| `@nekosu/maa-pipeline-manager/logic`   | Browser | interface 类型、runtime/option 构建；无文件系统和 Node API    |
+| `@nekosu/maa-tools/pm`（间接重新导出） | Node.js | 主入口的完整 API                                              |
+
+主入口中的 `Bundle` / `InterfaceBundle` 建模的是真实目录树，直接依赖 `node:path`、`node:events`、Node 事件循环以及 chokidar。`IContentLoader` / `IContentWatcher` 的边界只负责替换 Node host 内的内容读取和事件来源，供 VS Code 文档覆盖、测试实现等场景使用；它们并不承诺把完整文件编排层移植到浏览器。
+
+`./logic` 是独立构建入口，Webview 只从该入口导入。包级测试使用 esbuild 的 `platform: 'browser'` 打包其源码且不提供 Node polyfill；任何越界依赖都会直接导致测试失败。
+
 ## 模块架构
 
 ```
@@ -125,19 +137,18 @@ CLI checker 虽然是一次性消费者，仍复用 `FsContentWatcher` 的首次
 
 ### Dev 依赖
 
-| 包                 | 用途                                         |
-| ------------------ | -------------------------------------------- |
-| `@maaxyz/maa-node` | MAA 原生类型引用（`maa.RecognitionType` 等） |
+| 包                 | 用途                                                 |
+| ------------------ | ---------------------------------------------------- |
+| `@maaxyz/maa-node` | MAA 原生类型引用（`maa.RecognitionType` 等）         |
+| `esbuild`          | 验证 `./logic` 可在无 Node polyfill 的浏览器环境打包 |
 
 ## 技术选型
 
-| 选择                             | 理由                                                                       |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| `jsonc-parser` 而非 `JSON.parse` | 保留每个节点的源码偏移量和长度，支持精确诊断                               |
-| `chokidar` 而非 `fs.watch`       | 跨平台文件监视，更好的 debounce 和递归监视                                 |
-| 品牌化类型而非枚举               | 零运行时开销的名义类型，编译期防止路径混淆                                 |
-| EventEmitter 而非回调            | 支持多消费者、异步事件链（但 checker 侧使用困难，详见 [specs](../specs/)） |
-| 生成器函数                       | 惰性 AST 遍历，支持提前终止                                                |
-| MAA/Framework 双解析器           | 支持两种并存的 pipeline 语法                                               |
-
-> **设计失误**: 模块深度依赖 Node.js API（`fs`、`path`），导致无法在 browser 环境使用。`IContentLoader` / `IContentWatcher` 等抽象接口未能真正解耦——底层实现与 Node 强绑定。
+| 选择                             | 理由                                                                                      |
+| -------------------------------- | ----------------------------------------------------------------------------------------- |
+| `jsonc-parser` 而非 `JSON.parse` | 保留每个节点的源码偏移量和长度，支持精确诊断                                              |
+| `chokidar` 而非 `fs.watch`       | 跨平台文件监视，更好的 debounce 和递归监视                                                |
+| 品牌化类型而非枚举               | 零运行时开销的名义类型，编译期防止路径混淆                                                |
+| EventEmitter 而非回调            | 支持 Node host 内的多消费者、异步事件链（但 checker 侧使用困难，详见 [specs](../specs/)） |
+| 生成器函数                       | 惰性 AST 遍历，支持提前终止                                                               |
+| MAA/Framework 双解析器           | 支持两种并存的 pipeline 语法                                                              |

@@ -7,6 +7,7 @@ import ts from 'typescript'
 import {
   type ServiceRegistry,
   agentService,
+  mpeService,
   registerServices,
   stateService
 } from '../src/service/registry.ts'
@@ -52,7 +53,8 @@ test('registry publishes the composed service instances', () => {
       'commandService',
       'diagnosticService',
       'statusBarService',
-      'agentService'
+      'agentService',
+      'mpeService'
     ].map(name => [name, { name }])
   ) as unknown as ServiceRegistry
 
@@ -60,6 +62,7 @@ test('registry publishes the composed service instances', () => {
 
   assert.equal(stateService, services.stateService)
   assert.equal(agentService, services.agentService)
+  assert.equal(mpeService, services.mpeService)
 })
 
 test('incremental registration preserves services published earlier', () => {
@@ -70,6 +73,40 @@ test('incremental registration preserves services published earlier', () => {
   registerServices({ nativeService: native } as unknown as Partial<ServiceRegistry>)
 
   assert.equal(stateService, state)
+})
+
+test('composition root publishes every registered service', async () => {
+  const source = await parse(compositionRoot)
+  const published = new Set<string>()
+
+  function visit(node: ts.Node) {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'publish' &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      published.add(node.arguments[0].text)
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(source)
+
+  assert.deepEqual([...published].sort(), [
+    'agentService',
+    'commandService',
+    'debugService',
+    'diagnosticService',
+    'interfaceService',
+    'launchService',
+    'mpeService',
+    'nativeService',
+    'rootService',
+    'serverService',
+    'shortcutService',
+    'stateService',
+    'statusBarService'
+  ])
 })
 
 test('service implementations do not import the composition root', async () => {

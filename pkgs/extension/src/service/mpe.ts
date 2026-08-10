@@ -47,7 +47,7 @@ export class MpeService extends BaseService {
     this.defer = interfaceService.onResourceChanged(updateAvailability)
     await updateAvailability()
     this.defer = vscode.workspace.onDidCloseTextDocument(doc => {
-      this.panels.get(doc.uri.toString())?.dispose()
+      this.panels.get(doc.uri.toString())?.close()
     })
   }
 
@@ -129,10 +129,10 @@ class MpePanel implements vscode.Disposable {
     this.disposables.push(
       vscode.workspace.onDidRenameFiles(event => {
         if (event.files.some(file => file.oldUri.toString() === this.document.uri.toString()))
-          this.dispose()
+          this.close()
       }),
       vscode.workspace.onDidDeleteFiles(event => {
-        if (event.files.some(uri => uri.toString() === this.document.uri.toString())) this.dispose()
+        if (event.files.some(uri => uri.toString() === this.document.uri.toString())) this.close()
       })
     )
   }
@@ -341,6 +341,9 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private flush() {
     const queued = this.queue.splice(0)
     queued.forEach(message => this.send(message))
+  }
+  close() {
+    if (!this.disposed) this.panel.dispose()
   }
   dispose() {
     if (this.disposed) return

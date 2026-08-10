@@ -75,3 +75,10 @@ test('MPE host uses a nonce for its inline bridge script', () => {
   assert.match(source, /<script nonce="\$\{nonce\}">/)
   assert.doesNotMatch(source, /script-src 'unsafe-inline'/)
 })
+
+test('MPE document lifecycle closes the underlying webview panel', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /onDidCloseTextDocument\(doc => \{[\s\S]*?\.close\(\)\n    \}\)/)
+  assert.match(source, /close\(\) \{\n    if \(!this\.disposed\) this\.panel\.dispose\(\)\n  \}/)
+})

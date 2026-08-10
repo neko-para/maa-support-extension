@@ -109,6 +109,9 @@ test('MPE host uses a nonce for its inline bridge script', () => {
 test('MPE document lifecycle closes the underlying webview panel', () => {
   const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /onDidCloseTextDocument\(doc => \{[\s\S]*?\.close\(\)\n    \}\)/)
-  assert.match(source, /close\(\) \{\n    if \(!this\.disposed\) this\.panel\.dispose\(\)\n  \}/)
+  assert.match(source, /onDidCloseTextDocument\(doc => \{[\s\S]*?\.close\(\)\r?\n[ \t]{4}\}\)/)
+  assert.match(
+    source,
+    /close\(\) \{\r?\n[ \t]{4}if \(!this\.disposed\) this\.panel\.dispose\(\)\r?\n[ \t]{2}\}/
+  )
 })

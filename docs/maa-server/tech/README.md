@@ -2,7 +2,7 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
-本包遵循 [通用技术约定](../extra/common-tech.md)。`@maaxyz/maa-node` 不打包（运行时动态导入）。
+本包遵循 [通用技术约定](../extra/common-tech.md)。VSIX 中的服务器以无 `node_modules` 的独立子进程运行，因此构建时将全部 JavaScript 运行时依赖打入单文件；仅 `@maaxyz/maa-node` 不打包，由插件在运行时按已安装 MaaFramework 的绝对路径动态导入。
 
 ## 模块架构
 
@@ -77,6 +77,7 @@ src/
 | TCP socket 而非 stdio    | 子进程可能需要 UAC 提权，stdio 管道会断开 |
 | `vscode-jsonrpc`         | VSCode 生态标准，与插件端一致             |
 | 动态 import MaaFramework | 服务器与 MAA 安装位置解耦                 |
+| 运行时依赖打入单文件     | VSIX 子进程无需携带或查找 `node_modules`  |
 | Proxy IPC                | 消除样板代码，类型安全的双向调用          |
 | Throwaway instance       | 工具操作隔离，避免污染主实例              |
 

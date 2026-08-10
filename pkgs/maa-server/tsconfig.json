@@ -4,9 +4,10 @@
     "module": "ES2022",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "allowArbitraryExtensions": true,
     "verbatimModuleSyntax": true,
     "types": ["@maaxyz/maa-node", "@types/node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "tsdown.config.mts"]
 }

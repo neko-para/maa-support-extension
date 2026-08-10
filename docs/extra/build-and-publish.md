@@ -22,7 +22,9 @@ npm run build
        ④ types, maa-server-proto (并行)
        ⑤ maa-server, maa-tools, extension (并行)
        ⑥ prettier-plugin-maafw-sort
-    2. viteBuild: 构建 webview (Vite 多页面)
+    2. 将 maa-server/dist 拷贝到 release/server
+    3. 在系统临时目录隔离启动 maa-server，验证产物不依赖仓库 node_modules
+    4. viteBuild: 构建 webview (Vite 多页面)
 ```
 
 ## 构建配置
@@ -33,7 +35,7 @@ npm run build
 - Source map: 启用
 - 打包策略:
   - 大部分包: 完整打包
-  - `@nekosu/maa-server`: `@maaxyz/maa-node` 不打包（运行时动态导入）；tsdown 输出到 `dist/`，`scripts/build.mjs` 再拷贝到 `release/server/`
+  - `@nekosu/maa-server`: 使用 `deps.alwaysBundle` 将全部 JavaScript 运行时依赖打入单文件，只有 `@maaxyz/maa-node` 不打包（运行时动态导入）；tsdown 输出到 `dist/`，`scripts/build.mjs` 再拷贝到 `release/server/`
 
 ### MaaFramework 基线版本
 

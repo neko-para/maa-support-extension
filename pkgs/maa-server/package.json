@@ -1,6 +1,6 @@
 {
   "name": "@nekosu/maa-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "bin": {
     "maa-server": "dist/index.mjs"
@@ -18,7 +18,8 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "test": "node --test test/bundle.test.ts"
   },
   "dependencies": {
     "@nekosu/maa-pipeline-manager": "workspace:*",

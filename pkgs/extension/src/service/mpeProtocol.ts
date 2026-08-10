@@ -10,7 +10,7 @@ import {
 const formatting: FormattingOptions = { tabSize: 2, insertSpaces: true, eol: '\n' }
 
 export const mpeProtocol = 'mpe-embed'
-export const mpeProtocolVersion = '1.2.0'
+export const mpeProtocolVersion = '1.3.0'
 
 export type MpeProtocolMessage = {
   protocol: typeof mpeProtocol
@@ -55,12 +55,24 @@ export function updatePipelineText(
   previous: Record<string, unknown>,
   next: Record<string, unknown>
 ) {
+  // `next` is the complete Pipeline snapshot returned by MPE, not a partial patch.
   let result = text
   for (const key of new Set([...Object.keys(previous), ...Object.keys(next)])) {
     if (JSON.stringify(previous[key]) === JSON.stringify(next[key])) continue
     result = applyEdits(result, modify(result, [key], next[key], { formattingOptions: formatting }))
   }
   return result
+}
+
+export function hasDocumentVersionConflict(
+  loadedVersion: number | undefined,
+  requestedVersion: number,
+  currentVersion: number
+) {
+  return (
+    currentVersion !== requestedVersion ||
+    (loadedVersion !== undefined && currentVersion !== loadedVersion)
+  )
 }
 
 export function normalizeExternalUrl(value: unknown): string | null {

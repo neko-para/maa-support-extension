@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import {
+  hasDocumentVersionConflict,
   isCompatibleMpeMessage,
   isMpeReadyForRequest,
   mpeProtocol,
@@ -26,6 +27,35 @@ test('updates pipeline keys while preserving unrelated comments', () => {
 
   assert.match(result, /keep this comment/)
   assert.deepEqual(parsePipeline(result), next)
+})
+
+test('updates pipeline keys with complete snapshot deletion semantics', () => {
+  const original = '{\n  "A": {},\n  "B": {}\n}\n'
+  const result = updatePipelineText(original, parsePipeline(original), { A: { next: ['C'] } })
+
+  assert.deepEqual(parsePipeline(result), { A: { next: ['C'] } })
+})
+
+test('detects document changes before and during an MPE save', () => {
+  assert.equal(hasDocumentVersionConflict(3, 3, 3), false)
+  assert.equal(hasDocumentVersionConflict(3, 4, 4), true)
+  assert.equal(hasDocumentVersionConflict(3, 3, 4), true)
+  assert.equal(hasDocumentVersionConflict(undefined, 3, 3), false)
+})
+
+test('delegates document conflict choices to the MPE protocol', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /!pending\.force/)
+  assert.match(source, /code: 'document_changed'/)
+  assert.match(source, /canForce: true/)
+  assert.doesNotMatch(source, /showWarningMessage\(/)
+})
+
+test('MPE host identifies itself with the MSE product name', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /host: \{ id: 'mse', name: 'MSE', repositoryUrl \}/)
 })
 
 test('rejects malformed and non-object pipeline content', () => {

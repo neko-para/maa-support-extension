@@ -9,6 +9,7 @@ import { logger } from '../utils/logger'
 import { BaseService } from './context'
 import {
   type MpeProtocolMessage,
+  hasDocumentVersionConflict,
   isCompatibleMpeMessage,
   isMpeReadyForRequest,
   mpeProtocol,
@@ -31,6 +32,19 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 function errorCode(error: unknown) {
   if (!error || typeof error !== 'object' || !('code' in error)) return 'save_failed'
   return typeof error.code === 'string' ? error.code : 'save_failed'
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, character => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }
+    return entities[character]
+  })
 }
 
 export class MpeService extends BaseService {
@@ -95,7 +109,8 @@ class MpePanel implements vscode.Disposable {
   private ready = false
   private disposed = false
   private queue: MpeProtocolMessage[] = []
-  private pendingSave?: { requestId: string; documentVersion: number }
+  private pendingSave?: { requestId: string; documentVersion: number; force: boolean }
+  private loadedDocumentVersion?: number
   private saveTimeout?: ReturnType<typeof setTimeout>
   private requestCounter = 0
   private readonly disposables: vscode.Disposable[] = []
@@ -147,7 +162,7 @@ class MpePanel implements vscode.Disposable {
       if (parsed.protocol !== 'https:' && !localHttp)
         throw new Error('URL must use HTTPS (HTTP is only allowed for localhost)')
     } catch (error) {
-      this.panel.webview.html = `<p>MPE URL is invalid: ${String(error)}</p>`
+      this.panel.webview.html = `<p>MPE URL is invalid: ${escapeHtml(String(error))}</p>`
       return
     }
     const origin = parsed.origin
@@ -171,7 +186,7 @@ class MpePanel implements vscode.Disposable {
           allowCustomTemplate: true
         },
         ui: { hideHeader: false, hideToolbar: false, hiddenPanels: [] },
-        host: { id: 'mse', name: 'Maa Pipeline Support', repositoryUrl }
+        host: { id: 'mse', name: 'MSE', repositoryUrl }
       }
     }
     this.panel.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{box-sizing:border-box;margin:0;padding:0;width:100%;height:100%;overflow:hidden}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="mpe" src="${frameUrl}" title="MaaPipelineEditor"></iframe><script nonce="${nonce}">
@@ -208,7 +223,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         this.load(message.requestId)
         break
       case 'mpe:saveRequest':
-        this.requestSave(message.requestId)
+        this.requestSave(message)
         break
       case 'mpe:saveData':
         this.applySave(message)
@@ -222,6 +237,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private load(requestId?: string) {
     try {
       const data = parsePipeline(this.document.getText())
+      this.loadedDocumentVersion = this.document.version
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
@@ -240,9 +256,15 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     }
   }
 
-  private requestSave(requestId?: string) {
+  private requestSave(message: MpeProtocolMessage) {
+    const requestId = message.requestId
     if (!requestId || this.pendingSave) return
-    this.pendingSave = { requestId, documentVersion: this.document.version }
+    const payload = asRecord(message.payload)
+    this.pendingSave = {
+      requestId,
+      documentVersion: this.document.version,
+      force: payload?.force === true
+    }
     this.saveTimeout = setTimeout(() => {
       if (this.pendingSave?.requestId !== requestId) return
       this.pendingSave = undefined
@@ -273,10 +295,28 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     this.pendingSave = undefined
     if (this.saveTimeout) clearTimeout(this.saveTimeout)
     try {
-      if (this.document.version !== pending.documentVersion)
-        throw Object.assign(new Error('Source document changed while saving'), {
-          code: 'document_changed'
+      if (
+        !pending.force &&
+        hasDocumentVersionConflict(
+          this.loadedDocumentVersion,
+          pending.documentVersion,
+          this.document.version
+        )
+      ) {
+        this.send({
+          protocol: mpeProtocol,
+          version: mpeProtocolVersion,
+          type: 'mpe:saveResult',
+          requestId: pending.requestId,
+          payload: {
+            success: false,
+            code: 'document_changed',
+            message: 'The host document has changed',
+            canForce: true
+          }
         })
+        return
+      }
       const data = asRecord(asRecord(message.payload)?.data)
       if (!data)
         throw Object.assign(new Error('MPE returned invalid Pipeline data'), {
@@ -295,6 +335,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       )
       if (!(await vscode.workspace.applyEdit(edit)))
         throw new Error('VS Code rejected the document edit')
+      this.loadedDocumentVersion = this.document.version
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,

@@ -11,7 +11,7 @@ import { joinPath } from '@nekosu/maa-pipeline-manager'
 import type { FullConfig } from '../types/config'
 import { loadBundle } from '../utils/bundle'
 import { setupMaa } from '../utils/maa'
-import { compareTestCases, groupResourcePlans } from './schedule'
+import { compareTestCases, getDefaultTestJobCount, groupResourcePlans } from './schedule'
 import type { GroupRecoResult, RecoJob, RecoResult } from './types'
 import { checkRect } from './utils'
 
@@ -134,7 +134,7 @@ export async function runTest(cfg: FullConfig) {
 
   for (const [poolIndex, group] of groupResourcePlans(plans).entries()) {
     const pool = workerpool.pool(path.join(import.meta.dirname, 'test', 'worker.mjs'), {
-      maxWorkers: cfg.test.job ?? os.cpus().length / 4,
+      maxWorkers: cfg.test.job ?? getDefaultTestJobCount(os.cpus().length),
       workerType: 'process',
       forkOpts: {
         env: {

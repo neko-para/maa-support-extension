@@ -4,6 +4,10 @@ export type ResourcePlan = {
   resourcePaths: readonly string[]
 }
 
+export function getDefaultTestJobCount(cpuCount: number) {
+  return Math.max(1, Math.floor(cpuCount / 4))
+}
+
 export function compareTestCases(left: TestCases, right: TestCases) {
   const controllerOrder = left.configs.controller.localeCompare(right.configs.controller)
   if (controllerOrder !== 0) {

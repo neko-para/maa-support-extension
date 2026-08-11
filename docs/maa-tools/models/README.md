@@ -6,7 +6,7 @@
 
 - **npm 包名**: `@nekosu/maa-tools`
 - **类型**: CLI 检查器和测试工具
-- **版本**: 1.0.25
+- **版本**: 1.1.1
 
 ## 目标用户
 
@@ -63,6 +63,8 @@ npx @nekosu/maa-tools test [config-path]
 - 按解析后的有序资源路径合并等价测试配置，每组复用一个 `workerpool` 并行执行
 - 验证识别命中（可选 bounding box 约束；缺失识别框按不匹配处理）
 - 按 controller/resource 排序后的稳定顺序输出成功/失败统计，不受资源组执行顺序影响
+
+`test.job` 控制每个资源路径组的最大 worker 数，必须为大于等于 1 的整数；默认值为逻辑 CPU 数除以 4 后向下取整，且最少为 1。
 
 ### 3. 项目初始化 (`init`)
 

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { compareTestCases, groupResourcePlans } from '../src/test/schedule.ts'
+import {
+  compareTestCases,
+  getDefaultTestJobCount,
+  groupResourcePlans
+} from '../src/test/schedule.ts'
 import type { TestCases } from '../src/types/config'
 
 function testCases(controller: string, resource: string): TestCases {
@@ -10,6 +14,14 @@ function testCases(controller: string, resource: string): TestCases {
     cases: []
   }
 }
+
+test('default test job count is an integer and at least one', () => {
+  assert.equal(getDefaultTestJobCount(0), 1)
+  assert.equal(getDefaultTestJobCount(1), 1)
+  assert.equal(getDefaultTestJobCount(3), 1)
+  assert.equal(getDefaultTestJobCount(8), 2)
+  assert.equal(getDefaultTestJobCount(22), 5)
+})
 
 test('test cases use a stable controller then resource order', () => {
   const cases = [testCases('b', 'a'), testCases('a', 'b'), testCases('a', 'a')]

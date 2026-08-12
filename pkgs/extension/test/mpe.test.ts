@@ -1,15 +1,21 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import * as path from 'node:path'
 import test from 'node:test'
 
 import {
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
   isMpeReadyForRequest,
+  mergePipelineAndConfig,
   mpeProtocol,
   mpeProtocolVersion,
+  mpeSidecarPath,
   normalizeExternalUrl,
+  parseMpeConfig,
   parsePipeline,
+  splitPipelineAndConfig,
+  stringifyMpeConfig,
   updatePipelineText
 } from '../src/service/mpeProtocol.ts'
 
@@ -114,4 +120,107 @@ test('MPE document lifecycle closes the underlying webview panel', () => {
     source,
     /close\(\) \{\r?\n[ \t]{4}if \(!this\.disposed\) this\.panel\.dispose\(\)\r?\n[ \t]{2}\}/
   )
+})
+
+test('MPE iframe delegates clipboard permissions to the embedded editor', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /allow="clipboard-read; clipboard-write; clipboard-sanitized-write"/)
+})
+
+test('resolves the hidden MPE sidecar next to a pipeline file', () => {
+  const pipelineJson = path.join('/proj', 'pipeline', 'fight.json')
+  const pipelineJsonc = path.join('/proj', 'pipeline', 'fight.jsonc')
+  const sidecar = path.join('/proj', 'pipeline', '.fight.mpe.json')
+
+  assert.equal(mpeSidecarPath(pipelineJson), sidecar)
+  assert.equal(mpeSidecarPath(pipelineJsonc), sidecar)
+})
+
+test('parses a separated MPE config file', () => {
+  const config = parseMpeConfig(`{
+    // layout
+    "file_config": { "filename": "fight" },
+    "node_configs": { "Start": { "position": { "x": 10, "y": 20 } } },
+  }`)
+
+  assert.equal(config.file_config.filename, 'fight')
+  assert.deepEqual(config.node_configs.Start, { position: { x: 10, y: 20 } })
+})
+
+test('merges a sidecar config into pipeline nodes for MPE load', () => {
+  const pipeline = {
+    Start: { next: ['End'] },
+    End: {}
+  }
+  const merged = mergePipelineAndConfig(
+    pipeline,
+    {
+      file_config: { filename: 'fight', coordinateMode: 'absolute-v1' },
+      node_configs: {
+        Start: { position: { x: 12, y: 34 }, handleDirection: 'horizontal' },
+        End: { position: { x: 56, y: 78 }, extra_positions: [{ x: 1, y: 2 }] }
+      },
+      external_nodes: {
+        Shared: { position: { x: 9, y: 8 } }
+      }
+    },
+    'fight',
+    Object.keys(pipeline)
+  )
+
+  assert.deepEqual(merged['$__mpe_config_fight'], {
+    $__mpe_code: { filename: 'fight', coordinateMode: 'absolute-v1' }
+  })
+  assert.deepEqual(merged.Start, {
+    next: ['End'],
+    $__mpe_code: { position: { x: 12, y: 34 }, handleDirection: 'horizontal' }
+  })
+  assert.deepEqual(merged.End, {
+    $__mpe_code: {
+      position: { x: 56, y: 78 },
+      extra_positions: [{ x: 1, y: 2 }]
+    }
+  })
+  assert.deepEqual(merged['$__mpe_external_Shared_fight'], {
+    $__mpe_code: { position: { x: 9, y: 8 } }
+  })
+})
+
+test('splits MPE save data back into a clean pipeline and sidecar config', () => {
+  const { pipeline, config } = splitPipelineAndConfig({
+    $__mpe_config_fight: {
+      $__mpe_code: { filename: 'fight', coordinateMode: 'absolute-v1' }
+    },
+    Start: {
+      next: ['End'],
+      $__mpe_code: { position: { x: 12, y: 34 }, handleDirection: 'horizontal' }
+    },
+    End: {},
+    $__mpe_sticker_Note_fight: {
+      $__mpe_code: { position: { x: 1, y: 2 }, text: 'note' }
+    }
+  })
+
+  assert.deepEqual(pipeline, {
+    Start: { next: ['End'] },
+    End: {}
+  })
+  assert.deepEqual(config.file_config, { filename: 'fight', coordinateMode: 'absolute-v1' })
+  assert.deepEqual(config.node_configs.Start, {
+    position: { x: 12, y: 34 },
+    handleDirection: 'horizontal'
+  })
+  assert.equal(config.node_configs.End, undefined)
+  assert.deepEqual(config.sticker_nodes?.Note, { position: { x: 1, y: 2 }, text: 'note' })
+  assert.match(stringifyMpeConfig(config), /"filename": "fight"/)
+})
+
+test('MPE host loads and writes the separated sidecar config', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /readSidecar/)
+  assert.match(source, /mergePipelineAndConfig/)
+  assert.match(source, /splitPipelineAndConfig/)
+  assert.match(source, /writeSidecar/)
 })

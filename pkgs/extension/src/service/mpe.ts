@@ -8,14 +8,20 @@ import { isMaaAssistantArknights } from '../utils/fs'
 import { logger } from '../utils/logger'
 import { BaseService } from './context'
 import {
+  type MpeConfig,
   type MpeProtocolMessage,
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
   isMpeReadyForRequest,
+  mergePipelineAndConfig,
   mpeProtocol,
   mpeProtocolVersion,
+  mpeSidecarPath,
   normalizeExternalUrl,
+  parseMpeConfig,
   parsePipeline,
+  splitPipelineAndConfig,
+  stringifyMpeConfig,
   updatePipelineText
 } from './mpeProtocol'
 import { interfaceService } from './registry'
@@ -111,6 +117,7 @@ class MpePanel implements vscode.Disposable {
   private queue: MpeProtocolMessage[] = []
   private pendingSave?: { requestId: string; documentVersion: number; force: boolean }
   private loadedDocumentVersion?: number
+  private separatedConfigUri?: vscode.Uri
   private saveTimeout?: ReturnType<typeof setTimeout>
   private requestCounter = 0
   private readonly disposables: vscode.Disposable[] = []
@@ -189,7 +196,7 @@ class MpePanel implements vscode.Disposable {
         host: { id: 'mse', name: 'MSE', repositoryUrl }
       }
     }
-    this.panel.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{box-sizing:border-box;margin:0;padding:0;width:100%;height:100%;overflow:hidden}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="mpe" src="${frameUrl}" title="MaaPipelineEditor"></iframe><script nonce="${nonce}">
+    this.panel.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{box-sizing:border-box;margin:0;padding:0;width:100%;height:100%;overflow:hidden}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="mpe" src="${frameUrl}" title="MaaPipelineEditor" allow="clipboard-read; clipboard-write; clipboard-sanitized-write"></iframe><script nonce="${nonce}">
 const api=acquireVsCodeApi(), frame=document.getElementById('mpe');
 window.addEventListener('message',e=>{if(e.source===frame.contentWindow&&e.origin==='${origin}'&&e.data?.protocol==='mpe-embed')api.postMessage(e.data);else if(e.source!==frame.contentWindow)frame.contentWindow?.postMessage(e.data,'${origin}')});
 frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
@@ -217,10 +224,10 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
           return
         this.ready = true
         this.flush()
-        this.load(`mse-load-${Date.now()}-${++this.requestCounter}`)
+        void this.load(`mse-load-${Date.now()}-${++this.requestCounter}`)
         break
       case 'mpe:reloadRequest':
-        this.load(message.requestId)
+        void this.load(message.requestId)
         break
       case 'mpe:saveRequest':
         this.requestSave(message)
@@ -234,9 +241,9 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     }
   }
 
-  private load(requestId?: string) {
+  private async load(requestId?: string) {
     try {
-      const data = parsePipeline(this.document.getText())
+      const data = await this.pipelineSnapshot()
       this.loadedDocumentVersion = this.document.version
       this.send({
         protocol: mpeProtocol,
@@ -254,6 +261,42 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         payload: { code: 'invalid_pipeline', message: String(error) }
       })
     }
+  }
+
+  private sidecarUri() {
+    return vscode.Uri.file(mpeSidecarPath(this.document.uri.fsPath))
+  }
+
+  private async readSidecar(uri: vscode.Uri) {
+    try {
+      await vscode.workspace.fs.stat(uri)
+    } catch {
+      return undefined
+    }
+    try {
+      return parseMpeConfig((await vscode.workspace.openTextDocument(uri)).getText())
+    } catch (error) {
+      logger.warn(`Failed to read MPE config ${path.basename(uri.fsPath)}: ${String(error)}`)
+      return undefined
+    }
+  }
+
+  private async pipelineSnapshot() {
+    const pipeline = parsePipeline(this.document.getText())
+    const sidecarUri = this.sidecarUri()
+    const sidecar = await this.readSidecar(sidecarUri)
+    if (!sidecar) {
+      this.separatedConfigUri = undefined
+      return pipeline
+    }
+    this.separatedConfigUri = sidecarUri
+    // mpe:loadPipeline only accepts a combined pipeline object, so merge the sidecar here.
+    return mergePipelineAndConfig(
+      pipeline,
+      sidecar,
+      path.basename(this.document.fileName).replace(/\.(json|jsonc)$/i, ''),
+      Object.keys(pipeline)
+    )
   }
 
   private requestSave(message: MpeProtocolMessage) {
@@ -322,8 +365,15 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         throw Object.assign(new Error('MPE returned invalid Pipeline data'), {
           code: 'invalid_pipeline'
         })
+      const sidecarUri = this.separatedConfigUri ?? this.sidecarUri()
+      const separated = !!this.separatedConfigUri || !!(await this.readSidecar(sidecarUri))
+      const next = separated ? splitPipelineAndConfig(data) : undefined
+      if (next) {
+        await this.writeSidecar(sidecarUri, next.config)
+        this.separatedConfigUri = sidecarUri
+      }
       const original = this.document.getText()
-      const edits = updatePipelineText(original, parsePipeline(original), data)
+      const edits = updatePipelineText(original, parsePipeline(original), next?.pipeline ?? data)
       const edit = new vscode.WorkspaceEdit()
       edit.replace(
         this.document.uri,
@@ -356,6 +406,24 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         }
       })
     }
+  }
+
+  private async writeSidecar(uri: vscode.Uri, config: MpeConfig) {
+    const text = stringifyMpeConfig(config)
+    const open = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString())
+    if (open) {
+      const edit = new vscode.WorkspaceEdit()
+      edit.replace(
+        uri,
+        new vscode.Range(open.positionAt(0), open.positionAt(open.getText().length)),
+        text
+      )
+      if (!(await vscode.workspace.applyEdit(edit))) {
+        throw new Error('VS Code rejected the MPE config edit')
+      }
+      return
+    }
+    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(text))
   }
 
   private async openExternal(value: unknown) {

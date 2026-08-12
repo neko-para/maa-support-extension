@@ -129,9 +129,11 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 可从文件树、编辑器正文、编辑器标题栏或命令面板打开
 - 同一文件复用已有面板，不同文件保持独立的加载、同步和保存状态
 - 初次打开和“从 MSE 同步”读取当前 VS Code `TextDocument` 内容，包含尚未落盘的修改
+- 若同目录存在分离配置 `.{文件名}.mpe.json`，打开和同步时会一并读取并合并到画布；保存时把 Pipeline 与配置重新拆回原文件和该 sidecar，避免把 `$__mpe_*` 写进 Pipeline
 - MPE 保存通过 `WorkspaceEdit` 写回原文档，保留 VS Code 的 dirty、undo/redo 和正常保存语义，不直接覆盖磁盘
 - MPE 加载后若源文档被外部编辑，保存时会提示先从 MSE 同步；用户也可以确认使用 MPE 内容强制覆盖
 - MPE iframe 使用 v1.3.0 协议；外部链接由宿主校验后交给 VS Code 打开，文档冲突由 MPE 提供同步/强制覆盖选择
+- 嵌入 iframe 会向 MPE 下放剪贴板读写权限，使复制/粘贴走浏览器 Clipboard API 而不是被 Webview Permissions-Policy 拦截
 - MPE 地址可通过 `maa.pipelineEditorUrl` 配置，生产地址要求 HTTPS，本机 localhost 开发地址允许 HTTP
 
 该面板是外部编辑器集成，不改变普通 Pipeline 编辑器、命令和菜单的既有行为。

@@ -4,10 +4,13 @@ import * as path from 'node:path'
 import test from 'node:test'
 
 import {
+  beginMpeLoad,
+  finishMpeLoad,
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
   isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
+  isMpeSaveAllowed,
   isSeparatedMpeSidecar,
   isSidecarNotFound,
   mergePipelineAndConfig,
@@ -180,6 +183,10 @@ test('rejects sidecar configs with wrong field types', () => {
     () => parseMpeConfig('{"file_config": {}, "node_configs": {}, "external_nodes": []}'),
     /external_nodes must be an object/
   )
+  assert.throws(
+    () => parseMpeConfig('{"file_config": {}, "node_configs": {}, "sticker_nodes": null}'),
+    /sticker_nodes must be an object/
+  )
 })
 
 test('parses a separated MPE config file', () => {
@@ -276,11 +283,27 @@ test('MPE host loads and writes the separated sidecar config', () => {
   assert.match(source, /status: 'invalid' as const/)
 })
 
-test('MPE host blocks save after a failed sidecar load', () => {
+test('blocks MPE save until a host load succeeds', () => {
+  let auth = beginMpeLoad()
+  assert.equal(isMpeSaveAllowed(auth), false)
+
+  auth = finishMpeLoad(false)
+  assert.equal(isMpeSaveAllowed(auth), false)
+
+  auth = finishMpeLoad(true)
+  assert.equal(isMpeSaveAllowed(auth), true)
+
+  auth = beginMpeLoad()
+  assert.equal(isMpeSaveAllowed(auth), false)
+})
+
+test('MPE host only accepts save after a successful load', () => {
   const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /this\.loadFailed = true/)
-  assert.match(source, /if \(this\.loadFailed\)/)
+  assert.match(source, /this\.loadAuth = beginMpeLoad\(\)/)
+  assert.match(source, /this\.loadAuth = finishMpeLoad\(true\)/)
+  assert.match(source, /this\.loadAuth = finishMpeLoad\(false\)/)
+  assert.match(source, /!isMpeSaveAllowed\(this\.loadAuth\)/)
   assert.match(source, /code: 'save_blocked'/)
   assert.match(source, /请先加载成功再保存/)
 })

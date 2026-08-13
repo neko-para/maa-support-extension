@@ -73,6 +73,20 @@ export function isMpeReadyForRequest(value: unknown, requestId: string) {
   )
 }
 
+export type MpeLoadAuth = 'idle' | 'loaded' | 'failed'
+
+export function beginMpeLoad(): MpeLoadAuth {
+  return 'idle'
+}
+
+export function finishMpeLoad(ok: boolean): MpeLoadAuth {
+  return ok ? 'loaded' : 'failed'
+}
+
+export function isMpeSaveAllowed(auth: MpeLoadAuth) {
+  return auth === 'loaded'
+}
+
 export function parsePipeline(text: string) {
   return parseJsonObject(text, 'Pipeline')
 }
@@ -95,23 +109,25 @@ export function parseMpeConfig(text: string): MpeConfig {
     node_configs: nodeConfigs
   }
 
-  const specials = [
-    [externalMarkPrefix, data.external_nodes, 'external_nodes'] as const,
-    [anchorMarkPrefix, data.anchor_nodes, 'anchor_nodes'] as const,
-    [stickerMarkPrefix, data.sticker_nodes, 'sticker_nodes'] as const,
-    [groupMarkPrefix, data.group_nodes, 'group_nodes'] as const
-  ]
-
-  for (const [prefix, nodes, field] of specials) {
-    if (nodes && !asRecord(nodes)) {
-      throw new Error(`MPE config ${field} must be an object`)
-    }
-    if (nodes) {
-      config[field as keyof MpeConfig] = nodes
-    }
-  }
+  const externalNodes = optionalNodeMap(data.external_nodes, 'external_nodes')
+  const anchorNodes = optionalNodeMap(data.anchor_nodes, 'anchor_nodes')
+  const stickerNodes = optionalNodeMap(data.sticker_nodes, 'sticker_nodes')
+  const groupNodes = optionalNodeMap(data.group_nodes, 'group_nodes')
+  if (externalNodes) config.external_nodes = externalNodes
+  if (anchorNodes) config.anchor_nodes = anchorNodes
+  if (stickerNodes) config.sticker_nodes = stickerNodes
+  if (groupNodes) config.group_nodes = groupNodes
 
   return config
+}
+
+function optionalNodeMap(value: unknown, field: string) {
+  if (value === undefined) return undefined
+  const nodes = asRecord(value)
+  if (!nodes) {
+    throw new Error(`MPE config ${field} must be an object`)
+  }
+  return nodes
 }
 
 export type MpeSidecarRead =

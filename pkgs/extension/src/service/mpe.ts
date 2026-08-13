@@ -9,11 +9,15 @@ import { logger } from '../utils/logger'
 import { BaseService } from './context'
 import {
   type MpeConfig,
+  type MpeLoadAuth,
   type MpeProtocolMessage,
+  beginMpeLoad,
+  finishMpeLoad,
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
   isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
+  isMpeSaveAllowed,
   isSeparatedMpeSidecar,
   isSidecarNotFound,
   mergePipelineAndConfig,
@@ -121,7 +125,7 @@ export class MpeService extends BaseService {
 class MpePanel implements vscode.Disposable {
   readonly panel: vscode.WebviewPanel
   private ready = false
-  private loadFailed = false
+  private loadAuth: MpeLoadAuth = 'idle'
   private disposed = false
   private queue: MpeProtocolMessage[] = []
   private pendingSave?: { requestId: string; documentVersion: number; force: boolean }
@@ -218,7 +222,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private receive(value: unknown) {
     if (asRecord(value)?.builtin === 'mpe-host-ready') {
       this.ready = false
-      this.loadFailed = false
+      this.loadAuth = beginMpeLoad()
       this.pendingSave = undefined
       this.loadSeq += 1
       if (this.saveTimeout) clearTimeout(this.saveTimeout)
@@ -255,12 +259,14 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
 
   private async load(requestId?: string) {
     const seq = ++this.loadSeq
+    this.loadAuth = beginMpeLoad()
     try {
       const snapshot = await this.pipelineSnapshot()
       if (this.disposed || seq !== this.loadSeq) {
         return
       }
       this.loadedDocumentVersion = snapshot.version
+      this.loadAuth = finishMpeLoad(true)
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
@@ -272,7 +278,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       if (this.disposed || seq !== this.loadSeq) {
         return
       }
-      this.loadFailed = true
+      this.loadAuth = finishMpeLoad(false)
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
@@ -408,7 +414,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       return true
     }
     try {
-      if (this.loadFailed) {
+      if (!isMpeSaveAllowed(this.loadAuth)) {
         this.send({
           protocol: mpeProtocol,
           version: mpeProtocolVersion,

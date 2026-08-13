@@ -29,8 +29,8 @@ src/
     ├── shortcut.ts           # ShortcutService — 全局快捷键目标租约和跨窗口请求转发
     ├── native.ts             # NativeService — MaaFramework 二进制管理
     ├── server.ts             # ServerService — RPC 连接管理
-    ├── mpe.ts                # MPE iframe 面板、握手、版本稳定快照、损坏 sidecar 拒绝加载、sidecar 与 Pipeline 同一次保存
-    ├── mpeProtocol.ts        # mpe-embed 协议校验、JSONC 写回、`.mpe.json` 合并/拆分、sidecar 缺失/损坏判定
+    ├── mpe.ts                # MPE iframe 面板、握手、版本稳定快照、损坏 sidecar 拒绝加载并禁止保存、sidecar 与 Pipeline 同一次保存
+    ├── mpeProtocol.ts        # mpe-embed 协议校验、JSONC 写回、`.mpe.json` 合并/拆分、sidecar 缺失/损坏/字段类型判定
     ├── root.ts               # RootService — 资源根目录扫描
     ├── interface.ts          # InterfaceService — 接口包管理
     ├── launch.ts             # LaunchService — 任务启动编排

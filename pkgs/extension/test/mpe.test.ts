@@ -167,6 +167,21 @@ test('treats only a missing sidecar as integrated mode', () => {
   assert.equal(isSeparatedMpeSidecar(false, invalid), true)
 })
 
+test('rejects sidecar configs with wrong field types', () => {
+  assert.throws(
+    () => parseMpeConfig('{"file_config": [], "node_configs": {}}'),
+    /file_config must be an object/
+  )
+  assert.throws(
+    () => parseMpeConfig('{"file_config": {}, "node_configs": "conflict"}'),
+    /node_configs must be an object/
+  )
+  assert.throws(
+    () => parseMpeConfig('{"file_config": {}, "node_configs": {}, "external_nodes": []}'),
+    /external_nodes must be an object/
+  )
+})
+
 test('parses a separated MPE config file', () => {
   const config = parseMpeConfig(`{
     // layout
@@ -259,6 +274,15 @@ test('MPE host loads and writes the separated sidecar config', () => {
   assert.match(source, /appendSidecarEdit/)
   assert.match(source, /status: 'missing' as const/)
   assert.match(source, /status: 'invalid' as const/)
+})
+
+test('MPE host blocks save after a failed sidecar load', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /this\.loadFailed = true/)
+  assert.match(source, /if \(this\.loadFailed\)/)
+  assert.match(source, /code: 'save_blocked'/)
+  assert.match(source, /请先加载成功再保存/)
 })
 
 test('MPE host binds the loaded version to the parsed snapshot', () => {

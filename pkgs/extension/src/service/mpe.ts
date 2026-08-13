@@ -121,6 +121,7 @@ export class MpeService extends BaseService {
 class MpePanel implements vscode.Disposable {
   readonly panel: vscode.WebviewPanel
   private ready = false
+  private loadFailed = false
   private disposed = false
   private queue: MpeProtocolMessage[] = []
   private pendingSave?: { requestId: string; documentVersion: number; force: boolean }
@@ -217,6 +218,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private receive(value: unknown) {
     if (asRecord(value)?.builtin === 'mpe-host-ready') {
       this.ready = false
+      this.loadFailed = false
       this.pendingSave = undefined
       this.loadSeq += 1
       if (this.saveTimeout) clearTimeout(this.saveTimeout)
@@ -270,6 +272,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       if (this.disposed || seq !== this.loadSeq) {
         return
       }
+      this.loadFailed = true
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
@@ -405,6 +408,20 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       return true
     }
     try {
+      if (this.loadFailed) {
+        this.send({
+          protocol: mpeProtocol,
+          version: mpeProtocolVersion,
+          type: 'mpe:saveResult',
+          requestId: pending.requestId,
+          payload: {
+            success: false,
+            code: 'save_blocked',
+            message: '请先加载成功再保存'
+          }
+        })
+        return
+      }
       if (rejectIfChanged()) {
         return
       }

@@ -79,14 +79,39 @@ export function parsePipeline(text: string) {
 
 export function parseMpeConfig(text: string): MpeConfig {
   const data = parseJsonObject(text, 'MPE config')
-  return {
-    file_config: { filename: '', ...asRecord(data.file_config) },
-    node_configs: asRecord(data.node_configs) ?? {},
-    ...(asRecord(data.external_nodes) ? { external_nodes: asRecord(data.external_nodes) } : {}),
-    ...(asRecord(data.anchor_nodes) ? { anchor_nodes: asRecord(data.anchor_nodes) } : {}),
-    ...(asRecord(data.sticker_nodes) ? { sticker_nodes: asRecord(data.sticker_nodes) } : {}),
-    ...(asRecord(data.group_nodes) ? { group_nodes: asRecord(data.group_nodes) } : {})
+
+  const fileConfig = asRecord(data.file_config)
+  if (!fileConfig) {
+    throw new Error('MPE config file_config must be an object')
   }
+
+  const nodeConfigs = asRecord(data.node_configs)
+  if (!nodeConfigs) {
+    throw new Error('MPE config node_configs must be an object')
+  }
+
+  const config: MpeConfig = {
+    file_config: { filename: '', ...fileConfig },
+    node_configs: nodeConfigs
+  }
+
+  const specials = [
+    [externalMarkPrefix, data.external_nodes, 'external_nodes'] as const,
+    [anchorMarkPrefix, data.anchor_nodes, 'anchor_nodes'] as const,
+    [stickerMarkPrefix, data.sticker_nodes, 'sticker_nodes'] as const,
+    [groupMarkPrefix, data.group_nodes, 'group_nodes'] as const
+  ]
+
+  for (const [prefix, nodes, field] of specials) {
+    if (nodes && !asRecord(nodes)) {
+      throw new Error(`MPE config ${field} must be an object`)
+    }
+    if (nodes) {
+      config[field as keyof MpeConfig] = nodes
+    }
+  }
+
+  return config
 }
 
 export type MpeSidecarRead =

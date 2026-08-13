@@ -8,20 +8,34 @@ import { isMaaAssistantArknights } from '../utils/fs'
 import { logger } from '../utils/logger'
 import { BaseService } from './context'
 import {
+  type MpeConfig,
+  type MpeLoadAuth,
   type MpeProtocolMessage,
+  beginMpeLoad,
+  finishMpeLoad,
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
+  isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
+  isMpeSaveAllowed,
+  isSeparatedMpeSidecar,
+  isSidecarNotFound,
+  mergePipelineAndConfig,
   mpeProtocol,
   mpeProtocolVersion,
+  mpeSidecarPath,
   normalizeExternalUrl,
+  parseMpeConfig,
   parsePipeline,
+  splitPipelineAndConfig,
+  stringifyMpeConfig,
   updatePipelineText
 } from './mpeProtocol'
 import { interfaceService } from './registry'
 
 const repositoryUrl = 'https://github.com/neko-para/maa-support-extension'
 const defaultUrl = 'https://mpe.codax.site/stable/'
+const snapshotRetries = 3
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -29,9 +43,13 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined
 }
 
-function errorCode(error: unknown) {
-  if (!error || typeof error !== 'object' || !('code' in error)) return 'save_failed'
-  return typeof error.code === 'string' ? error.code : 'save_failed'
+function errorCode(error: unknown, fallback = 'save_failed') {
+  if (!error || typeof error !== 'object' || !('code' in error)) return fallback
+  return typeof error.code === 'string' ? error.code : fallback
+}
+
+function documentRange(document: vscode.TextDocument) {
+  return new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length))
 }
 
 function escapeHtml(value: string) {
@@ -107,12 +125,15 @@ export class MpeService extends BaseService {
 class MpePanel implements vscode.Disposable {
   readonly panel: vscode.WebviewPanel
   private ready = false
+  private loadAuth: MpeLoadAuth = 'idle'
   private disposed = false
   private queue: MpeProtocolMessage[] = []
   private pendingSave?: { requestId: string; documentVersion: number; force: boolean }
   private loadedDocumentVersion?: number
+  private separatedConfigUri?: vscode.Uri
   private saveTimeout?: ReturnType<typeof setTimeout>
   private requestCounter = 0
+  private loadSeq = 0
   private readonly disposables: vscode.Disposable[] = []
   onDispose = () => {}
 
@@ -189,7 +210,7 @@ class MpePanel implements vscode.Disposable {
         host: { id: 'mse', name: 'MSE', repositoryUrl }
       }
     }
-    this.panel.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{box-sizing:border-box;margin:0;padding:0;width:100%;height:100%;overflow:hidden}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="mpe" src="${frameUrl}" title="MaaPipelineEditor"></iframe><script nonce="${nonce}">
+    this.panel.webview.html = `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${csp}"><style>html,body{box-sizing:border-box;margin:0;padding:0;width:100%;height:100%;overflow:hidden}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="mpe" src="${frameUrl}" title="MaaPipelineEditor" allow="clipboard-read; clipboard-write; clipboard-sanitized-write"></iframe><script nonce="${nonce}">
 const api=acquireVsCodeApi(), frame=document.getElementById('mpe');
 window.addEventListener('message',e=>{if(e.source===frame.contentWindow&&e.origin==='${origin}'&&e.data?.protocol==='mpe-embed')api.postMessage(e.data);else if(e.source!==frame.contentWindow)frame.contentWindow?.postMessage(e.data,'${origin}')});
 frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
@@ -201,7 +222,9 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private receive(value: unknown) {
     if (asRecord(value)?.builtin === 'mpe-host-ready') {
       this.ready = false
+      this.loadAuth = beginMpeLoad()
       this.pendingSave = undefined
+      this.loadSeq += 1
       if (this.saveTimeout) clearTimeout(this.saveTimeout)
       if (this.initMessage) this.panel.webview.postMessage(this.initMessage)
       return
@@ -217,10 +240,10 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
           return
         this.ready = true
         this.flush()
-        this.load(`mse-load-${Date.now()}-${++this.requestCounter}`)
+        void this.load(`mse-load-${Date.now()}-${++this.requestCounter}`)
         break
       case 'mpe:reloadRequest':
-        this.load(message.requestId)
+        void this.load(message.requestId)
         break
       case 'mpe:saveRequest':
         this.requestSave(message)
@@ -234,26 +257,97 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     }
   }
 
-  private load(requestId?: string) {
+  private async load(requestId?: string) {
+    const seq = ++this.loadSeq
+    this.loadAuth = beginMpeLoad()
     try {
-      const data = parsePipeline(this.document.getText())
-      this.loadedDocumentVersion = this.document.version
+      const snapshot = await this.pipelineSnapshot()
+      if (this.disposed || seq !== this.loadSeq) {
+        return
+      }
+      this.loadedDocumentVersion = snapshot.version
+      this.loadAuth = finishMpeLoad(true)
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
         type: 'mpe:loadPipeline',
         requestId,
-        payload: { fileName: path.basename(this.document.fileName), data }
+        payload: { fileName: path.basename(this.document.fileName), data: snapshot.data }
       })
     } catch (error) {
+      if (this.disposed || seq !== this.loadSeq) {
+        return
+      }
+      this.loadAuth = finishMpeLoad(false)
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
         type: 'mpe:error',
         requestId,
-        payload: { code: 'invalid_pipeline', message: String(error) }
+        payload: { code: errorCode(error, 'invalid_pipeline'), message: String(error) }
       })
     }
+  }
+
+  private sidecarUri() {
+    return vscode.Uri.file(mpeSidecarPath(this.document.uri.fsPath))
+  }
+
+  private async readSidecar(uri: vscode.Uri) {
+    try {
+      await vscode.workspace.fs.stat(uri)
+    } catch (error) {
+      if (isSidecarNotFound(error)) {
+        return { status: 'missing' as const }
+      }
+      logger.warn(`Failed to stat MPE config ${path.basename(uri.fsPath)}: ${String(error)}`)
+      return { status: 'invalid' as const, error }
+    }
+    try {
+      return {
+        status: 'ok' as const,
+        config: parseMpeConfig((await vscode.workspace.openTextDocument(uri)).getText())
+      }
+    } catch (error) {
+      if (isSidecarNotFound(error)) {
+        return { status: 'missing' as const }
+      }
+      logger.warn(`Failed to read MPE config ${path.basename(uri.fsPath)}: ${String(error)}`)
+      return { status: 'invalid' as const, error }
+    }
+  }
+
+  private async pipelineSnapshot() {
+    const sidecarUri = this.sidecarUri()
+    for (let attempt = 0; attempt < snapshotRetries; attempt++) {
+      const version = this.document.version
+      const pipeline = parsePipeline(this.document.getText())
+      const sidecar = await this.readSidecar(sidecarUri)
+      if (!isCurrentDocumentSnapshot(version, this.document.version)) {
+        continue
+      }
+      if (sidecar.status === 'invalid') {
+        throw Object.assign(new Error(`MPE config is invalid: ${String(sidecar.error)}`), {
+          code: 'invalid_config'
+        })
+      }
+      if (sidecar.status === 'missing') {
+        this.separatedConfigUri = undefined
+        return { data: pipeline, version }
+      }
+      this.separatedConfigUri = sidecarUri
+      // mpe:loadPipeline only accepts a combined pipeline object, so merge the sidecar here.
+      return {
+        data: mergePipelineAndConfig(
+          pipeline,
+          sidecar.config,
+          path.basename(this.document.fileName).replace(/\.(json|jsonc)$/i, ''),
+          Object.keys(pipeline)
+        ),
+        version
+      }
+    }
+    throw new Error('Pipeline changed while loading MPE snapshot')
   }
 
   private requestSave(message: MpeProtocolMessage) {
@@ -294,15 +388,33 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     if (!pending || message.requestId !== pending.requestId) return
     this.pendingSave = undefined
     if (this.saveTimeout) clearTimeout(this.saveTimeout)
-    try {
+    const rejectIfChanged = () => {
       if (
-        !pending.force &&
-        hasDocumentVersionConflict(
+        pending.force ||
+        !hasDocumentVersionConflict(
           this.loadedDocumentVersion,
           pending.documentVersion,
           this.document.version
         )
       ) {
+        return false
+      }
+      this.send({
+        protocol: mpeProtocol,
+        version: mpeProtocolVersion,
+        type: 'mpe:saveResult',
+        requestId: pending.requestId,
+        payload: {
+          success: false,
+          code: 'document_changed',
+          message: 'The host document has changed',
+          canForce: true
+        }
+      })
+      return true
+    }
+    try {
+      if (!isMpeSaveAllowed(this.loadAuth)) {
         this.send({
           protocol: mpeProtocol,
           version: mpeProtocolVersion,
@@ -310,11 +422,13 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
           requestId: pending.requestId,
           payload: {
             success: false,
-            code: 'document_changed',
-            message: 'The host document has changed',
-            canForce: true
+            code: 'save_blocked',
+            message: '请先加载成功再保存'
           }
         })
+        return
+      }
+      if (rejectIfChanged()) {
         return
       }
       const data = asRecord(asRecord(message.payload)?.data)
@@ -322,17 +436,28 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         throw Object.assign(new Error('MPE returned invalid Pipeline data'), {
           code: 'invalid_pipeline'
         })
+      const sidecarUri = this.separatedConfigUri ?? this.sidecarUri()
+      const sidecar = await this.readSidecar(sidecarUri)
+      const separated = isSeparatedMpeSidecar(!!this.separatedConfigUri, sidecar)
+      if (rejectIfChanged()) {
+        return
+      }
+      const next = separated ? splitPipelineAndConfig(data) : undefined
       const original = this.document.getText()
-      const edits = updatePipelineText(original, parsePipeline(original), data)
-      const edit = new vscode.WorkspaceEdit()
-      edit.replace(
-        this.document.uri,
-        new vscode.Range(
-          this.document.positionAt(0),
-          this.document.positionAt(this.document.getText().length)
-        ),
-        edits
+      const pipelineText = updatePipelineText(
+        original,
+        parsePipeline(original),
+        next?.pipeline ?? data
       )
+      if (rejectIfChanged()) {
+        return
+      }
+      const edit = new vscode.WorkspaceEdit()
+      if (next) {
+        this.appendSidecarEdit(edit, sidecarUri, next.config)
+        this.separatedConfigUri = sidecarUri
+      }
+      edit.replace(this.document.uri, documentRange(this.document), pipelineText)
       if (!(await vscode.workspace.applyEdit(edit)))
         throw new Error('VS Code rejected the document edit')
       this.loadedDocumentVersion = this.document.version
@@ -356,6 +481,19 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         }
       })
     }
+  }
+
+  private appendSidecarEdit(edit: vscode.WorkspaceEdit, uri: vscode.Uri, config: MpeConfig) {
+    const text = stringifyMpeConfig(config)
+    const open = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString())
+    if (open) {
+      edit.replace(uri, documentRange(open), text)
+      return
+    }
+    edit.createFile(uri, {
+      overwrite: true,
+      contents: new TextEncoder().encode(text)
+    })
   }
 
   private async openExternal(value: unknown) {

@@ -8,6 +8,8 @@ import {
   isCompatibleMpeMessage,
   isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
+  isSeparatedMpeSidecar,
+  isSidecarNotFound,
   mergePipelineAndConfig,
   mpeProtocol,
   mpeProtocolVersion,
@@ -144,6 +146,27 @@ test('resolves the hidden MPE sidecar next to a pipeline file', () => {
   assert.equal(mpeSidecarPath(pipelineJsonc), sidecar)
 })
 
+test('treats only a missing sidecar as integrated mode', () => {
+  assert.equal(isSidecarNotFound({ code: 'FileNotFound' }), true)
+  assert.equal(isSidecarNotFound({ code: 'ENOENT' }), true)
+  assert.equal(isSidecarNotFound({ code: 'NoPermissions' }), false)
+  assert.equal(isSidecarNotFound({ code: 'Unavailable' }), false)
+  assert.equal(isSidecarNotFound(new Error('MPE config JSONC parse failed')), false)
+  assert.equal(isSidecarNotFound(undefined), false)
+
+  const missing = { status: 'missing' as const }
+  const ok = {
+    status: 'ok' as const,
+    config: { file_config: { filename: 'fight' }, node_configs: {} }
+  }
+  const invalid = { status: 'invalid' as const, error: new Error('conflict') }
+
+  assert.equal(isSeparatedMpeSidecar(false, missing), false)
+  assert.equal(isSeparatedMpeSidecar(true, missing), true)
+  assert.equal(isSeparatedMpeSidecar(false, ok), true)
+  assert.equal(isSeparatedMpeSidecar(false, invalid), true)
+})
+
 test('parses a separated MPE config file', () => {
   const config = parseMpeConfig(`{
     // layout
@@ -227,9 +250,15 @@ test('MPE host loads and writes the separated sidecar config', () => {
   const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
 
   assert.match(source, /readSidecar/)
+  assert.match(source, /isSidecarNotFound/)
+  assert.match(source, /isSeparatedMpeSidecar/)
+  assert.match(source, /code: 'invalid_config'/)
+  assert.match(source, /errorCode\(error, 'invalid_pipeline'\)/)
   assert.match(source, /mergePipelineAndConfig/)
   assert.match(source, /splitPipelineAndConfig/)
   assert.match(source, /appendSidecarEdit/)
+  assert.match(source, /status: 'missing' as const/)
+  assert.match(source, /status: 'invalid' as const/)
 })
 
 test('MPE host binds the loaded version to the parsed snapshot', () => {

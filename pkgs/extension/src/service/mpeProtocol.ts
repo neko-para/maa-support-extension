@@ -89,6 +89,20 @@ export function parseMpeConfig(text: string): MpeConfig {
   }
 }
 
+export type MpeSidecarRead =
+  | { status: 'missing' }
+  | { status: 'ok'; config: MpeConfig }
+  | { status: 'invalid'; error: unknown }
+
+export function isSidecarNotFound(error: unknown) {
+  if (!error || typeof error !== 'object' || !('code' in error)) return false
+  return error.code === 'FileNotFound' || error.code === 'ENOENT'
+}
+
+export function isSeparatedMpeSidecar(alreadySeparated: boolean, sidecar: MpeSidecarRead) {
+  return alreadySeparated || sidecar.status !== 'missing'
+}
+
 export function mpeSidecarPath(pipelinePath: string) {
   const baseName = path.basename(pipelinePath).replace(/\.(json|jsonc)$/i, '')
   return path.join(path.dirname(pipelinePath), `.${baseName}.mpe.json`)

@@ -14,6 +14,8 @@ import {
   isCompatibleMpeMessage,
   isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
+  isSeparatedMpeSidecar,
+  isSidecarNotFound,
   mergePipelineAndConfig,
   mpeProtocol,
   mpeProtocolVersion,
@@ -37,9 +39,9 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined
 }
 
-function errorCode(error: unknown) {
-  if (!error || typeof error !== 'object' || !('code' in error)) return 'save_failed'
-  return typeof error.code === 'string' ? error.code : 'save_failed'
+function errorCode(error: unknown, fallback = 'save_failed') {
+  if (!error || typeof error !== 'object' || !('code' in error)) return fallback
+  return typeof error.code === 'string' ? error.code : fallback
 }
 
 function documentRange(document: vscode.TextDocument) {
@@ -273,7 +275,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         version: mpeProtocolVersion,
         type: 'mpe:error',
         requestId,
-        payload: { code: 'invalid_pipeline', message: String(error) }
+        payload: { code: errorCode(error, 'invalid_pipeline'), message: String(error) }
       })
     }
   }
@@ -285,14 +287,24 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private async readSidecar(uri: vscode.Uri) {
     try {
       await vscode.workspace.fs.stat(uri)
-    } catch {
-      return undefined
+    } catch (error) {
+      if (isSidecarNotFound(error)) {
+        return { status: 'missing' as const }
+      }
+      logger.warn(`Failed to stat MPE config ${path.basename(uri.fsPath)}: ${String(error)}`)
+      return { status: 'invalid' as const, error }
     }
     try {
-      return parseMpeConfig((await vscode.workspace.openTextDocument(uri)).getText())
+      return {
+        status: 'ok' as const,
+        config: parseMpeConfig((await vscode.workspace.openTextDocument(uri)).getText())
+      }
     } catch (error) {
+      if (isSidecarNotFound(error)) {
+        return { status: 'missing' as const }
+      }
       logger.warn(`Failed to read MPE config ${path.basename(uri.fsPath)}: ${String(error)}`)
-      return undefined
+      return { status: 'invalid' as const, error }
     }
   }
 
@@ -305,7 +317,12 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       if (!isCurrentDocumentSnapshot(version, this.document.version)) {
         continue
       }
-      if (!sidecar) {
+      if (sidecar.status === 'invalid') {
+        throw Object.assign(new Error(`MPE config is invalid: ${String(sidecar.error)}`), {
+          code: 'invalid_config'
+        })
+      }
+      if (sidecar.status === 'missing') {
         this.separatedConfigUri = undefined
         return { data: pipeline, version }
       }
@@ -314,7 +331,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       return {
         data: mergePipelineAndConfig(
           pipeline,
-          sidecar,
+          sidecar.config,
           path.basename(this.document.fileName).replace(/\.(json|jsonc)$/i, ''),
           Object.keys(pipeline)
         ),
@@ -397,7 +414,8 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
           code: 'invalid_pipeline'
         })
       const sidecarUri = this.separatedConfigUri ?? this.sidecarUri()
-      const separated = !!this.separatedConfigUri || !!(await this.readSidecar(sidecarUri))
+      const sidecar = await this.readSidecar(sidecarUri)
+      const separated = isSeparatedMpeSidecar(!!this.separatedConfigUri, sidecar)
       if (rejectIfChanged()) {
         return
       }

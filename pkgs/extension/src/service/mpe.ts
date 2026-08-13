@@ -12,6 +12,7 @@ import {
   type MpeProtocolMessage,
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
+  isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
   mergePipelineAndConfig,
   mpeProtocol,
@@ -28,6 +29,7 @@ import { interfaceService } from './registry'
 
 const repositoryUrl = 'https://github.com/neko-para/maa-support-extension'
 const defaultUrl = 'https://mpe.codax.site/stable/'
+const snapshotRetries = 3
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -38,6 +40,10 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 function errorCode(error: unknown) {
   if (!error || typeof error !== 'object' || !('code' in error)) return 'save_failed'
   return typeof error.code === 'string' ? error.code : 'save_failed'
+}
+
+function documentRange(document: vscode.TextDocument) {
+  return new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length))
 }
 
 function escapeHtml(value: string) {
@@ -120,6 +126,7 @@ class MpePanel implements vscode.Disposable {
   private separatedConfigUri?: vscode.Uri
   private saveTimeout?: ReturnType<typeof setTimeout>
   private requestCounter = 0
+  private loadSeq = 0
   private readonly disposables: vscode.Disposable[] = []
   onDispose = () => {}
 
@@ -209,6 +216,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     if (asRecord(value)?.builtin === 'mpe-host-ready') {
       this.ready = false
       this.pendingSave = undefined
+      this.loadSeq += 1
       if (this.saveTimeout) clearTimeout(this.saveTimeout)
       if (this.initMessage) this.panel.webview.postMessage(this.initMessage)
       return
@@ -242,17 +250,24 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   }
 
   private async load(requestId?: string) {
+    const seq = ++this.loadSeq
     try {
-      const data = await this.pipelineSnapshot()
-      this.loadedDocumentVersion = this.document.version
+      const snapshot = await this.pipelineSnapshot()
+      if (this.disposed || seq !== this.loadSeq) {
+        return
+      }
+      this.loadedDocumentVersion = snapshot.version
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
         type: 'mpe:loadPipeline',
         requestId,
-        payload: { fileName: path.basename(this.document.fileName), data }
+        payload: { fileName: path.basename(this.document.fileName), data: snapshot.data }
       })
     } catch (error) {
+      if (this.disposed || seq !== this.loadSeq) {
+        return
+      }
       this.send({
         protocol: mpeProtocol,
         version: mpeProtocolVersion,
@@ -282,21 +297,31 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   }
 
   private async pipelineSnapshot() {
-    const pipeline = parsePipeline(this.document.getText())
     const sidecarUri = this.sidecarUri()
-    const sidecar = await this.readSidecar(sidecarUri)
-    if (!sidecar) {
-      this.separatedConfigUri = undefined
-      return pipeline
+    for (let attempt = 0; attempt < snapshotRetries; attempt++) {
+      const version = this.document.version
+      const pipeline = parsePipeline(this.document.getText())
+      const sidecar = await this.readSidecar(sidecarUri)
+      if (!isCurrentDocumentSnapshot(version, this.document.version)) {
+        continue
+      }
+      if (!sidecar) {
+        this.separatedConfigUri = undefined
+        return { data: pipeline, version }
+      }
+      this.separatedConfigUri = sidecarUri
+      // mpe:loadPipeline only accepts a combined pipeline object, so merge the sidecar here.
+      return {
+        data: mergePipelineAndConfig(
+          pipeline,
+          sidecar,
+          path.basename(this.document.fileName).replace(/\.(json|jsonc)$/i, ''),
+          Object.keys(pipeline)
+        ),
+        version
+      }
     }
-    this.separatedConfigUri = sidecarUri
-    // mpe:loadPipeline only accepts a combined pipeline object, so merge the sidecar here.
-    return mergePipelineAndConfig(
-      pipeline,
-      sidecar,
-      path.basename(this.document.fileName).replace(/\.(json|jsonc)$/i, ''),
-      Object.keys(pipeline)
-    )
+    throw new Error('Pipeline changed while loading MPE snapshot')
   }
 
   private requestSave(message: MpeProtocolMessage) {
@@ -337,27 +362,33 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     if (!pending || message.requestId !== pending.requestId) return
     this.pendingSave = undefined
     if (this.saveTimeout) clearTimeout(this.saveTimeout)
-    try {
+    const rejectIfChanged = () => {
       if (
-        !pending.force &&
-        hasDocumentVersionConflict(
+        pending.force ||
+        !hasDocumentVersionConflict(
           this.loadedDocumentVersion,
           pending.documentVersion,
           this.document.version
         )
       ) {
-        this.send({
-          protocol: mpeProtocol,
-          version: mpeProtocolVersion,
-          type: 'mpe:saveResult',
-          requestId: pending.requestId,
-          payload: {
-            success: false,
-            code: 'document_changed',
-            message: 'The host document has changed',
-            canForce: true
-          }
-        })
+        return false
+      }
+      this.send({
+        protocol: mpeProtocol,
+        version: mpeProtocolVersion,
+        type: 'mpe:saveResult',
+        requestId: pending.requestId,
+        payload: {
+          success: false,
+          code: 'document_changed',
+          message: 'The host document has changed',
+          canForce: true
+        }
+      })
+      return true
+    }
+    try {
+      if (rejectIfChanged()) {
         return
       }
       const data = asRecord(asRecord(message.payload)?.data)
@@ -367,22 +398,25 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         })
       const sidecarUri = this.separatedConfigUri ?? this.sidecarUri()
       const separated = !!this.separatedConfigUri || !!(await this.readSidecar(sidecarUri))
+      if (rejectIfChanged()) {
+        return
+      }
       const next = separated ? splitPipelineAndConfig(data) : undefined
+      const original = this.document.getText()
+      const pipelineText = updatePipelineText(
+        original,
+        parsePipeline(original),
+        next?.pipeline ?? data
+      )
+      if (rejectIfChanged()) {
+        return
+      }
+      const edit = new vscode.WorkspaceEdit()
       if (next) {
-        await this.writeSidecar(sidecarUri, next.config)
+        this.appendSidecarEdit(edit, sidecarUri, next.config)
         this.separatedConfigUri = sidecarUri
       }
-      const original = this.document.getText()
-      const edits = updatePipelineText(original, parsePipeline(original), next?.pipeline ?? data)
-      const edit = new vscode.WorkspaceEdit()
-      edit.replace(
-        this.document.uri,
-        new vscode.Range(
-          this.document.positionAt(0),
-          this.document.positionAt(this.document.getText().length)
-        ),
-        edits
-      )
+      edit.replace(this.document.uri, documentRange(this.document), pipelineText)
       if (!(await vscode.workspace.applyEdit(edit)))
         throw new Error('VS Code rejected the document edit')
       this.loadedDocumentVersion = this.document.version
@@ -408,22 +442,17 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
     }
   }
 
-  private async writeSidecar(uri: vscode.Uri, config: MpeConfig) {
+  private appendSidecarEdit(edit: vscode.WorkspaceEdit, uri: vscode.Uri, config: MpeConfig) {
     const text = stringifyMpeConfig(config)
     const open = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString())
     if (open) {
-      const edit = new vscode.WorkspaceEdit()
-      edit.replace(
-        uri,
-        new vscode.Range(open.positionAt(0), open.positionAt(open.getText().length)),
-        text
-      )
-      if (!(await vscode.workspace.applyEdit(edit))) {
-        throw new Error('VS Code rejected the MPE config edit')
-      }
+      edit.replace(uri, documentRange(open), text)
       return
     }
-    await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(text))
+    edit.createFile(uri, {
+      overwrite: true,
+      contents: new TextEncoder().encode(text)
+    })
   }
 
   private async openExternal(value: unknown) {

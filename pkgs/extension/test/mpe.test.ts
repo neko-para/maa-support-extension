@@ -6,6 +6,7 @@ import test from 'node:test'
 import {
   hasDocumentVersionConflict,
   isCompatibleMpeMessage,
+  isCurrentDocumentSnapshot,
   isMpeReadyForRequest,
   mergePipelineAndConfig,
   mpeProtocol,
@@ -49,10 +50,16 @@ test('detects document changes before and during an MPE save', () => {
   assert.equal(hasDocumentVersionConflict(undefined, 3, 3), false)
 })
 
+test('accepts a snapshot only when it matches the current document version', () => {
+  assert.equal(isCurrentDocumentSnapshot(3, 3), true)
+  assert.equal(isCurrentDocumentSnapshot(3, 4), false)
+})
+
 test('delegates document conflict choices to the MPE protocol', () => {
   const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
 
-  assert.match(source, /!pending\.force/)
+  assert.match(source, /pending\.force/)
+  assert.match(source, /rejectIfChanged/)
   assert.match(source, /code: 'document_changed'/)
   assert.match(source, /canForce: true/)
   assert.doesNotMatch(source, /showWarningMessage\(/)
@@ -222,5 +229,26 @@ test('MPE host loads and writes the separated sidecar config', () => {
   assert.match(source, /readSidecar/)
   assert.match(source, /mergePipelineAndConfig/)
   assert.match(source, /splitPipelineAndConfig/)
-  assert.match(source, /writeSidecar/)
+  assert.match(source, /appendSidecarEdit/)
+})
+
+test('MPE host binds the loaded version to the parsed snapshot', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /isCurrentDocumentSnapshot\(version, this\.document\.version\)/)
+  assert.match(source, /loadedDocumentVersion = snapshot\.version/)
+  assert.match(source, /seq !== this\.loadSeq/)
+})
+
+test('MPE host writes pipeline and sidecar in one WorkspaceEdit', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /appendSidecarEdit\(edit, sidecarUri, next\.config\)/)
+  assert.match(source, /edit\.createFile\(uri, \{/)
+  assert.match(
+    source,
+    /edit\.replace\(this\.document\.uri, documentRange\(this\.document\), pipelineText\)/
+  )
+  assert.doesNotMatch(source, /workspace\.fs\.writeFile/)
+  assert.doesNotMatch(source, /writeSidecar/)
 })

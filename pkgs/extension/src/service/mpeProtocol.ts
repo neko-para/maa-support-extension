@@ -348,6 +348,10 @@ export function hasDocumentVersionConflict(
   )
 }
 
+export function isCurrentDocumentSnapshot(readVersion: number, currentVersion: number) {
+  return readVersion === currentVersion
+}
+
 export function normalizeExternalUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null
 

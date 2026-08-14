@@ -6,6 +6,7 @@ import type {
   ControllerRuntimeBase,
   InputConfig,
   Interface,
+  OptionsConfig,
   ResourceRuntime,
   SelectConfig,
   SelectOption,
@@ -17,6 +18,10 @@ export type OptionTrace = {
   name: string
   from: 'global' | 'controller' | 'resource' | 'task' | 'option' | 'preset'
   origin: string
+}
+
+type RuntimeTaskConfig = TaskConfig & {
+  option: OptionsConfig
 }
 
 function isStringArray(arr?: unknown): arr is string[] {
@@ -80,6 +85,44 @@ export function resolveSelect(
 export function resolveCheckbox(task: TaskConfig, option: string, optMeta: CheckboxOption) {
   const cfg = resolveOptionConfig(task, option, 'checkbox') ?? optMeta.default_case ?? []
   return optMeta.cases?.filter(x => cfg.includes(x.name)) ?? null
+}
+
+export function buildRuntimeOptionConfig(
+  data: Interface,
+  task: TaskConfig,
+  ctrlRt: ControllerRuntimeBase,
+  resRt: ResourceRuntime
+): RuntimeTaskConfig | string {
+  const options = buildOption(data, task, ctrlRt, resRt)
+  if (typeof options === 'string') {
+    return options
+  }
+
+  const option: OptionsConfig = { ...(task.option ?? {}) }
+
+  for (const opt of options) {
+    const optMeta = data.option?.[opt.name]
+    if (!optMeta) {
+      return t('maa.pi.error.cannot-find-option-from', opt.name, opt.from, opt.origin)
+    }
+
+    if (!optMeta.type || optMeta.type === 'select' || optMeta.type === 'switch') {
+      option[opt.name] ??= optMeta.default_case ?? optMeta.cases?.[0].name
+    } else if (optMeta.type === 'checkbox') {
+      option[opt.name] ??= optMeta.default_case ?? []
+    } else if (optMeta.type === 'input') {
+      const inputConfig = { ...(resolveOptionConfig(task, opt.name, 'input') ?? {}) }
+      for (const input of optMeta.inputs ?? []) {
+        inputConfig[input.name] ??= input.default ?? ''
+      }
+      option[opt.name] = inputConfig
+    }
+  }
+
+  return {
+    ...task,
+    option
+  }
 }
 
 export function buildOption(

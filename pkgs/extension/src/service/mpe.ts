@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 
-import type { AbsolutePath } from '@nekosu/maa-pipeline-manager'
+import type { AbsolutePath, TaskName } from '@nekosu/maa-pipeline-manager'
 
 import { isMaaAssistantArknights } from '../utils/fs'
 import { logger } from '../utils/logger'
 import { BaseService } from './context'
+import { convertRange } from './language/utils'
 import {
+  type MpeAnchorDefinition,
   type MpeConfig,
   type MpeLoadAuth,
   type MpeProtocolMessage,
@@ -31,11 +33,16 @@ import {
   stringifyMpeConfig,
   updatePipelineText
 } from './mpeProtocol'
-import { interfaceService } from './registry'
+import { interfaceService, rootService } from './registry'
 
 const repositoryUrl = 'https://github.com/neko-para/maa-support-extension'
 const defaultUrl = 'https://mpe.codax.site/stable/'
 const snapshotRetries = 3
+
+type MpeNavigationResult = {
+  success: boolean
+  message: string
+}
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -89,7 +96,7 @@ export class MpeService extends BaseService {
     super.dispose()
   }
 
-  async open(uri: vscode.Uri) {
+  async open(uri: vscode.Uri, focusNode?: string) {
     const doc = await vscode.workspace.openTextDocument(uri)
     if (!this.supported(doc)) {
       vscode.window.showErrorMessage(
@@ -101,13 +108,60 @@ export class MpeService extends BaseService {
     const existing = this.panels.get(key)
     if (existing) {
       existing.panel.reveal()
+      if (focusNode) existing.focusNode(focusNode)
       return true
     }
-    const panel = new MpePanel(doc)
+    const panel = new MpePanel(doc, nodeName => this.navigateNode(nodeName))
     this.panels.set(key, panel)
     panel.onDispose = () => this.panels.delete(key)
+    if (focusNode) panel.focusNode(focusNode)
     await panel.start()
     return true
+  }
+
+  private async navigateNode(nodeName: string): Promise<MpeNavigationResult> {
+    try {
+      const intBundle = interfaceService.interfaceBundle
+      if (!intBundle) {
+        return { success: false, message: '当前没有可用的 Pipeline 资源' }
+      }
+
+      await intBundle.flush()
+      const targets = intBundle.topLayer.getTask(nodeName as TaskName).flatMap(({ infos }) => infos)
+      if (targets.length === 0) {
+        return { success: false, message: `未找到节点: ${nodeName}` }
+      }
+
+      let target = targets[0]
+      if (targets.length > 1) {
+        const selected = await vscode.window.showQuickPick(
+          targets.map(item => ({
+            label: rootService.relativeToRoot(item.file),
+            item
+          })),
+          { title: `选择节点 ${nodeName} 的定义` }
+        )
+        if (!selected) {
+          return { success: false, message: '已取消节点跳转' }
+        }
+        target = selected.item
+      }
+
+      const document = await vscode.workspace.openTextDocument(target.file)
+      const editor = await vscode.window.showTextDocument(document, { preview: false })
+      const range = convertRange(document, target.prop)
+      const selection = new vscode.Selection(range.start, range.end)
+      editor.selection = selection
+      editor.revealRange(selection)
+
+      if (!(await this.open(document.uri, nodeName))) {
+        return { success: false, message: `无法在 MPE 中打开节点: ${nodeName}` }
+      }
+      return { success: true, message: `已打开节点: ${nodeName}` }
+    } catch (error) {
+      logger.error(`Failed to navigate to MPE node ${nodeName}: ${String(error)}`)
+      return { success: false, message: `节点跳转失败: ${nodeName}` }
+    }
   }
 
   supported(doc: vscode.TextDocument) {
@@ -125,11 +179,14 @@ export class MpeService extends BaseService {
 class MpePanel implements vscode.Disposable {
   readonly panel: vscode.WebviewPanel
   private ready = false
+  private canvasLoaded = false
   private loadAuth: MpeLoadAuth = 'idle'
   private disposed = false
   private queue: MpeProtocolMessage[] = []
   private pendingSave?: { requestId: string; documentVersion: number; force: boolean }
   private loadedDocumentVersion?: number
+  private activeLoadRequestId?: string
+  private pendingFocusNode?: string
   private separatedConfigUri?: vscode.Uri
   private saveTimeout?: ReturnType<typeof setTimeout>
   private requestCounter = 0
@@ -137,7 +194,10 @@ class MpePanel implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = []
   onDispose = () => {}
 
-  constructor(private readonly document: vscode.TextDocument) {
+  constructor(
+    private readonly document: vscode.TextDocument,
+    private readonly navigateNode: (nodeName: string) => Promise<MpeNavigationResult>
+  ) {
     this.panel = vscode.window.createWebviewPanel(
       'maa.mpe',
       `MPE: ${path.basename(document.fileName)}`,
@@ -204,7 +264,8 @@ class MpePanel implements vscode.Disposable {
           allowUndoRedo: true,
           allowAutoLayout: true,
           allowSearch: true,
-          allowCustomTemplate: true
+          allowCustomTemplate: true,
+          hostNodeNavigation: true
         },
         ui: { hideHeader: false, hideToolbar: false, hiddenPanels: [] },
         host: { id: 'mse', name: 'MSE', repositoryUrl }
@@ -222,7 +283,9 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
   private receive(value: unknown) {
     if (asRecord(value)?.builtin === 'mpe-host-ready') {
       this.ready = false
+      this.canvasLoaded = false
       this.loadAuth = beginMpeLoad()
+      this.activeLoadRequestId = undefined
       this.pendingSave = undefined
       this.loadSeq += 1
       if (this.saveTimeout) clearTimeout(this.saveTimeout)
@@ -245,6 +308,9 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       case 'mpe:reloadRequest':
         void this.load(message.requestId)
         break
+      case 'mpe:loadResult':
+        this.finishLoad(message)
+        break
       case 'mpe:saveRequest':
         this.requestSave(message)
         break
@@ -254,14 +320,22 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       case 'mpe:openExternalRequest':
         void this.openExternal(asRecord(message.payload)?.url)
         break
+      case 'mpe:navigateNodeRequest':
+        void this.requestNodeNavigation(message)
+        break
     }
   }
 
   private async load(requestId?: string) {
     const seq = ++this.loadSeq
+    this.activeLoadRequestId = requestId
+    this.canvasLoaded = false
     this.loadAuth = beginMpeLoad()
     try {
-      const snapshot = await this.pipelineSnapshot()
+      const [snapshot, anchorDefinitions] = await Promise.all([
+        this.pipelineSnapshot(),
+        this.anchorDefinitions()
+      ])
       if (this.disposed || seq !== this.loadSeq) {
         return
       }
@@ -272,12 +346,17 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         version: mpeProtocolVersion,
         type: 'mpe:loadPipeline',
         requestId,
-        payload: { fileName: path.basename(this.document.fileName), data: snapshot.data }
+        payload: {
+          fileName: path.basename(this.document.fileName),
+          data: snapshot.data,
+          anchorDefinitions
+        }
       })
     } catch (error) {
       if (this.disposed || seq !== this.loadSeq) {
         return
       }
+      this.activeLoadRequestId = undefined
       this.loadAuth = finishMpeLoad(false)
       this.send({
         protocol: mpeProtocol,
@@ -287,6 +366,78 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         payload: { code: errorCode(error, 'invalid_pipeline'), message: String(error) }
       })
     }
+  }
+
+  private finishLoad(message: MpeProtocolMessage) {
+    if (!this.activeLoadRequestId || message.requestId !== this.activeLoadRequestId) return
+    this.activeLoadRequestId = undefined
+    this.canvasLoaded = asRecord(message.payload)?.success === true
+    if (this.canvasLoaded) this.flushPendingFocus()
+  }
+
+  private async anchorDefinitions(): Promise<MpeAnchorDefinition[]> {
+    const intBundle = interfaceService.interfaceBundle
+    if (!intBundle) return []
+
+    try {
+      await intBundle.flush()
+      const currentFile = this.document.uri.fsPath
+      return intBundle.topLayer.getAnchorList().map(([anchorName, decl]) => {
+        // getAnchorList exposes the anchor variant, but returns the complete indexed declaration.
+        const file = (decl as typeof decl & { file: AbsolutePath }).file
+        return {
+          anchorName,
+          nodeName: decl.belong,
+          fileName: path.basename(file),
+          relativePath: rootService.relativeToRoot(file),
+          isCurrentFile: file === currentFile
+        }
+      })
+    } catch (error) {
+      logger.warn(`Failed to collect MPE anchor definitions: ${String(error)}`)
+      return []
+    }
+  }
+
+  private async requestNodeNavigation(message: MpeProtocolMessage) {
+    const requestId = message.requestId
+    if (!requestId) return
+
+    const value = asRecord(message.payload)?.nodeName
+    const nodeName = typeof value === 'string' && value.trim().length > 0 ? value : undefined
+    const result = nodeName
+      ? await this.navigateNode(nodeName)
+      : { success: false, message: '节点名为空' }
+    this.send({
+      protocol: mpeProtocol,
+      version: mpeProtocolVersion,
+      type: 'mpe:navigateNodeResult',
+      requestId,
+      payload: { ...result, nodeName: nodeName ?? '' }
+    })
+  }
+
+  focusNode(nodeName: string) {
+    this.pendingFocusNode = nodeName
+    if (this.canvasLoaded) this.flushPendingFocus()
+  }
+
+  private flushPendingFocus() {
+    const nodeName = this.pendingFocusNode
+    if (!nodeName) return
+    this.pendingFocusNode = undefined
+    this.send({
+      protocol: mpeProtocol,
+      version: mpeProtocolVersion,
+      type: 'mpe:selectNode',
+      payload: { nodeId: nodeName }
+    })
+    this.send({
+      protocol: mpeProtocol,
+      version: mpeProtocolVersion,
+      type: 'mpe:focusNode',
+      payload: { nodeId: nodeName }
+    })
   }
 
   private sidecarUri() {

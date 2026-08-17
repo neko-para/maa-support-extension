@@ -29,8 +29,8 @@ src/
     ├── shortcut.ts           # ShortcutService — 全局快捷键目标租约和跨窗口请求转发
     ├── native.ts             # NativeService — MaaFramework 二进制管理
     ├── server.ts             # ServerService — RPC 连接管理
-    ├── mpe.ts                # MPE iframe 面板、握手、版本稳定快照、损坏 sidecar 拒绝加载、未成功加载禁止保存、sidecar 与 Pipeline 同一次保存
-    ├── mpeProtocol.ts        # mpe-embed 协议校验、JSONC 写回、`.mpe.json` 合并/拆分、sidecar 缺失/损坏/字段类型判定、加载授权
+    ├── mpe.ts                # MPE iframe 面板、握手、宿主节点导航、Anchor 上下文、版本稳定快照、sidecar 加载与保存
+    ├── mpeProtocol.ts        # mpe-embed 协议校验与类型、JSONC 写回、`.mpe.json` 合并/拆分、sidecar 判定、加载授权
     ├── root.ts               # RootService — 资源根目录扫描
     ├── interface.ts          # InterfaceService — 接口包管理
     ├── launch.ts             # LaunchService — 任务启动编排
@@ -74,6 +74,12 @@ src/
         ├── promise.ts        # makePromise() 延迟 Promise
         └── color.js/.d.ts    # HSV→RGB 转换
 ```
+
+## MPE iframe 协议
+
+MSE 作为 MPE iframe 宿主使用 `mpe-embed` v1.4.0，1.x 消息仍按主版本兼容。`mpe:init` 通过 `hostNodeNavigation: true` 声明外部节点由宿主导航；MPE 发送带 `requestId` 的 `mpe:navigateNodeRequest` 后，MSE 复用 `InterfaceBundle.topLayer.getTask()` 查找定义，打开非预览 JSON 标签和对应 MPE 面板，再返回 `mpe:navigateNodeResult`。目标面板只在匹配的 `mpe:loadResult` 成功后接收 `mpe:selectNode` 与 `mpe:focusNode`。
+
+`mpe:loadPipeline` 同时携带来自 `InterfaceBundle.topLayer.getAnchorList()` 的 `anchorDefinitions`，每项包含 Anchor 名、声明节点、文件名、相对路径和当前文件标记。这些数据只用于 iframe 内展示定义上下文，Anchor 不走宿主导航。Anchor 索引采集失败时降级为空列表，不阻断 Pipeline 本身加载。
 
 ## 服务类层次
 

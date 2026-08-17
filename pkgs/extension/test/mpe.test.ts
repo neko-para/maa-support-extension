@@ -76,6 +76,37 @@ test('MPE host identifies itself with the MSE product name', () => {
   assert.match(source, /host: \{ id: 'mse', name: 'MSE', repositoryUrl \}/)
 })
 
+test('MPE host delegates embedded node navigation to the existing task index', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.equal(mpeProtocolVersion, '1.4.0')
+  assert.match(source, /hostNodeNavigation: true/)
+  assert.match(source, /case 'mpe:navigateNodeRequest':/)
+  assert.match(source, /topLayer\s*\.getTask\(nodeName as TaskName\)/)
+  assert.match(source, /vscode\.window\.showTextDocument\(document, \{ preview: false \}\)/)
+  assert.match(source, /this\.open\(document\.uri, nodeName\)/)
+  assert.match(source, /type: 'mpe:navigateNodeResult'/)
+})
+
+test('MPE host supplies anchor definitions from the existing anchor index', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /topLayer\.getAnchorList\(\)/)
+  assert.match(source, /nodeName: decl\.belong/)
+  assert.match(source, /anchorDefinitions/)
+  assert.match(source, /isCurrentFile:/)
+})
+
+test('MPE host focuses a requested node only after the target canvas loads', () => {
+  const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
+
+  assert.match(source, /case 'mpe:loadResult':/)
+  assert.match(source, /type: 'mpe:selectNode'/)
+  assert.match(source, /type: 'mpe:focusNode'/)
+  assert.match(source, /pendingFocusNode/)
+  assert.match(source, /canvasLoaded/)
+})
+
 test('rejects malformed and non-object pipeline content', () => {
   assert.throws(() => parsePipeline('{ invalid }'), /parse failed/)
   assert.throws(() => parsePipeline('[]'), /JSON object/)

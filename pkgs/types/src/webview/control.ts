@@ -139,6 +139,10 @@ export type ControlWebToHost =
       address: string
     }
   | {
+      command: 'configDesktopWlRoots'
+      socket_path: string
+    }
+  | {
       command: 'uploadImage'
     }
   | {

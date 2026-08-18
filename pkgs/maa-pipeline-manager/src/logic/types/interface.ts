@@ -15,6 +15,7 @@ export type AdbController = ControllerBase & {
   win32?: never
   playconver?: never
   gamepad?: never
+  wlroots?: never
 }
 
 export type Win32Controller = ControllerBase & {
@@ -29,6 +30,7 @@ export type Win32Controller = ControllerBase & {
   }
   playconver?: never
   gamepad?: never
+  wlroots?: never
 }
 
 export type PlayCoverController = ControllerBase & {
@@ -39,6 +41,7 @@ export type PlayCoverController = ControllerBase & {
     uuid?: string
   }
   gamepad?: never
+  wlroots?: never
 }
 
 export type GamepadController = ControllerBase & {
@@ -52,9 +55,20 @@ export type GamepadController = ControllerBase & {
     screencap?: keyof typeof maa.Win32InputMethod
     gamepad_type?: keyof typeof maa.GamepadType
   }
+  wlroots?: never
 }
 
-export type Controller = AdbController | Win32Controller | PlayCoverController | GamepadController
+export type WlRootsController = ControllerBase & {
+  type: 'WlRoots'
+  adb?: never
+  win32?: never
+  playcover?: never
+  wlroots?: {
+    socket_path?: string
+  }
+}
+
+export type Controller = AdbController | Win32Controller | PlayCoverController | GamepadController | WlRootsController
 
 export type Resource = EntryBase & {
   name: string

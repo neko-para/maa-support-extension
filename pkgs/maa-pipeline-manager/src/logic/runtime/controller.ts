@@ -6,6 +6,8 @@ export interface ControllerRuntimeConstants {
   Win32ScreencapMethod: typeof maa.Win32ScreencapMethod
   Win32InputMethod: typeof maa.Win32InputMethod
   GamepadType: typeof maa.GamepadType
+  LinuxScreencapMethod: typeof maa.LinuxScreencapMethod
+  LinuxInputMethod: typeof maa.LinuxInputMethod
 }
 
 export function buildControllerRuntime(
@@ -141,6 +143,69 @@ export function buildControllerRuntime(
         fixNum(ctrlInfo.gamepad?.gamepad_type, constants.GamepadType) ??
           constants.GamepadType.Xbox360
       ],
+
+      ...baseOption
+    }
+  } else if (ctrlInfo.type === 'Linux') {
+    if (!config.linux) {
+      return t('maa.pi.error.cannot-find-linux-for-controller', config.controller ?? '<unknown>')
+    }
+
+    const lnx = ctrlInfo.linux ?? {}
+    const user = config.linux
+
+    // 与 MaaPiCli 一致：interface.json 未声明时默认 Wlr
+    const screencapName = lnx.screencap ?? 'Wlr'
+    const inputName = lnx.input ?? 'Wlr'
+
+    // binding 导出的 Linux 常量是字符串（如 "4"），C++ meojson 只接受数字，统一转 Number
+    const screencap = Number(fixNum(screencapName, constants.LinuxScreencapMethod))
+    const input = Number(fixNum(inputName, constants.LinuxInputMethod))
+    if (
+      !(screencapName in constants.LinuxScreencapMethod) ||
+      !(inputName in constants.LinuxInputMethod)
+    ) {
+      return t('maa.pi.error.invalid-linux-method', config.controller ?? '<unknown>')
+    }
+
+    // 组装客户端侧配置 JSON；pipewire_source/display_no 为 client-only 标记字段，
+    // C++ 侧忽略未知字段，maa-server 连接时解析并剥离
+    const conf: Record<string, unknown> = {
+      screencap_method: screencap,
+      input_method: input,
+      use_win32_vk_code: lnx.use_win32_vk_code ?? false
+    }
+
+    if (screencapName === 'PipeWire') {
+      conf.pipewire_source = lnx.pipewire_source ?? 'Gamescope'
+    }
+
+    if (user.display_no !== undefined) {
+      conf.display_no = user.display_no
+    }
+
+    if (screencapName === 'Wlr' || inputName === 'Wlr') {
+      if (!user.wlr_socket_path) {
+        return t(
+          'maa.pi.error.cannot-find-wlr-socket-for-controller',
+          config.controller ?? '<unknown>'
+        )
+      }
+      conf.wlr_socket_path = user.wlr_socket_path
+    }
+
+    if (inputName === 'UInput') {
+      if (user.uinput_screen_width !== undefined) {
+        conf.uinput_screen_width = user.uinput_screen_width
+      }
+      if (user.uinput_screen_height !== undefined) {
+        conf.uinput_screen_height = user.uinput_screen_height
+      }
+    }
+
+    return {
+      type: 'linux',
+      args: [JSON.stringify(conf)],
 
       ...baseOption
     }

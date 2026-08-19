@@ -36,6 +36,7 @@ export type HostToSubApis = {
 
   refreshAdb: () => maa.AdbDevice[]
   refreshDesktop: () => maa.DesktopDevice[]
+  refreshGamescope: () => maa.GamescopeInstance[]
 
   postTask: (inst: string, task: string, pipeline_override: Record<string, unknown>[]) => boolean
   postStop: (inst: string) => void

@@ -37,7 +37,7 @@
     "workerpool": "^10.0.1"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "5.12.2",
+    "@maaxyz/maa-node": "5.13.0-beta.3",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.5",
     "@types/source-map-support": "^0.5.10",

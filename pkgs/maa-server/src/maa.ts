@@ -53,6 +53,21 @@ const events = new EventEmitter<{
   agentStopped: [id: string]
 }>()
 
+// 从 gamescope 实例列表中按 display_no 匹配目标实例，用于解析 pw_node_id / eis_socket_path。
+// 匹配不到时回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）。
+function pickGamescopeInstance(
+  instances: maa.GamescopeInstance[],
+  displayNo?: number
+): maa.GamescopeInstance | undefined {
+  if (displayNo !== undefined) {
+    const byDisplay = instances.find(inst => inst[0] === displayNo)
+    if (byDisplay) {
+      return byDisplay
+    }
+  }
+  return instances.find(inst => inst[1] !== 0)
+}
+
 export async function updateCtrl(runtime: ControllerRuntime) {
   const key = JSON.stringify(runtime)
   if (key !== cacheKey) {
@@ -74,6 +89,45 @@ export async function updateCtrl(runtime: ControllerRuntime) {
     controller = new maa.PlayCoverController(...runtime.args)
   } else if (runtime.type === 'gamepad') {
     controller = new maa.GamepadController(...runtime.args)
+  } else if (runtime.type === 'linux') {
+    // 客户端侧配置 JSON（含 pipewire_source/display_no 标记字段，C++ 会忽略未知字段）
+    let conf: Record<string, unknown>
+    try {
+      conf = JSON.parse(runtime.args[0])
+    } catch {
+      return false
+    }
+
+    const screencap = conf.screencap_method as number
+    const input = conf.input_method as number
+    const pipewireSource = conf.pipewire_source as string | undefined
+    delete conf.pipewire_source
+    delete conf.display_no
+
+    if (pipewireSource === 'Portal') {
+      logger.info('Linux controller: pipewire_source Portal is not supported yet')
+      return false
+    }
+
+    // Gamescope 直连或 Libei 输入需要现查 gamescope 实例，注入 pw_node_id / eis_socket_path。
+    // binding 导出的常量是字符串（uint64 转字符串，如 "4"），配置 JSON 中是数字，统一转 Number 比较。
+    if (
+      screencap === Number(maa.LinuxScreencapMethod.PipeWire) ||
+      input === Number(maa.LinuxInputMethod.Libei)
+    ) {
+      const instances = await maa.LinuxController.find_gamescope_instances()
+      const target = pickGamescopeInstance(instances ?? [], conf.display_no as number | undefined)
+      if (!target) {
+        logger.info('Linux controller: no gamescope instance found')
+        return false
+      }
+      conf.pw_node_id = target[1]
+      if (input === Number(maa.LinuxInputMethod.Libei)) {
+        conf.eis_socket_path = target[2]
+      }
+    }
+
+    controller = new maa.LinuxController(JSON.stringify(conf))
   } else if (runtime.type === 'vscFixed') {
     if (!existsSync(runtime.args[0])) {
       return false

@@ -122,6 +122,10 @@ export type ControlWebToHost =
       command: 'refreshDesktop'
     }
   | {
+      // return [display_no: number, pipewire_node_id: number, eis_socket_path: string][] | null
+      command: 'refreshGamescope'
+    }
+  | {
       command: 'configAdb'
       adb: string
       address: string
@@ -137,6 +141,15 @@ export type ControlWebToHost =
   | {
       command: 'configPlayCover'
       address: string
+    }
+  | {
+      command: 'configLinux'
+      linux: {
+        display_no?: number
+        wlr_socket_path?: string
+        uinput_screen_width?: number
+        uinput_screen_height?: number
+      }
     }
   | {
       command: 'uploadImage'

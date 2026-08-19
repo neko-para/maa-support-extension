@@ -25,7 +25,14 @@ VSCode 插件进程可能无法以管理员权限运行，而某些 MaaFramework
 
 ### 2. 控制器管理
 
-通过 MaaFramework API 管理多种控制器类型（ADB、Win32、PlayCover、Gamepad、自定义控制器等），提供统一的创建、更新接口。
+通过 MaaFramework API 管理多种控制器类型（ADB、Win32、PlayCover、Gamepad、Linux、自定义控制器等），提供统一的创建、更新接口。
+
+Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
+
+- 从客户端配置 JSON 读取 `screencap_method` / `input_method`，通过 `maa.LinuxController` 创建
+- PipeWire 截图（Gamescope 直连）或 Libei 输入时，通过 `maa.LinuxController.find_gamescope_instances()` 按 `display_no` 匹配目标 gamescope 实例，注入 `pw_node_id` / `eis_socket_path`；匹配不到时回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）
+- `pipewire_source=Portal` 暂不支持（返回 `false` 并记录日志）
+- binding 导出的 Linux 常量为字符串（uint64 转字符串，如 `"4"`），配置 JSON 中为数字，比较时统一经 `Number()` 转换
 
 ### 3. 任务执行
 

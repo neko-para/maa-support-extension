@@ -138,6 +138,11 @@ export class WebviewControlService extends BaseService {
           this.provider?.response(data.seq, (await ipc?.refreshDesktop()) ?? [])
           break
         }
+        case 'refreshGamescope': {
+          const ipc = await serverService.ensureServer()
+          this.provider?.response(data.seq, (await ipc?.refreshGamescope()) ?? [])
+          break
+        }
         case 'configAdb':
           interfaceService.reduceConfig({
             adb: {
@@ -161,6 +166,11 @@ export class WebviewControlService extends BaseService {
             playcover: {
               address: data.address
             }
+          })
+          break
+        case 'configLinux':
+          interfaceService.reduceConfig({
+            linux: data.linux
           })
           break
         case 'uploadImage': {

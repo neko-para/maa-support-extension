@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { NButton, NCard, NDropdown, NFlex, NInput, NPopselect, NSelect } from 'naive-ui'
+import {
+  NButton,
+  NCard,
+  NDropdown,
+  NFlex,
+  NInput,
+  NInputNumber,
+  NPopselect,
+  NSelect,
+  NText
+} from 'naive-ui'
 import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface'
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface'
 import { computed, ref } from 'vue'
@@ -201,6 +211,100 @@ function configPlayCover(address: string) {
   })
 }
 
+// ============ Linux ============
+
+const linuxMeta = computed(() => {
+  return (
+    (
+      currentControllerMeta.value as {
+        linux?: { screencap?: string; input?: string; pipewire_source?: string }
+      } | null
+    )?.linux ?? {}
+  )
+})
+
+// 与 buildControllerRuntime 的默认值保持一致（interface.json 未声明时按 Wlr 处理）
+const linuxScreencap = computed(() => linuxMeta.value.screencap ?? 'Wlr')
+const linuxInput = computed(() => linuxMeta.value.input ?? 'Wlr')
+
+const needGamescope = computed(() => {
+  return (
+    (linuxScreencap.value === 'PipeWire' && linuxMeta.value.pipewire_source !== 'Portal') ||
+    linuxInput.value === 'Libei'
+  )
+})
+
+const needWlrSocket = computed(() => {
+  return linuxScreencap.value === 'Wlr' || linuxInput.value === 'Wlr'
+})
+
+const needUInputSize = computed(() => {
+  return linuxInput.value === 'UInput'
+})
+
+function configLinux(linux: {
+  display_no?: number
+  wlr_socket_path?: string
+  uinput_screen_width?: number
+  uinput_screen_height?: number
+}) {
+  ipc.send({
+    command: 'configLinux',
+    linux: {
+      ...hostState.value.interfaceConfigJson?.linux,
+      ...linux
+    }
+  })
+}
+
+const gamescopeInstances = ref<maa.GamescopeInstance[]>([])
+
+const refreshingGamescope = ref(false)
+const selectingGamescope = ref(false)
+
+const gamescopeOptions = computed(() => {
+  return gamescopeInstances.value.map((info, index) => {
+    return {
+      key: index,
+      label: `Display ${info[0]}`
+    } satisfies DropdownMixedOption
+  })
+})
+
+async function refreshGamescope() {
+  refreshingGamescope.value = true
+  gamescopeInstances.value =
+    ((await ipc.call({
+      command: 'refreshGamescope'
+    })) as maa.GamescopeInstance[] | null) ?? []
+  refreshingGamescope.value = false
+}
+
+function configGamescope(index: number) {
+  const opt = gamescopeInstances.value[index]!
+  configLinux({
+    display_no: opt[0]
+  })
+}
+
+async function nativeSelectGamescope() {
+  selectingGamescope.value = true
+  const choice = (await ipc.call({
+    command: 'showSelect',
+    options: gamescopeInstances.value.map((info, index) => {
+      return {
+        value: index,
+        title: `Display ${info[0]}`,
+        subtitle: info[2]
+      }
+    })
+  })) as number | null
+  if (typeof choice === 'number') {
+    configGamescope(choice)
+  }
+  selectingGamescope.value = false
+}
+
 function uploadImage() {
   ipc.send({
     command: 'uploadImage'
@@ -377,6 +481,87 @@ function uploadImage() {
           <span> {{ currDeviceGamepad[1] }} </span>
           <span> {{ currDeviceGamepad[2] }} </span>
         </template>
+      </n-flex>
+    </n-card>
+  </template>
+  <template v-if="currentType === 'Linux'">
+    <n-card title="Linux" size="small">
+      <n-flex v-if="linuxMeta.pipewire_source === 'Portal'" vertical>
+        <n-text depth="3">{{ t('maa.control.linux.portal-unsupported') }}</n-text>
+      </n-flex>
+      <template v-if="needGamescope">
+        <n-card title="Gamescope" size="small" embedded>
+          <template #header-extra>
+            <n-flex>
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <n-button
+                    :loading="refreshingGamescope"
+                    :disabled="refreshingGamescope || selectingGamescope"
+                    @click="refreshGamescope"
+                    size="small"
+                  >
+                    {{ t('maa.control.scan') }}
+                  </n-button>
+                </template>
+                {{ t('maa.control.tooltip.scan-gamescope') }}
+              </Tooltip>
+              <n-popselect
+                :disabled="
+                  refreshingGamescope || selectingGamescope || gamescopeOptions.length === 0
+                "
+                trigger="hover"
+                :options="gamescopeOptions"
+                @update:value="configGamescope"
+                size="small"
+              >
+                <Tooltip trigger="hover">
+                  <template #trigger>
+                    <n-button
+                      :loading="selectingGamescope"
+                      :disabled="
+                        refreshingGamescope || selectingGamescope || gamescopeOptions.length === 0
+                      "
+                      size="small"
+                      @click="nativeSelectGamescope"
+                    >
+                      {{ t('maa.control.controller.display-list') }}
+                    </n-button>
+                  </template>
+                  {{ t('maa.control.tooltip.display-list-gamescope') }}
+                </Tooltip>
+              </n-popselect>
+            </n-flex>
+          </template>
+          <n-flex v-if="hostState.interfaceConfigJson?.linux?.display_no !== undefined" vertical>
+            <span>
+              {{ t('maa.control.linux.display-no') }}:
+              {{ hostState.interfaceConfigJson.linux.display_no }}
+            </span>
+          </n-flex>
+        </n-card>
+      </template>
+      <n-flex v-if="needWlrSocket" vertical>
+        <n-input
+          :value="hostState.interfaceConfigJson?.linux?.wlr_socket_path"
+          @update:value="v => configLinux({ wlr_socket_path: v })"
+          :placeholder="t('maa.control.linux.wlr-socket-placeholder')"
+          size="small"
+        ></n-input>
+      </n-flex>
+      <n-flex v-if="needUInputSize" vertical>
+        <n-input-number
+          :value="hostState.interfaceConfigJson?.linux?.uinput_screen_width"
+          @update:value="v => configLinux({ uinput_screen_width: v ?? undefined })"
+          :placeholder="t('maa.control.linux.uinput-width')"
+          size="small"
+        ></n-input-number>
+        <n-input-number
+          :value="hostState.interfaceConfigJson?.linux?.uinput_screen_height"
+          @update:value="v => configLinux({ uinput_screen_height: v ?? undefined })"
+          :placeholder="t('maa.control.linux.uinput-height')"
+          size="small"
+        ></n-input-number>
       </n-flex>
     </n-card>
   </template>

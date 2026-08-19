@@ -27,6 +27,9 @@ export default {
   'maa.pi.error.cannot-find-address-for-controller':
     '无法找到控制器 {0} 的 PlayCover 配置的 address, 请重新配置控制器',
   'maa.pi.error.cannot-find-gamepad-for-controller': '无法找到控制器 {0} 的 Gamepad 配置',
+  'maa.pi.error.cannot-find-linux-for-controller': '无法找到控制器 {0} 的 Linux 配置',
+  'maa.pi.error.invalid-linux-method': '控制器 {0} 的 Linux 截图/输入方式无效',
+  'maa.pi.error.cannot-find-wlr-socket-for-controller': '控制器 {0} 需要配置 Wayland socket 路径',
   'maa.pi.error.cannot-find-resource': '无法找到资源 {0}',
   'maa.pi.error.cannot-find-task': '无法找到任务 {0}',
   'maa.pi.error.cannot-find-option': '无法找到选项组 {0}',

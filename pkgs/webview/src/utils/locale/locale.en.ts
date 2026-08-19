@@ -25,6 +25,15 @@ export default {
   'maa.control.tooltip.scan-desktop': 'Refresh the list of available desktop windows',
   'maa.control.tooltip.window-list-win32': 'Browse and select a Win32 window',
   'maa.control.tooltip.window-list-gamepad': 'Browse and select a gamepad window',
+  'maa.control.tooltip.scan-gamescope': 'Refresh the list of discovered gamescope instances',
+  'maa.control.tooltip.display-list-gamescope':
+    'Browse and select a gamescope instance (by display number)',
+  'maa.control.linux.portal-unsupported':
+    'pipewire_source=Portal is not supported yet, use Gamescope mode',
+  'maa.control.linux.display-no': 'Selected display number',
+  'maa.control.linux.wlr-socket-placeholder': 'Wayland socket path (e.g. /run/user/1000/wayland-0)',
+  'maa.control.linux.uinput-width': 'uinput screen width',
+  'maa.control.linux.uinput-height': 'uinput screen height',
   'maa.control.tooltip.upload-fixed': 'Upload an image file to use as a fixed screenshot',
   'maa.control.tooltip.use-preset': 'Select and load a preset task configuration',
   'maa.control.tooltip.add-task': 'Add a new task from the available task list',
@@ -48,6 +57,7 @@ export default {
   'maa.control.controller.select-controller': 'Select controller',
   'maa.control.controller.device-list': 'Device list',
   'maa.control.controller.window-list': 'Window list',
+  'maa.control.controller.display-list': 'Display list',
   'maa.control.task.task': 'Task',
   'maa.control.task.use-preset': 'Use Preset',
   'maa.control.task.add-task': 'Add',

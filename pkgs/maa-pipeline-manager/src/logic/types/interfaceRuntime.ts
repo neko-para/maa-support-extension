@@ -38,6 +38,12 @@ export type ControllerRuntimeVariant =
       args: [hwnd: maa.DesktopHandle, screencap: maa.ScreencapOrInputMethods, gamepad: maa.Uint64]
     }
   | {
+      // args[0]: 客户端侧组装好的 Linux 控制器配置 JSON（含 pipewire_source/display_no 标记字段），
+      // 由 maa-server 在连接时解析、发现 gamescope 实例并注入 pw_node_id / eis_socket_path
+      type: 'linux'
+      args: [config: string]
+    }
+  | {
       type: 'vscFixed'
       args: [image: string]
     }

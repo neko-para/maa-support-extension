@@ -63,6 +63,18 @@ export async function initServer() {
           Win32ScreencapMethod: maa.Win32ScreencapMethod,
           Win32InputMethod: maa.Win32InputMethod,
           GamepadType: maa.GamepadType,
+          // Linux 常量仅在本地 fork 构建中存在；官方发布版缺失时回退硬编码表
+          // （数值见 MaaFramework MaaDef.h，协议稳定）
+          LinuxScreencapMethod: maa.LinuxScreencapMethod ?? {
+            Wlr: 1,
+            ExtImage: 2,
+            PipeWire: 4
+          },
+          LinuxInputMethod: maa.LinuxInputMethod ?? {
+            Wlr: 1,
+            UInput: 2,
+            Libei: 4
+          },
           Global: {
             version_from_macro: maa.Global.version_from_macro,
             version: maa.Global.version
@@ -83,6 +95,9 @@ export async function initServer() {
       }
       ipc.refreshDesktop = async () => {
         return (await maa.Win32Controller.find()) ?? []
+      }
+      ipc.refreshGamescope = async () => {
+        return (await maa.LinuxController.find_gamescope_instances()) ?? []
       }
       ipc.postTask = postTask
       ipc.postStop = postStop

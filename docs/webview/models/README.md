@@ -18,7 +18,7 @@
 
 侧边栏常驻面板，提供类 MaaPiCli 的控制界面：
 
-- **Controller 配置**: ADB/Win32/PlayCover/Gamepad 的参数设置
+- **Controller 配置**: ADB/Win32/PlayCover/Gamepad/Linux 的参数设置；Linux 配置支持截图/输入方式选择、gamescope 实例扫描与选择（Wlr/UInput/Libei/PipeWire，Portal 模式提示暂不支持）
 - **Resource 选择**: 切换活动的 resource bundle
 - **Task 管理**: 添加/删除/配置任务选项
 - **Launch**: 启动任务执行
@@ -27,7 +27,7 @@
 
 控制面板按 Toolkit → Interface → Controller → Resource → Task → Launch/Eval 的顺序展示；先选择 Controller，再选择受其约束的 Resource。
 
-控制器配置完整性检查会向 pipeline manager 显式注入一份浏览器占位常量表。该表只用于判断 runtime 能否构建，不参与启动；真正执行时由 extension host 使用 MaaFramework 原生常量重新构建 runtime。常量表完整枚举当前依赖的 Win32/Gamepad 常量，使依赖新增时由类型检查暴露，不修改 `globalThis.maa`。
+控制器配置完整性检查会向 pipeline manager 显式注入一份浏览器占位常量表。该表只用于判断 runtime 能否构建，不参与启动；真正执行时由 extension host 使用 MaaFramework 原生常量重新构建 runtime。常量表完整枚举当前依赖的 Win32/Gamepad/Linux 常量，使依赖新增时由类型检查暴露，不修改 `globalThis.maa`。
 
 控制面板将 interface 元数据与常规 host state 分开同步，并把两者作为浅响应式的只读快照；配置修改不会重复传输 interface。文本型任务选项会合并高频输入，避免连续写入配置并回传 state。
 
@@ -83,7 +83,7 @@ Webview 使用独立的响应式 locale 系统：
 - `locale.en.ts` — 英文字典
 - 响应式 locale 切换（`vscodeLocale` ref）
 
-该字典只包含 Webview UI 文案，与 host/checker 使用的 `@nekosu/maa-locale` 没有相同 key；独立边界及重新评估条件参见 [locale-system.md](../../extra/locale-system.md)。
+该字典只包含 Webview UI 文案，与 host/checker 使用的 `@nekosu/maa-locale` 没有相同 key；独立边界及重新评估条件参见 [locale-system.md](../../extra/locale-system.md)。控制面板的 Linux 控制器相关文案使用 `maa.control.*` 前缀（扫描/选择 gamescope 实例、提示 Portal 模式未支持等）。
 
 ## 抽象边界
 

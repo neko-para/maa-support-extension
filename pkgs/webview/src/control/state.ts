@@ -45,6 +45,16 @@ const controllerRuntimeConstants = {
   GamepadType: {
     Xbox360: validationPlaceholder,
     DualShock4: validationPlaceholder
+  },
+  LinuxScreencapMethod: {
+    Wlr: validationPlaceholder,
+    ExtImage: validationPlaceholder,
+    PipeWire: validationPlaceholder
+  },
+  LinuxInputMethod: {
+    Wlr: validationPlaceholder,
+    UInput: validationPlaceholder,
+    Libei: validationPlaceholder
   }
 } satisfies ControllerRuntimeConstants
 

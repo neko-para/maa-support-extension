@@ -35,7 +35,7 @@
 - `fetchConstants()`、`updateController()`、`setupInstance()`
 - `getScreencap(instance?)`、`resize()`
 - `performOcr()`、`performTemplateMatch()`、`performReco()`
-- `refreshAdb()`、`refreshDesktop()`
+- `refreshAdb()`、`refreshDesktop()`、`refreshGamescope()`
 - `postTask()`、`postStop()`、`getKnownTasks()`、`destroyInstance()`
 - `getRecoDetail()`、`getActDetail()`、`getNode()`
 - `agentStopped()`

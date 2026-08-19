@@ -5,9 +5,9 @@
     "lint": "vue-tsc -p . --noEmit"
   },
   "devDependencies": {
-    "@maaxyz/maa-node": "5.12.2",
-    "@nekosu/maa-types": "workspace:*",
+    "@maaxyz/maa-node": "5.13.0-beta.3",
     "@nekosu/maa-pipeline-manager": "workspace:*",
+    "@nekosu/maa-types": "workspace:*",
     "@types/node": "^25.3.5",
     "@types/vscode-webview": "^1.57.5",
     "@vicons/material": "^0.13.0",

@@ -45,7 +45,15 @@ function parseJsonObject(text: string, label: string) {
 }
 
 export const mpeProtocol = 'mpe-embed'
-export const mpeProtocolVersion = '1.3.0'
+export const mpeProtocolVersion = '1.4.0'
+
+export type MpeAnchorDefinition = {
+  anchorName: string
+  nodeName: string
+  fileName: string
+  relativePath: string
+  isCurrentFile: boolean
+}
 
 export type MpeProtocolMessage = {
   protocol: typeof mpeProtocol

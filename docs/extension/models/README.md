@@ -135,7 +135,9 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 未成功加载完成前禁止保存（含加载进行中和加载失败），避免空画布覆盖 Pipeline；加载成功后恢复保存
 - MPE 保存通过 `WorkspaceEdit` 写回原文档，保留 VS Code 的 dirty、undo/redo 和正常保存语义，不直接覆盖磁盘
 - MPE 加载后若 Pipeline 源文档被外部编辑，保存时会提示先从 MSE 同步；用户也可以确认使用 MPE 内容强制覆盖
-- MPE iframe 使用 v1.3.0 协议；外部链接由宿主校验后交给 VS Code 打开，文档冲突由 MPE 提供同步/强制覆盖选择
+- MPE iframe 使用 v1.4.0 协议；外部链接由宿主校验后交给 VS Code 打开，文档冲突由 MPE 提供同步/强制覆盖选择
+- iframe 内的 External 节点跳转由 MSE 使用现有 Pipeline 索引解析；若有多个定义先选择目标，再同时保留目标 JSON 标签和对应 MPE 面板，并在画布加载成功后选中、定位目标节点
+- iframe 内不提供 Anchor 跳转，但会把现有 Anchor 索引中的定义文件与节点作为只读上下文传给 MPE 展示
 - 嵌入 iframe 会向 MPE 下放剪贴板读写权限，使复制/粘贴走浏览器 Clipboard API 而不是被 Webview Permissions-Policy 拦截
 - MPE 地址可通过 `maa.pipelineEditorUrl` 配置，生产地址要求 HTTPS，本机 localhost 开发地址允许 HTTP
 

@@ -43,6 +43,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 选择 controller、resource、task
 - 开关 admin 模式（仅 Windows UAC 提权）、debug 模式
 - 配置 ADB/Win32/PlayCover 等控制器参数
+- 可选在项目启动时连接已配置的控制器；控制器不可用时，可选自动发现并连接唯一匹配的 ADB、Win32 或 Gamepad 控制器
 - 管理任务队列（添加、删除、配置选项）
 - 启动/停止任务执行
 - 上传图片

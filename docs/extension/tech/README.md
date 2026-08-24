@@ -141,6 +141,18 @@ DisposableHelper
 - 后续启动任务、截图或其他需要服务端的操作会调用 `ServerService.ensureServer()`，重新启动 maa-server 并建立连接
 - 断线意味着子进程内的 Maa 运行实例已经丢失，重新连接不会也无法恢复原任务，因此断线后不立即启动空闲子进程
 
+### 项目启动时连接
+
+VS Code 设置 `maa.controller.connectOnStartup` 开启后，插件在当前 interface 配置加载完成时尝试连接配置中的控制器；资源切换时也会执行一次。该设置默认关闭，不会改变现有的按需连接行为。
+
+`maa.controller.autoDetectOnStartup` 可在上述连接失败或配置不完整时启用自动发现；单独开启它也会触发启动时连接：
+
+- ADB 使用 `AdbController.find()`；只有唯一设备时才写回 `config/maa_pi_config.json`
+- Win32 和 Gamepad 使用 `Win32Controller.find()`，并应用 interface 中的 `class_regex` / `window_regex`；只有唯一窗口匹配时才写回句柄
+- PlayCover 只能使用已有 address，Fixed Image 不需要外部连接
+
+多个设备或窗口匹配时不会擅自选择；自动发现成功后复用标准 `updateController()` 连接路径。这样项目只需提供 controller 的声明和匹配规则，不需要为 MSE 增加项目专用代码。
+
 ## MaaFramework Registry 状态
 
 `NativeService` 从 global state 读取镜像类型，并在构造 `MaaVersionManager` 时注入对应 registry。服务公开的 `registry` 访问器直接代理 manager，镜像选择命令不维护第二份运行时状态；manager 再为每次查询和安装捕获操作级快照。

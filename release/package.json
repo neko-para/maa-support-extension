@@ -134,6 +134,16 @@
           "description": "keep win32 admin process conhost alive",
           "default": false
         },
+        "maa.controller.connectOnStartup": {
+          "type": "boolean",
+          "description": "%maa.setting.controller-connect-on-startup%",
+          "default": false
+        },
+        "maa.controller.autoDetectOnStartup": {
+          "type": "boolean",
+          "description": "%maa.setting.controller-auto-detect-on-startup%",
+          "default": false
+        },
         "maa.webviewTooltipDisabled": {
           "type": "boolean",
           "description": "%maa.setting.webview-tooltip%",

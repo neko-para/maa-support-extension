@@ -6,7 +6,7 @@ import { setLocale, t } from '@nekosu/maa-locale'
 
 import packageJson from '../../../release/package.json'
 import { commands } from './command'
-import { init, nativeService, statusBarService } from './service'
+import { init, launchService, nativeService, statusBarService } from './service'
 import { checkMaaAssistantArknights, isMaaAssistantArknights } from './utils/fs'
 import { logger, setupLogger } from './utils/logger'
 
@@ -51,6 +51,8 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   statusBarService.showMaaStatus(nativeService.version)
+
+  void launchService.connectOnStartup()
 
   logger.info(`MaaSupport version ${packageJson.version ?? 'dev'}`)
 }

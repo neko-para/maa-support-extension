@@ -28,6 +28,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+          fetch-tags: true
 
       - uses: pnpm/action-setup@v4
 
@@ -50,7 +51,14 @@ jobs:
             ver=${{ github.ref_name }}
             ver=${ver:1}
           else
-            ver=`git describe --tags --match "v*" --long | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/'`-`git rev-parse --abbrev-ref HEAD | sed 's#/#-#' | sed 's#_#-#'`
+            base_ver=$(git describe --tags --match "v*" --long 2>/dev/null \
+              | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/')
+            if [ -z "$base_ver" ]; then
+              base_ver="0.0.0-post.0-ci.g${GITHUB_SHA:0:7}"
+            fi
+            branch_ver=$(git rev-parse --abbrev-ref HEAD \
+              | sed -E 's#[^0-9A-Za-z.-]+#-#g; s#^-+##; s#-+$##')
+            ver="${base_ver}-${branch_ver:-branch}"
           fi
           echo "Change version to ${ver}"
           npm --prefix release pkg set version=${ver}

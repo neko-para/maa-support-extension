@@ -51,7 +51,8 @@ jobs:
             ver=${{ github.ref_name }}
             ver=${ver:1}
           else
-            base_ver=$(git describe --tags --match "v*" --long 2>/dev/null \
+            describe=$(git describe --tags --match "v*" --long 2>/dev/null || true)
+            base_ver=$(printf '%s\n' "$describe" \
               | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-g([a-f0-9]+)/\1-post.\2-ci.g\3/')
             if [ -z "$base_ver" ]; then
               base_ver="0.0.0-post.0-ci.g${GITHUB_SHA:0:7}"

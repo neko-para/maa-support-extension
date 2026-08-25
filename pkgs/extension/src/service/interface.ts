@@ -27,6 +27,7 @@ import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 export class InterfaceService extends BaseService {
   interfaceBundle?: InterfaceBundle
   interfaceConfigJson: InterfaceConfig
+  private interfaceLoad: Promise<void> = Promise.resolve()
   readonly evalErrorDelegate = new MaaErrorDelegateImpl()
 
   get interfaceJson(): Interface {
@@ -114,7 +115,7 @@ export class InterfaceService extends BaseService {
     }
 
     this.defer = rootService.onActiveResourceChanged(() => {
-      this.loadInterface()
+      this.interfaceLoad = this.loadInterface()
     })
 
     this.defer = rootService.onConfigChanged(() => {
@@ -137,6 +138,10 @@ export class InterfaceService extends BaseService {
 
   async init() {
     console.log('init InterfaceService')
+  }
+
+  async waitForLoad() {
+    await this.interfaceLoad
   }
 
   async loadInterface() {
@@ -294,7 +299,10 @@ export class InterfaceService extends BaseService {
     return true
   }
 
-  async buildControllerRuntime(): Promise<ControllerRuntime | null> {
+  async buildControllerRuntime(
+    showError = true,
+    configOverride?: InterfaceConfig
+  ): Promise<ControllerRuntime | null> {
     if (!(await serverService.fetchConstants())) {
       return null
     }
@@ -304,14 +312,18 @@ export class InterfaceService extends BaseService {
     }
 
     const data = this.interfaceJson
-    const config = this.interfaceConfigJson
+    const config = configOverride
+      ? { ...this.interfaceConfigJson, ...configOverride }
+      : this.interfaceConfigJson
     if (!data || !config) {
       return null
     }
 
     const runtime = buildControllerRuntime(data, config)
     if (typeof runtime === 'string') {
-      vscode.window.showErrorMessage(runtime)
+      if (showError) {
+        vscode.window.showErrorMessage(runtime)
+      }
       return null
     }
 

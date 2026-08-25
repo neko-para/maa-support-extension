@@ -34,7 +34,7 @@ export type HostToSubApis = {
   ) => string
   performReco: (image: string, resources: string[]) => string
 
-  refreshAdb: () => maa.AdbDevice[]
+  refreshAdb: (adbPath?: string) => maa.AdbDevice[]
   refreshDesktop: () => maa.DesktopDevice[]
 
   postTask: (inst: string, task: string, pipeline_override: Record<string, unknown>[]) => boolean

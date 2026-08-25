@@ -299,7 +299,10 @@ export class InterfaceService extends BaseService {
     return true
   }
 
-  async buildControllerRuntime(showError = true): Promise<ControllerRuntime | null> {
+  async buildControllerRuntime(
+    showError = true,
+    configOverride?: InterfaceConfig
+  ): Promise<ControllerRuntime | null> {
     if (!(await serverService.fetchConstants())) {
       return null
     }
@@ -309,7 +312,9 @@ export class InterfaceService extends BaseService {
     }
 
     const data = this.interfaceJson
-    const config = this.interfaceConfigJson
+    const config = configOverride
+      ? { ...this.interfaceConfigJson, ...configOverride }
+      : this.interfaceConfigJson
     if (!data || !config) {
       return null
     }

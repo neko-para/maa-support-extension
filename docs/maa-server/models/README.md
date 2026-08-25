@@ -45,7 +45,7 @@ VSCode 插件进程可能无法以管理员权限运行，而某些 MaaFramework
 
 ### 5. 设备发现
 
-- `refreshAdb()` — 扫描 ADB 设备
+- `refreshAdb(adbPath?)` — 扫描 ADB 设备；可选透传指定的 adb 路径
 - `refreshDesktop()` — 扫描桌面窗口
 
 ### 6. 截图

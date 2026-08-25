@@ -1,7 +1,11 @@
 import * as vscode from 'vscode'
 
 import { t } from '@nekosu/maa-locale'
-import type { InterfaceConfig, InterfaceRuntime } from '@nekosu/maa-pipeline-manager'
+import type {
+  ControllerRuntime,
+  InterfaceConfig,
+  InterfaceRuntime
+} from '@nekosu/maa-pipeline-manager'
 
 import { logger, loggerChannel } from '../utils/logger'
 import { BaseService } from './context'
@@ -21,6 +25,7 @@ import { WebviewLaunchPanel } from './webview/launch'
 
 export class LaunchService extends BaseService {
   private startupConnection?: Promise<boolean>
+  private startupConnectionPending = false
 
   constructor() {
     super()
@@ -31,35 +36,44 @@ export class LaunchService extends BaseService {
     console.log('init LaunchService')
 
     this.defer = rootService.onActiveResourceChanged(() => {
-      void this.connectOnStartup()
+      if (this.startupConnection) {
+        this.startupConnectionPending = true
+      } else {
+        void this.connectOnStartup()
+      }
     })
   }
 
-  async updateCache(showError = true) {
-    const runtime = await interfaceService.buildControllerRuntime(showError)
+  async updateCache(showError = true, runtime?: ControllerRuntime) {
+    const controllerRuntime = runtime ?? (await interfaceService.buildControllerRuntime(showError))
 
-    if (!runtime) {
+    if (!controllerRuntime) {
       return false
     }
 
     const ipc = await serverService.ensureServer()
-    return (await ipc?.updateController(runtime)) ?? false
+    return (await ipc?.updateController(controllerRuntime)) ?? false
   }
 
-  async connectOnStartup(): Promise<boolean> {
+  connectOnStartup(): Promise<boolean> {
     if (this.startupConnection) {
       return this.startupConnection
     }
 
-    this.startupConnection = this.connectOnStartupImpl()
-    try {
-      return await this.startupConnection
-    } catch (err) {
-      logger.error(`startup controller connection failed: ${err}`)
-      return false
-    } finally {
-      this.startupConnection = undefined
-    }
+    const connection = this.connectOnStartupImpl()
+      .catch(err => {
+        logger.error(`startup controller connection failed: ${err}`)
+        return false
+      })
+      .finally(() => {
+        this.startupConnection = undefined
+        if (this.startupConnectionPending) {
+          this.startupConnectionPending = false
+          void this.connectOnStartup()
+        }
+      })
+    this.startupConnection = connection
+    return connection
   }
 
   private async connectOnStartupImpl() {
@@ -69,13 +83,24 @@ export class LaunchService extends BaseService {
       return false
     }
 
+    const activeResource = rootService.activeResource
+    if (!activeResource) {
+      return false
+    }
+    const resourceKey = this.resourceKey(activeResource)
     await interfaceService.waitForLoad()
-    if (!rootService.activeResource) {
+    if (!this.isResourceCurrent(resourceKey)) {
       return false
     }
 
     let runtime = await interfaceService.buildControllerRuntime(false)
-    if (runtime && (await this.updateCache(false))) {
+    if (!this.isResourceCurrent(resourceKey)) {
+      return false
+    }
+    if (runtime && (await this.updateCache(false, runtime))) {
+      if (!this.isResourceCurrent(resourceKey)) {
+        return false
+      }
       logger.info('startup controller connected')
       return true
     }
@@ -85,24 +110,49 @@ export class LaunchService extends BaseService {
       return false
     }
 
+    if (!this.isResourceCurrent(resourceKey)) {
+      return false
+    }
     const discovered = await this.discoverController()
     if (!discovered) {
       logger.warn('startup controller auto-detection found no unique controller')
       return false
     }
 
-    await interfaceService.reduceConfig(discovered)
-    runtime = await interfaceService.buildControllerRuntime(false)
+    if (!this.isResourceCurrent(resourceKey)) {
+      return false
+    }
+    runtime = await interfaceService.buildControllerRuntime(false, discovered)
     if (!runtime) {
       logger.warn('startup controller runtime could not be rebuilt after auto-detection')
       return false
     }
-    if (!(await this.updateCache(false))) {
+    if (!this.isResourceCurrent(resourceKey)) {
+      return false
+    }
+    if (!(await this.updateCache(false, runtime))) {
       logger.warn('startup controller connection failed after auto-detection')
       return false
     }
+    if (!this.isResourceCurrent(resourceKey)) {
+      return false
+    }
+    await interfaceService.reduceConfig(discovered)
 
     logger.info('startup controller auto-detected and connected')
+    return true
+  }
+
+  private resourceKey(resource: NonNullable<typeof rootService.activeResource>) {
+    return `${resource.workspace.fsPath}\0${resource.interfaceRelative}`
+  }
+
+  private isResourceCurrent(resourceKey: string) {
+    const current = rootService.activeResource
+    if (!current || this.resourceKey(current) !== resourceKey) {
+      this.startupConnectionPending = true
+      return false
+    }
     return true
   }
 
@@ -121,19 +171,18 @@ export class LaunchService extends BaseService {
     }
 
     if (controller.type === 'Adb') {
-      const devices = (await ipc.refreshAdb()) ?? []
       const current = config.adb
-      if (
-        current &&
-        devices.some(device => device[1] === current.adb_path && device[2] === current.address)
-      ) {
-        return null
-      }
+      const devices = (await ipc.refreshAdb(current?.adb_path)) ?? []
       if (devices.length !== 1) {
         return null
       }
 
       const device = devices[0]
+      const matchesCurrent = current?.adb_path === device[1] && current?.address === device[2]
+      if (matchesCurrent && this.hasCompleteAdbConfig(current)) {
+        return null
+      }
+
       let deviceConfig: unknown
       try {
         deviceConfig = JSON.parse(device[5])
@@ -198,6 +247,19 @@ export class LaunchService extends BaseService {
             hwnd: matches[0][0]
           }
         }
+  }
+
+  private hasCompleteAdbConfig(config: InterfaceConfig['adb']) {
+    return (
+      !!config &&
+      typeof config.adb_path === 'string' &&
+      config.adb_path.length > 0 &&
+      typeof config.address === 'string' &&
+      config.address.length > 0 &&
+      config.screencap !== undefined &&
+      config.input !== undefined &&
+      config.config !== undefined
+    )
   }
 
   async setupInstance(runtime: InterfaceRuntime): Promise<[boolean, string]> {

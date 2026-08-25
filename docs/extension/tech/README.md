@@ -147,9 +147,11 @@ VS Code 设置 `maa.controller.connectOnStartup` 开启后，插件在当前 int
 
 `maa.controller.autoDetectOnStartup` 可在上述连接失败或配置不完整时启用自动发现；单独开启它也会触发启动时连接：
 
-- ADB 使用 `AdbController.find()`；只有唯一设备时才写回 `config/maa_pi_config.json`
+- ADB 使用 `AdbController.find()`（透传已有的 `adb_path`）；只有唯一设备且控制器连接成功后才写回 `config/maa_pi_config.json`，已匹配但字段不完整的配置会被补全
 - Win32 和 Gamepad 使用 `Win32Controller.find()`，并应用 interface 中的 `class_regex` / `window_regex`；只有唯一窗口匹配时才写回句柄
 - PlayCover 只能使用已有 address，Fixed Image 不需要外部连接
+
+自动检测会先用内存中的合并配置构建 runtime 并调用 `updateController()`；连接成功后才持久化检测结果，避免失败连接覆盖已有配置。
 
 多个设备或窗口匹配时不会擅自选择；自动发现成功后复用标准 `updateController()` 连接路径。这样项目只需提供 controller 的声明和匹配规则，不需要为 MSE 增加项目专用代码。
 

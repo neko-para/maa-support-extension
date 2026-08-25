@@ -78,8 +78,8 @@ export async function initServer() {
       ipc.performTemplateMatch = performTemplateMatch
       ipc.performReco = performReco
 
-      ipc.refreshAdb = async () => {
-        return (await maa.AdbController.find()) ?? []
+      ipc.refreshAdb = async (adbPath?: string) => {
+        return (await maa.AdbController.find(adbPath)) ?? []
       }
       ipc.refreshDesktop = async () => {
         return (await maa.Win32Controller.find()) ?? []

@@ -29,6 +29,7 @@ import {
   mpeSidecarPath,
   normalizeExternalUrl,
   parseMpeConfig,
+  parseMpeSavePayload,
   parsePipeline,
   splitPipelineAndConfig,
   stringifyMpeConfig,
@@ -498,7 +499,7 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
         data: mergePipelineAndConfig(
           pipeline,
           sidecar.config,
-          path.basename(this.document.fileName).replace(/\.(json|jsonc)$/i, ''),
+          path.basename(this.document.fileName),
           Object.keys(pipeline)
         ),
         version
@@ -588,18 +589,29 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       if (rejectIfChanged()) {
         return
       }
-      const data = asRecord(asRecord(message.payload)?.data)
-      if (!data)
-        throw Object.assign(new Error('MPE returned invalid Pipeline data'), {
-          code: 'invalid_pipeline'
-        })
+      const save = parseMpeSavePayload(message.payload)
       const sidecarUri = this.separatedConfigUri ?? this.sidecarUri()
       const sidecar = await this.readSidecar(sidecarUri)
-      const separated = isSeparatedMpeSidecar(!!this.separatedConfigUri, sidecar)
+      const separated =
+        save.mode === 'separated'
+          ? true
+          : save.mode === 'integrated'
+            ? false
+            : isSeparatedMpeSidecar(!!this.separatedConfigUri, sidecar)
       if (rejectIfChanged()) {
         return
       }
-      const next = separated ? splitPipelineAndConfig(data) : undefined
+      const next = separated
+        ? save.pipeline && save.config
+          ? { pipeline: save.pipeline, config: save.config }
+          : splitPipelineAndConfig(save.data!)
+        : undefined
+      const data = save.data ?? save.pipeline
+      if (!data) {
+        throw Object.assign(new Error('MPE returned invalid Pipeline data'), {
+          code: 'invalid_pipeline'
+        })
+      }
       const original = this.document.getText()
       const pipelineText = updatePipelineText(
         original,
@@ -612,11 +624,14 @@ frame.addEventListener('load',()=>api.postMessage({builtin:'mpe-host-ready'}));
       const edit = new vscode.WorkspaceEdit()
       if (next) {
         this.appendSidecarEdit(edit, sidecarUri, next.config)
-        this.separatedConfigUri = sidecarUri
+      } else if (save.mode === 'integrated' && sidecar.status !== 'missing') {
+        edit.deleteFile(sidecarUri, { ignoreIfNotExists: true })
       }
       edit.replace(this.document.uri, documentRange(this.document), pipelineText)
       if (!(await vscode.workspace.applyEdit(edit)))
         throw new Error('VS Code rejected the document edit')
+      if (next) this.separatedConfigUri = sidecarUri
+      else if (save.mode === 'integrated') this.separatedConfigUri = undefined
       this.loadedDocumentVersion = this.document.version
       this.send({
         protocol: mpeProtocol,

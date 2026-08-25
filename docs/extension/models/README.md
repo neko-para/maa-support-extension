@@ -129,9 +129,9 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 可从文件树、编辑器正文、编辑器标题栏或命令面板打开
 - 同一文件复用已有面板，不同文件保持独立的加载、同步和保存状态
 - 初次打开和“从 MSE 同步”读取当前 VS Code `TextDocument` 内容，包含尚未落盘的修改
-- 若同目录存在分离配置 `.{文件名}.mpe.json`，打开和同步时会一并读取并合并到画布；保存时把 Pipeline 与 sidecar 放进同一次 `WorkspaceEdit` 拆回，避免把 `$__mpe_*` 写进 Pipeline
-- sidecar 是画布派生的布局缓存，保存以 MPE 画布为准，不与 Pipeline 对等做冲突确认；删除后再次保存会按分离模式重建
-- 只有 sidecar 文件不存在才按集成模式处理。文件存在但打不开、JSON 损坏或字段类型错误时拒绝加载并报错
+- 若同目录存在分离配置 `.{文件名}.mpe.json`，打开和同步时会一并读取并合并到画布；合并保留 Pipeline 的完整文件名（包括 `.json`/`.jsonc` 扩展名），以匹配 MPE 导出的特殊节点键。保存模式以 MPE 回传的 `mode` 为准：分离模式首次保存也会创建 sidecar，集成模式会清理旧 sidecar；旧版 MPE 未回传模式时才按 sidecar 存在性兼容判断
+- sidecar 是画布派生的布局缓存，保存以 MPE 画布为准，不与 Pipeline 对等做冲突确认；MPE 仍选择分离模式时，外部删除后再次保存会重建 sidecar，切换到集成模式时则会清理 sidecar
+- 加载时 sidecar 不存在则只加载 Pipeline；文件存在但打不开、JSON 损坏或字段类型错误时拒绝加载并报错。sidecar 是否存在仅在旧版 MPE 保存消息缺少 `mode` 时用于兼容判断
 - 未成功加载完成前禁止保存（含加载进行中和加载失败），避免空画布覆盖 Pipeline；加载成功后恢复保存
 - MPE 保存通过 `WorkspaceEdit` 写回原文档，保留 VS Code 的 dirty、undo/redo 和正常保存语义，不直接覆盖磁盘
 - MPE 加载后若 Pipeline 源文档被外部编辑，保存时会提示先从 MSE 同步；用户也可以确认使用 MPE 内容强制覆盖

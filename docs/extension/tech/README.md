@@ -79,6 +79,8 @@ src/
 
 MSE 作为 MPE iframe 宿主使用 `mpe-embed` v1.4.0，1.x 消息仍按主版本兼容。`mpe:init` 通过 `hostNodeNavigation: true` 声明外部节点由宿主导航；MPE 发送带 `requestId` 的 `mpe:navigateNodeRequest` 后，MSE 复用 `InterfaceBundle.topLayer.getTask()` 查找定义，打开非预览 JSON 标签和对应 MPE 面板，再返回 `mpe:navigateNodeResult`。目标面板只在匹配的 `mpe:loadResult` 成功后接收 `mpe:selectNode` 与 `mpe:focusNode`。
 
+嵌入保存的模式由 MPE 自己决定并在 `mpe:saveData` payload 中回传。`mode: separated` 时 MPE 发送已拆分的 `pipeline` 与 `config`，MSE 仅负责在同一次 `WorkspaceEdit` 中写入 Pipeline 和 `.mpe.json` sidecar；`mode: integrated` 时 MSE 写入完整 Pipeline 并清理旧 sidecar。只有旧版消息缺少 `mode` 时，才按 sidecar 存在性进行兼容判断，宿主不覆盖 MPE 的保存模式。
+
 `mpe:loadPipeline` 同时携带来自 `InterfaceBundle.topLayer.getAnchorList()` 的 `anchorDefinitions`，每项包含 Anchor 名、声明节点、文件名、相对路径和当前文件标记。这些数据只用于 iframe 内展示定义上下文，Anchor 不走宿主导航。Anchor 索引采集失败时降级为空列表，不阻断 Pipeline 本身加载。
 
 ## 服务类层次

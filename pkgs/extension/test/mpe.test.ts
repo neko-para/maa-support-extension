@@ -19,6 +19,7 @@ import {
   mpeSidecarPath,
   normalizeExternalUrl,
   parseMpeConfig,
+  parseMpeSavePayload,
   parsePipeline,
   splitPipelineAndConfig,
   stringifyMpeConfig,
@@ -231,6 +232,49 @@ test('parses a separated MPE config file', () => {
   assert.deepEqual(config.node_configs.Start, { position: { x: 10, y: 20 } })
 })
 
+test('parses MPE-owned integrated and separated save payloads', () => {
+  const integrated = parseMpeSavePayload({
+    mode: 'integrated',
+    data: { Start: {} }
+  })
+  assert.equal(integrated.mode, 'integrated')
+  assert.deepEqual(integrated.data, { Start: {} })
+
+  const separated = parseMpeSavePayload({
+    mode: 'separated',
+    pipeline: '{ "Start": {} }',
+    config: '{ "file_config": { "filename": "fight.json" }, "node_configs": {} }'
+  })
+  assert.equal(separated.mode, 'separated')
+  assert.deepEqual(separated.pipeline, { Start: {} })
+  assert.equal(separated.config?.file_config.filename, 'fight.json')
+
+  const legacy = parseMpeSavePayload({ data: { Start: {} } })
+  assert.equal(legacy.mode, undefined)
+})
+
+test('rejects invalid MPE save payloads', () => {
+  const validConfig = { file_config: {}, node_configs: {} }
+
+  assert.throws(
+    () => parseMpeSavePayload({ mode: 'future', data: { Start: {} } }),
+    /mode must be integrated or separated/
+  )
+  assert.throws(
+    () => parseMpeSavePayload({ mode: 'integrated' }),
+    /Integrated MPE save requires data/
+  )
+  assert.throws(
+    () => parseMpeSavePayload({ mode: 'separated', config: validConfig }),
+    /Separated MPE save requires pipeline and config/
+  )
+  assert.throws(
+    () => parseMpeSavePayload({ mode: 'separated', pipeline: { Start: {} } }),
+    /Separated MPE save requires pipeline and config/
+  )
+  assert.throws(() => parseMpeSavePayload({ data: [] }), /MPE save data must be an object/)
+})
+
 test('merges a sidecar config into pipeline nodes for MPE load', () => {
   const pipeline = {
     Start: { next: ['End'] },
@@ -267,6 +311,26 @@ test('merges a sidecar config into pipeline nodes for MPE load', () => {
   })
   assert.deepEqual(merged['$__mpe_external_Shared_fight'], {
     $__mpe_code: { position: { x: 9, y: 8 } }
+  })
+})
+
+test('preserves the pipeline extension when merging separated MPE config', () => {
+  const merged = mergePipelineAndConfig(
+    { Start: {} },
+    {
+      file_config: { filename: 'fight.jsonc' },
+      node_configs: { Start: { position: { x: 1, y: 2 } } },
+      sticker_nodes: { note_with_underscore: { position: { x: 3, y: 4 } } }
+    },
+    'fight.jsonc',
+    ['Start']
+  )
+
+  assert.deepEqual(merged['$__mpe_config_fight.jsonc'], {
+    $__mpe_code: { filename: 'fight.jsonc' }
+  })
+  assert.deepEqual(merged['$__mpe_sticker_note_with_underscore_fight.jsonc'], {
+    $__mpe_code: { position: { x: 3, y: 4 } }
   })
 })
 
@@ -347,11 +411,12 @@ test('MPE host binds the loaded version to the parsed snapshot', () => {
   assert.match(source, /seq !== this\.loadSeq/)
 })
 
-test('MPE host writes pipeline and sidecar in one WorkspaceEdit', () => {
+test('MPE host writes pipeline and manages sidecar in one WorkspaceEdit', () => {
   const source = readFileSync(new URL('../src/service/mpe.ts', import.meta.url), 'utf8')
 
   assert.match(source, /appendSidecarEdit\(edit, sidecarUri, next\.config\)/)
   assert.match(source, /edit\.createFile\(uri, \{/)
+  assert.match(source, /edit\.deleteFile\(sidecarUri, \{ ignoreIfNotExists: true \}\)/)
   assert.match(
     source,
     /edit\.replace\(this\.document\.uri, documentRange\(this\.document\), pipelineText\)/

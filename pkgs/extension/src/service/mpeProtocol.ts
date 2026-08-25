@@ -63,6 +63,49 @@ export type MpeProtocolMessage = {
   payload?: unknown
 }
 
+export type MpeSaveMode = 'integrated' | 'separated'
+
+export type MpeSavePayload = {
+  mode?: MpeSaveMode
+  data?: Record<string, unknown>
+  pipeline?: Record<string, unknown>
+  config?: MpeConfig
+}
+
+function parseSaveObject(value: unknown, label: string) {
+  if (typeof value === 'string') return parseJsonObject(value, label)
+  return asRecord(value)
+}
+
+export function parseMpeSavePayload(value: unknown): MpeSavePayload {
+  const payload = asRecord(value)
+  if (!payload) throw new Error('MPE save payload must be an object')
+
+  if (payload.mode !== undefined && payload.mode !== 'integrated' && payload.mode !== 'separated') {
+    throw new Error('MPE save mode must be integrated or separated')
+  }
+  const mode = payload.mode
+  const data = payload.data === undefined ? undefined : parseSaveObject(payload.data, 'Pipeline')
+  const pipeline =
+    payload.pipeline === undefined ? undefined : parseSaveObject(payload.pipeline, 'Pipeline')
+  const rawConfig =
+    payload.config === undefined ? undefined : parseSaveObject(payload.config, 'MPE config')
+  const config = rawConfig ? parseMpeConfig(JSON.stringify(rawConfig)) : undefined
+
+  if (payload.data !== undefined && !data) throw new Error('MPE save data must be an object')
+  if (payload.pipeline !== undefined && !pipeline) {
+    throw new Error('MPE save pipeline must be an object')
+  }
+  if (mode === 'separated' && (!pipeline || !config)) {
+    throw new Error('Separated MPE save requires pipeline and config')
+  }
+  if (mode === 'integrated' && !data) {
+    throw new Error('Integrated MPE save requires data')
+  }
+
+  return { mode, data, pipeline, config }
+}
+
 export function isCompatibleMpeMessage(value: unknown): value is MpeProtocolMessage {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const message = value as Record<string, unknown>

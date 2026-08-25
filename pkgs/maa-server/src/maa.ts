@@ -25,6 +25,7 @@ export async function initMaa() {
   maa.Global.debug_mode = option.debugMode
   maa.Global.log_dir = option.maaLog
   maa.Global.save_draw = option.saveDraw
+  maa.Global.save_on_error = option.saveOnError
 }
 
 type InstanceCache = {

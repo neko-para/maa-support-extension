@@ -6,6 +6,7 @@ export type State = {
   admin?: boolean
   debugMode?: boolean
   saveDraw?: boolean
+  saveOnError?: boolean
 
   activeWorkspace?: string
   activeInterface?: string

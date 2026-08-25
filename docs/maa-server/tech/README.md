@@ -10,7 +10,7 @@
 src/
 ├── index.ts          # 入口: 安装 source-map → initOptions() → initServer() → initMaa()
 ├── options.ts        # 启动配置: 解析 process.argv[2] (base64 JSON)
-│                     #   { id, port, module, maaLog, debugMode, saveDraw }
+│                     #   { id, port, module, maaLog, debugMode, saveDraw, saveOnError }
 ├── server.ts         # TCP/RPC 传输层
 │                     #   - 连接 127.0.0.1:{port}
 │                     #   - 创建 vscode-jsonrpc MessageConnection
@@ -36,7 +36,7 @@ src/
 
 ```
 1. node server.mjs <base64-json>
-2. index.ts → initOptions()     # 解析 base64 JSON → { id, port, module, maaLog, debugMode, saveDraw }
+2. index.ts → initOptions()     # 解析 base64 JSON → { id, port, module, maaLog, debugMode, saveDraw, saveOnError }
 3. index.ts → initServer()      # 创建 TCP 连接到 127.0.0.1:{port}
                                  #   建立 vscode-jsonrpc MessageConnection
                                  #   发送 initNoti (包含 client id)
@@ -83,4 +83,4 @@ src/
 
 ## 全局配置
 
-`initMaa()` 将启动参数 `saveDraw` 直接写入 MaaFramework 的全局 `save_draw`。启用后识别绘制图像由 MaaFramework 保存到 `log_dir/vision`。
+`initMaa()` 将启动参数 `saveDraw` 直接写入 MaaFramework 的全局 `save_draw`。启用后识别绘制图像由 MaaFramework 保存到 `log_dir/vision`。`saveOnError` 同理写入全局 `save_on_error`：启用后任务失败时由 MaaFramework 将现场截图保存到 `log_dir/on_error`（默认开启，与 MaaToolkit 项目接口层的默认一致；原生裸 API 默认关闭，此透传使插件与 toolkit 宿主行为对齐）。

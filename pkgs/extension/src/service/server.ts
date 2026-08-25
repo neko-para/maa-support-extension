@@ -35,6 +35,7 @@ export class ServerService extends BaseService {
   status: boolean
   debugMode: boolean
   saveDraw: boolean
+  saveOnError: boolean
   maaLogDir: string | null
 
   instMap: Record<string, WebviewLaunchPanel>
@@ -55,6 +56,7 @@ export class ServerService extends BaseService {
     this.status = false
     this.debugMode = stateService.state.debugMode ?? true
     this.saveDraw = stateService.state.saveDraw ?? false
+    this.saveOnError = stateService.state.saveOnError ?? true
     this.maaLogDir = null
 
     this.instMap = {}
@@ -160,6 +162,22 @@ export class ServerService extends BaseService {
     }
   }
 
+  switchSaveOnError(saveOnError?: boolean) {
+    if (saveOnError === undefined) {
+      saveOnError = !this.saveOnError
+    }
+    if (saveOnError !== this.saveOnError) {
+      this.kill()
+      this.saveOnError = saveOnError
+
+      stateService.reduce({
+        saveOnError
+      })
+      this.pushStatus(false)
+      statusBarService.showServerStatus('close')
+    }
+  }
+
   async setupServer() {
     statusBarService.showServerStatus('loading~spin')
     const maaLogDir = await rootService.resolveMaaLogDir()
@@ -169,7 +187,8 @@ export class ServerService extends BaseService {
         module: nativeService.activeModulePath,
         maaLog: maaLogDir.fsPath,
         debugMode: this.debugMode,
-        saveDraw: this.saveDraw
+        saveDraw: this.saveDraw,
+        saveOnError: this.saveOnError
       })) &&
       this.rpc.conn
     ) {

@@ -107,6 +107,21 @@ async function jump(target: ToolkitJumpTarget) {
           </template>
           {{ t('maa.control.tooltip.toggle-save-draw') }}
         </Tooltip>
+        <Tooltip v-if="hostState.saveOnError !== undefined" trigger="hover">
+          <template #trigger>
+            <n-button
+              :disabled="!!loading"
+              :loading="loading === 'switch-save-on-error'"
+              @click="jump('switch-save-on-error')"
+              size="small"
+              :type="hostState.saveOnError ? 'warning' : 'default'"
+              :ghost="hostState.saveOnError"
+            >
+              {{ t('maa.control.toolkit.toggle-save-on-error') }}
+            </n-button>
+          </template>
+          {{ t('maa.control.tooltip.toggle-save-on-error') }}
+        </Tooltip>
         <Tooltip trigger="hover">
           <template #trigger>
             <n-button

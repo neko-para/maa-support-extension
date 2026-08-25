@@ -14,6 +14,7 @@ export default {
   'maa.control.toolkit.toggle-admin-mode': 'Toggle Admin Mode',
   'maa.control.toolkit.toggle-debug-mode': 'Toggle Debug Mode',
   'maa.control.toolkit.toggle-save-draw': 'Save Recognition Draws',
+  'maa.control.toolkit.toggle-save-on-error': 'Save Failure Screenshots',
   'maa.control.toolkit.activate-shortcuts': 'Activate Global Shortcuts',
   'maa.control.toolkit.shortcuts-active': 'Global Shortcuts Active',
   'maa.control.interface.interface': 'Interface',
@@ -39,6 +40,8 @@ export default {
     'Enable access to the raw image used by each recognition in runtime details',
   'maa.control.tooltip.toggle-save-draw':
     'Save annotated recognition images (draws) to disk; this may create many files and use significant disk space',
+  'maa.control.tooltip.toggle-save-on-error':
+    'Save the on-screen screenshot to the on_error subdirectory of the log dir (e.g. debug/on_error) when a task fails, to help diagnose failures',
   'maa.control.tooltip.activate-shortcuts':
     'Make this VS Code window the sole target for Maa global shortcuts',
   'maa.control.interface.select-interface': 'Select interface',

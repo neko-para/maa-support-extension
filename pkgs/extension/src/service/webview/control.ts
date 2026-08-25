@@ -93,6 +93,10 @@ export class WebviewControlService extends BaseService {
               serverService.switchSaveDraw()
               this.pushState()
               break
+            case 'switch-save-on-error':
+              serverService.switchSaveOnError()
+              this.pushState()
+              break
             case 'activate-shortcuts':
               await shortcutService.activate()
               this.pushState()
@@ -417,6 +421,7 @@ export class WebviewControlService extends BaseService {
       admin: process.platform === 'win32' ? serverService.rpc.admin : undefined,
       debugMode: serverService.debugMode,
       saveDraw: serverService.saveDraw,
+      saveOnError: serverService.saveOnError,
       shortcutTarget: shortcutService.isTarget,
 
       interface: rootService.resourceRoots.map(root => root.interfaceRelative),

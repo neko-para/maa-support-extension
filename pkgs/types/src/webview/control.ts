@@ -11,6 +11,7 @@ export type ControlHostState = HostStateBase & {
   admin?: boolean
   debugMode?: boolean
   saveDraw?: boolean
+  saveOnError?: boolean
   shortcutTarget?: boolean
 
   interface?: string[]
@@ -45,6 +46,7 @@ export type ToolkitJumpTarget =
   | 'switch-admin'
   | 'switch-debug-mode'
   | 'switch-save-draw'
+  | 'switch-save-on-error'
   | 'activate-shortcuts'
 
 export type InterfaceRevealOption =

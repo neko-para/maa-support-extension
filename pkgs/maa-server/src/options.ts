@@ -5,6 +5,7 @@ export let option: {
   maaLog: string
   debugMode: boolean
   saveDraw: boolean
+  saveOnError: boolean
 }
 
 export function initOptions() {

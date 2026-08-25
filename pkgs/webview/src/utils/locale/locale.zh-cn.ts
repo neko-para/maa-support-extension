@@ -14,6 +14,7 @@ export default {
   'maa.control.toolkit.toggle-admin-mode': '切换管理员模式',
   'maa.control.toolkit.toggle-debug-mode': '切换调试模式',
   'maa.control.toolkit.toggle-save-draw': '保存识别绘图',
+  'maa.control.toolkit.toggle-save-on-error': '保存失败截图',
   'maa.control.toolkit.activate-shortcuts': '激活全局快捷键',
   'maa.control.toolkit.shortcuts-active': '全局快捷键已激活',
   'maa.control.interface.interface': '配置',
@@ -38,6 +39,8 @@ export default {
   'maa.control.tooltip.toggle-debug': '开启后可在运行详情中查看每次识别使用的原始图像（Raw）',
   'maa.control.tooltip.toggle-save-draw':
     '将带有识别框和结果标注的可视化图（Draw）保存到磁盘；可能产生大量文件并占用较多空间',
+  'maa.control.tooltip.toggle-save-on-error':
+    '任务失败时自动保存现场截图到日志目录的 on_error 子目录（如 debug/on_error），便于排查失败原因',
   'maa.control.tooltip.activate-shortcuts': '将当前 VS Code 窗口设为 Maa 全局快捷键的唯一执行目标',
   'maa.control.interface.select-interface': '选择配置',
   'maa.control.resource.resource': '资源',

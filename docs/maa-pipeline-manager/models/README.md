@@ -63,7 +63,7 @@
 
 ### 5. Node.js 内容源抽象
 
-- `FsContentLoader` / `FsContentWatcher` — 文件读写和 chokidar 监视
+- `FsContentLoader` / `FsContentWatcher` — 文件读写和 chokidar 监视；macOS 默认使用 polling，避免大型资源初次扫描时为每个匹配文件创建 `fs.watch` 句柄并触发 `EMFILE`。调用方可通过 `FsContentWatcherOptions` 显式覆盖 watcher 选项
 - `ContentJson<T>` — 带 debounce flush 的 JSON/JSONC 文件监视
 - `Bundle` / `BundleManager` — pipeline 资源目录管理
 - `InterfaceBundle.resolvePaths(controller, resource)` — 在不切换 active 状态的情况下计算有序资源路径，供批处理消费者规划隔离任务

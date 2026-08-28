@@ -27,7 +27,7 @@ export class ProcessManager {
     const keepAlive = vscode.workspace.getConfiguration('maa').get('win32ProcKeep') as boolean
     await fs.writeFile(
       this.ps1ScriptPath,
-      `Start-Process -FilePath cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
+      `$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)\n$cmd = if ($env:ComSpec -and [System.IO.Path]::IsPathRooted($env:ComSpec)) { $env:ComSpec } else { Join-Path ([Environment]::SystemDirectory) 'cmd.exe' }\nStart-Process -FilePath $cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
     )
     this.clean = () => {
       fs.rm(tempFolder, { recursive: true })

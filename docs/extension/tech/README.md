@@ -222,6 +222,7 @@ VS Code 命令按是否跨领域编排划分归属：
 插件将项目运行产物与内部存储分开管理：
 
 - **插件自身日志**: `context.storageUri/mse.log`（无工作区时回退到 `context.globalStorageUri`）
+- **提权启动脚本**: Windows UAC 包装脚本使用带 BOM 的 UTF-8 编码，并固定通过 Windows 系统目录中的 `cmd.exe` 调用 `RunAs`；stdout/stderr 使用 Node 流式 UTF-8 解码，避免非 ASCII 路径和跨数据块中文日志损坏。RPC 建立前若包装进程退出（包括取消 UAC 或 `Start-Process` 失败）会立即终止连接等待，连接超过 60 秒未完成也会超时，并统一清理监听器、socket 和临时脚本
 - **MAA 日志和识别绘图**: 默认写入当前活动 interface 项目的 `debug/`。`maatools.config.mts` 可通过 `cwd` 和 `maaLogDir` 覆盖目录；相对 `cwd` 以工作区根目录为基准，相对 `maaLogDir` 以解析后的项目目录为基准。项目目录不可写或没有活动项目时回退到 `context.storageUri/debug/`。活动项目或配置使解析后的日志目录发生变化时会关闭 maa-server，使下次连接使用新目录。
 - **上传图片副本**: `context.storageUri/fixed/`，与 MAA 日志目录分离，避免 MaaFramework 日志轮转递归清理 PNG。
 - **Native 模块**: context.globalStorageUri/native

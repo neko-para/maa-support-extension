@@ -13,6 +13,7 @@ export class ProcessManager {
   ps1ScriptPath?: string
 
   proc?: ChildProcess
+  closed: Promise<void> = Promise.resolve()
 
   clean?: () => void
 
@@ -25,9 +26,12 @@ export class ProcessManager {
     const tempFolder = await fs.mkdtemp(path.join(os.tmpdir(), 'mse-ps1-'))
     this.ps1ScriptPath = path.join(tempFolder, 'uac.ps1')
     const keepAlive = vscode.workspace.getConfiguration('maa').get('win32ProcKeep') as boolean
+    const script = `$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$cmd = Join-Path ([Environment]::SystemDirectory) 'cmd.exe'
+Start-Process -FilePath $cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
     await fs.writeFile(
       this.ps1ScriptPath,
-      `Start-Process -FilePath cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELECTRON_RUN_AS_NODE=\`"1\`" & \`"${process.argv[0]}\`" \`"${this.script}\`" \`"${arg}\`"" -Wait -Verb RunAs`
+      Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(script, 'utf8')])
     )
     this.clean = () => {
       fs.rm(tempFolder, { recursive: true })
@@ -40,6 +44,8 @@ export class ProcessManager {
     }
 
     let proc: ChildProcess
+    const [closed, resolveClosed] = makePromise<void>()
+    this.closed = closed
 
     if (this.admin) {
       await this.setupPs1(arg)
@@ -51,21 +57,14 @@ export class ProcessManager {
         ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', this.ps1ScriptPath],
         { stdio: ['ignore', 'pipe', 'pipe'] }
       )
-
-      proc.stdout?.on('data', (data: Buffer) => {
-        logger.info(data.toString().trimEnd())
-      })
-      proc.stderr?.on('data', (data: Buffer) => {
-        logger.info(data.toString().trimEnd())
-      })
     } else {
       proc = spawn(process.argv[0], [this.script, arg], { stdio: ['ignore', 'pipe', 'pipe'] })
+    }
 
-      proc.stdout?.on('data', (data: Buffer) => {
-        logger.info(data.toString().trimEnd())
-      })
-      proc.stderr?.on('data', (data: Buffer) => {
-        logger.info(data.toString().trimEnd())
+    for (const stream of [proc.stdout, proc.stderr]) {
+      stream?.setEncoding('utf8')
+      stream?.on('data', (data: string) => {
+        logger.info(data.trimEnd())
       })
     }
 
@@ -82,11 +81,13 @@ export class ProcessManager {
     })
     proc.on('error', () => {
       resolve(false)
+      resolveClosed()
     })
     proc.on('close', () => {
       if (proc === this.proc) {
         this.proc = undefined
       }
+      resolveClosed()
     })
 
     return promise
@@ -95,5 +96,9 @@ export class ProcessManager {
   kill() {
     this.proc?.kill()
     this.proc = undefined
+  }
+
+  waitForClose() {
+    return this.closed
   }
 }

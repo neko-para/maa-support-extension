@@ -6,6 +6,8 @@ import * as path from 'node:path'
 import { PassThrough } from 'node:stream'
 import test from 'node:test'
 
+import { makePromise, waitForConnection } from '../src/service/utils/promise.ts'
+
 const processSource = await fs.readFile(
   new URL('../src/service/utils/process.ts', import.meta.url),
   'utf8'
@@ -32,6 +34,35 @@ test('ProcessManager enables stateful UTF-8 decoding for stdout and stderr', () 
   stream.end(encoded.subarray(1))
 
   assert.equal(output.join(''), '中文日志')
+})
+
+test('RPC connection wait succeeds only after protocol setup', async () => {
+  const [connection, resolveConnection] = makePromise<boolean>()
+  const [processClosed] = makePromise<void>()
+
+  setImmediate(() => resolveConnection(true))
+
+  assert.equal(await waitForConnection(connection, processClosed, 1_000), 'connected')
+})
+
+test('RPC connection wait ends on process exit, rejection, or timeout', async t => {
+  await t.test('process exit', async () => {
+    const [connection] = makePromise<boolean>()
+    const [processClosed, resolveProcessClosed] = makePromise<void>()
+    setImmediate(resolveProcessClosed)
+    assert.equal(await waitForConnection(connection, processClosed, 1_000), 'process-exited')
+  })
+
+  await t.test('connection rejection', async () => {
+    const [processClosed] = makePromise<void>()
+    assert.equal(await waitForConnection(Promise.resolve(false), processClosed, 1_000), 'failed')
+  })
+
+  await t.test('timeout', async () => {
+    const [connection] = makePromise<boolean>()
+    const [processClosed] = makePromise<void>()
+    assert.equal(await waitForConnection(connection, processClosed, 10), 'timeout')
+  })
 })
 
 test(

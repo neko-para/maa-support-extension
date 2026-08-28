@@ -7,7 +7,9 @@ import { initNoti, shutdownNoti } from '@nekosu/maa-server-proto'
 
 import { logger } from '../../utils/logger'
 import { ProcessManager } from './process'
-import { makePromise } from './promise'
+import { makePromise, waitForConnection } from './promise'
+
+const connectionTimeout = 60_000
 
 function encodeParam(data: unknown) {
   return Buffer.from(JSON.stringify(data)).toString('base64')
@@ -97,13 +99,16 @@ export class RpcManager extends EventEmitter<{
     }
 
     const [promise, resolve] = makePromise<boolean>()
+    let pendingSocket: net.Socket | undefined
+    let attemptActive = true
 
     const setupConnection = (socket: net.Socket) => {
       logger.info('connection established')
+      pendingSocket = socket
       const conn = rpc.createMessageConnection(socket, socket)
 
       conn.onNotification(initNoti, clientId => {
-        if (!this.conn && clientId === this.id) {
+        if (attemptActive && !this.conn && clientId === this.id) {
           logger.info('rpc setup')
           this.conn = conn
           resolve(true)
@@ -123,15 +128,18 @@ export class RpcManager extends EventEmitter<{
           this.proc = undefined
           this.conn = undefined
           this.emit('connectionLost')
+        } else if (attemptActive) {
+          resolve(false)
         }
       })
     }
 
     this.server.once('connection', setupConnection)
 
-    this.proc = new ProcessManager(this.script, this.admin)
+    const proc = new ProcessManager(this.script, this.admin)
+    this.proc = proc
     if (
-      !(await this.proc.ensure(
+      !(await proc.ensure(
         encodeParam({
           id: this.id,
           port: this.port,
@@ -139,13 +147,37 @@ export class RpcManager extends EventEmitter<{
         })
       ))
     ) {
-      this.proc.kill()
-      this.proc.clean?.()
-      this.proc = undefined
-      this.server.removeListener('connection', setupConnection)
+      attemptActive = false
+      this.disposeConnectionAttempt(proc, setupConnection, pendingSocket)
       return false
     }
 
-    return promise
+    const result = await waitForConnection(promise, proc.waitForClose(), connectionTimeout)
+    attemptActive = false
+    if (result === 'connected') {
+      return true
+    }
+
+    if (result === 'timeout') {
+      logger.error('Maa server connection timed out')
+    } else if (result === 'process-exited') {
+      logger.error('Maa server process exited before RPC setup')
+    }
+    this.disposeConnectionAttempt(proc, setupConnection, pendingSocket)
+    return false
+  }
+
+  private disposeConnectionAttempt(
+    proc: ProcessManager,
+    setupConnection: (socket: net.Socket) => void,
+    socket?: net.Socket
+  ) {
+    this.server?.removeListener('connection', setupConnection)
+    socket?.destroy()
+    proc.kill()
+    proc.clean?.()
+    if (this.proc === proc) {
+      this.proc = undefined
+    }
   }
 }

@@ -13,6 +13,7 @@ export class ProcessManager {
   ps1ScriptPath?: string
 
   proc?: ChildProcess
+  closed: Promise<void> = Promise.resolve()
 
   clean?: () => void
 
@@ -43,6 +44,8 @@ Start-Process -FilePath $cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELE
     }
 
     let proc: ChildProcess
+    const [closed, resolveClosed] = makePromise<void>()
+    this.closed = closed
 
     if (this.admin) {
       await this.setupPs1(arg)
@@ -78,11 +81,13 @@ Start-Process -FilePath $cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELE
     })
     proc.on('error', () => {
       resolve(false)
+      resolveClosed()
     })
     proc.on('close', () => {
       if (proc === this.proc) {
         this.proc = undefined
       }
+      resolveClosed()
     })
 
     return promise
@@ -91,5 +96,9 @@ Start-Process -FilePath $cmd -ArgumentList "${keepAlive ? '/K' : '/C'}","set ELE
   kill() {
     this.proc?.kill()
     this.proc = undefined
+  }
+
+  waitForClose() {
+    return this.closed
   }
 }

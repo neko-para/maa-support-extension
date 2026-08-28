@@ -147,3 +147,5 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 ## MAA 日志与存储目录
 
 MaaFramework 原生日志（`maafw.log` / `maa.log`）和识别绘图默认写入当前活动 interface 项目的 `debug/`。`maatools.config.mts` 中的 `cwd`、`maaLogDir` 可覆盖该目录；没有活动项目或项目目录不可写时回退到 `context.storageUri/debug/`（无工作区时再回退到 `context.globalStorageUri/debug/`）。插件自身日志和上传图片副本仍保存在 VS Code storage，Native 模块与跨窗口协调文件仍保存在 global storage。
+
+Windows Admin 模式通过带 BOM 的 UTF-8 PowerShell 包装脚本启动系统 `cmd.exe`，包含中文或其他非 ASCII 字符的脚本路径和启动诊断应保持可读。

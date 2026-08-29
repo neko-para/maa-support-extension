@@ -52,7 +52,16 @@ const selectDrag = ref<DragHandler>(new DragHandler())
 
 export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
-    cropBox.value = new Box()
+    if (greenMaskSt.drawing.value) {
+      greenMaskSt.drawing.value = false
+    } else if (pickSt.selecting.value) {
+      pickSt.selecting.value = false
+      pickSt.selectBox.value = null
+    } else if (pickSt.picking.value) {
+      pickSt.picking.value = false
+    } else {
+      cropBox.value = new Box()
+    }
   }
   // event.metaKey
 }

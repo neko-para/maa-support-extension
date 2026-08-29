@@ -64,7 +64,11 @@ export default {
   'maa.control.not-strip-list': '列表不去重',
 
   'maa.crop.crop-tool': '截图工具',
-  'maa.crop.hint': '按住control以开始裁剪',
+  'maa.crop.overlay.empty': '点击上方「截图」或「上传」载入图像',
+  'maa.crop.overlay.hint': 'Ctrl + 拖拽 裁剪 · 滚轮 缩放 · 中键拖拽 平移 · Esc 取消',
+  'maa.crop.overlay.mode-picking': '取色模式：点击图像采集颜色（Esc 退出）',
+  'maa.crop.overlay.mode-selecting': '框选模式：按住左键拖拽选区（Esc 退出）',
+  'maa.crop.overlay.mode-masking': '涂绿模式：按住左键涂抹（Esc 退出）',
   'maa.crop.screencap': '截图',
   'maa.crop.upload': '上传',
   'maa.crop.download': '下载',
@@ -132,6 +136,8 @@ export default {
   'maa.crop.tooltip.copy-roi': '复制 ROI 矩形到剪贴板',
   'maa.crop.tooltip.paste-roi': '从剪贴板粘贴 ROI 矩形',
   'maa.crop.tooltip.copy-roi-ex': '复制扩展 ROI 矩形到剪贴板',
+  'maa.crop.tooltip.roi': '裁剪框坐标 [x, y, w, h]；可粘贴形如 [x, y, w, h] 的文本设置裁剪框',
+  'maa.crop.tooltip.roi-ex': 'ROI 向四周扩展 50px 后的坐标（自动限制在图像内）',
   'maa.crop.tooltip.color-method': '推荐范围输出的目标颜色空间',
   'maa.crop.tooltip.recommend-method':
     'Min/Max：覆盖所有采样点的紧致范围。Mean +/- Std：统计典型范围',

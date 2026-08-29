@@ -66,7 +66,13 @@ export default {
   'maa.control.not-strip-list': 'Not Strip List',
 
   'maa.crop.crop-tool': 'Crop Tool',
-  'maa.crop.hint': 'Hold control to start cropping',
+  'maa.crop.overlay.empty': 'Click Screencap or Upload above to load an image',
+  'maa.crop.overlay.hint':
+    'Ctrl + Drag to crop · Wheel to zoom · Middle-drag to pan · Esc to cancel',
+  'maa.crop.overlay.mode-picking': 'Pick mode: click the image to sample colors (Esc to exit)',
+  'maa.crop.overlay.mode-selecting':
+    'Rect mode: drag on the image to select a region (Esc to exit)',
+  'maa.crop.overlay.mode-masking': 'Mask mode: hold left button to paint (Esc to exit)',
   'maa.crop.screencap': 'Screencap',
   'maa.crop.upload': 'Upload',
   'maa.crop.download': 'Download',
@@ -136,6 +142,8 @@ export default {
   'maa.crop.tooltip.copy-roi': 'Copy the ROI rectangle to clipboard',
   'maa.crop.tooltip.paste-roi': 'Paste an ROI rectangle from clipboard',
   'maa.crop.tooltip.copy-roi-ex': 'Copy the expanded ROI rectangle to clipboard',
+  'maa.crop.tooltip.roi': 'Crop box coordinates [x, y, w, h]; paste a [x, y, w, h] text to set it',
+  'maa.crop.tooltip.roi-ex': 'ROI expanded by 50px on each side (clamped to image bounds)',
   'maa.crop.tooltip.color-method': 'Target color space for the recommended range output',
   'maa.crop.tooltip.recommend-method':
     'Min/Max: tight bounds covering all samples. Mean +/- Std: statistical typical range',

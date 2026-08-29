@@ -5,7 +5,7 @@ import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
-import { toggleShow } from '../states/visible'
+import { showTab, toggleShow } from '../states/visible'
 </script>
 
 <template>
@@ -77,7 +77,11 @@ import { toggleShow } from '../states/visible'
       </Tooltip>
       <Tooltip trigger="hover">
         <template #trigger>
-          <n-button @click="toggleShow('settings')" size="small">
+          <n-button
+            :type="showTab === 'settings' ? 'primary' : 'default'"
+            @click="toggleShow('settings')"
+            size="small"
+          >
             {{ t('maa.crop.settings') }}
           </n-button>
         </template>
@@ -85,14 +89,25 @@ import { toggleShow } from '../states/visible'
       </Tooltip>
       <Tooltip trigger="hover">
         <template #trigger>
-          <n-button @click="toggleShow('tool')" size="small"> {{ t('maa.crop.tools') }} </n-button>
+          <n-button
+            :type="showTab === 'tool' ? 'primary' : 'default'"
+            @click="toggleShow('tool')"
+            size="small"
+          >
+            {{ t('maa.crop.tools') }}
+          </n-button>
         </template>
         {{ t('maa.crop.tooltip.tools') }}
       </Tooltip>
     </n-flex>
     <n-flex align="center">
       <n-flex align="center">
-        ROI
+        <Tooltip trigger="hover">
+          <template #trigger>
+            <span>ROI</span>
+          </template>
+          {{ t('maa.crop.tooltip.roi') }}
+        </Tooltip>
         {{ controlSt.roiDisp() }}
         <Tooltip trigger="hover">
           <template #trigger>
@@ -112,7 +127,12 @@ import { toggleShow } from '../states/visible'
         </Tooltip>
       </n-flex>
       <n-flex align="center">
-        ROI EX
+        <Tooltip trigger="hover">
+          <template #trigger>
+            <span>ROI EX</span>
+          </template>
+          {{ t('maa.crop.tooltip.roi-ex') }}
+        </Tooltip>
         {{ controlSt.roiExpandDisp() }}
         <Tooltip trigger="hover">
           <template #trigger>
@@ -123,7 +143,6 @@ import { toggleShow } from '../states/visible'
           {{ t('maa.crop.tooltip.copy-roi-ex') }}
         </Tooltip>
       </n-flex>
-      <span> {{ t('maa.crop.hint') }} </span>
     </n-flex>
   </n-flex>
 </template>

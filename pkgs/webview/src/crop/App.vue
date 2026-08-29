@@ -2,12 +2,15 @@
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 import { NCard, NConfigProvider, NFlex, NScrollbar } from 'naive-ui'
-import { ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 
 import { t } from '../utils/locale'
 import { useTheme } from '../utils/theme'
 import * as canvasSt from './states/canvas'
 import * as controlSt from './states/control'
+import * as greenMaskSt from './states/greenMask'
+import * as imageSt from './states/image'
+import * as pickSt from './states/pick'
 import { showTab } from './states/visible'
 import ControlView from './views/ControlView.vue'
 import SettingsView from './views/SettingsView.vue'
@@ -21,6 +24,24 @@ const canvasSizeEl = ref<HTMLDivElement | null>(null)
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
 canvasSt.setup(canvasSizeEl, canvasEl)
+
+window.addEventListener('keydown', controlSt.onKeyDown)
+onUnmounted(() => {
+  window.removeEventListener('keydown', controlSt.onKeyDown)
+})
+
+const activeMode = computed(() => {
+  if (greenMaskSt.drawing.value) {
+    return t('maa.crop.overlay.mode-masking')
+  }
+  if (pickSt.selecting.value) {
+    return t('maa.crop.overlay.mode-selecting')
+  }
+  if (pickSt.picking.value) {
+    return t('maa.crop.overlay.mode-picking')
+  }
+  return null
+})
 </script>
 
 <template>
@@ -55,6 +76,15 @@ canvasSt.setup(canvasSizeEl, canvasEl)
               @pointerup.prevent="controlSt.onPointerUp"
               @contextmenu.prevent="controlSt.onContextMenu"
             ></canvas>
+            <div v-if="!imageSt.data.value" class="crop-overlay-center">
+              {{ t('maa.crop.overlay.empty') }}
+            </div>
+            <div v-if="activeMode" class="crop-overlay-top crop-overlay-mode">
+              {{ activeMode }}
+            </div>
+            <div v-else-if="imageSt.data.value" class="crop-overlay-bottom">
+              {{ t('maa.crop.overlay.hint') }}
+            </div>
           </div>
           <n-scrollbar v-if="showTab" style="width: 40vw">
             <settings-view v-show="showTab === 'settings'"></settings-view>
@@ -65,3 +95,48 @@ canvasSt.setup(canvasSizeEl, canvasEl)
     </n-config-provider>
   </template>
 </template>
+
+<style scoped>
+.crop-overlay-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--vscode-descriptionForeground, gray);
+  font-size: 14px;
+}
+
+.crop-overlay-top {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.crop-overlay-mode {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--vscode-editorWidget-foreground, inherit);
+  background: var(--vscode-editorWidget-background, rgba(0, 0, 0, 0.6));
+  border: 1px solid var(--vscode-focusBorder, #007fd4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.crop-overlay-bottom {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground, gray);
+  background: var(--vscode-editorWidget-background, rgba(0, 0, 0, 0.4));
+  border: 1px solid var(--vscode-editorWidget-border, transparent);
+}
+</style>

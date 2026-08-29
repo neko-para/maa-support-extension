@@ -2,6 +2,7 @@ import type { HostStateBase } from './base'
 
 export type CropSettings = {
   saveAddRoiInfo?: boolean
+  saveDir?: string
   selectFill?: string
   selectOpacity?: number
   selectOutlineOnly?: boolean
@@ -45,6 +46,10 @@ export type CropWebToHost =
   | {
       // return string | null
       command: 'requestUpload'
+    }
+  | {
+      // return string | null
+      command: 'requestPickFolder'
     }
   | {
       // return void

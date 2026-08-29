@@ -140,6 +140,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         })
         const finalImage = await jimpImage.getBuffer('image/png')
 
+        const saveDir = stateService.state.cropSettings?.saveDir
         const resource = interfaceService.suggestResource()
         if (!resource) {
           vscode.window.showWarningMessage(t('maa.crop.warning.no-resource'))
@@ -147,7 +148,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
             filters: {
               Png: ['png']
             },
-            defaultUri: rootService.activeResource?.workspace ?? undefined
+            defaultUri: saveDir
+              ? vscode.Uri.file(saveDir)
+              : (rootService.activeResource?.workspace ?? undefined)
           })
           if (path) {
             await vscode.workspace.fs.writeFile(path, finalImage)
@@ -155,7 +158,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           this.response(data.seq, null)
           break
         }
-        const imageRoot = vscode.Uri.joinPath(resource, imageSuffix)
+        const targetDir = saveDir
+          ? vscode.Uri.file(saveDir)
+          : vscode.Uri.joinPath(resource, imageSuffix)
         const name = await vscode.window.showInputBox({
           title: t('maa.pi.title.input-image'),
           ignoreFocusOut: true
@@ -165,7 +170,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           break
         }
         const resultPath = vscode.Uri.joinPath(
-          imageRoot,
+          targetDir,
           stateService.state.cropSettings?.saveAddRoiInfo
             ? `${name}__${data.roi.join('_')}__${data.expandRoi.join('_')}.png`
             : `${name}.png`
@@ -173,6 +178,28 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         await vscode.workspace.fs.writeFile(resultPath, finalImage)
         vscode.commands.executeCommand('revealInExplorer', resultPath)
         this.response(data.seq, null)
+        break
+      }
+      case 'requestPickFolder': {
+        const saveDir = stateService.state.cropSettings?.saveDir
+        const resource = interfaceService.suggestResource()
+        const defaultUri = saveDir
+          ? vscode.Uri.file(saveDir)
+          : resource
+            ? vscode.Uri.joinPath(resource, imageSuffix)
+            : rootService.activeResource?.workspace
+        const folders = await vscode.window.showOpenDialog({
+          canSelectFolders: true,
+          canSelectFiles: false,
+          canSelectMany: false,
+          openLabel: 'Select Folder',
+          defaultUri
+        })
+        if (!folders || folders.length === 0) {
+          this.response(data.seq, null)
+          break
+        }
+        this.response(data.seq, folders[0]!.fsPath)
         break
       }
       case 'resize': {

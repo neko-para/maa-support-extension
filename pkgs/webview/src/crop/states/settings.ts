@@ -77,6 +77,7 @@ function useSetting<K extends keyof CropSettings>(
 }
 
 export const saveAddRoiInfo = useSetting('saveAddRoiInfo', false)
+export const saveDir = useSetting('saveDir', '')
 export const selectFill = useSetting('selectFill', 'wheat', isColor)
 export const selectOpacity = useSetting('selectOpacity', 0.3)
 export const selectOutlineOnly = useSetting('selectOutlineOnly', false)

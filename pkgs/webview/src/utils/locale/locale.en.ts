@@ -153,6 +153,12 @@ export default {
   'maa.crop.settings.group.pick': 'Pick & Match',
   'maa.crop.settings.group.display': 'Result Display',
   'maa.crop.settings.saving-file-with-roi': 'Add ROI in saved file name',
+  'maa.crop.settings.save-dir': 'Save directory',
+  'maa.crop.settings.save-dir-default': 'Default',
+  'maa.crop.settings.save-dir-pick': 'Browse…',
+  'maa.crop.settings.save-dir-clear': 'Reset',
+  'maa.crop.tooltip.save-dir':
+    'When set, downloaded cropped images are saved directly to this directory; otherwise the default location is used',
   'maa.crop.settings.with-roi': 'With ROI',
   'maa.crop.settings.without-roi': 'Without ROI',
   'maa.crop.settings.select-color': 'Selected color',

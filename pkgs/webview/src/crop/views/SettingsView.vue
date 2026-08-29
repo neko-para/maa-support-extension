@@ -1,22 +1,58 @@
 <script setup lang="ts">
-import { NCard, NFlex } from 'naive-ui'
+import { NButton, NCard, NFlex, NInput, NText } from 'naive-ui'
 
+import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import SettingsInput from '../components/SettingsInput.vue'
 import SettingsInputNumber from '../components/SettingsInputNumber.vue'
 import SettingsSwitch from '../components/SettingsSwitch.vue'
+import { ipc } from '../ipc'
 import * as settingsSt from '../states/settings'
+
+async function pickSaveDir() {
+  const dir = (await ipc.call({ command: 'requestPickFolder' })) as string | null
+  if (dir) {
+    settingsSt.saveDir.val = dir
+  }
+}
 </script>
 
 <template>
   <n-flex vertical>
     <n-card :title="t('maa.crop.settings.group.save')" size="small">
-      <settings-switch
-        :inst="settingsSt.saveAddRoiInfo"
-        :title="t('maa.crop.settings.saving-file-with-roi')"
-        :on="t('maa.crop.settings.with-roi')"
-        :off="t('maa.crop.settings.without-roi')"
-      ></settings-switch>
+      <n-flex vertical>
+        <settings-switch
+          :inst="settingsSt.saveAddRoiInfo"
+          :title="t('maa.crop.settings.saving-file-with-roi')"
+          :on="t('maa.crop.settings.with-roi')"
+          :off="t('maa.crop.settings.without-roi')"
+        ></settings-switch>
+        <n-flex align="center">
+          <Tooltip trigger="hover">
+            <template #trigger>
+              <n-text>{{ t('maa.crop.settings.save-dir') }}</n-text>
+            </template>
+            {{ t('maa.crop.tooltip.save-dir') }}
+          </Tooltip>
+          <n-input
+            readonly
+            size="small"
+            style="flex: 1"
+            :value="settingsSt.saveDir.val ?? ''"
+            :placeholder="t('maa.crop.settings.save-dir-default')"
+          ></n-input>
+          <n-button size="small" @click="pickSaveDir()">
+            {{ t('maa.crop.settings.save-dir-pick') }}
+          </n-button>
+          <n-button
+            v-if="settingsSt.saveDir.val"
+            size="small"
+            @click="settingsSt.saveDir.val = undefined"
+          >
+            {{ t('maa.crop.settings.save-dir-clear') }}
+          </n-button>
+        </n-flex>
+      </n-flex>
     </n-card>
 
     <n-card :title="t('maa.crop.settings.group.crop')" size="small">

@@ -141,6 +141,11 @@ export default {
   'maa.crop.tooltip.color-method': '推荐范围输出的目标颜色空间',
   'maa.crop.tooltip.recommend-method':
     'Min/Max：覆盖所有采样点的紧致范围。Mean +/- Std：统计典型范围',
+  'maa.crop.settings.group.save': '保存',
+  'maa.crop.settings.group.crop': '裁剪框',
+  'maa.crop.settings.group.viewport': '视图与指示线',
+  'maa.crop.settings.group.pick': '取色与匹配',
+  'maa.crop.settings.group.display': '结果显示',
   'maa.crop.settings.saving-file-with-roi': '保存时文件名中附带ROI',
   'maa.crop.settings.with-roi': '附带ROI',
   'maa.crop.settings.without-roi': '不附带ROI',

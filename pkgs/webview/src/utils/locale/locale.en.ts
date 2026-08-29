@@ -147,6 +147,11 @@ export default {
   'maa.crop.tooltip.color-method': 'Target color space for the recommended range output',
   'maa.crop.tooltip.recommend-method':
     'Min/Max: tight bounds covering all samples. Mean +/- Std: statistical typical range',
+  'maa.crop.settings.group.save': 'Save',
+  'maa.crop.settings.group.crop': 'Crop Box',
+  'maa.crop.settings.group.viewport': 'Viewport & Crosshair',
+  'maa.crop.settings.group.pick': 'Pick & Match',
+  'maa.crop.settings.group.display': 'Result Display',
   'maa.crop.settings.saving-file-with-roi': 'Add ROI in saved file name',
   'maa.crop.settings.with-roi': 'With ROI',
   'maa.crop.settings.without-roi': 'Without ROI',

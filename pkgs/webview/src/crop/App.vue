@@ -6,6 +6,7 @@ import { computed, onUnmounted, ref } from 'vue'
 
 import { t } from '../utils/locale'
 import { useTheme } from '../utils/theme'
+import HistoryStrip from './components/HistoryStrip.vue'
 import * as canvasSt from './states/canvas'
 import * as controlSt from './states/control'
 import * as greenMaskSt from './states/greenMask'
@@ -85,6 +86,7 @@ const activeMode = computed(() => {
             <div v-else-if="imageSt.data.value" class="crop-overlay-bottom">
               {{ t('maa.crop.overlay.hint') }}
             </div>
+            <history-strip v-show="!activeMode"></history-strip>
           </div>
           <n-scrollbar v-if="showTab" style="width: 40vw">
             <settings-view v-show="showTab === 'settings'"></settings-view>

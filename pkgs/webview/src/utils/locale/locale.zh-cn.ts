@@ -78,6 +78,7 @@ export default {
   'maa.crop.resize': '缩放',
   'maa.crop.copy': '复制',
   'maa.crop.paste': '粘贴',
+  'maa.crop.history': '历史',
   'maa.crop.use': '使用',
   'maa.crop.settings': '设置',
   'maa.crop.tools': '工具',
@@ -138,6 +139,7 @@ export default {
   'maa.crop.tooltip.copy-roi-ex': '复制扩展 ROI 矩形到剪贴板',
   'maa.crop.tooltip.roi': '裁剪框坐标 [x, y, w, h]；可粘贴形如 [x, y, w, h] 的文本设置裁剪框',
   'maa.crop.tooltip.roi-ex': 'ROI 向四周扩展 50px 后的坐标（自动限制在图像内）',
+  'maa.crop.tooltip.history': '点击缩略图切换回对应图片，裁剪框会保留，蒙版与取色状态会重置',
   'maa.crop.tooltip.color-method': '推荐范围输出的目标颜色空间',
   'maa.crop.tooltip.recommend-method':
     'Min/Max：覆盖所有采样点的紧致范围。Mean +/- Std：统计典型范围',

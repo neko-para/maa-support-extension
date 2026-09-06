@@ -82,6 +82,7 @@ export default {
   'maa.crop.resize': 'Resize',
   'maa.crop.copy': 'Copy',
   'maa.crop.paste': 'Paste',
+  'maa.crop.history': 'History',
   'maa.crop.use': 'Use',
   'maa.crop.settings': 'Settings',
   'maa.crop.tools': 'Tools',
@@ -144,6 +145,8 @@ export default {
   'maa.crop.tooltip.copy-roi-ex': 'Copy the expanded ROI rectangle to clipboard',
   'maa.crop.tooltip.roi': 'Crop box coordinates [x, y, w, h]; paste a [x, y, w, h] text to set it',
   'maa.crop.tooltip.roi-ex': 'ROI expanded by 50px on each side (clamped to image bounds)',
+  'maa.crop.tooltip.history':
+    'Click a thumbnail to switch back to that image; the crop box is kept while mask and color-picking state are reset',
   'maa.crop.tooltip.color-method': 'Target color space for the recommended range output',
   'maa.crop.tooltip.recommend-method':
     'Min/Max: tight bounds covering all samples. Mean +/- Std: statistical typical range',

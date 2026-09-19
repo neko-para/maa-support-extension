@@ -97,6 +97,10 @@ export async function initServer() {
         return (await maa.Win32Controller.find()) ?? []
       }
       ipc.refreshGamescope = async () => {
+        // 旧版 MaaFramework 不导出 LinuxController
+        if (!maa.LinuxController?.find_gamescope_instances) {
+          return []
+        }
         return (await maa.LinuxController.find_gamescope_instances()) ?? []
       }
       ipc.postTask = postTask

@@ -30,8 +30,9 @@ VSCode 插件进程可能无法以管理员权限运行，而某些 MaaFramework
 Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 
 - 从客户端配置 JSON 读取 `screencap_method` / `input_method`，通过 `maa.LinuxController` 创建
-- PipeWire 截图（Gamescope 直连）或 Libei 输入时，通过 `maa.LinuxController.find_gamescope_instances()` 按 `display_no` 匹配目标 gamescope 实例，注入 `pw_node_id` / `eis_socket_path`；匹配不到时回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）
-- `pipewire_source=Portal` 暂不支持（返回 `false` 并记录日志）
+- PipeWire 截图（Gamescope 直连）或 Libei 输入时，通过 `maa.LinuxController.find_gamescope_instances()` 按 `display_no` 匹配目标 gamescope 实例，注入 `pw_node_id` / `eis_socket_path`；匹配不到、或匹配到的实例没有 PipeWire 节点（`pipewire_node_id === 0`）时回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）。`display_no` 在从配置 JSON 中剥离前取出，否则无法参与匹配
+- `pipewire_source=Portal` 暂不支持：客户端侧构建 runtime 时即返回错误，服务端另有兜底（返回 `false` 并记录日志）
+- 当前选中的 MaaFramework 缺少所需 API（`find_gamescope_instances`，5.13.0-beta.3 起提供）时，`updateCtrl` 与 `refreshGamescope` 直接返回失败/空列表，不抛 `TypeError`
 - binding 导出的 Linux 常量为字符串（uint64 转字符串，如 `"4"`），配置 JSON 中为数字，比较时统一经 `Number()` 转换
 
 ### 3. 任务执行
@@ -54,6 +55,7 @@ Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 
 - `refreshAdb(adbPath?)` — 扫描 ADB 设备；可选透传指定的 adb 路径
 - `refreshDesktop()` — 扫描桌面窗口
+- `refreshGamescope()` — 扫描 gamescope 实例（`[display_no, pipewire_node_id, eis_socket_path]`）；MaaFramework 不支持 Linux 控制器时返回空列表
 
 ### 6. 截图
 

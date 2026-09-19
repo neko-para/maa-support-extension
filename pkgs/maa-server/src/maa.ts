@@ -55,13 +55,14 @@ const events = new EventEmitter<{
 }>()
 
 // 从 gamescope 实例列表中按 display_no 匹配目标实例，用于解析 pw_node_id / eis_socket_path。
-// 匹配不到时回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）。
+// 匹配不到（或匹配到的实例没有 PipeWire 节点，即 pipewire_node_id === 0）时，
+// 回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）。
 function pickGamescopeInstance(
   instances: maa.GamescopeInstance[],
   displayNo?: number
 ): maa.GamescopeInstance | undefined {
   if (displayNo !== undefined) {
-    const byDisplay = instances.find(inst => inst[0] === displayNo)
+    const byDisplay = instances.find(inst => inst[0] === displayNo && inst[1] !== 0)
     if (byDisplay) {
       return byDisplay
     }
@@ -91,6 +92,14 @@ export async function updateCtrl(runtime: ControllerRuntime) {
   } else if (runtime.type === 'gamepad') {
     controller = new maa.GamepadController(...runtime.args)
   } else if (runtime.type === 'linux') {
+    // Linux 控制器所需的 API（LinuxController / LinuxScreencapMethod / find_gamescope_instances）
+    // 自 MaaFramework 5.13.0-beta.3 起提供；当前选中的框架可能是更早的版本
+    // （服务端支持运行时切换），此时显式报错而不是抛 TypeError
+    if (!maa.LinuxController?.find_gamescope_instances) {
+      logger.info('Linux controller is not supported by the active MaaFramework')
+      return false
+    }
+
     // 客户端侧配置 JSON（含 pipewire_source/display_no 标记字段，C++ 会忽略未知字段）
     let conf: Record<string, unknown>
     try {
@@ -102,6 +111,8 @@ export async function updateCtrl(runtime: ControllerRuntime) {
     const screencap = conf.screencap_method as number
     const input = conf.input_method as number
     const pipewireSource = conf.pipewire_source as string | undefined
+    // display_no 只用于服务端匹配 gamescope 实例，必须在从 conf 中剥离前取出
+    const displayNo = conf.display_no as number | undefined
     delete conf.pipewire_source
     delete conf.display_no
 
@@ -117,7 +128,7 @@ export async function updateCtrl(runtime: ControllerRuntime) {
       input === Number(maa.LinuxInputMethod.Libei)
     ) {
       const instances = await maa.LinuxController.find_gamescope_instances()
-      const target = pickGamescopeInstance(instances ?? [], conf.display_no as number | undefined)
+      const target = pickGamescopeInstance(instances ?? [], displayNo)
       if (!target) {
         logger.info('Linux controller: no gamescope instance found')
         return false

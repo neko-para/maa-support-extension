@@ -265,19 +265,22 @@ const selectingGamescope = ref(false)
 const gamescopeOptions = computed(() => {
   return gamescopeInstances.value.map((info, index) => {
     return {
-      key: index,
+      value: index,
       label: `Display ${info[0]}`
-    } satisfies DropdownMixedOption
+    } satisfies SelectMixedOption
   })
 })
 
 async function refreshGamescope() {
   refreshingGamescope.value = true
-  gamescopeInstances.value =
-    ((await ipc.call({
-      command: 'refreshGamescope'
-    })) as maa.GamescopeInstance[] | null) ?? []
-  refreshingGamescope.value = false
+  try {
+    gamescopeInstances.value =
+      ((await ipc.call({
+        command: 'refreshGamescope'
+      })) as maa.GamescopeInstance[] | null) ?? []
+  } finally {
+    refreshingGamescope.value = false
+  }
 }
 
 function configGamescope(index: number) {
@@ -289,20 +292,23 @@ function configGamescope(index: number) {
 
 async function nativeSelectGamescope() {
   selectingGamescope.value = true
-  const choice = (await ipc.call({
-    command: 'showSelect',
-    options: gamescopeInstances.value.map((info, index) => {
-      return {
-        value: index,
-        title: `Display ${info[0]}`,
-        subtitle: info[2]
-      }
-    })
-  })) as number | null
-  if (typeof choice === 'number') {
-    configGamescope(choice)
+  try {
+    const choice = (await ipc.call({
+      command: 'showSelect',
+      options: gamescopeInstances.value.map((info, index) => {
+        return {
+          value: index,
+          title: `Display ${info[0]}`,
+          subtitle: info[2]
+        }
+      })
+    })) as number | null
+    if (typeof choice === 'number') {
+      configGamescope(choice)
+    }
+  } finally {
+    selectingGamescope.value = false
   }
-  selectingGamescope.value = false
 }
 
 function uploadImage() {

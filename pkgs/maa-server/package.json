@@ -19,7 +19,7 @@
   },
   "scripts": {
     "lint": "tsc -p . --noEmit",
-    "test": "node --test test/bundle.test.ts"
+    "test": "node --test test/bundle.test.ts test/linuxController.test.ts"
   },
   "dependencies": {
     "@nekosu/maa-pipeline-manager": "workspace:*",

@@ -177,7 +177,12 @@ export function buildControllerRuntime(
     }
 
     if (screencapName === 'PipeWire') {
-      conf.pipewire_source = lnx.pipewire_source ?? 'Gamescope'
+      // Portal 需要用户在运行期授权 ScreenCast，尚未接入；提前报错，避免启动后才失败
+      const pipewireSource = lnx.pipewire_source ?? 'Gamescope'
+      if (pipewireSource === 'Portal') {
+        return t('maa.pi.error.linux-portal-unsupported', config.controller ?? '<unknown>')
+      }
+      conf.pipewire_source = pipewireSource
     }
 
     if (user.display_no !== undefined) {

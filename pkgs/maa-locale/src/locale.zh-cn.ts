@@ -30,6 +30,10 @@ export default {
   'maa.pi.error.cannot-find-linux-for-controller': '无法找到控制器 {0} 的 Linux 配置',
   'maa.pi.error.invalid-linux-method': '控制器 {0} 的 Linux 截图/输入方式无效',
   'maa.pi.error.cannot-find-wlr-socket-for-controller': '控制器 {0} 需要配置 Wayland socket 路径',
+  'maa.pi.error.linux-portal-unsupported':
+    '控制器 {0} 暂不支持 pipewire_source=Portal，请使用 Gamescope 模式',
+  'maa.pi.error.linux-requires-newer-maa':
+    'Linux 控制器 {0} 需要 MaaFramework {1} 及以上版本（当前：{2}）',
   'maa.pi.error.cannot-find-resource': '无法找到资源 {0}',
   'maa.pi.error.cannot-find-task': '无法找到任务 {0}',
   'maa.pi.error.cannot-find-option': '无法找到选项组 {0}',

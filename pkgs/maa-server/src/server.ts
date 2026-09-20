@@ -63,7 +63,8 @@ export async function initServer() {
           Win32ScreencapMethod: maa.Win32ScreencapMethod,
           Win32InputMethod: maa.Win32InputMethod,
           GamepadType: maa.GamepadType,
-          // Linux 常量仅在本地 fork 构建中存在；官方发布版缺失时回退硬编码表
+          // Linux 控制器自 5.13.0-beta.3 起可用；那之前发布的 binding 不导出这两个常量，
+          // 而服务端支持运行时切换框架版本，旧版本下这里仍要给出完整常量表
           // （数值见 MaaFramework MaaDef.h，协议稳定）
           LinuxScreencapMethod: maa.LinuxScreencapMethod ?? {
             Wlr: 1,

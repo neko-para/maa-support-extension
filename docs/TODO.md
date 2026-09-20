@@ -49,6 +49,7 @@
 - [x] **TODO-26** — **格式切换实验性功能**: 已移除 extension 中调用 `toggleMode()` 的 V1/V2 格式转换 Code Action，避免整任务重写静默丢失 JSONC 注释。MaaFramework 官方文档说明 V2 自 v4.4 起同时兼容 V1，两种格式无需统一迁移；原条目中“官方推荐其他方法迁移”的说法没有对应依据。`LayerInfo.toggleMode()` 作为已公开 API 暂时保留并标记弃用，后续源码保真转换必须由持有原始文档的调用方执行局部编辑。
 - [x] **TODO-27** — **jsonc-parser 父指针剥离**: `shrinkParent()` 使用 `delete` 操作修改 `readonly` 属性。已确认是预期行为——AST 在多处缓存，剥离 parent 指针优化内存占用。代码不依赖 parent 指针，`deepWriteable` 断言是必要的实现手段。
 - [x] **TODO-28** — **`buildTree` 丢失位置信息**: 从 jsonc-parser AST 重建纯 JS 对象时丢失了位置/偏移信息。已确认是有意设计——`buildTree` 用于求值/合并/存储上下文，生成轻量 plain object；诊断走原始 AST Node（保留位置）。两者分工明确。
+- [ ] **TODO-37** — **Portal 截图源未实现**: 协议 3.3 的 `pipewire_source` 允许 `Portal`（显示器捕获），且 2.4 明确“MaaFramework 不负责 Screencast Portal 的处理，Client 需要自行实现”。本项目有意不实现该分支：`buildControllerRuntime` 在构建 runtime 阶段即返回错误（文案 key `maa.pi.error.linux-portal-unsupported`），maa-server 侧另有兜底拒绝。当前 workaround 是改用 `Gamescope` 或换用支持 Portal 的 Client。MaaFramework 侧的接入点是 `maa.LinuxController.create_portal_helper()`：`open_stream()` 授权后取 `pipewire_fd` / `pipewire_node_id` 注入 `pw_socket_fd` / `pw_node_id`，`persist` / `restore_token` 可用于免重复授权。
 
 ## @nekosu/maa-tasker
 

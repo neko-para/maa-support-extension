@@ -1,12 +1,18 @@
 import { build } from 'esbuild'
 import assert from 'node:assert/strict'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { rmSync } from 'node:fs'
+import { mkdtemp } from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
-import test from 'node:test'
+import test, { after } from 'node:test'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import type { ControllerRuntime } from '@nekosu/maa-pipeline-manager'
+import {
+  type ControllerRuntime,
+  type Interface,
+  type InterfaceConfig,
+  buildControllerRuntime
+} from '@nekosu/maa-pipeline-manager/logic'
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 
@@ -31,8 +37,8 @@ assert.equal(bundleResult.errors.length, 0)
 const { updateCtrl } = (await import(pathToFileURL(bundleFile).href)) as {
   updateCtrl: (runtime: ControllerRuntime) => Promise<boolean>
 }
-process.on('exit', () => {
-  void rm(bundleDir, { recursive: true, force: true })
+after(() => {
+  rmSync(bundleDir, { recursive: true, force: true })
 })
 
 type GamescopeInstance = [display_no: number, pipewire_node_id: number, eis_socket_path: string]
@@ -180,6 +186,64 @@ test('linux controller fails cleanly when the active MaaFramework is too old', a
 
   assert.equal(ok, false)
   assert.equal(fake.createdConfigs.length, 0)
+})
+
+// 客户端 buildControllerRuntime 产出的 runtime 必须能被服务端直接消费：binding 导出的
+// Linux 常量是字符串（如 "4"），配置 JSON 中必须是数字，否则原生创建控制器会失败
+test('linux runtime built by the client stays numeric and is accepted by the server', async () => {
+  const fake = setupFakeMaa({ instances: [[0, 11, '/run/user/1000/gamescope-0-ei']] })
+
+  const data: Interface = {
+    controller: [
+      {
+        name: 'client-built-linux',
+        type: 'Linux',
+        linux: { screencap: 'PipeWire', input: 'Libei' }
+      }
+    ]
+  }
+  const config: InterfaceConfig = {
+    controller: 'client-built-linux',
+    linux: { display_no: 0 }
+  }
+
+  // 只传两个参数：与运行时一致，常量取自 globalThis.maa
+  const runtime = buildControllerRuntime(data, config)
+  if (typeof runtime === 'string' || runtime.type !== 'linux') {
+    assert.fail(`unexpected controller runtime ${JSON.stringify(runtime)}`)
+  }
+
+  const conf = JSON.parse(runtime.args[0]) as Record<string, unknown>
+  assert.equal(conf.screencap_method, 4)
+  assert.equal(conf.input_method, 4)
+  assert.equal(conf.pipewire_source, 'Gamescope')
+  assert.equal(conf.display_no, 0)
+
+  assert.equal(await updateCtrl(runtime), true)
+  assert.equal(fake.createdConfigs.length, 1)
+  assert.equal(fake.createdConfigs[0].screencap_method, 4)
+  assert.equal(fake.createdConfigs[0].pw_node_id, 11)
+  assert.equal(fake.createdConfigs[0].eis_socket_path, '/run/user/1000/gamescope-0-ei')
+})
+
+test('linux controller fails cleanly on non-Linux platforms', async () => {
+  const fake = setupFakeMaa({ instances: [[0, 11, '/run/user/1000/gamescope-0-ei']] })
+
+  // 非 Linux 平台上 binding 的构造函数会抛 TypeError，这里直接返回失败
+  const platform = Object.getOwnPropertyDescriptor(process, 'platform')
+  assert.ok(platform)
+  Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
+  try {
+    const ok = await updateCtrl(
+      linuxRuntime('non-linux-platform', { screencap_method: 4, input_method: 4, display_no: 0 })
+    )
+
+    assert.equal(ok, false)
+    assert.equal(fake.createdConfigs.length, 0)
+    assert.equal(fake.findCalls, 0)
+  } finally {
+    Object.defineProperty(process, 'platform', platform)
+  }
 })
 
 test('linux controller does not query gamescope for Wlr screencap and input', async () => {

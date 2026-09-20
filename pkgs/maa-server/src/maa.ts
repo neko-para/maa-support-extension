@@ -92,6 +92,13 @@ export async function updateCtrl(runtime: ControllerRuntime) {
   } else if (runtime.type === 'gamepad') {
     controller = new maa.GamepadController(...runtime.args)
   } else if (runtime.type === 'linux') {
+    // 协议标注 Linux 控制器仅 Linux 可用；非 Linux 平台上 binding 的
+    // new maa.LinuxController() 会直接抛 TypeError（find_gamescope_instances 则干净返回 null）
+    if (process.platform !== 'linux') {
+      logger.info('Linux controller is only supported on Linux')
+      return false
+    }
+
     // Linux 控制器所需的 API（LinuxController / LinuxScreencapMethod / find_gamescope_instances）
     // 自 MaaFramework 5.13.0-beta.3 起提供；当前选中的框架可能是更早的版本
     // （服务端支持运行时切换），此时显式报错而不是抛 TypeError

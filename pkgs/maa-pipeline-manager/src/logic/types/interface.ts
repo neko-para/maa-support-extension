@@ -15,6 +15,7 @@ export type AdbController = ControllerBase & {
   win32?: never
   playconver?: never
   gamepad?: never
+  linux?: never
 }
 
 export type Win32Controller = ControllerBase & {
@@ -29,6 +30,7 @@ export type Win32Controller = ControllerBase & {
   }
   playconver?: never
   gamepad?: never
+  linux?: never
 }
 
 export type PlayCoverController = ControllerBase & {
@@ -39,6 +41,7 @@ export type PlayCoverController = ControllerBase & {
     uuid?: string
   }
   gamepad?: never
+  linux?: never
 }
 
 export type GamepadController = ControllerBase & {
@@ -52,9 +55,29 @@ export type GamepadController = ControllerBase & {
     screencap?: keyof typeof maa.Win32InputMethod
     gamepad_type?: keyof typeof maa.GamepadType
   }
+  linux?: never
 }
 
-export type Controller = AdbController | Win32Controller | PlayCoverController | GamepadController
+export type LinuxController = ControllerBase & {
+  type: 'Linux'
+  adb?: never
+  win32?: never
+  playcover?: never
+  gamepad?: never
+  linux?: {
+    screencap?: keyof typeof maa.LinuxScreencapMethod
+    input?: keyof typeof maa.LinuxInputMethod
+    use_win32_vk_code?: boolean
+    pipewire_source?: 'Gamescope' | 'Portal'
+  }
+}
+
+export type Controller =
+  | AdbController
+  | Win32Controller
+  | PlayCoverController
+  | GamepadController
+  | LinuxController
 
 export type Resource = EntryBase & {
   name: string

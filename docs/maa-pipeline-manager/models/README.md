@@ -87,6 +87,7 @@
 从 interface 配置和用户选择构建可执行的运行时对象：
 
 - `buildControllerRuntime()` — 构建控制器运行时常量；默认读取 MaaFramework 全局常量，也可通过第三个参数显式注入 `ControllerRuntimeConstants`，供无原生绑定的浏览器预览等环境使用
+- `type: 'Linux'` 的控制器会从 interface 元数据（`linux.screencap` / `linux.input`）和用户配置组装一份客户端侧 JSON（含 `pipewire_source` / `display_no` 等 client-only 标记字段），由 maa-server 连接时解析并注入 `pw_node_id` / `eis_socket_path`；`screencap_method` / `input_method` 在 JSON 中为数字（binding 导出的常量为字符串，必须经 `Number()` 转换，否则原生创建控制器会失败）；`pipewire_source: 'Portal'` 尚未接入（详见 [docs/TODO.md](../../TODO.md) TODO-37），构建时直接返回错误字符串
 - `buildResourceRuntime()` — 构建资源路径运行时
 - `buildOption()` — 解析选项依赖链
 - `buildTaskRuntime()` — 构建带 pipeline override 的任务运行时

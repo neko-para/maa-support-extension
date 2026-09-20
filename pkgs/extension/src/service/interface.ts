@@ -1,9 +1,11 @@
 import * as fs from 'fs/promises'
 import { existsSync } from 'node:fs'
 import * as path from 'node:path'
+import semVerCompare from 'semver/functions/compare.js'
 import { v4 } from 'uuid'
 import * as vscode from 'vscode'
 
+import { t } from '@nekosu/maa-locale'
 import type {
   AgentConfig,
   ControllerRuntime,
@@ -21,7 +23,8 @@ import {
 import { MaaErrorDelegateImpl } from '../utils/eval'
 import { isMaaAssistantArknights } from '../utils/fs'
 import { BaseService } from './context'
-import { diagnosticService, rootService, serverService } from './registry'
+import { linuxControllerMinimumMaaVersion } from './native'
+import { diagnosticService, nativeService, rootService, serverService } from './registry'
 import { VscodeContentLoader, VscodeContentWatcher } from './utils/content'
 
 export class InterfaceService extends BaseService {
@@ -316,6 +319,26 @@ export class InterfaceService extends BaseService {
       ? { ...this.interfaceConfigJson, ...configOverride }
       : this.interfaceConfigJson
     if (!data || !config) {
+      return null
+    }
+
+    // Linux 控制器依赖 MaaFramework 5.13.0-beta.3 起提供的 maa.LinuxController API，
+    // 旧版本运行时会报“不支持”而不是崩溃；在执行前就给出明确提示
+    const ctrlInfo = data.controller?.find(x => x.name === config.controller)
+    if (
+      ctrlInfo?.type === 'Linux' &&
+      semVerCompare(nativeService.version, linuxControllerMinimumMaaVersion) === -1
+    ) {
+      if (showError) {
+        vscode.window.showErrorMessage(
+          t(
+            'maa.pi.error.linux-requires-newer-maa',
+            config.controller ?? '<unknown>',
+            linuxControllerMinimumMaaVersion,
+            nativeService.version
+          )
+        )
+      }
       return null
     }
 

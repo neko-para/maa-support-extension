@@ -37,7 +37,7 @@ t('maa.pi.error.cannot-find-task', taskName)
 
 通过点分隔的 key 前缀组织文案：
 
-- `maa.pi.*` — Pipeline Interface UI
+- `maa.pi.*` — Pipeline Interface UI（含控制器配置错误提示，如 Linux 控制器缺失/截图输入方式无效/缺少 Wayland socket 路径）
 - `maa.debug.*` — 调试相关
 - `maa.pipeline.*` — Pipeline 诊断
 - `maa.native.*` — 原生框架管理

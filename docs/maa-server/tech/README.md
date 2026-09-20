@@ -21,7 +21,7 @@ src/
 │                     #   - ipc.$.method = handler → 本地注册
 │                     #   - ipc.method(args) → 远程调用
 ├── maa.ts            # MaaFramework 核心包装 (~467 行)
-│                     #   - 控制器管理 (ADB/Win32/PlayCover/Gamepad/Custom)
+│                     #   - 控制器管理 (ADB/Win32/PlayCover/Gamepad/Linux/Custom)
 │                     #   - 资源/任务器/Agent 管理
 │                     #   - 所有 IPC 处理器的实际实现
 ├── utils.ts          # makePromise(): 延迟 Promise 工厂

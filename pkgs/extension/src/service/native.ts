@@ -14,6 +14,9 @@ const defaultRegistryType = 'npm'
 
 const defaultMaaVersion = packageJson.devDependencies['@maaxyz/maa-node']
 const minimumMaaVersion = '5.5.0'
+// 本插件使用的 LinuxController API（LinuxScreencapMethod / find_gamescope_instances 等）
+// 自 MaaFramework 5.13.0-beta.3 起提供
+export const linuxControllerMinimumMaaVersion = '5.13.0-beta.3'
 
 function fixMinimumVersion(ver: string) {
   if (semVerCompare(ver, minimumMaaVersion) === -1) {

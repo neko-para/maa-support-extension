@@ -29,6 +29,15 @@ export default {
     'Cannot find address in playcover config for controller {0}, please reconfigure the controller',
   'maa.pi.error.cannot-find-gamepad-for-controller':
     'Cannot find gamepad config for controller {0}',
+  'maa.pi.error.cannot-find-linux-for-controller':
+    'Cannot find the Linux config for controller {0}',
+  'maa.pi.error.invalid-linux-method': 'Invalid Linux screencap/input method for controller {0}',
+  'maa.pi.error.cannot-find-wlr-socket-for-controller':
+    'Controller {0} requires a Wayland socket path',
+  'maa.pi.error.linux-portal-unsupported':
+    'Controller {0}: pipewire_source=Portal is not supported yet, please use Gamescope mode',
+  'maa.pi.error.linux-requires-newer-maa':
+    'Linux controller {0} requires MaaFramework {1} or newer (current: {2})',
   'maa.pi.error.cannot-find-resource': 'Cannot find resource {0}',
   'maa.pi.error.cannot-find-task': 'Cannot find task {0}',
   'maa.pi.error.cannot-find-option': 'Cannot find option {0}',

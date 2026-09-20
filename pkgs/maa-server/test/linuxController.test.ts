@@ -103,6 +103,20 @@ function linuxRuntime(name: string, conf: Record<string, unknown>): ControllerRu
   }
 }
 
+// 平台守卫（process.platform !== 'linux' 时 Linux 控制器直接失败）只在 Linux 上放行，
+// 因此成功路径的用例需要临时把 platform 换成 linux。只能包住 updateCtrl 调用，不能
+// 在模块顶层 stub：esbuild 会按假平台去找 @esbuild/<platform>-<arch>，导致整个文件加载失败。
+async function withPlatform<T>(platform: NodeJS.Platform, fn: () => Promise<T>): Promise<T> {
+  const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')
+  assert.ok(descriptor)
+  Object.defineProperty(process, 'platform', { configurable: true, value: platform })
+  try {
+    return await fn()
+  } finally {
+    Object.defineProperty(process, 'platform', descriptor)
+  }
+}
+
 test('linux controller injects the gamescope instance selected by display_no', async () => {
   const fake = setupFakeMaa({
     instances: [
@@ -111,13 +125,15 @@ test('linux controller injects the gamescope instance selected by display_no', a
     ]
   })
 
-  const ok = await updateCtrl(
-    linuxRuntime('select-by-display-no', {
-      screencap_method: 4,
-      input_method: 4,
-      pipewire_source: 'Gamescope',
-      display_no: 2
-    })
+  const ok = await withPlatform('linux', () =>
+    updateCtrl(
+      linuxRuntime('select-by-display-no', {
+        screencap_method: 4,
+        input_method: 4,
+        pipewire_source: 'Gamescope',
+        display_no: 2
+      })
+    )
   )
 
   assert.equal(ok, true)
@@ -137,8 +153,10 @@ test('linux controller skips an instance whose display has no PipeWire node', as
     ]
   })
 
-  const ok = await updateCtrl(
-    linuxRuntime('skip-empty-node', { screencap_method: 4, input_method: 1, display_no: 0 })
+  const ok = await withPlatform('linux', () =>
+    updateCtrl(
+      linuxRuntime('skip-empty-node', { screencap_method: 4, input_method: 1, display_no: 0 })
+    )
   )
 
   assert.equal(ok, true)
@@ -153,23 +171,26 @@ test('linux controller falls back to the first instance with a PipeWire node', a
     ]
   })
 
-  const ok = await updateCtrl(
-    linuxRuntime('fallback-instance', { screencap_method: 1, input_method: 4 })
+  const ok = await withPlatform('linux', () =>
+    updateCtrl(linuxRuntime('fallback-instance', { screencap_method: 1, input_method: 4 }))
   )
 
   assert.equal(ok, true)
   assert.equal(fake.createdConfigs[0].pw_node_id, 44)
+  assert.equal(fake.createdConfigs[0].eis_socket_path, '/run/user/1000/gamescope-1-ei')
 })
 
 test('linux controller rejects the Portal PipeWire source', async () => {
   const fake = setupFakeMaa({ instances: [[0, 11, '/run/user/1000/gamescope-0-ei']] })
 
-  const ok = await updateCtrl(
-    linuxRuntime('reject-portal', {
-      screencap_method: 4,
-      input_method: 1,
-      pipewire_source: 'Portal'
-    })
+  const ok = await withPlatform('linux', () =>
+    updateCtrl(
+      linuxRuntime('reject-portal', {
+        screencap_method: 4,
+        input_method: 1,
+        pipewire_source: 'Portal'
+      })
+    )
   )
 
   assert.equal(ok, false)
@@ -180,8 +201,10 @@ test('linux controller rejects the Portal PipeWire source', async () => {
 test('linux controller fails cleanly when the active MaaFramework is too old', async () => {
   const fake = setupFakeMaa({ supported: false })
 
-  const ok = await updateCtrl(
-    linuxRuntime('old-framework', { screencap_method: 4, input_method: 4, display_no: 0 })
+  const ok = await withPlatform('linux', () =>
+    updateCtrl(
+      linuxRuntime('old-framework', { screencap_method: 4, input_method: 4, display_no: 0 })
+    )
   )
 
   assert.equal(ok, false)
@@ -219,7 +242,7 @@ test('linux runtime built by the client stays numeric and is accepted by the ser
   assert.equal(conf.pipewire_source, 'Gamescope')
   assert.equal(conf.display_no, 0)
 
-  assert.equal(await updateCtrl(runtime), true)
+  assert.equal(await withPlatform('linux', () => updateCtrl(runtime)), true)
   assert.equal(fake.createdConfigs.length, 1)
   assert.equal(fake.createdConfigs[0].screencap_method, 4)
   assert.equal(fake.createdConfigs[0].pw_node_id, 11)
@@ -230,31 +253,28 @@ test('linux controller fails cleanly on non-Linux platforms', async () => {
   const fake = setupFakeMaa({ instances: [[0, 11, '/run/user/1000/gamescope-0-ei']] })
 
   // 非 Linux 平台上 binding 的构造函数会抛 TypeError，这里直接返回失败
-  const platform = Object.getOwnPropertyDescriptor(process, 'platform')
-  assert.ok(platform)
-  Object.defineProperty(process, 'platform', { configurable: true, value: 'win32' })
-  try {
-    const ok = await updateCtrl(
+  const ok = await withPlatform('win32', () =>
+    updateCtrl(
       linuxRuntime('non-linux-platform', { screencap_method: 4, input_method: 4, display_no: 0 })
     )
+  )
 
-    assert.equal(ok, false)
-    assert.equal(fake.createdConfigs.length, 0)
-    assert.equal(fake.findCalls, 0)
-  } finally {
-    Object.defineProperty(process, 'platform', platform)
-  }
+  assert.equal(ok, false)
+  assert.equal(fake.createdConfigs.length, 0)
+  assert.equal(fake.findCalls, 0)
 })
 
 test('linux controller does not query gamescope for Wlr screencap and input', async () => {
   const fake = setupFakeMaa({ instances: [[0, 11, '/run/user/1000/gamescope-0-ei']] })
 
-  const ok = await updateCtrl(
-    linuxRuntime('wlr-only', {
-      screencap_method: 1,
-      input_method: 1,
-      wlr_socket_path: '/run/wayland-0'
-    })
+  const ok = await withPlatform('linux', () =>
+    updateCtrl(
+      linuxRuntime('wlr-only', {
+        screencap_method: 1,
+        input_method: 1,
+        wlr_socket_path: '/run/wayland-0'
+      })
+    )
   )
 
   assert.equal(ok, true)

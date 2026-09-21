@@ -143,6 +143,11 @@ export class WebviewControlService extends BaseService {
           this.provider?.response(data.seq, (await ipc?.refreshGamescope()) ?? [])
           break
         }
+        case 'refreshWlrCompositor': {
+          const ipc = await serverService.ensureServer()
+          this.provider?.response(data.seq, (await ipc?.refreshWlrCompositor()) ?? [])
+          break
+        }
         case 'configAdb':
           interfaceService.reduceConfig({
             adb: {

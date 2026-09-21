@@ -128,6 +128,10 @@ export type ControlWebToHost =
       command: 'refreshGamescope'
     }
   | {
+      // return [id: number, socket_path: string, socket_name: string][] | null
+      command: 'refreshWlrCompositor'
+    }
+  | {
       command: 'configAdb'
       adb: string
       address: string

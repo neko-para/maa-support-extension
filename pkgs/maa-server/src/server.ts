@@ -7,6 +7,8 @@ import { ipc, setupIpc } from './apis'
 import {
   agentStopped,
   destroyInstance,
+  findGamescopeInstances,
+  findWlrCompositor,
   getActDetail,
   getKnownTasks,
   getNode,
@@ -97,13 +99,8 @@ export async function initServer() {
       ipc.refreshDesktop = async () => {
         return (await maa.Win32Controller.find()) ?? []
       }
-      ipc.refreshGamescope = async () => {
-        // 旧版 MaaFramework 不导出 LinuxController
-        if (!maa.LinuxController?.find_gamescope_instances) {
-          return []
-        }
-        return (await maa.LinuxController.find_gamescope_instances()) ?? []
-      }
+      ipc.refreshGamescope = findGamescopeInstances
+      ipc.refreshWlrCompositor = findWlrCompositor
       ipc.postTask = postTask
       ipc.postStop = postStop
       ipc.getKnownTasks = getKnownTasks

@@ -30,12 +30,12 @@
 
 定义完整的双向协议类型：
 
-**Host → Server** (约 18 个方法)：
+**Host → Server** (约 19 个方法)：
 
 - `fetchConstants()`、`updateController()`、`setupInstance()`
 - `getScreencap(instance?)`、`resize()`
 - `performOcr()`、`performTemplateMatch()`、`performReco()`
-- `refreshAdb(adbPath?)`、`refreshDesktop()`、`refreshGamescope()`
+- `refreshAdb(adbPath?)`、`refreshDesktop()`、`refreshGamescope()`、`refreshWlrCompositor()`
 - `postTask()`、`postStop()`、`getKnownTasks()`、`destroyInstance()`
 - `getRecoDetail()`、`getActDetail()`、`getNode()`
 - `agentStopped()`

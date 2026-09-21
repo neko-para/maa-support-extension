@@ -33,7 +33,7 @@ Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 - PipeWire 截图（Gamescope 直连）或 Libei 输入时，通过 `maa.LinuxController.find_gamescope_instances()` 按 `display_no` 匹配目标 gamescope 实例，注入 `pw_node_id` / `eis_socket_path`；匹配不到、或匹配到的实例没有 PipeWire 节点（`pipewire_node_id === 0`）时回退到第一个带 PipeWire 节点的实例（与 MaaPiCli 一致）。`display_no` 在从配置 JSON 中剥离前取出，否则无法参与匹配
 - `pipewire_source=Portal` 暂不支持（协议能力缺口，有意不实现，见 [docs/TODO.md](../../TODO.md) TODO-37）：客户端侧构建 runtime 时即返回错误，服务端另有兜底（返回 `false` 并记录日志）
 - 非 Linux 平台上 `updateCtrl` 对 Linux 控制器直接返回 `false`（binding 的 `new maa.LinuxController()` 会抛 `TypeError`，而非返回未连接）
-- 当前选中的 MaaFramework 缺少所需 API（`find_gamescope_instances`，5.13.0-beta.3 起提供）时，`updateCtrl` 与 `refreshGamescope` 直接返回失败/空列表，不抛 `TypeError`；`fetchConstants` 在该版本之前的框架上回退硬编码 Linux 常量表，保证 host 侧常量表形状完整
+- 当前选中的 MaaFramework 缺少所需 API（`find_gamescope_instances` / `find_wlr_compositor`，5.13.0-beta.3 起提供）时，`updateCtrl` 与设备扫描直接返回失败/空列表，不抛 `TypeError`；`fetchConstants` 在该版本之前的框架上回退硬编码 Linux 常量表，保证 host 侧常量表形状完整
 - binding 导出的 Linux 常量为字符串（uint64 转字符串，如 `"4"`），配置 JSON 中为数字，比较时统一经 `Number()` 转换；该契约由测试使用 `buildControllerRuntime` 的真实产物验证
 
 ### 3. 任务执行
@@ -57,6 +57,7 @@ Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 - `refreshAdb(adbPath?)` — 扫描 ADB 设备；可选透传指定的 adb 路径
 - `refreshDesktop()` — 扫描桌面窗口
 - `refreshGamescope()` — 扫描 gamescope 实例（`[display_no, pipewire_node_id, eis_socket_path]`）；MaaFramework 不支持 Linux 控制器时返回空列表
+- `refreshWlrCompositor()` — 扫描 Wayland 合成器 socket（`[id, socket_path, socket_name]`，由 MaaToolkit 枚举 `$XDG_RUNTIME_DIR/wayland-*` 并逐个尝试连接）；MaaFramework 不支持 Linux 控制器时返回空列表。`updateCtrl` 与这两个扫描共用 `maa.ts` 中的 `findGamescopeInstances` / `findWlrCompositor`
 
 ### 6. 截图
 

@@ -311,6 +311,66 @@ async function nativeSelectGamescope() {
   }
 }
 
+const wlrCompositors = ref<maa.WlRootsCompositor[]>([])
+
+const refreshingWlrCompositor = ref(false)
+const selectingWlrCompositor = ref(false)
+
+const wlrCompositorOptions = computed(() => {
+  return wlrCompositors.value.map((info, index) => {
+    return {
+      value: index,
+      label: info[2]
+    } satisfies SelectMixedOption
+  })
+})
+
+const currWlrCompositor = computed(() => {
+  return wlrCompositors.value.find(
+    info => info[1] === hostState.value.interfaceConfigJson?.linux?.wlr_socket_path
+  )
+})
+
+async function refreshWlrCompositor() {
+  refreshingWlrCompositor.value = true
+  try {
+    wlrCompositors.value =
+      ((await ipc.call({
+        command: 'refreshWlrCompositor'
+      })) as maa.WlRootsCompositor[] | null) ?? []
+  } finally {
+    refreshingWlrCompositor.value = false
+  }
+}
+
+function configWlrCompositor(index: number) {
+  const opt = wlrCompositors.value[index]!
+  configLinux({
+    wlr_socket_path: opt[1]
+  })
+}
+
+async function nativeSelectWlrCompositor() {
+  selectingWlrCompositor.value = true
+  try {
+    const choice = (await ipc.call({
+      command: 'showSelect',
+      options: wlrCompositors.value.map((info, index) => {
+        return {
+          value: index,
+          title: info[2],
+          subtitle: info[1]
+        }
+      })
+    })) as number | null
+    if (typeof choice === 'number') {
+      configWlrCompositor(choice)
+    }
+  } finally {
+    selectingWlrCompositor.value = false
+  }
+}
+
 function uploadImage() {
   ipc.send({
     command: 'uploadImage'
@@ -547,14 +607,65 @@ function uploadImage() {
           </n-flex>
         </n-card>
       </template>
-      <n-flex v-if="needWlrSocket" vertical>
-        <n-input
-          :value="hostState.interfaceConfigJson?.linux?.wlr_socket_path"
-          @update:value="v => configLinux({ wlr_socket_path: v })"
-          :placeholder="t('maa.control.linux.wlr-socket-placeholder')"
-          size="small"
-        ></n-input>
-      </n-flex>
+      <n-card v-if="needWlrSocket" title="Wlr" size="small" embedded>
+        <template #header-extra>
+          <n-flex>
+            <Tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  :loading="refreshingWlrCompositor"
+                  :disabled="refreshingWlrCompositor || selectingWlrCompositor"
+                  @click="refreshWlrCompositor"
+                  size="small"
+                >
+                  {{ t('maa.control.scan') }}
+                </n-button>
+              </template>
+              {{ t('maa.control.tooltip.scan-wlr-compositor') }}
+            </Tooltip>
+            <n-popselect
+              :disabled="
+                refreshingWlrCompositor ||
+                selectingWlrCompositor ||
+                wlrCompositorOptions.length === 0
+              "
+              trigger="hover"
+              :options="wlrCompositorOptions"
+              @update:value="configWlrCompositor"
+              size="small"
+            >
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <n-button
+                    :loading="selectingWlrCompositor"
+                    :disabled="
+                      refreshingWlrCompositor ||
+                      selectingWlrCompositor ||
+                      wlrCompositorOptions.length === 0
+                    "
+                    size="small"
+                    @click="nativeSelectWlrCompositor"
+                  >
+                    {{ t('maa.control.controller.compositor-list') }}
+                  </n-button>
+                </template>
+                {{ t('maa.control.tooltip.compositor-list-wlr') }}
+              </Tooltip>
+            </n-popselect>
+          </n-flex>
+        </template>
+        <n-flex vertical>
+          <n-input
+            :value="hostState.interfaceConfigJson?.linux?.wlr_socket_path"
+            @update:value="v => configLinux({ wlr_socket_path: v })"
+            :placeholder="t('maa.control.linux.wlr-socket-placeholder')"
+            size="small"
+          ></n-input>
+          <n-text v-if="currWlrCompositor" depth="3">
+            {{ t('maa.control.linux.compositor-matched', currWlrCompositor[2]) }}
+          </n-text>
+        </n-flex>
+      </n-card>
       <n-flex v-if="needUInputSize" vertical>
         <n-input-number
           :value="hostState.interfaceConfigJson?.linux?.uinput_screen_width"

@@ -34,8 +34,12 @@ const bundleResult = await build({
   target: 'node24'
 })
 assert.equal(bundleResult.errors.length, 0)
-const { updateCtrl } = (await import(pathToFileURL(bundleFile).href)) as {
+const { updateCtrl, findGamescopeInstances, findWlrCompositor } = (await import(
+  pathToFileURL(bundleFile).href
+)) as {
   updateCtrl: (runtime: ControllerRuntime) => Promise<boolean>
+  findGamescopeInstances: () => Promise<GamescopeInstance[]>
+  findWlrCompositor: () => Promise<WlrCompositor[]>
 }
 after(() => {
   rmSync(bundleDir, { recursive: true, force: true })
@@ -43,14 +47,19 @@ after(() => {
 
 type GamescopeInstance = [display_no: number, pipewire_node_id: number, eis_socket_path: string]
 
+// MaaToolkit 在 Linux 上枚举 $XDG_RUNTIME_DIR/wayland-*，元组为
+// [id, 完整 socket 路径, socket 文件名]
+type WlrCompositor = [id: number, socket_path: string, socket_name: string]
+
 type FakeMaaOptions = {
   instances?: GamescopeInstance[]
+  compositors?: WlrCompositor[]
   // false 模拟早于 5.13.0-beta.3 的 MaaFramework：缺少 LinuxController / find_gamescope_instances
   supported?: boolean
 }
 
 // updateCtrl 在调用时读取 globalThis.maa，因此可以注入假的 MaaFramework 绑定
-function setupFakeMaa({ instances = [], supported = true }: FakeMaaOptions = {}) {
+function setupFakeMaa({ instances = [], compositors = [], supported = true }: FakeMaaOptions = {}) {
   const createdConfigs: Record<string, unknown>[] = []
   let findCalls = 0
 
@@ -58,6 +67,10 @@ function setupFakeMaa({ instances = [], supported = true }: FakeMaaOptions = {})
     static async find_gamescope_instances() {
       findCalls += 1
       return instances
+    }
+
+    static async find_wlr_compositor() {
+      return compositors
     }
 
     connected = true
@@ -280,4 +293,22 @@ test('linux controller does not query gamescope for Wlr screencap and input', as
   assert.equal(ok, true)
   assert.equal(fake.findCalls, 0)
   assert.equal('pw_node_id' in fake.createdConfigs[0], false)
+})
+
+test('linux device discovery returns the tuples reported by the active MaaFramework', async () => {
+  setupFakeMaa({
+    instances: [[0, 11, '/run/user/1000/gamescope-0-ei']],
+    compositors: [[0, '/run/user/1000/wayland-0', 'wayland-0']]
+  })
+
+  assert.deepEqual(await findGamescopeInstances(), [[0, 11, '/run/user/1000/gamescope-0-ei']])
+  // 客户端把第二项写进 wlr_socket_path：只有完整路径能通过原生侧的存在性检查
+  assert.deepEqual(await findWlrCompositor(), [[0, '/run/user/1000/wayland-0', 'wayland-0']])
+})
+
+test('linux device discovery degrades to empty lists on an older MaaFramework', async () => {
+  setupFakeMaa({ supported: false })
+
+  assert.deepEqual(await findGamescopeInstances(), [])
+  assert.deepEqual(await findWlrCompositor(), [])
 })

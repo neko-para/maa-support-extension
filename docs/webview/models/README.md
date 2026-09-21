@@ -18,7 +18,7 @@
 
 侧边栏常驻面板，提供类 MaaPiCli 的控制界面：
 
-- **Controller 配置**: ADB/Win32/PlayCover/Gamepad/Linux 的参数设置；Linux 的截图/输入方式由 interface 元数据的 `linux.screencap` / `linux.input` 决定（Wlr/UInput/Libei/PipeWire），面板据此展示 gamescope 实例扫描与选择、Wayland socket 路径、uinput 尺寸等条件字段，并在 `pipewire_source=Portal` 时提示暂不支持
+- **Controller 配置**: ADB/Win32/PlayCover/Gamepad/Linux 的参数设置；Linux 的截图/输入方式由 interface 元数据的 `linux.screencap` / `linux.input` 决定（Wlr/UInput/Libei/PipeWire），面板据此展示 gamescope 实例扫描与选择、Wayland socket 路径及其合成器扫描与选择、uinput 尺寸等条件字段，并在 `pipewire_source=Portal` 时提示暂不支持
 - **Resource 选择**: 切换活动的 resource bundle
 - **Task 管理**: 添加/删除/配置任务选项
 - **Launch**: 启动任务执行
@@ -86,7 +86,7 @@ Webview 使用独立的响应式 locale 系统：
 - `locale.en.ts` — 英文字典
 - 响应式 locale 切换（`vscodeLocale` ref）
 
-该字典只包含 Webview UI 文案，与 host/checker 使用的 `@nekosu/maa-locale` 没有相同 key；独立边界及重新评估条件参见 [locale-system.md](../../extra/locale-system.md)。控制面板的 Linux 控制器相关文案使用 `maa.control.*` 前缀（扫描/选择 gamescope 实例、提示 Portal 模式未支持等）。
+该字典只包含 Webview UI 文案，与 host/checker 使用的 `@nekosu/maa-locale` 没有相同 key；独立边界及重新评估条件参见 [locale-system.md](../../extra/locale-system.md)。控制面板的 Linux 控制器相关文案使用 `maa.control.*` 前缀（扫描/选择 gamescope 实例与 Wayland 合成器、提示 Portal 模式未支持等）。
 
 ## 抽象边界
 

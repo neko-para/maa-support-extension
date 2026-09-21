@@ -70,6 +70,24 @@ function pickGamescopeInstance(
   return instances.find(inst => inst[1] !== 0)
 }
 
+// Linux 控制器的设备发现 API 自 MaaFramework 5.13.0-beta.3 起提供；服务端支持运行时切换框架
+// 版本，旧版本下返回空列表而不是抛 TypeError
+export async function findGamescopeInstances() {
+  if (!maa.LinuxController?.find_gamescope_instances) {
+    return []
+  }
+  return (await maa.LinuxController.find_gamescope_instances()) ?? []
+}
+
+// MaaToolkit 在 Linux 上返回 [id, 完整 socket 路径, socket 文件名]，客户端取第二项作为
+// wlr_socket_path（原生侧会对其执行存在性检查，相对文件名不可用）
+export async function findWlrCompositor() {
+  if (!maa.LinuxController?.find_wlr_compositor) {
+    return []
+  }
+  return (await maa.LinuxController.find_wlr_compositor()) ?? []
+}
+
 export async function updateCtrl(runtime: ControllerRuntime) {
   const key = JSON.stringify(runtime)
   if (key !== cacheKey) {

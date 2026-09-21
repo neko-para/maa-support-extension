@@ -29,10 +29,13 @@ export default {
   'maa.control.tooltip.scan-gamescope': 'Refresh the list of discovered gamescope instances',
   'maa.control.tooltip.display-list-gamescope':
     'Browse and select a gamescope instance (by display number)',
+  'maa.control.tooltip.scan-wlr-compositor': 'Refresh the list of connected Wayland compositors',
+  'maa.control.tooltip.compositor-list-wlr': 'Browse and select a Wayland compositor socket',
   'maa.control.linux.portal-unsupported':
     'pipewire_source=Portal is not supported yet, use Gamescope mode',
   'maa.control.linux.display-no': 'Selected display number',
   'maa.control.linux.wlr-socket-placeholder': 'Wayland socket path (e.g. /run/user/1000/wayland-0)',
+  'maa.control.linux.compositor-matched': 'Matched compositor: {0}',
   'maa.control.linux.uinput-width': 'uinput screen width',
   'maa.control.linux.uinput-height': 'uinput screen height',
   'maa.control.tooltip.upload-fixed': 'Upload an image file to use as a fixed screenshot',
@@ -61,6 +64,7 @@ export default {
   'maa.control.controller.device-list': 'Device list',
   'maa.control.controller.window-list': 'Window list',
   'maa.control.controller.display-list': 'Display list',
+  'maa.control.controller.compositor-list': 'Compositor list',
   'maa.control.task.task': 'Task',
   'maa.control.task.use-preset': 'Use Preset',
   'maa.control.task.add-task': 'Add',

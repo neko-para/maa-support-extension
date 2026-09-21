@@ -40,7 +40,8 @@ const controllerRuntimeConstants = {
     PostMessageWithCursorPos: validationPlaceholder,
     SendMessageWithWindowPos: validationPlaceholder,
     PostMessageWithWindowPos: validationPlaceholder,
-    Interception: validationPlaceholder
+    Interception: validationPlaceholder,
+    AnchoredTouch: validationPlaceholder
   },
   GamepadType: {
     Xbox360: validationPlaceholder,

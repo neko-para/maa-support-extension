@@ -80,8 +80,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@nekosu/maa-locale':
         specifier: workspace:*
         version: link:../maa-locale
@@ -189,8 +189,8 @@ importers:
         version: 3.3.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -229,8 +229,8 @@ importers:
         version: 8.2.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -257,8 +257,8 @@ importers:
         version: 8.2.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -310,8 +310,8 @@ importers:
         version: 10.0.1
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@tsconfig/node24':
         specifier: ^24.0.4
         version: 24.0.4
@@ -381,8 +381,8 @@ importers:
   pkgs/types:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@nekosu/maa-pipeline-manager':
         specifier: workspace:*
         version: link:../maa-pipeline-manager
@@ -399,8 +399,8 @@ importers:
   pkgs/webview:
     devDependencies:
       '@maaxyz/maa-node':
-        specifier: 5.13.0-beta.3
-        version: 5.13.0-beta.3
+        specifier: 5.13.0
+        version: 5.13.0
       '@nekosu/maa-pipeline-manager':
         specifier: workspace:*
         version: link:../maa-pipeline-manager
@@ -933,38 +933,38 @@ packages:
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
 
-  '@maaxyz/maa-node-darwin-arm64@5.13.0-beta.3':
-    resolution: {integrity: sha512-VPHYxP9XyvjkwjcdD85254WyUDwWjXxo8pO0zb8wvHtzB0XdcGNHYE1ajStaIurBma1Pc+xUTkdvDX/GgIGkvA==}
+  '@maaxyz/maa-node-darwin-arm64@5.13.0':
+    resolution: {integrity: sha512-FRCh8FmIl7QWKYF+7H0ytkOyLBGA50U8+WtmIC6adDMbML8D24vQf2OCeR93sJseFRVUGhI+0b3LmMNVvGURlQ==}
     cpu: [arm64]
     os: [darwin]
 
-  '@maaxyz/maa-node-darwin-x64@5.13.0-beta.3':
-    resolution: {integrity: sha512-N1PEU2TWxzJR1OQ3fC0EY1u1U+rQnCDCAK5IBQ2ATFk7vjDeYva9Kiz4GHcdpi6gbpP9fH7zIYSZ036qr11XIQ==}
+  '@maaxyz/maa-node-darwin-x64@5.13.0':
+    resolution: {integrity: sha512-9zycZ1G85SFATKWkxzMehI3UhG7RhSEm3+9DQPiwWUUrGn4HYO7B2ErTLzVdiDjFmI5Qjg7B6LN1NYCThqO7FA==}
     cpu: [x64]
     os: [darwin]
 
-  '@maaxyz/maa-node-linux-arm64@5.13.0-beta.3':
-    resolution: {integrity: sha512-am78ie2HvRPp9gVBB1v+hIjyyzcq/arXM0d7qMVi9MuEpiHMry+D5eEukoSnzKDAtsZQfKi7DPddRmH75k83bw==}
+  '@maaxyz/maa-node-linux-arm64@5.13.0':
+    resolution: {integrity: sha512-9N+9YmpboWeOuQ1j7tNZFc5/5Q7XgxJIUeOAXShGcf14iEadKY3Q39MtLnCZC6+WcwYdkAvI/ZPhDq9RB9E2bQ==}
     cpu: [arm64]
     os: [linux]
 
-  '@maaxyz/maa-node-linux-x64@5.13.0-beta.3':
-    resolution: {integrity: sha512-3t768O5xy6RB3U3UxdHAebRrBXt5AHmC4xm5Odv53ykPx07l2iHNM/Pfkl0ULiSt+Y8WXyyylPXBeMKW3gGo7A==}
+  '@maaxyz/maa-node-linux-x64@5.13.0':
+    resolution: {integrity: sha512-vJTo3IdKOcckAXf++moYKzOq9Q+Uf2nkaTFgX6T2/vvp7m9wnKf7MSSeyiDK1JeRkwecsRqsm4fNLMvRJb8plg==}
     cpu: [x64]
     os: [linux]
 
-  '@maaxyz/maa-node-win32-arm64@5.13.0-beta.3':
-    resolution: {integrity: sha512-KomrJtIXyuDXBmAtNBV/wPo4AGKQMyewrP1LBkPv/zXxBKH8CegagSj98D9GqGkDCMlpe2XgQtSFltX/uovlwQ==}
+  '@maaxyz/maa-node-win32-arm64@5.13.0':
+    resolution: {integrity: sha512-SLU64psmrvsR8akVxOG36cdlGVPCKvQxBbtcS9A787Ia2JfCetfb/WZe0Z5dQvn5dUXIiizPoXRA76NXn3X9dg==}
     cpu: [arm64]
     os: [win32]
 
-  '@maaxyz/maa-node-win32-x64@5.13.0-beta.3':
-    resolution: {integrity: sha512-H/SEO3feZLqrKIq4Ou6TzAMM0atU6c3XETxRra+eaACwOS8C4q/out389jXHzw35tSwhduAQS9Zc0ZFH5d40XA==}
+  '@maaxyz/maa-node-win32-x64@5.13.0':
+    resolution: {integrity: sha512-eXOQeXuxu67YwX4GkJBfaGF5ft5sMBEIDBrYlnixKS/bHC6jyZWSpqPn4Te8zTEbCdvk1j3W8mUJmfHXp32iRw==}
     cpu: [x64]
     os: [win32]
 
-  '@maaxyz/maa-node@5.13.0-beta.3':
-    resolution: {integrity: sha512-51LnQqNw58ALkVrsuHBA5DqISE1BBQqYiaAP9JwtwRBLAYEpzoTd+Qgv4CIkYF6fqsoRT0HFPEggR68Qb+lzhw==}
+  '@maaxyz/maa-node@5.13.0':
+    resolution: {integrity: sha512-UtMmom2WtqAKWMpd9yQ4xZNxXjXl3JZIaQHPuyj28dOMo13mudAT0SyAnQPT8UTe8u1ddwadH2cnJR1U63fmJg==}
     engines: {node: '>= 20.0.0'}
 
   '@napi-rs/wasm-runtime@1.1.1':
@@ -3340,32 +3340,32 @@ snapshots:
 
   '@juggle/resize-observer@3.4.0': {}
 
-  '@maaxyz/maa-node-darwin-arm64@5.13.0-beta.3':
+  '@maaxyz/maa-node-darwin-arm64@5.13.0':
     optional: true
 
-  '@maaxyz/maa-node-darwin-x64@5.13.0-beta.3':
+  '@maaxyz/maa-node-darwin-x64@5.13.0':
     optional: true
 
-  '@maaxyz/maa-node-linux-arm64@5.13.0-beta.3':
+  '@maaxyz/maa-node-linux-arm64@5.13.0':
     optional: true
 
-  '@maaxyz/maa-node-linux-x64@5.13.0-beta.3':
+  '@maaxyz/maa-node-linux-x64@5.13.0':
     optional: true
 
-  '@maaxyz/maa-node-win32-arm64@5.13.0-beta.3':
+  '@maaxyz/maa-node-win32-arm64@5.13.0':
     optional: true
 
-  '@maaxyz/maa-node-win32-x64@5.13.0-beta.3':
+  '@maaxyz/maa-node-win32-x64@5.13.0':
     optional: true
 
-  '@maaxyz/maa-node@5.13.0-beta.3':
+  '@maaxyz/maa-node@5.13.0':
     optionalDependencies:
-      '@maaxyz/maa-node-darwin-arm64': 5.13.0-beta.3
-      '@maaxyz/maa-node-darwin-x64': 5.13.0-beta.3
-      '@maaxyz/maa-node-linux-arm64': 5.13.0-beta.3
-      '@maaxyz/maa-node-linux-x64': 5.13.0-beta.3
-      '@maaxyz/maa-node-win32-arm64': 5.13.0-beta.3
-      '@maaxyz/maa-node-win32-x64': 5.13.0-beta.3
+      '@maaxyz/maa-node-darwin-arm64': 5.13.0
+      '@maaxyz/maa-node-darwin-x64': 5.13.0
+      '@maaxyz/maa-node-linux-arm64': 5.13.0
+      '@maaxyz/maa-node-linux-x64': 5.13.0
+      '@maaxyz/maa-node-win32-arm64': 5.13.0
+      '@maaxyz/maa-node-win32-x64': 5.13.0
 
   '@napi-rs/wasm-runtime@1.1.1':
     dependencies:

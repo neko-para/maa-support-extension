@@ -9,7 +9,13 @@ import type {
   TaskConfig,
   TaskRuntime
 } from '../types'
-import { buildOption, resolveCheckbox, resolveOptionConfig, resolveSelect } from './option'
+import {
+  buildOption,
+  buildRuntimeOptionConfig,
+  resolveCheckbox,
+  resolveOptionConfig,
+  resolveSelect
+} from './option'
 
 export function buildTask(
   data: Interface,
@@ -21,7 +27,12 @@ export function buildTask(
 
   const overrides: unknown[] = [taskMeta?.pipeline_override ?? {}]
 
-  const options = buildOption(data, task, ctrlRt, resRt)
+  const runtimeTask = buildRuntimeOptionConfig(data, task, ctrlRt, resRt)
+  if (typeof runtimeTask === 'string') {
+    return runtimeTask
+  }
+
+  const options = buildOption(data, runtimeTask, ctrlRt, resRt)
   if (typeof options === 'string') {
     return options
   }
@@ -33,12 +44,12 @@ export function buildTask(
     }
 
     if (!optMeta.type || optMeta.type === 'select' || optMeta.type === 'switch') {
-      const caseMeta = resolveSelect(task, opt.name, optMeta)
+      const caseMeta = resolveSelect(runtimeTask, opt.name, optMeta)
       if (caseMeta?.pipeline_override) {
         overrides.push(caseMeta.pipeline_override)
       }
     } else if (optMeta.type === 'checkbox') {
-      const caseMetas = resolveCheckbox(task, opt.name, optMeta)
+      const caseMetas = resolveCheckbox(runtimeTask, opt.name, optMeta)
       for (const caseMeta of caseMetas ?? []) {
         if (caseMeta?.pipeline_override) {
           overrides.push(caseMeta.pipeline_override)
@@ -47,7 +58,7 @@ export function buildTask(
     } else if (optMeta.type === 'input') {
       // no verify
 
-      const vals = resolveOptionConfig(task, opt.name, 'input') ?? {}
+      const vals = resolveOptionConfig(runtimeTask, opt.name, 'input') ?? {}
 
       const updateOverride = (v: unknown): unknown => {
         if (Array.isArray(v)) {

@@ -39,6 +39,14 @@ test('调试会话终止后摘除残留 agent 记录', () => {
   assert.match(agentSource, /info\.session\.id === session\.id/)
 })
 
+test('调试会话 handle 写入配置并按 handle 过滤启动监听', () => {
+  // 必须是 handle 而非 identifier：onDidTerminateDebugSession 原样带回，
+  // setupAgent 的 watcher 以 startDebugSession 的返回值匹配
+  assert.doesNotMatch(agentSource, /config\.__mse_agent_id = identifier/)
+  assert.match(agentSource, /const id = v4\(\)\n\s*config\.__mse_agent_id = id/)
+  assert.match(agentSource, /s\.configuration\.__mse_agent_id === id/)
+})
+
 test('stopAgent 与 agentStopped 失败降级为日志', () => {
   assert.match(agentSource, /logger\.warn\(`stop agent \$\{id\} failed: \$\{err\}`\)/)
   assert.match(agentSource, /logger\.warn\(`notify agentStopped \$\{id\} failed: \$\{err\}`\)/)

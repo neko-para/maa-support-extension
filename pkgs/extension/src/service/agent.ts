@@ -130,11 +130,18 @@ export class AgentService extends BaseService {
     if (!replaced) {
       logger.warn('No {AGENT_ID} found in config')
     }
-    config.__mse_agent_id = identifier
+    // handle 必须在 startDebugging 之前写入配置：onDidTerminateDebugSession 会把它原样
+    // 带回，maa-server 侧 setupAgent 的 watcher 以它与本函数的返回值匹配，agent 提前退出
+    // 时 setup 才能立即失败，而不是空等 agentTimeout
+    const id = v4()
+    config.__mse_agent_id = id
 
     let session: vscode.DebugSession | undefined = undefined
     const disp = vscode.debug.onDidStartDebugSession(s => {
-      session = s
+      // 并发可能启动无关的调试会话，只认带自己 handle 的
+      if (s.configuration.__mse_agent_id === id) {
+        session = s
+      }
     })
     const succ = await vscode.debug.startDebugging(vscode.workspace.workspaceFolders![0], config)
     disp.dispose()
@@ -143,7 +150,6 @@ export class AgentService extends BaseService {
       return null
     }
 
-    const id = v4()
     this.agents[id] = {
       type: 'debug',
       session

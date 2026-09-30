@@ -149,6 +149,8 @@ DisposableHelper
 
 `RpcManager.kill()` 同步清空 `conn`：紧随其后的 `ensureServer()` 必须重新建连，否则会把正在废弃的连接当成可用连接。
 
+agent 在连接期间退出时，setup 不必等满 `agentTimeout`：`startDebugSession` 把返回的 handle 写入 `config.__mse_agent_id`，调试会话终止事件会原样带回，`setupAgent` 据此立即中止等待并走失败分支。`onDidStartDebugSession` 同样按 handle 过滤，并发启动的无关调试会话不会被误认。
+
 ### IPC 错误处理
 
 两端 dispatcher 都用 `Promise.resolve().then(...).catch(...)` 收口而不是 `try/catch`——handler 基本都是 `async`，`try/catch` 只能拦住同步抛出。调用侧同样分两类：

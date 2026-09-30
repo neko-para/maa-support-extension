@@ -36,10 +36,22 @@ export class AgentService extends BaseService {
       }
     })
     this.defer = vscode.debug.onDidTerminateDebugSession(event => {
+      this.reapDebugSession(event)
       if (event.configuration.__mse_agent_id) {
         this.agentStopped(event.configuration.__mse_agent_id)
       }
     })
+  }
+
+  // Agent 进程可能在未被显式 stopAgent 的情况下退出（例如 OOM）。这里按 session id 摘掉
+  // 残留记录，否则后续清理会拿已经终止的 session 去调 stopDebugging，编辑器会以
+  // "debug session not found" 拒绝。
+  private reapDebugSession(session: vscode.DebugSession) {
+    for (const [id, info] of Object.entries(this.agents)) {
+      if (info.type === 'debug' && info.session.id === session.id) {
+        delete this.agents[id]
+      }
+    }
   }
 
   async init() {}
@@ -146,13 +158,18 @@ export class AgentService extends BaseService {
     }
     delete this.agents[id]
 
-    switch (info.type) {
-      case 'task':
-        info.task.terminate()
-        break
-      case 'debug':
-        await vscode.debug.stopDebugging(info.session)
-        break
+    try {
+      switch (info.type) {
+        case 'task':
+          info.task.terminate()
+          break
+        case 'debug':
+          await vscode.debug.stopDebugging(info.session)
+          break
+      }
+    } catch (err) {
+      // session 可能已经终止：编辑器会以 "debug session not found" 拒绝，属于预期竞态
+      logger.warn(`stop agent ${id} failed: ${err}`)
     }
   }
 
@@ -161,6 +178,10 @@ export class AgentService extends BaseService {
   }
 
   async agentStopped(id: string) {
-    await (await serverService.ensureServer())?.agentStopped(id)
+    try {
+      await (await serverService.ensureServer())?.agentStopped(id)
+    } catch (err) {
+      logger.warn(`notify agentStopped ${id} failed: ${err}`)
+    }
   }
 }

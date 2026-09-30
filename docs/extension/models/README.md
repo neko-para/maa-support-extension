@@ -112,6 +112,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 启动子进程或调试会话作为 "agent"
 - 注入 PI\_\* 协议环境变量
 - 管理 agent 生命周期
+- agent 异常退出（如 OOM）后摘除失效会话，实例启动失败时重建 maa-server 并自动重试一次，无需重启编辑器
 
 ### 10. MAA Assistant Arknights 模式 🄼
 

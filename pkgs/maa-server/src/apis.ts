@@ -15,12 +15,14 @@ export function setupIpc(conn: rpc.MessageConnection) {
     if (method !== 'pushNotify') {
       console.log('<--', method)
     }
-    try {
-      return ipc.$[method](...args)
-    } catch (err) {
-      console.error(`handle ${method} failed: ${err}`)
-      return null
-    }
+    // handler 多为 async：同步抛出与异步拒绝都要在这里收口，否则拒绝会以 ResponseError
+    // 弹回 extension，并在那边成为未捕获拒绝
+    return Promise.resolve()
+      .then(() => ipc.$[method](...args))
+      .catch(err => {
+        console.error(`handle ${method} failed: ${err}`)
+        return null
+      })
   })
 
   const handlers: Record<string, unknown> = {}

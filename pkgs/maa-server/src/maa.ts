@@ -211,6 +211,14 @@ export async function updateCtrl(runtime: ControllerRuntime) {
   }
 }
 
+// 清理路径不参与控制流：ipc.stopAgent 是 JSON-RPC 请求，对端 handler 的异步拒绝会以
+// ResponseError 弹回本进程，不接住就会变成进程级未捕获拒绝（崩溃日志里的裸栈即由此产生）。
+function stopAgentSilently(id: string) {
+  ipc.stopAgent(id).catch(err => {
+    logger.warn(`stopAgent ${id} failed: ${err}`)
+  })
+}
+
 async function setupAgent(
   agentConfig: AgentRuntime,
   runtime: InterfaceRuntime,
@@ -283,7 +291,7 @@ async function setupAgent(
     connectPromise.then(() => {
       client?.destroy()
       if (agent) {
-        ipc.stopAgent(agent)
+        stopAgentSilently(agent)
       }
     })
     return null
@@ -293,7 +301,7 @@ async function setupAgent(
     logger.info(`AgentClient connect failed`)
     client?.destroy()
     if (agent) {
-      ipc.stopAgent(agent)
+      stopAgentSilently(agent)
     }
     return null
   } else {
@@ -331,7 +339,7 @@ async function setupResource(
     if (!info) {
       for (const agent of agents) {
         agent.client.destroy()
-        ipc.stopAgent(agent.agent)
+        stopAgentSilently(agent.agent)
       }
       resource.destroy()
       return null
@@ -354,7 +362,7 @@ export async function setupInst(
 }> {
   for (const agent of taskerInst?.agents ?? []) {
     agent.client.destroy()
-    ipc.stopAgent(agent.agent)
+    stopAgentSilently(agent.agent)
   }
   taskerInst?.tasker.destroy()
   taskerInst?.resource.destroy()
@@ -403,7 +411,7 @@ export async function setupInst(
   if (!tasker.inited) {
     for (const agent of resourceInfo.agents) {
       agent.client.destroy()
-      ipc.stopAgent(agent.agent)
+      stopAgentSilently(agent.agent)
     }
     tasker.destroy()
     resourceInfo.resource.destroy()
@@ -423,10 +431,18 @@ export async function setupInst(
   taskerMap[handle] = taskerInst
 
   taskerInst.tasker.add_sink(async (_, msg) => {
-    await ipc.pushNotify(handle, msg)
+    try {
+      await ipc.pushNotify(handle, msg)
+    } catch (err) {
+      logger.warn(`pushNotify ${handle} failed: ${err}`)
+    }
   })
   taskerInst.tasker.add_context_sink(async (_, msg) => {
-    await ipc.pushNotify(handle, msg)
+    try {
+      await ipc.pushNotify(handle, msg)
+    } catch (err) {
+      logger.warn(`pushNotify ${handle} failed: ${err}`)
+    }
   })
 
   cache = undefined
@@ -498,7 +514,7 @@ export async function destroyInstance(id: string) {
 
   for (const agent of inst.agents) {
     agent.client.destroy()
-    ipc.stopAgent(agent.agent)
+    stopAgentSilently(agent.agent)
   }
   inst.tasker.destroy()
   inst.resource.destroy()

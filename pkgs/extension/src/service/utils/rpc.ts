@@ -41,6 +41,9 @@ export class RpcManager extends EventEmitter<{
 
   kill() {
     this.conn?.sendNotification(shutdownNoti)
+    // 立刻置空：否则紧随其后的 ensureServer() 会把这条正在废弃的连接当成可用连接，
+    // 让重建 maa-server 后的重试打在旧连接上
+    this.conn = undefined
 
     if (this.proc) {
       this.proc.kill()

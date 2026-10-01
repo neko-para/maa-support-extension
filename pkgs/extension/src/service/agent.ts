@@ -36,10 +36,22 @@ export class AgentService extends BaseService {
       }
     })
     this.defer = vscode.debug.onDidTerminateDebugSession(event => {
+      this.reapDebugSession(event)
       if (event.configuration.__mse_agent_id) {
         this.agentStopped(event.configuration.__mse_agent_id)
       }
     })
+  }
+
+  // Agent 进程可能在未被显式 stopAgent 的情况下退出（例如 OOM）。这里按 session id 摘掉
+  // 残留记录，否则后续清理会拿已经终止的 session 去调 stopDebugging，编辑器会以
+  // "debug session not found" 拒绝。
+  private reapDebugSession(session: vscode.DebugSession) {
+    for (const [id, info] of Object.entries(this.agents)) {
+      if (info.type === 'debug' && info.session.id === session.id) {
+        delete this.agents[id]
+      }
+    }
   }
 
   async init() {}
@@ -118,11 +130,18 @@ export class AgentService extends BaseService {
     if (!replaced) {
       logger.warn('No {AGENT_ID} found in config')
     }
-    config.__mse_agent_id = identifier
+    // handle 必须在 startDebugging 之前写入配置：onDidTerminateDebugSession 会把它原样
+    // 带回，maa-server 侧 setupAgent 的 watcher 以它与本函数的返回值匹配，agent 提前退出
+    // 时 setup 才能立即失败，而不是空等 agentTimeout
+    const id = v4()
+    config.__mse_agent_id = id
 
     let session: vscode.DebugSession | undefined = undefined
     const disp = vscode.debug.onDidStartDebugSession(s => {
-      session = s
+      // 并发可能启动无关的调试会话，只认带自己 handle 的
+      if (s.configuration.__mse_agent_id === id) {
+        session = s
+      }
     })
     const succ = await vscode.debug.startDebugging(vscode.workspace.workspaceFolders![0], config)
     disp.dispose()
@@ -131,7 +150,6 @@ export class AgentService extends BaseService {
       return null
     }
 
-    const id = v4()
     this.agents[id] = {
       type: 'debug',
       session
@@ -146,13 +164,18 @@ export class AgentService extends BaseService {
     }
     delete this.agents[id]
 
-    switch (info.type) {
-      case 'task':
-        info.task.terminate()
-        break
-      case 'debug':
-        await vscode.debug.stopDebugging(info.session)
-        break
+    try {
+      switch (info.type) {
+        case 'task':
+          info.task.terminate()
+          break
+        case 'debug':
+          await vscode.debug.stopDebugging(info.session)
+          break
+      }
+    } catch (err) {
+      // session 可能已经终止：编辑器会以 "debug session not found" 拒绝，属于预期竞态
+      logger.warn(`stop agent ${id} failed: ${err}`)
     }
   }
 
@@ -161,6 +184,16 @@ export class AgentService extends BaseService {
   }
 
   async agentStopped(id: string) {
-    await (await serverService.ensureServer())?.agentStopped(id)
+    // kill() 重建窗口内 stopAll 的 terminate 事件仍会异步到达：此时拉起 server 会与
+    // 重试路径并发 ensureServer，ensureConnection 开头就会杀掉重试刚启动的进程；且新建
+    // 的 server 也不持有旧 agent 的 watcher，通知本就无意义，因此只在有连接时发送
+    if (!serverService.rpc.conn) {
+      return
+    }
+    try {
+      await (await serverService.ensureServer())?.agentStopped(id)
+    } catch (err) {
+      logger.warn(`notify agentStopped ${id} failed: ${err}`)
+    }
   }
 }

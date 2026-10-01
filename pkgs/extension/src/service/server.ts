@@ -202,12 +202,14 @@ export class ServerService extends BaseService {
         if (method !== 'pushNotify') {
           logger.info('<-- ' + method)
         }
-        try {
-          return this.ipc?.$[method](...args)
-        } catch (err) {
-          logger.error(`handle ${method} failed: ${err}`)
-          return null
-        }
+        // handler 多为 async：同步抛出与异步拒绝都要在这里收口，否则拒绝会以
+        // ResponseError 弹回 maa-server，并在那边成为未捕获拒绝
+        return Promise.resolve()
+          .then(() => this.ipc?.$[method](...args))
+          .catch(err => {
+            logger.error(`handle ${method} failed: ${err}`)
+            return null
+          })
       })
 
       const handlers: Record<string, unknown> = {}

@@ -267,16 +267,39 @@ export class LaunchService extends BaseService {
       return [false, t('maa.debug.init-controller-failed')]
     }
 
+    const first = await this.setupInstanceOnce(runtime)
+    if (first[0]) {
+      return first
+    }
+
+    // maa-server 是长驻进程：上一次启动残留的 Agent 连接与原生对象都留在里面，失败态
+    // 会一直累积到进程重启。这里直接重建进程再试一次，把"重启编辑器才能恢复"自动化。
+    logger.warn(`setup instance failed: ${first[1]}, rebuilding maa-server and retrying`)
+    serverService.kill()
+
+    const second = await this.setupInstanceOnce(runtime)
+    if (!second[0]) {
+      logger.error(`setup instance failed after rebuilding maa-server: ${second[1]}`)
+    }
+    return second
+  }
+
+  private async setupInstanceOnce(runtime: InterfaceRuntime): Promise<[boolean, string]> {
     const timeout =
       (vscode.workspace.getConfiguration('maa').get('agentTimeout') as number | undefined) ?? 30000
 
-    const ipc = await serverService.ensureServer()
-    const result = (await ipc?.setupInstance(runtime, timeout)) ?? { error: 'ipc error' }
-    if (result.error || !result.handle) {
-      return [false, result.error ?? 'no handle']
-    }
+    try {
+      const ipc = await serverService.ensureServer()
+      const result = (await ipc?.setupInstance(runtime, timeout)) ?? { error: 'ipc error' }
+      if (result.error || !result.handle) {
+        return [false, result.error ?? 'no handle']
+      }
 
-    return [true, result.handle]
+      return [true, result.handle]
+    } catch (err) {
+      // 调用可能直接以 ResponseError 拒绝（例如 maa-server 在调用途中退出）
+      return [false, `${err}`]
+    }
   }
 
   async launchRuntime(

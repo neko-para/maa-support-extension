@@ -83,6 +83,13 @@ ipc.$ = { postTask: handler } // 注册 hostToSubReq 处理器
 
 两端 Proxy 对 `then` 属性固定返回 `undefined`，使 IPC 对象保持 non-thenable。否则 `await` 或 Promise resolution 会把 Proxy 当作 Promise，并将 `then` 误发为 RPC 方法。
 
+### 错误处理约定
+
+`MarkApis` 把两端所有 API 都标成返回 Promise（即使对端实现声明为同步 `void`），因此拒绝有两个必须显式处理的落点：
+
+- **handler 侧**：dispatcher 用 `Promise.resolve().then(() => handler(...)).catch(...)` 收口。handler 基本都是 `async`，`try/catch` 只能捕获同步抛出；漏掉的异步拒绝会被 `vscode-jsonrpc` 包成 `ResponseError` 回送给调用方。
+- **调用侧**：清理与通知类调用（`stopAgent`、`pushNotify`）不参与控制流，必须显式 `catch`。未接住的拒绝会成为**对端进程**的未捕获拒绝——日志里的裸栈就是这样产生的：编辑器主线程对已终止的 debug session 返回 `debug session not found`，`subToHostReq` 请求被拒绝，而 maa-server 侧从未 await 那个 Promise。
+
 ## Channel 3: Extension → Agent (子进程)
 
 - **触发方式**: Server 通过 `subToHostReq`（`startTask` / `startDebugSession`）回调 extension

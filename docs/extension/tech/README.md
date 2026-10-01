@@ -143,6 +143,23 @@ DisposableHelper
 - 后续启动任务、截图或其他需要服务端的操作会调用 `ServerService.ensureServer()`，重新启动 maa-server 并建立连接
 - 断线意味着子进程内的 Maa 运行实例已经丢失，重新连接不会也无法恢复原任务，因此断线后不立即启动空闲子进程
 
+### 启动失败自愈
+
+`setupInstance` 失败时（`init-resource-failed` / `init-instance-failed`、没有 handle，或调用直接以 `ResponseError` 拒绝）会调用 `ServerService.kill()` 重建 maa-server，然后重试一次。maa-server 是长驻进程，上一次启动残留的 Agent 连接与原生对象都留在里面，重建进程是唯一可靠的复位手段；自动化这一步后用户不必重启编辑器（root cause 见 [TODO-38](../../TODO.md)）。
+
+`RpcManager.kill()` 同步清空 `conn`：紧随其后的 `ensureServer()` 必须重新建连，否则会把正在废弃的连接当成可用连接。
+
+agent 在连接期间退出时，setup 不必等满 `agentTimeout`：`startDebugSession` 把返回的 handle 写入 `config.__mse_agent_id`，调试会话终止事件会原样带回，`setupAgent` 据此立即中止等待并走失败分支。`onDidStartDebugSession` 同样按 handle 过滤，并发启动的无关调试会话不会被误认。
+
+### IPC 错误处理
+
+两端 dispatcher 都用 `Promise.resolve().then(...).catch(...)` 收口而不是 `try/catch`——handler 基本都是 `async`，`try/catch` 只能拦住同步抛出。调用侧同样分两类：
+
+- `stopAgent`、`pushNotify` 等清理与通知调用不参与控制流，统一吃掉拒绝并降级为日志（`stopAgentSilently`、sink 内的 `try/catch`）
+- 调试会话终止后按 session id 摘除 `AgentService.agents` 里的残留记录，避免 `stopDebugging()` 打在已失效的会话上（编辑器会以 `debug session not found` 拒绝）
+- `agentStopped` 只在已有连接时发送：`kill()` 重建窗口内 `stopAll` 的 terminate 事件仍会异步到达，此时并发 `ensureServer()` 会让 `ensureConnection` 杀掉重试刚启动的进程；且新建的 server 不持有旧 agent 的 watcher，通知无意义
+- `postStop`、`destroyInstance`、`agentStopped` 的失败只记录警告，不再向对端抛协议错误
+
 ### 项目启动时连接
 
 VS Code 设置 `maa.controller.connectOnStartup` 开启后，插件在当前 interface 配置加载完成时尝试连接配置中的控制器；资源切换时也会执行一次。该设置默认关闭，不会改变现有的按需连接行为。

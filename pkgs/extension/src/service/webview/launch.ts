@@ -12,6 +12,7 @@ import type {
 
 import { commands } from '../../command'
 import { isMaaAssistantArknights } from '../../utils/fs'
+import { logger } from '../../utils/logger'
 import { getTooltipDisabled } from '../../utils/settings'
 import { WebviewPanelProvider } from '../../utils/webview/panel'
 import { context } from '../context'
@@ -85,7 +86,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.pushRealtimeEnd('disposed')
     this.stop().finally(() => {
       this.send = () => {}
-      this.ipc.destroyInstance(this.instance)
+      this.ipc.destroyInstance(this.instance).catch(err => {
+        logger.warn(`destroy instance ${this.instance} failed: ${err}`)
+      })
     })
 
     delete serverService.instMap[this.instance]
@@ -181,6 +184,9 @@ export class WebviewLaunchPanel extends WebviewPanelProvider<LaunchHostToWeb, La
     this.cont()
     try {
       await this.ipc.postStop(this.instance)
+    } catch (err) {
+      // maa-server 可能已经退出、实例也可能已被销毁，停止失败不应升级为未捕获拒绝
+      logger.warn(`stop instance ${this.instance} failed: ${err}`)
     } finally {
       this.pushRealtimeEnd('stopped')
     }

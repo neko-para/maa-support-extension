@@ -16,3 +16,6 @@ QUESTION.md
 
 .claude
 .vscode/settings.json
+
+# extension 写入的运行时配置（任何 interface.json 目录都会生成）
+**/config/maa_pi_config.json

@@ -184,6 +184,12 @@ export class AgentService extends BaseService {
   }
 
   async agentStopped(id: string) {
+    // kill() 重建窗口内 stopAll 的 terminate 事件仍会异步到达：此时拉起 server 会与
+    // 重试路径并发 ensureServer，ensureConnection 开头就会杀掉重试刚启动的进程；且新建
+    // 的 server 也不持有旧 agent 的 watcher，通知本就无意义，因此只在有连接时发送
+    if (!serverService.rpc.conn) {
+      return
+    }
     try {
       await (await serverService.ensureServer())?.agentStopped(id)
     } catch (err) {

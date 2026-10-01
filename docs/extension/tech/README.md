@@ -157,6 +157,7 @@ agent 在连接期间退出时，setup 不必等满 `agentTimeout`：`startDebug
 
 - `stopAgent`、`pushNotify` 等清理与通知调用不参与控制流，统一吃掉拒绝并降级为日志（`stopAgentSilently`、sink 内的 `try/catch`）
 - 调试会话终止后按 session id 摘除 `AgentService.agents` 里的残留记录，避免 `stopDebugging()` 打在已失效的会话上（编辑器会以 `debug session not found` 拒绝）
+- `agentStopped` 只在已有连接时发送：`kill()` 重建窗口内 `stopAll` 的 terminate 事件仍会异步到达，此时并发 `ensureServer()` 会让 `ensureConnection` 杀掉重试刚启动的进程；且新建的 server 不持有旧 agent 的 watcher，通知无意义
 - `postStop`、`destroyInstance`、`agentStopped` 的失败只记录警告，不再向对端抛协议错误
 
 ### 项目启动时连接

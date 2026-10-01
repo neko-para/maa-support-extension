@@ -52,6 +52,12 @@ test('stopAgent 与 agentStopped 失败降级为日志', () => {
   assert.match(agentSource, /logger\.warn\(`notify agentStopped \$\{id\} failed: \$\{err\}`\)/)
 })
 
+test('重建窗口内 agentStopped 不拉起新 server', () => {
+  // kill() 重建期间 stopAll 的 terminate 事件会异步到达：若此时 ensureServer() 并发拉起
+  // 第二个 maa-server，ensureConnection 开头会杀掉重试刚启动的进程，重试以 ipc error 假失败
+  assert.match(agentSource, /if \(!serverService\.rpc\.conn\) \{\s*\n\s*return\s*\n\s*\}/)
+})
+
 test('setupInstance 失败后重建 maa-server 并重试一次', () => {
   assert.match(launchSource, /private async setupInstanceOnce/)
   assert.equal((launchSource.match(/this\.setupInstanceOnce\(runtime\)/g) ?? []).length, 2)

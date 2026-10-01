@@ -1,0 +1,9 @@
+{
+    "Common.OK": "OK",
+    "Nested": {
+        "x": 2,
+        "y": 1
+    },
+    "Task.A.label": "a label",
+    "Task.Z.desc": "z desc"
+}

@@ -1,0 +1,16 @@
+{
+    "name": "plain data",
+    "values": [
+        3,
+        1,
+        2
+    ],
+    "task": [
+        "build",
+        "test"
+    ],
+    "nested": {
+        "task": "not an interface section",
+        "list": [{"z": 1, "a": 2}]
+    }
+}

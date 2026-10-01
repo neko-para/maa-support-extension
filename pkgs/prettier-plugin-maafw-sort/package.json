@@ -16,7 +16,9 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsdown && tsc -p . --noEmit",
+    "test": "node --test test/sort.test.ts",
+    "pretest": "tsdown"
   },
   "dependencies": {
     "@babel/types": "^7.29.0"

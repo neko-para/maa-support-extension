@@ -1,0 +1,222 @@
+{
+    "$schema": "./schema.json",
+    "interface_version": 2,
+    "languages": {
+        "zh_cn": {
+            "main": "主任务"
+        }
+    },
+    "name": "test",
+    "title": "Test",
+    "github": "https://github.com/x/y",
+    "version": "1.0.0",
+    "contact": "a@b.c",
+    "license": "MIT",
+    "welcome": "hello",
+    "telemetry": {
+        "sentry": {
+            "dsn": "https://x@y"
+        }
+    },
+    "controller": [
+        {
+            "name": "Adb",
+            "label": "Linux",
+            "description": "linux controller",
+            "icon": "ctl.png",
+            "type": "Linux",
+            "display_short_side": 1280,
+            "display_long_side": 720,
+            "display_expand": [
+                1280,
+                720
+            ],
+            "display_raw": false,
+            "permission_required": true,
+            "attach_resource_path": ["res/extra"],
+            "option": ["optSwitch"],
+            "macos": {
+                "input": "im-kitty"
+            },
+            "linux": {
+                "input": "uinput"
+            }
+        }
+    ],
+    "default_controller": "Adb",
+    "resource": [
+        {
+            "name": "Default",
+            "label": "Default",
+            "description": "default resource",
+            "icon": "res.png",
+            "path": [
+                "res/base",
+                "res/extra"
+            ],
+            "controller": ["Adb"],
+            "option": ["optInput"],
+            "hash": "1a2b3c4d"
+        }
+    ],
+    "pretask": {
+        "resource": ["Default"],
+        "controller": ["Adb"],
+        "exec": "node",
+        "args": ["--check"],
+        "name": "check",
+        "label": "Pretask",
+        "description": "pretask",
+        "icon": "pretask.png",
+        "option": {
+            "optInput": "2"
+        }
+    },
+    "agent": [
+        {
+            "child_exec": "node",
+            "child_args": ["--x"],
+            "identifier": "id"
+        }
+    ],
+    "group": [
+        {
+            "name": "standalone",
+            "label": "Standalone",
+            "description": "standalone group",
+            "icon": "g.png",
+            "default_expand": true
+        }
+    ],
+    "task": [
+        {
+            "name": "main",
+            "label": "Main Task",
+            "entry": "JobEntry",
+            "default_check": true,
+            "description": "main task",
+            "icon": "icon.png",
+            "resource": ["Default"],
+            "controller": ["Adb"],
+            "pipeline_override": {
+                "JobOverride": {
+                    "desc": "override task",
+                    "recognition": "DirectHit",
+                    "next": [
+                        "A",
+                        "B"
+                    ]
+                }
+            },
+            "option": [
+                "optSwitch",
+                "optInput"
+            ]
+        }
+    ],
+    "option": {
+        "optInput": {
+            "type": "input",
+            "controller": ["Adb"],
+            "resource": ["Default"],
+            "label": "Input Opt",
+            "description": "input option",
+            "icon": "opt.png",
+            "inputs": [
+                {
+                    "name": "count",
+                    "label": "Count",
+                    "description": "count",
+                    "icon": "in.png",
+                    "default": "1",
+                    "pipeline_type": "int",
+                    "verify": "^[0-9]+$",
+                    "pattern_msg": "digits only",
+                    "password": false
+                }
+            ],
+            "pipeline_override": {
+                "InputOverride": {
+                    "desc": "input override",
+                    "post_delay": 100
+                }
+            }
+        },
+        "optSwitch": {
+            "type": "select",
+            "label": "Switch Opt",
+            "cases": [
+                {
+                    "name": "caseB",
+                    "label": "Case B",
+                    "description": "case b",
+                    "icon": "c2.png",
+                    "option": ["optInput"],
+                    "pipeline_override": {
+                        "CaseOverride": {
+                            "desc": "case override",
+                            "timeout": 5000
+                        }
+                    }
+                },
+                {
+                    "name": "caseA",
+                    "label": "Case A",
+                    "description": "case a",
+                    "icon": "c1.png"
+                }
+            ],
+            "default_case": "caseA"
+        },
+        "optHotkey": {
+            "type": "hotkey",
+            "label": "Hotkey Opt",
+            "hotkeys": [
+                {
+                    "name": "skill",
+                    "label": "Skill",
+                    "description": "skill key",
+                    "default": "69"
+                }
+            ]
+        }
+    },
+    "global_option": [
+        "optSwitch",
+        "optHotkey"
+    ],
+    "setting": [
+        {
+            "name": "basic",
+            "label": "Basic",
+            "description": "basic section",
+            "icon": "set.png",
+            "option": [
+                "optInput",
+                "optSwitch"
+            ],
+            "default_expand": true
+        }
+    ],
+    "import": ["./extra.tasks.json"],
+    "preset": [
+        {
+            "name": "default",
+            "label": "Preset",
+            "description": "preset",
+            "icon": "pre.png",
+            "task": [
+                {
+                    "name": "main",
+                    "enabled": true,
+                    "option": {
+                        "optSwitch": "caseB",
+                        "optInput": {
+                            "count": "3"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

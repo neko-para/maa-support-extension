@@ -1,0 +1,19 @@
+{
+    "option": {
+        "myOpt": {
+            "type": "select",
+            "label": "L",
+            "cases": [
+                {
+                    "name": "c",
+                    "pipeline_override": {
+                        "T": {
+                            "desc": "d",
+                            "next": ["A"]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

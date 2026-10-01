@@ -1,0 +1,31 @@
+{
+    "task": [
+        {
+            "name": "frag",
+            "entry": "FragEntry",
+            "pipeline_override": {
+                "FragTask": {
+                    "desc": "frag task",
+                    "pre_delay": 0,
+                    "post_delay": 0
+                }
+            }
+        }
+    ],
+    "option": {
+        "fragOpt": {
+            "type": "switch",
+            "cases": [
+                {
+                    "name": "fragCase",
+                    "pipeline_override": {
+                        "FragOverride": {
+                            "desc": "frag override",
+                            "next": ["C"]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

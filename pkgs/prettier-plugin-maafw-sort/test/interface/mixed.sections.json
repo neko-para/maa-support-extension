@@ -1,0 +1,19 @@
+{
+    "task": [
+        {
+            "name": "n",
+            "entry": "E"
+        }
+    ],
+    "option": [
+        {
+            "pipeline_override": {
+                "T": {
+                    "desc": "d",
+                    "next": ["A"]
+                }
+            },
+            "name": "x"
+        }
+    ]
+}

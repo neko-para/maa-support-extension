@@ -1,4 +1,9 @@
-import type { ParserOptions, StringArraySupportOption, SupportOptions } from 'prettier'
+import type {
+  BooleanSupportOption,
+  ParserOptions,
+  StringArraySupportOption,
+  SupportOptions
+} from 'prettier'
 
 export const options: SupportOptions = {
   maafwPipelinePatterns: {
@@ -22,6 +27,23 @@ export const options: SupportOptions = {
       }
     ],
     description: 'MaaFramework Interface Json Pattern Regexs'
+  } satisfies StringArraySupportOption,
+  maafwInterfaceDetect: {
+    category: 'maafw-sort',
+    type: 'boolean',
+    default: true,
+    description: 'Detect MaaFramework Interface Json By Content When Patterns Miss'
+  } satisfies BooleanSupportOption,
+  maafwLocalePatterns: {
+    category: 'maafw-sort',
+    type: 'string',
+    array: true,
+    default: [
+      {
+        value: ['/locales/.*\\.jsonc?']
+      }
+    ],
+    description: 'MaaFramework Localization Json Pattern Regexs'
   } satisfies StringArraySupportOption
 }
 
@@ -44,8 +66,12 @@ function extractRegexArray(vals: unknown) {
 export function parseOption(opt: ParserOptions) {
   const pipelinePatterns = extractRegexArray(opt.maafwPipelinePatterns)
   const interfacePatterns = extractRegexArray(opt.maafwInterfacePatterns)
+  const localePatterns = extractRegexArray(opt.maafwLocalePatterns)
+  const interfaceDetect = opt.maafwInterfaceDetect !== false
   return {
     pipelinePatterns,
-    interfacePatterns
+    interfacePatterns,
+    localePatterns,
+    interfaceDetect
   }
 }

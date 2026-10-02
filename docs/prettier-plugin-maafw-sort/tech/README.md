@@ -25,9 +25,12 @@ src/
 1. 遍历根对象，跳过 $ 前缀 root field
 2. 每个任务对象按标准 key 顺序排列:
    desc/doc → enabled → max_hit → sub_name → recognition(及其参数) → inverse
-   → pre_wait_freezes/pre_delay → action(及其参数) → anchor
-   → repeat/repeat_wait_freezes/repeat_delay → post_wait_freezes/post_delay
+   → pre_wait_freezes/pre_delay → action(及其参数，含 contact/pressure/auto_up)
+   → anchor → repeat/repeat_wait_freezes/repeat_delay → post_wait_freezes/post_delay
    → timeout/rate_limit → next/on_error → focus/attach → ...
+   all_of/any_of 的条目（内联识别定义）按同一任务级 orders 排序，
+   sub_name 即挂在此处（条目内 sub_name → recognition → 参数）
+   wait_freezes（对象或数组）与 focus 对象内部同样按标准顺序排序
 3. 对 recognition/action 子对象: type → param
 4. 对不识别的 key 保持原位（相对于它们首次出现的位置）
 5. 递归处理嵌套对象

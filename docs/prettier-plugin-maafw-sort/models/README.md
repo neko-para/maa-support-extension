@@ -20,7 +20,7 @@ MaaFramework pipeline 文件的编辑者和 CI 流程。
 - 顶层任务 key 按标准顺序排列（任务名本身不排序）
 - `recognition` 子对象: `type` → `param`
 - `action` 子对象: `type` → `param`
-- `swipes` 数组中的对象 key 排序
+- `swipes` 数组、wait_freezes（对象或数组）、`focus` 对象的内部 key 排序
 - `all_of` / `any_of` 数组中的任务对象排序
 - `$` 前缀的 root field 不是任务，不参与排序
 

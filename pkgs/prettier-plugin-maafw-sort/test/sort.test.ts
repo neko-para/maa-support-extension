@@ -390,6 +390,99 @@ test("locale: non-matching path untouched", async () => {
     ]);
 });
 
+test("pipeline: auto_up / sub_name / wait_freezes / focus coverage", async () => {
+    const out = await fmtJson(
+        {
+            Task1: {
+                next: ["B"],
+                focus: {trace: true, display: "log", content: "hello"},
+                post_delay: 100,
+                action: {
+                    type: "TouchDown",
+                    param: {target: true, pressure: 10, auto_up: true, contact: 1},
+                },
+                recognition: {
+                    type: "And",
+                    // sub_name 挂在 all_of 条目内（条目=内联识别定义，v2/v1 混用），
+                    // 条目由任务级 orders 排序：sub_name → recognition → 参数
+                    param: {
+                        all_of: [
+                            {recognition: {type: "OCR", param: {expected: "OK"}}, sub_name: "text"},
+                            {threshold: 0.7, template: "A.png", recognition: "TemplateMatch", sub_name: "icon"},
+                        ],
+                        box_index: 1,
+                    },
+                },
+                pre_wait_freezes: {
+                    timeout: 5000,
+                    method: 3,
+                    threshold: 0.9,
+                    target_offset: [
+                        1,
+                        2,
+                    ],
+                    target: true,
+                    time: 1000,
+                    rate_limit: 100,
+                },
+                repeat_wait_freezes: [
+                    {time: 1, timeout: 2, target_offset: [1], target: true, threshold: 0.8, method: 1, rate_limit: 2},
+                ],
+            },
+        },
+        "proj/pipeline/x.json",
+    );
+
+    const task = out.Task1 as Record<string, unknown>;
+    const action = (task.action as Record<string, unknown>).param as Record<string, unknown>;
+    assert.deepEqual(keys(action), [
+        "target",
+        "contact",
+        "pressure",
+        "auto_up",
+    ]);
+    const and = (task.recognition as Record<string, unknown>).param as Record<string, unknown>;
+    assert.deepEqual(keys(and), [
+        "all_of",
+        "box_index",
+    ]);
+    const entries = and.all_of as Record<string, unknown>[];
+    assert.deepEqual(keys(entries[0]), [
+        "sub_name",
+        "recognition",
+    ]);
+    assert.deepEqual(keys(entries[1]), [
+        "sub_name",
+        "recognition",
+        "template",
+        "threshold",
+    ]);
+    assert.deepEqual(keys(task.focus as Record<string, unknown>), [
+        "content",
+        "display",
+        "trace",
+    ]);
+    assert.deepEqual(keys(task.pre_wait_freezes as Record<string, unknown>), [
+        "time",
+        "target",
+        "target_offset",
+        "threshold",
+        "method",
+        "rate_limit",
+        "timeout",
+    ]);
+    const rwf = task.repeat_wait_freezes as Record<string, unknown>[];
+    assert.deepEqual(keys(rwf[0]), [
+        "time",
+        "target",
+        "target_offset",
+        "threshold",
+        "method",
+        "rate_limit",
+        "timeout",
+    ]);
+});
+
 test("idempotency", async () => {
     const inputs: [value: unknown, filepath: string][] = [
         [

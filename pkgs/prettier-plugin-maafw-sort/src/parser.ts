@@ -144,6 +144,7 @@ export const actKeys = [
   'duration',
   'contact',
   'pressure',
+  'auto_up',
 
   'swipes',
 
@@ -181,6 +182,18 @@ const swipeKeys = [
   'pressure'
 ]
 
+const waitFreezeKeys = [
+  'time',
+  'target',
+  'target_offset',
+  'threshold',
+  'method',
+  'rate_limit',
+  'timeout'
+]
+
+const focusKeys = ['content', 'display', 'trace']
+
 function processAllOfAnyOf(node: Expression | PatternLike) {
   if (node.type === 'ArrayExpression') {
     for (const elem of node.elements) {
@@ -194,6 +207,18 @@ function processAllOfAnyOf(node: Expression | PatternLike) {
 function processSwipes(node: Expression | PatternLike) {
   if (node.type === 'ObjectExpression') {
     sortObject(node, swipeKeys, [], {})
+  }
+}
+
+function processEntryObjects(node: Expression | PatternLike, keys: string[]) {
+  if (node.type === 'ObjectExpression') {
+    sortObject(node, keys, [], {})
+  } else if (node.type === 'ArrayExpression') {
+    for (const elem of node.elements) {
+      if (elem?.type === 'ObjectExpression') {
+        sortObject(elem, keys, [], {})
+      }
+    }
   }
 }
 
@@ -270,7 +295,12 @@ function processPipelineTask(node: ObjectExpression) {
 
       all_of: processAllOfAnyOf,
       any_of: processAllOfAnyOf,
-      swipes: processSwipes
+      swipes: processSwipes,
+
+      pre_wait_freezes: node => processEntryObjects(node, waitFreezeKeys),
+      repeat_wait_freezes: node => processEntryObjects(node, waitFreezeKeys),
+      post_wait_freezes: node => processEntryObjects(node, waitFreezeKeys),
+      focus: node => processEntryObjects(node, focusKeys)
     }
   )
 }

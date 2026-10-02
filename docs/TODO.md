@@ -28,9 +28,9 @@
 - [x] **TODO-39** — **agent 生命周期残留①：watcher ID 对齐**: `startDebugSession` 把返回的 handle 写入 `config.__mse_agent_id`（而非 identifier），`onDidTerminateDebugSession` 原样带回后 `setupAgent` 的 watcher 能真正匹配，agent 提前退出时 setup 立即失败而不是空等 `agentTimeout`；`onDidStartDebugSession` 同时按 handle 过滤，并发启动的无关调试会话不再被误认。
 - [ ] **TODO-40** — **agent 生命周期与启动失败消息残留②③④⑤⑥**: ②`setupAgent` 失败时 client 的销毁写在 `connectPromise.then(...)` 里，agent 提前退出后仍要等到 `agentTimeout` 才回收 client 与 agent handle（日志证实原生 connect 会 settle，清理本身不会丢失）；改为同步销毁需先验证 maa-node 在 connect 进行中 `destroy()` 的原生安全性；③`setupInst` 开头的"清理上一个实例"读的是 `taskerInst`，但它在成功路径末尾已被置空，正常重启时是死代码，需要改为按面板归属回收 `taskerMap` 中的残留实例（无差别回收会破坏多面板并行）；④admin/UAC 模式下 `ProcessManager.kill()` 只杀得掉 powershell 启动器，提权的 maa-server 不随编辑器退出而结束，需要 pidfile 或进程树回收；⑤`setupAgent` 里 agent 在 `startDebugSession` 响应返回前即终止的窗口：watcher 在拿到 handle 后才注册，`agentStopped` 事件可能在此之前 emit 落空，setup 仍要等 `client.connect()` 在 `agentTimeout` 自行 settle；彻底修复需把 id 的生成与 watcher 注册提前到发起 RPC 之前（如由 maa-server 预生成 id 传入 `startDebugSession`）；⑥`setupInstance` 失败消息未统一走 `t()`：controller 失败在 extension 侧已本地化，maa-server 返回的 key（`init-resource-failed` 等）与 `setupInstanceOnce` catch 路径的原始 `${err}` 直接经 `session.pushMessage`（`OutputEvent`）写入 debug console，用户看到的是未翻译的 key 或裸错误串。
 
-- [ ] **TODO-41** — **maa_pi_config.json 无末尾换行**: 扩展写 pi config（`pkgs/extension/src/service/interface.ts`）用 `JSON.stringify(..., null, 4)` 不带 `
-`，打开任何含 interface.json 的目录都会生成该文件；用户项目若对 json 跑 `prettier --check` 会变红（本仓库 `pkgs/prettier-plugin-maafw-sort/test/interface/` fixture 即复现）。修法：写入时补 `
-`；仓库侧已加 `**/config/maa_pi_config.json` gitignore 兜底。
+- [x] **TODO-41** — **maa_pi_config.json 无末尾换行**: 扩展写 pi config（`pkgs/extension/src/service/interface.ts`）用 `JSON.stringify(..., null, 4)` 不带 `
+`，打开任何含 interface.json 的目录都会生成该文件；用户项目若对 json 跑 `prettier --check` 会变红（本仓库 `pkgs/prettier-plugin-maafw-sort/test/interface/` fixture 即复现）。已修复：写入时补 `
+`，旧文件在下次配置变更写入时自愈。仓库侧 `**/config/maa_pi_config.json` gitignore 保留（运行时状态不应入库）。
 
 ## @mse/webview
 

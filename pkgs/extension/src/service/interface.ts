@@ -266,7 +266,8 @@ export class InterfaceService extends BaseService {
     }
     const configPath = root.configUri.fsPath
     await fs.mkdir(path.dirname(configPath), { recursive: true })
-    await fs.writeFile(configPath, JSON.stringify(this.interfaceConfigJson, null, 4))
+    // 末尾换行：该文件落在用户项目里，无换行会让项目的 prettier --check 变红
+    await fs.writeFile(configPath, JSON.stringify(this.interfaceConfigJson, null, 4) + '\n')
   }
 
   updateResource() {

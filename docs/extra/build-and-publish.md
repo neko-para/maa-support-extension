@@ -101,10 +101,11 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 **CI secrets**:
 
-| Secret       | 用途                              |
-| ------------ | --------------------------------- |
-| `VSCE_TOKEN` | 发布到 VSCode Marketplace         |
-| `OVSX_PAT`   | 发布到 Open VSX 的 Personal Token |
+| Secret       | 用途                      |
+| ------------ | ------------------------- |
+| `VSCE_TOKEN` | 发布到 VSCode Marketplace |
+
+Open VSX 走 Trusted Publishing（OIDC），不保存长期 token，因此没有对应的 secret。前提是在 open-vsx.org 的 _Trusted Publishers_ 页面登记本仓库的 workflow。
 
 **方法**: 推送格式为 `v*` 的 git tag（正式版）或 `p*` 的 tag（预发布版）。CI 触发后：
 
@@ -113,7 +114,7 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 3. `vsce package` 打包为 `.vsix`；`v*` tag 生成正式版，`p*` tag 通过 `--pre-release` 写入预发布标记
 4. 下载同一构建产物，并行执行：
    - `vsce publish` 发布到 VSCode Marketplace
-   - `ovsx publish` 发布到 Open VSX；Open VSX 根据 `.vsix` 中的标记将版本识别为正式版或预发布版，上传时无需再次传入 `--pre-release`
+   - `ovsx publish --trusted-publishing` 发布到 Open VSX，用 GitHub Actions 的 OIDC ID token 换取短时 token；Open VSX 根据 `.vsix` 中的标记将版本识别为正式版或预发布版，上传时无需再次传入 `--pre-release`
 
 非 tag 推送（分支提交）仅构建、lint 和测试，不发布。
 

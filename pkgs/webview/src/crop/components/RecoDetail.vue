@@ -17,6 +17,34 @@ type RichRecoDetailEntry = {
   entry: maa.RecoDetailEntry
 }
 
+// 识别结果字段按算法不同：TemplateMatch 有 score，FeatureMatch / ColorMatch 有 count，
+// OCR 有 text，NeuralNetworkClassify / NeuralNetworkDetect 有 cls_index / label；
+// Custom 的 detail 不在此展示，看下方 JSON
+function entryValue(entry: maa.RecoDetailEntry): string | undefined {
+  if (entry.score !== undefined) {
+    return entry.score.toFixed(4)
+  }
+  if (entry.count !== undefined) {
+    return `count=${entry.count}`
+  }
+  const cls: string[] = []
+  if (entry.cls_index !== undefined) {
+    cls.push(`cls_index=${entry.cls_index}`)
+  }
+  if (entry.label !== undefined) {
+    cls.push(`label=${entry.label}`)
+  }
+  if (cls.length > 0) {
+    return cls.join(' ')
+  }
+  return undefined
+}
+
+function entryLabel(entry: maa.RecoDetailEntry): string {
+  const value = entryValue(entry)
+  return `[${entry.box.join(',')}]${value ? ` ${value}` : ''}${entry.text ? ` "${entry.text}"` : ''}`
+}
+
 function buildTree(
   detail: maa.RecoDetailWithoutDraws,
   leaves: Record<string, RichRecoDetailEntry>,
@@ -34,7 +62,7 @@ function buildTree(
       }
       return {
         key: `${key}.${sub}`,
-        label: `[${entry.box.join(',')}] ${(entry.score ?? 0).toFixed(4)}${entry.text ? ` "${entry.text}"` : ''}`
+        label: entryLabel(entry)
       } satisfies TreeOption
     }
     childs = []
@@ -116,10 +144,10 @@ useDrawStep((ctx, vp) => {
     if (!name.startsWith('@mse/')) {
       ctx.fillText(name.slice(0, -1), ...box.rt.add(Size.from(5, 0)).flat())
     }
-    if (entry.score) {
-      const text = entry.score.toFixed(2)
-      const width = ctx.measureText(text).width
-      ctx.fillText(text, ...box.lt.sub(Size.from(width, 0)).flat())
+    const value = entryValue(entry)
+    if (value) {
+      const width = ctx.measureText(value).width
+      ctx.fillText(value, ...box.lt.sub(Size.from(width, 0)).flat())
     }
 
     if (entry.text) {

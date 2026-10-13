@@ -39,7 +39,7 @@
 - **裁剪**: 基于 Canvas 的图像裁剪（`Ctrl` + 拖拽创建裁剪框，滚轮缩放，中键拖拽平移）
 - **OCR**: 在图像上执行文字识别
 - **模板匹配**: 使用自定义模板进行图像匹配
-- **识别测试**: 运行 pipeline 识别测试
+- **识别测试**: 运行 pipeline 识别测试；识别详情树与画布标注按算法展示对应字段（TemplateMatch 的 `score`、FeatureMatch / ColorMatch 的 `count`、OCR 的 `text`、`NeuralNetworkClassify` / `NeuralNetworkDetect` 的 `cls_index` / `label`），某算法没有的字段不显示占位值，Custom 的 `detail` 只在下方 JSON 中查看
 - **可视化设置**: ROI 编辑、绿色蒙版、颜色阈值；识别详情为空时跳过绘制；设置项按保存、裁剪框、视图与指示线、取色与匹配、结果显示分组展示；支持通过文件夹选择器自定义下载保存目录，未设置时按 `imageSuffix` 保存到资源 image 目录（MAA 下为 template 目录）、无资源配置时弹出另存为对话框
 - **主题适配**: Canvas 背景始终跟随 VS Code 编辑器背景色，并使用主题边框界定可交互区域；不提供独立背景色配置
 - **交互引导**: 无图时画布显示载入图像引导；有图时常驻显示操作提示；取色/框选/涂绿模式激活时在画布顶部显示模式横幅

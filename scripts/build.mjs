@@ -4,7 +4,9 @@ import os from 'node:os'
 import path from 'node:path'
 import { build as viteBuild } from 'vite'
 
-import { buildChain } from './utils.mjs'
+import { buildChain, verifyExtensionIcon } from './utils.mjs'
+
+await verifyExtensionIcon(path.join(import.meta.dirname, '../release'))
 
 await buildChain([
   'pkgs/simple-parser',

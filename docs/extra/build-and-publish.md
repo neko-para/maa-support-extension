@@ -97,6 +97,8 @@ simple-parser → maa-tasker → maa-locale → maa-version-manager → maa-pipe
 
 **构建产物目录**: `release/` — 插件打包根目录。`package.json`、`README.md`、`images/`、`out/`（编译后的扩展代码）、`webview/`（Vite 构建产物）、`server/`（maa-server）等均位于此目录。修改插件的 `contributes`（命令、配置项、视图等）或 `engines` 等清单字段时，应修改 `release/package.json`，而非源码 `pkgs/extension/package.json`。
 
+**图标**: `release/package.json` 的 `icon` 必须是不小于 128x128 且不超过 1 MB 的 PNG，超出时市场服务端会拒收（`vsce package` 本地不报错，只在发布时才失败）。`scripts/build.mjs` 构建前用 `verifyExtensionIcon` 校验这两项，超限直接中断构建。
+
 **发布目标**: VSCode Marketplace 和 Open VSX，扩展标识均为 `nekosu.maa-support`。两个市场复用同一个 `.vsix` 构建产物，并通过相互独立的 CI job 发布，单个市场发布失败不会阻止另一个市场的发布 job 启动。
 
 **CI secrets**:

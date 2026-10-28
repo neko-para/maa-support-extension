@@ -4,21 +4,15 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import test from 'node:test'
 
+import { collectTests } from '../src/test/collect.ts'
 import { evaluateCase } from '../src/test/evaluate.ts'
-import { filterGroupsForFiles } from '../src/test/filter.ts'
-import { collectTests } from '../src/test/list.ts'
+import { captureTestFileReads, loadTestCases, readTestFile } from '../src/test/files.ts'
 import { expandTestGroups } from '../src/test/plan.ts'
 import { TestRunProgress } from '../src/test/progress.ts'
-import { buildRunTargets } from '../src/test/targets.ts'
+import { buildRunTargets, filterGroupsForFiles } from '../src/test/selection.ts'
 import type { TestRunEvent } from '../src/test/types.ts'
 import type { FullConfig } from '../src/types/config.ts'
-import {
-  captureTestFileReads,
-  loadTestCases,
-  pathKey,
-  readTestFile,
-  samePath
-} from '../src/utils/tools.ts'
+import { pathKey, samePath } from '../src/utils/paths.ts'
 
 test('Windows比较键按win32规则解析并忽略大小写和分隔符，不改输入字符串', () => {
   const original = 'C:\\Repo\\tests\\..\\tests\\A.json'

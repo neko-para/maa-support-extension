@@ -3,13 +3,13 @@ import assert from 'node:assert/strict'
 import * as path from 'node:path'
 import test from 'node:test'
 
-import type { RunTarget } from '../src/test/filter.ts'
+import type { RunTarget } from '../src/test/selection.ts'
 import type { TestRunEvent } from '../src/test/types.ts'
 
 test('配置缺失的前置错误也合并重复targets，完整发布两个选择后才结束文件', async () => {
   const { runTestDetailed } = await createJiti(import.meta.url, { fsCache: false }).import<
-    typeof import('../src/test/index')
-  >('../src/test/index.ts')
+    typeof import('../src/test/run')
+  >('../src/test/run.ts')
   const file = path.resolve('early-error-tests/selected.json')
   const target: RunTarget = {
     file,

@@ -1,8 +1,9 @@
 import * as path from 'node:path'
 
 import type { CaseOrigin, TestCases } from '../types/config'
-import { pathKey, samePath } from '../utils/tools.ts'
+import { pathKey, samePath } from '../utils/paths.ts'
 import { buildGroupRunResult, evaluateCase } from './evaluate.ts'
+import { distributeImageDurations } from './images.ts'
 import { buildTestRunResult } from './report.ts'
 import type {
   ListedFile,
@@ -13,7 +14,6 @@ import type {
   TestRunOptions,
   TestRunResult
 } from './types'
-import { distributeImageDurations } from './utils.ts'
 
 function originKey(origin: CaseOrigin) {
   return JSON.stringify([pathKey(origin.file), origin.case])

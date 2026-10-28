@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 
 import type { TestCases } from '../types/config'
-import { samePath } from '../utils/tools.ts'
+import { samePath } from '../utils/paths.ts'
 import type {
   CaseVerdict,
   ListedCase,

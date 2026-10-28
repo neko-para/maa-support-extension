@@ -1,14 +1,15 @@
 import * as path from 'node:path'
 
 import type { FullConfig, TestCases } from '../types/config'
+import { pathKey } from '../utils/paths.ts'
+import { captureTestFileReads, isCaseOrigin, readTestFile } from './files.ts'
 import {
-  captureTestFileReads,
-  isCaseOrigin,
-  pathKey,
-  readTestFile,
-  samePath
-} from '../utils/tools.ts'
-import { TestSourceError, filterGroupsForFiles, withGroupNodes } from './filter.ts'
+  TestSourceError,
+  filesForTargets,
+  filterGroupsByPlatform,
+  filterGroupsForFiles,
+  withGroupNodes
+} from './selection.ts'
 import type { ListedFile, TestRunOptions } from './types'
 
 export class TestPlanError extends Error {
@@ -56,56 +57,6 @@ function validateGroup(value: unknown): TestCases {
     )
   }
   return withGroupNodes(group)
-}
-
-function selectedFile(
-  target: NonNullable<TestRunOptions['targets']>[number],
-  groups?: readonly TestCases[]
-): ListedFile {
-  const { selected, ...file } = target
-  const actual = groups
-    ? new Set(
-        groups.flatMap(group =>
-          group.cases.flatMap(testCase =>
-            testCase.origin && samePath(testCase.origin.file, target.file)
-              ? [testCase.origin.case]
-              : []
-          )
-        )
-      )
-    : undefined
-  return {
-    ...file,
-    file: path.resolve(target.file),
-    cases: target.cases.filter(testCase =>
-      selected !== undefined
-        ? selected.includes(testCase.index)
-        : actual === undefined || actual.has(testCase.index)
-    )
-  }
-}
-
-export function filesForTargets(
-  targets: NonNullable<TestRunOptions['targets']>,
-  groups?: readonly TestCases[]
-): ListedFile[] {
-  const files = new Map<string, ListedFile>()
-  for (const target of targets) {
-    const listed = selectedFile(target, groups)
-    const key = pathKey(listed.file)
-    const previous = files.get(key)
-    if (!previous) {
-      files.set(key, listed)
-      continue
-    }
-    const cases = new Map(previous.cases.map(testCase => [testCase.index, testCase]))
-    for (const testCase of listed.cases) {
-      if (!cases.has(testCase.index)) cases.set(testCase.index, testCase)
-    }
-    previous.cases = [...cases.values()].sort((left, right) => left.index - right.index)
-    if (listed.error && !previous.error) previous.error = listed.error
-  }
-  return [...files.values()]
 }
 
 async function filesForGroups(
@@ -183,15 +134,7 @@ export async function expandTestGroups(
       : [...reads.values()].filter(file => file.error)
     throw loaded.error
   }
-  const all = loaded.groups
-  const inList = (list: readonly string[] | undefined, value: string) =>
-    !list || list.length === 0 || list.includes(value)
-  const groups = all.filter(
-    group =>
-      group.cases.length > 0 &&
-      inList(options.controllers, group.configs.controller) &&
-      inList(options.resources, group.configs.resource)
-  )
+  const groups = filterGroupsByPlatform(loaded.groups, options)
   if (!options.targets || options.targets.length === 0) {
     return { groups, files: await filesForGroups(groups, reads) }
   }

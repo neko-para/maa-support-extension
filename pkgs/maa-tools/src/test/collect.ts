@@ -1,16 +1,10 @@
 import * as path from 'node:path'
 
 import type { FullConfig } from '../types/config'
-import { isCaseOrigin, parseTestContent, pathKey, readTestFile } from '../utils/tools.ts'
+import { pathKey } from '../utils/paths.ts'
+import { isCaseOrigin, readTestFile } from './files.ts'
 import { expandTestGroups } from './plan.ts'
 import type { TestCollection, TestRunOptions } from './types'
-
-export { normalizeHits, normalizeName, normalizeStringList } from '../utils/tools.ts'
-export type { ListedCase, ListedFile, ListedFileBody, TestCollection } from './types'
-
-export function listTestContent(content: string) {
-  return parseTestContent(content).body
-}
 
 /** 收集实际配置展开出的来源，不初始化 MaaFW，不额外扫描约定目录。 */
 export async function collectTests(

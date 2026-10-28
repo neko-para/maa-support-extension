@@ -10,7 +10,7 @@ import type { TestCliOptions } from '../src/cli-args.ts'
 
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
-const toolsSource = new URL('../src/utils/tools.ts', import.meta.url).href
+const filesSource = new URL('../src/test/files.ts', import.meta.url).href
 const entry = `
   import { createJiti } from 'jiti';
   const { runCli, runCliFromArgs } = await createJiti(import.meta.url, { fsCache: false }).import(process.env.MAA_CLI_TEST_SOURCE);
@@ -128,7 +128,7 @@ test('list 从实际配置收集，并记录配置顶层加载的好文件和坏
   await fs.writeFile(
     path.join(root, 'custom.mts'),
     `
-    import { loadTestCases } from ${JSON.stringify(toolsSource)};
+    import { loadTestCases } from ${JSON.stringify(filesSource)};
     const chosen = await loadTestCases(${JSON.stringify(selected)});
     await loadTestCases(${JSON.stringify(broken)});
     export default { cwd: ${JSON.stringify(root)}, interfacePath: 'unused', test: { cases: [chosen] } };
@@ -159,7 +159,7 @@ test('人类列表与 JSON 清单同源，保留筛选后的原始下标和配�
   await fs.writeFile(
     path.join(root, 'maatools.config.mts'),
     `
-    import { loadTestCases } from ${JSON.stringify(toolsSource)};
+    import { loadTestCases } from ${JSON.stringify(filesSource)};
     const cfg = {
       cwd: ${JSON.stringify(root)}, mode: 'stdio', interfacePath: 'unused',
       test: { cases: async () => {

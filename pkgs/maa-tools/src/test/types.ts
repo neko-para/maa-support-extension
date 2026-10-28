@@ -1,5 +1,5 @@
 import type { CaseOrigin } from '../types/config'
-import type { RunTarget } from './filter'
+import type { RunTarget } from './selection'
 
 export type { CaseOrigin } from '../types/config'
 

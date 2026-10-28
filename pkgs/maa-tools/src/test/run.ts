@@ -12,11 +12,11 @@ import type { FullConfig, TestCases } from '../types/config'
 import { loadBundle } from '../utils/bundle'
 import { setupMaa } from '../utils/maa'
 import { buildGroupRunResult, evaluateCase, groupNameOf } from './evaluate'
-import { TestSourceError } from './filter'
+import { createRecoJobs, resolveTestImagePath } from './images'
 import { createRunLogDir, releaseRunLogDir, testLogRoot } from './log-dir'
-import { TestPlanError, expandTestGroups, filesForTargets } from './plan'
+import { TestPlanError, expandTestGroups } from './plan'
 import { TestRunProgress } from './progress'
-import { compareTestCases, getDefaultTestJobCount, groupResourcePlans } from './schedule'
+import { TestSourceError, filesForTargets } from './selection'
 import type {
   CaseCheckResult,
   ListedFile,
@@ -26,26 +26,36 @@ import type {
   TestRunOptions,
   TestRunResult
 } from './types'
-import { createRecoJobs, resolveTestImagePath } from './utils'
 
-export { collectTests } from './list'
-export type {
-  CaseCheckResult,
-  CaseOrigin,
-  CaseVerdict,
-  CheckFailureReason,
-  ListedCase,
-  ListedFile,
-  TestCaseRunResult,
-  TestCollection,
-  TestFileCaseResult,
-  TestFileRunResult,
-  TestGroupRunResult,
-  TestRunEvent,
-  TestRunOptions,
-  TestRunResult,
-  TestRunStatus
-} from './types'
+type ResourcePlan = {
+  resourcePaths: readonly string[]
+}
+
+export function getDefaultTestJobCount(cpuCount: number) {
+  return Math.max(1, Math.floor(cpuCount / 4))
+}
+
+export function compareTestCases(left: TestCases, right: TestCases) {
+  const controllerOrder = left.configs.controller.localeCompare(right.configs.controller)
+  if (controllerOrder !== 0) {
+    return controllerOrder
+  }
+  return left.configs.resource.localeCompare(right.configs.resource)
+}
+
+export function groupResourcePlans<T extends ResourcePlan>(plans: readonly T[]) {
+  const groups = new Map<string, T[]>()
+  for (const plan of plans) {
+    const key = JSON.stringify(plan.resourcePaths)
+    const group = groups.get(key)
+    if (group) {
+      group.push(plan)
+    } else {
+      groups.set(key, [plan])
+    }
+  }
+  return [...groups.values()]
+}
 
 type GroupRunPlan = {
   groupIndex: number

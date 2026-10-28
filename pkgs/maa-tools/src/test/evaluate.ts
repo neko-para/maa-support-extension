@@ -6,9 +6,17 @@ import type {
   TestCaseRunResult,
   TestGroupRunResult
 } from './types'
-import { checkRect } from './utils.ts'
 
 type TestCase = TestCases['cases'][number]
+
+function checkRect(expect: maa.Rect, real: maa.Rect) {
+  return (
+    real[0] >= expect[0] &&
+    real[1] >= expect[1] &&
+    real[0] + real[2] <= expect[0] + expect[2] &&
+    real[1] + real[3] <= expect[1] + expect[3]
+  )
+}
 
 /** 用完整节点集合判定用例；没有返回结果的节点也必须留下失败检查。 */
 export function evaluateCase(

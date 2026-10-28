@@ -12,7 +12,7 @@ import type { TestRunEvent, TestRunResult } from '../src/test/types.ts'
 type StreamRecord = TestRunEvent | { schemaVersion: 1; type: 'run-result'; result: TestRunResult }
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
-const toolsSource = new URL('../src/utils/tools.ts', import.meta.url).href
+const filesSource = new URL('../src/test/files.ts', import.meta.url).href
 const entry = `
   import { createJiti } from 'jiti';
   if (process.send || process.channel) throw new Error('测试只能使用标准输入输出');
@@ -39,7 +39,7 @@ async function fixture(t: TestContext, count = 3, name = '用例名称') {
   await fs.writeFile(
     path.join(root, 'maatools.config.mts'),
     `
-    import { loadTestCases } from ${JSON.stringify(toolsSource)};
+    import { loadTestCases } from ${JSON.stringify(filesSource)};
     console.log('CONFIG_LOG');
     console.info('CONFIG_INFO');
     process.stdout.write('CONFIG_DIRECT_WRITE\\n');

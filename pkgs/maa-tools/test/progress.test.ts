@@ -3,6 +3,7 @@ import * as path from 'node:path'
 import test from 'node:test'
 
 import { groupVerdict } from '../src/test/evaluate.ts'
+import { createRecoJobs } from '../src/test/images.ts'
 import { TestRunProgress } from '../src/test/progress.ts'
 import type {
   ListedFile,
@@ -12,7 +13,6 @@ import type {
   TestRunEvent,
   TestRunResult
 } from '../src/test/types.ts'
-import { createRecoJobs } from '../src/test/utils.ts'
 import type { TestCases } from '../src/types/config.ts'
 
 const fileA = path.resolve('live-tests/a.json')

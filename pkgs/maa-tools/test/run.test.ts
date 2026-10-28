@@ -1,12 +1,13 @@
+import { createJiti } from 'jiti'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import {
-  compareTestCases,
-  getDefaultTestJobCount,
-  groupResourcePlans
-} from '../src/test/schedule.ts'
 import type { TestCases } from '../src/types/config'
+
+const { compareTestCases, getDefaultTestJobCount, groupResourcePlans } = await createJiti(
+  import.meta.url,
+  { fsCache: false }
+).import<typeof import('../src/test/run')>('../src/test/run.ts')
 
 function testCases(controller: string, resource: string): TestCases {
   return {

@@ -2,8 +2,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
-import { makeFakeController, toArrayBuffer } from '../utils'
-import { loadMaa } from '../utils/maa'
+import { loadMaa, makeFakeController, toArrayBuffer } from '../utils/maa'
 import type { RecoJob, RecoJobOutcome, RecoResult } from './types'
 
 await loadMaa(

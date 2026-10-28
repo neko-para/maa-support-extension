@@ -3,20 +3,11 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 
-import type { ListedCase, ListedFile, ListedFileBody } from '../test/types'
 import type { CaseOrigin, TestCases } from '../types/config'
+import { pathKey } from '../utils/paths.ts'
+import type { ListedCase, ListedFile, ListedFileBody } from './types'
 
 const testFileReads = new AsyncLocalStorage<Map<string, ListedFile>>()
-
-/** 文件身份比较键；只用于查找和去重，不用于显示或改写返回路径。 */
-export function pathKey(file: string, platform: NodeJS.Platform = process.platform): string {
-  const resolved = (platform === 'win32' ? path.win32 : path.posix).resolve(file)
-  return platform === 'win32' ? resolved.toLowerCase() : resolved
-}
-
-export function samePath(left: string, right: string): boolean {
-  return pathKey(left) === pathKey(right)
-}
 
 export function isCaseOrigin(value: unknown): value is CaseOrigin {
   const origin = value as Partial<CaseOrigin> | null

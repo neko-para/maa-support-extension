@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { buildGroupRunResult, evaluateCase, groupVerdict } from '../src/test/evaluate.ts'
+import { createRecoJobs, distributeImageDurations } from '../src/test/images.ts'
 import type {
   CaseCheckResult,
   CaseVerdict,
   RecoResult,
   TestCaseRunResult
 } from '../src/test/types.ts'
-import { createRecoJobs, distributeImageDurations } from '../src/test/utils.ts'
 import type { TestCases } from '../src/types/config.ts'
 
 type TestCase = TestCases['cases'][number]

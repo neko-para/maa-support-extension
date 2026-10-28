@@ -1,7 +1,7 @@
 import * as path from 'node:path'
 
 import type { FullConfig } from '../types/config'
-import { isCaseOrigin, parseTestContent, readTestFile } from '../utils/tools.ts'
+import { isCaseOrigin, parseTestContent, pathKey, readTestFile } from '../utils/tools.ts'
 import { expandTestGroups } from './plan.ts'
 import type { TestCollection, TestRunOptions } from './types'
 
@@ -43,11 +43,16 @@ export async function collectTests(
   )
   let collected = expanded.files
   if (files.length > 0) {
-    const requested = [...new Set(files.map(file => path.resolve(cfg.cwd ?? process.cwd(), file)))]
-    const actual = new Map(collected.map(file => [file.file, file]))
+    const requested = new Map<string, string>()
+    for (const file of files) {
+      const absolute = path.resolve(cfg.cwd ?? process.cwd(), file)
+      const key = pathKey(absolute)
+      if (!requested.has(key)) requested.set(key, absolute)
+    }
+    const actual = new Map(collected.map(file => [pathKey(file.file), file]))
     collected = []
-    for (const file of requested) {
-      const listed = actual.get(file)
+    for (const [key, file] of requested) {
+      const listed = actual.get(key)
       if (listed) {
         collected.push(listed)
       } else {

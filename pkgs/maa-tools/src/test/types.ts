@@ -110,7 +110,7 @@ export type TestFileCaseResult = ListedCase & {
 export type TestFileRunResult = Omit<ListedFile, 'cases'> & {
   /** 计划阶段确定的原始下标，cases 必须完整覆盖。 */
   selectedCases: number[]
-  verdict: 'pass' | 'fail' | 'error'
+  verdict: 'pass' | 'fail' | 'error' | 'skipped'
   reason?: string
   cases: TestFileCaseResult[]
 }

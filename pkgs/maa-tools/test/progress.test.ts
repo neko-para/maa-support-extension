@@ -423,7 +423,8 @@ test('先完成error/skip/空文件，后续fatal不会改写已发布事实和r
   assert.equal(final.files[1].reason, 'no-tests-verified')
   assert.equal(final.files[2].cases[1].verdict, 'error')
   assert.equal(final.files[2].cases[1].reason, 'later worker failure')
-  assert.equal(final.files[3].reason, 'no-tests-verified')
+  assert.equal(final.files[3].verdict, 'skipped')
+  assert.equal(final.files[3].reason, 'no-cases-selected')
   assert.equal(final.files[4].cases[0].reason, 'no-result')
   assertConsistent(events, final)
 })
@@ -530,4 +531,65 @@ test('没有onEvent就不构建快照；没有origin的库调用仍返回真实g
   assert.equal(final.status, 'passed')
   assert.deepEqual(final.files, [])
   assert.equal(final.groups.length, 1)
+})
+
+for (const verdict of ['pass', 'fail'] as const) {
+  test(`空文件的即时快照为empty/skip，另一文件${verdict}完成后保留真实整批结论`, async () => {
+    const events: TestRunEvent[] = []
+    const progress = coordinator([metadata(fileA, []), metadata(fileB)], [planned(fileB)], events)
+    await progress.initialize()
+    assert.equal(events.length, 1)
+    const first = events[0] as Extract<TestRunEvent, { type: 'file-result' }>
+    assert.equal(first.type, 'file-result')
+    assert.equal(first.file, fileA)
+    assert.equal(first.result.status, 'empty')
+    assert.equal(first.result.errorCode, 'no-tests-matched')
+    assert.equal(first.result.files[0].verdict, 'skipped')
+    assert.equal(first.result.files[0].reason, 'no-cases-selected')
+    assert.deepEqual(first.result.files[0].selectedCases, [])
+    await progress.startCase({ file: fileB, case: 0 })
+    await progress.recordCase(0, 0, caseResult(fileB, 0, verdict))
+    const final = await progress.finish()
+    assert.equal(final.status, verdict === 'pass' ? 'passed' : 'failed')
+    assert.equal(final.files[1].verdict, verdict)
+    assertConsistent(events, final)
+  })
+}
+
+test('所有文件过滤为空时每个快照和最终都为empty，文件跳过不冒充通过', async () => {
+  const events: TestRunEvent[] = []
+  const progress = coordinator([metadata(fileA, []), metadata(fileB, [])], [], events)
+  await progress.initialize()
+  const final = await progress.finish()
+  assert.equal(final.status, 'empty')
+  assert.equal(final.errorCode, 'no-tests-matched')
+  assert.deepEqual(
+    final.files.map(file => file.verdict),
+    ['skipped', 'skipped']
+  )
+  for (const event of completed(events)) assert.equal(event.result.status, 'empty')
+  assertConsistent(events, final)
+})
+
+test('空范围快照不误伤其它文件的真实坏文件或已选择却无计划的case', async () => {
+  const events: TestRunEvent[] = []
+  const bad = { ...metadata(path.resolve('live-tests/broken.json'), []), error: 'bad file' }
+  const progress = coordinator(
+    [metadata(fileA, []), metadata(fileB), metadata(fileC), bad],
+    [planned(fileB)],
+    events
+  )
+  await progress.initialize()
+  await progress.recordCase(0, 0, caseResult(fileB))
+  const final = await progress.finish()
+  assert.equal(final.status, 'error')
+  assert.equal(final.errorCode, 'test-file-error')
+  assert.equal(final.files[0].verdict, 'skipped')
+  assert.equal(final.files[1].verdict, 'pass')
+  assert.equal(final.files[2].verdict, 'error')
+  assert.deepEqual(final.files[2].selectedCases, [0])
+  assert.equal(final.files[2].cases[0].reason, 'no-result')
+  assert.equal(final.files[3].verdict, 'error')
+  assert.equal(final.files[3].reason, 'bad file')
+  assertConsistent(events, final)
 })

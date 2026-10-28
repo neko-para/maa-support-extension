@@ -1,6 +1,7 @@
 import * as path from 'node:path'
 
 import type { TestCases } from '../types/config'
+import { samePath } from '../utils/tools.ts'
 import type {
   CaseVerdict,
   ListedCase,
@@ -52,7 +53,7 @@ function summarizeCase(
     for (const result of group.cases) {
       if (
         result.origin &&
-        path.resolve(result.origin.file) === path.resolve(file.file) &&
+        samePath(result.origin.file, file.file) &&
         result.origin.case === testCase.index
       ) {
         platforms.push({ controller: group.controller, resource: group.resource, result })
@@ -65,9 +66,7 @@ function summarizeCase(
   const planned = (input.plannedGroups ?? []).filter(group =>
     group.cases.some(
       item =>
-        item.origin &&
-        path.resolve(item.origin.file) === path.resolve(file.file) &&
-        item.origin.case === testCase.index
+        item.origin && samePath(item.origin.file, file.file) && item.origin.case === testCase.index
     )
   )
   const missingCode =
@@ -124,6 +123,16 @@ function summarizeCase(
 }
 
 function summarizeFile(file: ListedFile, input: RunReportInput): TestFileRunResult {
+  if (!file.error && file.cases.length === 0) {
+    return {
+      ...file,
+      file: path.resolve(file.file),
+      selectedCases: [],
+      verdict: 'skipped',
+      reason: 'no-cases-selected',
+      cases: []
+    }
+  }
   const cases = file.cases.map(testCase => summarizeCase(file, testCase, input))
   const failed = cases.some(testCase => testCase.verdict === 'fail')
   const error = file.error || cases.some(testCase => testCase.verdict === 'error')

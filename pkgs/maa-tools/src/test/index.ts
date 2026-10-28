@@ -14,7 +14,7 @@ import { setupMaa } from '../utils/maa'
 import { buildGroupRunResult, evaluateCase, groupNameOf } from './evaluate'
 import { TestSourceError } from './filter'
 import { createRunLogDir, releaseRunLogDir, testLogRoot } from './log-dir'
-import { TestPlanError, expandTestGroups } from './plan'
+import { TestPlanError, expandTestGroups, filesForTargets } from './plan'
 import { TestRunProgress } from './progress'
 import { compareTestCases, getDefaultTestJobCount, groupResourcePlans } from './schedule'
 import type {
@@ -62,12 +62,7 @@ export async function runTestDetailed(
   options: TestRunOptions = {}
 ): Promise<TestRunResult> {
   const startedAt = performance.now()
-  let files: ListedFile[] = (options.targets ?? []).map(({ selected, ...file }) => ({
-    ...file,
-    cases: file.cases.filter(
-      testCase => selected === undefined || selected.includes(testCase.index)
-    )
-  }))
+  let files: ListedFile[] = filesForTargets(options.targets ?? [])
   let plannedGroups: TestCases[] = []
   let progress: TestRunProgress | undefined
   const createProgress = () =>

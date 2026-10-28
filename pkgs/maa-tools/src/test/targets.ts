@@ -1,6 +1,6 @@
 import * as path from 'node:path'
 
-import { readTestFile } from '../utils/tools.ts'
+import { pathKey, readTestFile } from '../utils/tools.ts'
 import type { RunTarget } from './filter'
 
 export class TestSelectionError extends Error {
@@ -13,7 +13,12 @@ export async function buildRunTargets(
   caseIndices?: number | readonly number[] | null,
   cwd: string = process.cwd()
 ): Promise<RunTarget[]> {
-  const paths = [...new Set(files.map(file => path.resolve(cwd, file)))]
+  const paths = new Map<string, string>()
+  for (const file of files) {
+    const absolute = path.resolve(cwd, file)
+    const key = pathKey(absolute)
+    if (!paths.has(key)) paths.set(key, absolute)
+  }
   const selected =
     caseIndices === null ||
     caseIndices === undefined ||
@@ -21,7 +26,7 @@ export async function buildRunTargets(
       ? undefined
       : [...new Set(typeof caseIndices === 'number' ? [caseIndices] : caseIndices)]
   if (selected !== undefined) {
-    if (paths.length !== 1) {
+    if (paths.size !== 1) {
       throw new TestSelectionError('--case 只能和单个 --file 一起用')
     }
     if (
@@ -32,7 +37,7 @@ export async function buildRunTargets(
     }
   }
   const targets: RunTarget[] = []
-  for (const file of paths) {
+  for (const file of paths.values()) {
     const { listed } = await readTestFile(file)
     if (
       !listed.error &&

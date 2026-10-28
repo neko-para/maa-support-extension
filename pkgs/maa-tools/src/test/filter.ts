@@ -1,7 +1,5 @@
-import * as path from 'node:path'
-
 import type { TestCases } from '../types/config'
-import { isCaseOrigin, normalizeHits } from '../utils/tools.ts'
+import { isCaseOrigin, normalizeHits, pathKey } from '../utils/tools.ts'
 import type { ListedFile } from './types'
 
 export type { CaseOrigin } from '../types/config'
@@ -36,7 +34,7 @@ export function filterGroupsForFiles(
     if (target.error) {
       continue
     }
-    const file = path.resolve(target.file)
+    const file = pathKey(target.file)
     if (selected.has(file) && selected.get(file) === undefined) {
       continue
     }
@@ -58,7 +56,7 @@ export function filterGroupsForFiles(
           `测试组 ${group.configs.name ?? `${group.configs.controller}:${group.configs.resource}`} 的用例缺少原始来源；按文件选择需要 loader 保留 loadTestCases 填写的 origin`
         )
       }
-      const file = path.resolve(origin.file)
+      const file = pathKey(origin.file)
       return selected.has(file) && (selected.get(file)?.has(origin.case) ?? true)
     })
     if (cases.length > 0) {

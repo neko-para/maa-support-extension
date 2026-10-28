@@ -1,6 +1,7 @@
 import * as path from 'node:path'
 
 import type { CaseOrigin, TestCases } from '../types/config'
+import { pathKey, samePath } from '../utils/tools.ts'
 import { buildGroupRunResult, evaluateCase } from './evaluate.ts'
 import { buildTestRunResult } from './report.ts'
 import type {
@@ -15,7 +16,7 @@ import type {
 import { distributeImageDurations } from './utils.ts'
 
 function originKey(origin: CaseOrigin) {
-  return JSON.stringify([path.resolve(origin.file), origin.case])
+  return JSON.stringify([pathKey(origin.file), origin.case])
 }
 
 type OriginState = {
@@ -60,7 +61,11 @@ export class TestRunProgress {
         file: absolute,
         cases: [...file.cases].sort((left, right) => left.index - right.index)
       }
-      this.files.set(absolute, { metadata, remaining: metadata.cases.length, emitted: false })
+      this.files.set(pathKey(absolute), {
+        metadata,
+        remaining: metadata.cases.length,
+        emitted: false
+      })
       for (const testCase of metadata.cases) {
         const origin = { file: absolute, case: testCase.index }
         this.origins.set(originKey(origin), {
@@ -118,10 +123,11 @@ export class TestRunProgress {
       groups: this.groupResults(
         result =>
           result.origin !== undefined &&
-          path.resolve(result.origin.file) === file.file &&
+          samePath(result.origin.file, file.file) &&
           (caseIndex === undefined || result.origin.case === caseIndex)
       ),
-      plannedGroups: this.plannedGroups,
+      // 空文件没有计划槽位，不能借其它文件的计划把该范围快照报成错误。
+      plannedGroups: cases.length === 0 ? [] : this.plannedGroups,
       durationMs: this.elapsed(),
       ...this.failure
     })
@@ -147,7 +153,7 @@ export class TestRunProgress {
       return
     }
     state.completed = true
-    const file = this.files.get(state.origin.file)!
+    const file = this.files.get(pathKey(state.origin.file))!
     file.remaining -= 1
     if (this.onEvent) {
       await this.emit({

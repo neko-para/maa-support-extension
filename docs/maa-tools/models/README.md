@@ -68,6 +68,8 @@ origin: {
 | `--controller <name>` | 可重复，按组配置的控制器原值选择                                                        |
 | `--resource <name>`   | 可重复，按组配置的资源原值选择                                                          |
 
+来源文件路径在 Windows 上规范化后按不区分大小写的方式匹配和去重；其他系统区分大小写。返回和显示路径保留原有大小写。
+
 过滤条件取交集。没有匹配为 `empty`，错误代码为 `no-tests-matched`，不初始化 MaaFramework。用例被 loader 排除后，显式请求它的下标也不会让它重新参与运行；结果会说明没有匹配。
 
 **选择用例不改变识别断言。** 每组完整待检查节点在过滤前固定。选一条截图，仍检查同组所有节点：该条 `hits` 写出的节点期望命中，没写出的节点期望不命中。需要的识别结果缺失时不能默认通过。
@@ -119,7 +121,7 @@ origin: {
 | `durationMs`          | 本次运行实际经过的时间                                 |
 | `errorCode`、`reason` | 可选的错误代码与说明，不要求调用方解析英文日志         |
 
-文件结果包含文件元数据、`selectedCases`、`verdict`、可选 `reason` 和 `cases`。`selectedCases` 是本次计划运行的原始下标，`cases` 必须完整覆盖它；没有运行结果的计划用例保留明确错误，不能省略后让调用方猜通过。
+文件结果包含元数据、`selectedCases`、`verdict`（pass/fail/error/skipped）、可选 `reason` 和 `cases`。`selectedCases` 是本次计划下标，`cases` 必须完整覆盖它。过滤后本次 cases 为空且无文件错误时，文件为 `skipped`，reason 为 `no-cases-selected`，两数组均为空；有计划却缺结果不能改成跳过。
 
 文件下每条用例包含源码元数据、`verdict`、`durationMs`、可选 `reason`，以及 `platforms`。平台项包含 `controller`、`resource` 和实际 `result`，其中给出单个 `origin`、`imagePath`、`checks` 和识别时间。已解析的图片路径为绝对路径；尚未执行的 error 占位结果可以用空字符串表示还没有实际路径。平台来自配置实际展开的组，不能从源文件声明中的所有控制器和资源组合补造。
 
@@ -129,8 +131,8 @@ origin: {
 
 - 单平台用例：检查决定 pass/fail，应返回却缺失节点结果也为 fail；缺图为 skipped；没有待检查节点或计划未能执行为 error。没有结果不当成未命中，识别无明细会报错。用例设置了期望框时，识别必须返回实际框且完整落在期望框内；未设置期望框则不检查框。
 - 跨平台用例：fail 优先，其次 error；没有失败但有缺图平台时为 skipped，其余为 pass。
-- 文件：有用例失败为 fail，其次 error；至少有一个平台完成有效检查、其余仅缺图跳过时可 pass；没有有效检查为 error。
-- 整批：error 优先于 failed，再是 passed；没有匹配用例为 empty。无文件来源的全量调用按实际组结果汇总，不能因 `files` 为空就判 empty。
+- 文件：无文件错误且过滤后本次没有用例时为 skipped；其余有用例失败为 fail，其次 error。至少一个平台完成有效检查、其余仅缺图时可 pass；坏文件、缺结果或全缺图无验证仍为 error。
+- 整批：error 优先于 failed，再是 passed；过滤后的空文件不影响其他文件的真实通过或失败，全部过滤为空仍为 empty。无文件来源的全量调用按实际组结果汇总，不能因 `files` 为空就判 empty。
 
 例如 A 平台有效检查通过、B 平台缺图：该用例汇总为 skipped，文件可以通过，但必须列明 B 未验证。所有聚合用例均为 skipped 不等于所有平台都没有验证；调用方直接使用框架给出的文件 verdict。所有平台均缺图，或没有有效检查，则不能返回 passed；纯缺图和没有节点可检查时也无需初始化 MaaFramework。
 

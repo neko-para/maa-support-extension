@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import * as path from 'node:path'
 import test from 'node:test'
 
+import { buildGroupRunResult } from '../src/test/evaluate.ts'
+import { expandTestGroups } from '../src/test/plan.ts'
 import { buildTestRunResult } from '../src/test/report.ts'
 import type { ListedFile, TestCaseRunResult, TestGroupRunResult } from '../src/test/types.ts'
 import type { TestCases } from '../src/types/config.ts'
@@ -238,4 +240,116 @@ test('实际计划有平台但执行未返回，补准确平台error；启动错
   assert.deepEqual(report.files[0].selectedCases, [0])
   assert.equal(report.files[0].cases[0].reason, '准备失败')
   assert.equal(report.files[0].cases[0].platforms[0].result.error, 'maa-setup-failed')
+})
+
+for (const axis of ['controller', 'resource'] as const) {
+  for (const verdict of ['pass', 'fail'] as const) {
+    test(`${axis}过滤掉整个文件时跳过空文件，保留另一个文件的${verdict}`, async () => {
+      const first = { ...planned(fileA, [0], 'C2'), configs: { controller: 'C2', resource: 'R2' } }
+      const second = { ...planned(fileB, [0], 'C1'), configs: { controller: 'C1', resource: 'R1' } }
+      const expanded = await expandTestGroups(
+        { interfacePath: 'unused', test: { cases: [first, second] } },
+        {
+          targets: [metadata(fileA), metadata(fileB)],
+          ...(axis === 'controller' ? { controllers: ['C1'] } : { resources: ['R1'] })
+        }
+      )
+      const report = buildTestRunResult({
+        files: expanded.files,
+        groups: [buildGroupRunResult(expanded.groups[0], [result(fileB, 0, verdict)])],
+        plannedGroups: expanded.groups,
+        durationMs: 1
+      })
+      assert.equal(report.status, verdict === 'pass' ? 'passed' : 'failed')
+      assert.equal(report.errorCode, undefined)
+      assert.equal(report.files[0].verdict, 'skipped')
+      assert.equal(report.files[0].reason, 'no-cases-selected')
+      assert.deepEqual(report.files[0].selectedCases, [])
+      assert.deepEqual(report.files[0].cases, [])
+      assert.equal(report.files[1].verdict, verdict)
+    })
+  }
+}
+
+test('全部文件被平台过滤时仍为empty，空文件本身记跳过而非通过', async () => {
+  const expanded = await expandTestGroups(
+    { interfacePath: 'unused', test: { cases: [planned()] } },
+    {
+      targets: [metadata()],
+      controllers: ['excluded']
+    }
+  )
+  const report = buildTestRunResult({
+    files: expanded.files,
+    groups: [],
+    plannedGroups: expanded.groups,
+    durationMs: 0
+  })
+  assert.equal(report.status, 'empty')
+  assert.equal(report.errorCode, 'no-tests-matched')
+  assert.equal(report.files[0].verdict, 'skipped')
+  assert.equal(report.files[0].reason, 'no-cases-selected')
+})
+
+test('零case跳过不掩盖坏文件或另一个文件有选择却缺结果', () => {
+  const empty = metadata(fileA, [])
+  const bad = { ...metadata(fileB, []), error: 'bad file' }
+  const badReport = buildTestRunResult({ files: [empty, bad], groups: [], durationMs: 0 })
+  assert.equal(badReport.status, 'error')
+  assert.equal(badReport.errorCode, 'test-file-error')
+  assert.equal(badReport.files[1].verdict, 'error')
+  const missing = buildTestRunResult({
+    files: [empty, metadata(fileB)],
+    groups: [],
+    plannedGroups: [planned(fileB)],
+    durationMs: 0
+  })
+  assert.equal(missing.status, 'error')
+  assert.equal(missing.files[0].verdict, 'skipped')
+  assert.equal(missing.files[1].verdict, 'error')
+  assert.equal(missing.files[1].cases[0].verdict, 'error')
+})
+
+test('SDK重复文件目标合并选中下标，不能让进度的文件metadata被最后一个目标覆盖', async () => {
+  const expanded = await expandTestGroups(
+    { interfacePath: 'unused', test: { cases: [planned(fileA, [0, 2])] } },
+    {
+      targets: [
+        { ...metadata(fileA, [0, 2]), selected: [0] },
+        { ...metadata(fileA, [0, 2]), selected: [2] }
+      ]
+    }
+  )
+  assert.equal(expanded.files.length, 1)
+  assert.deepEqual(
+    expanded.files[0].cases.map(testCase => testCase.index),
+    [0, 2]
+  )
+  const report = buildTestRunResult({
+    files: expanded.files,
+    groups: [group([result(fileA), result(fileA, 2)])],
+    plannedGroups: expanded.groups,
+    durationMs: 1
+  })
+  assert.equal(report.status, 'passed')
+  assert.deepEqual(report.files[0].selectedCases, [0, 2])
+})
+
+test('SDK重复文件目标去重仍保留任何一个目标的文件错误', async () => {
+  const expanded = await expandTestGroups(
+    { interfacePath: 'unused', test: { cases: [planned()] } },
+    {
+      targets: [metadata(), { ...metadata(fileA, []), error: 'bad file' }]
+    }
+  )
+  assert.equal(expanded.files.length, 1)
+  const report = buildTestRunResult({
+    files: expanded.files,
+    groups: [group([result()])],
+    plannedGroups: expanded.groups,
+    durationMs: 1
+  })
+  assert.equal(report.status, 'error')
+  assert.equal(report.errorCode, 'test-file-error')
+  assert.equal(report.files[0].error, 'bad file')
 })

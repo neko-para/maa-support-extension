@@ -1,7 +1,13 @@
 import * as path from 'node:path'
 
 import type { FullConfig, TestCases } from '../types/config'
-import { captureTestFileReads, isCaseOrigin, readTestFile } from '../utils/tools.ts'
+import {
+  captureTestFileReads,
+  isCaseOrigin,
+  pathKey,
+  readTestFile,
+  samePath
+} from '../utils/tools.ts'
 import { TestSourceError, filterGroupsForFiles, withGroupNodes } from './filter.ts'
 import type { ListedFile, TestRunOptions } from './types'
 
@@ -61,7 +67,7 @@ function selectedFile(
     ? new Set(
         groups.flatMap(group =>
           group.cases.flatMap(testCase =>
-            testCase.origin && path.resolve(testCase.origin.file) === path.resolve(target.file)
+            testCase.origin && samePath(testCase.origin.file, target.file)
               ? [testCase.origin.case]
               : []
           )
@@ -79,26 +85,52 @@ function selectedFile(
   }
 }
 
+export function filesForTargets(
+  targets: NonNullable<TestRunOptions['targets']>,
+  groups?: readonly TestCases[]
+): ListedFile[] {
+  const files = new Map<string, ListedFile>()
+  for (const target of targets) {
+    const listed = selectedFile(target, groups)
+    const key = pathKey(listed.file)
+    const previous = files.get(key)
+    if (!previous) {
+      files.set(key, listed)
+      continue
+    }
+    const cases = new Map(previous.cases.map(testCase => [testCase.index, testCase]))
+    for (const testCase of listed.cases) {
+      if (!cases.has(testCase.index)) cases.set(testCase.index, testCase)
+    }
+    previous.cases = [...cases.values()].sort((left, right) => left.index - right.index)
+    if (listed.error && !previous.error) previous.error = listed.error
+  }
+  return [...files.values()]
+}
+
 async function filesForGroups(
   groups: readonly TestCases[],
   reads: Map<string, ListedFile>
 ): Promise<ListedFile[]> {
-  const indexes = new Map<string, Set<number>>()
+  const indexes = new Map<string, { file: string; selected: Set<number> }>()
   for (const group of groups) {
     for (const testCase of group.cases) {
       const origin = testCase.origin
       if (!isCaseOrigin(origin)) {
         continue
       }
-      const file = path.resolve(origin.file)
-      const selected = indexes.get(file) ?? new Set<number>()
-      selected.add(origin.case)
-      indexes.set(file, selected)
+      const key = pathKey(origin.file)
+      const entry = indexes.get(key) ?? {
+        file: path.resolve(origin.file),
+        selected: new Set<number>()
+      }
+      entry.selected.add(origin.case)
+      indexes.set(key, entry)
     }
   }
   const files: ListedFile[] = []
-  for (const [file, selected] of indexes) {
-    const listed = reads.get(file) ?? (await readTestFile(file)).listed
+  for (const [key, { file, selected }] of indexes) {
+    const listed = reads.get(key) ?? (await readTestFile(file)).listed
     const missing = [...selected].filter(index => !listed.cases.some(item => item.index === index))
     files.push({
       ...listed,
@@ -109,7 +141,7 @@ async function filesForGroups(
     })
   }
   for (const listed of reads.values()) {
-    if (listed.error && !indexes.has(listed.file)) {
+    if (listed.error && !indexes.has(pathKey(listed.file))) {
       files.push(listed)
     }
   }
@@ -147,7 +179,7 @@ export async function expandTestGroups(
   })
   if (loaded.error) {
     loaded.error.files = options.targets?.length
-      ? options.targets.map(target => selectedFile(target))
+      ? filesForTargets(options.targets)
       : [...reads.values()].filter(file => file.error)
     throw loaded.error
   }
@@ -163,7 +195,7 @@ export async function expandTestGroups(
   if (!options.targets || options.targets.length === 0) {
     return { groups, files: await filesForGroups(groups, reads) }
   }
-  const files = options.targets.map(target => selectedFile(target, groups))
+  const files = filesForTargets(options.targets, groups)
   try {
     return { ...filterGroupsForFiles(groups, options.targets), files }
   } catch (error) {

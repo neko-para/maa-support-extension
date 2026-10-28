@@ -90,7 +90,6 @@ export type ListedFile = ListedFileBody & {
 }
 
 export type TestCollection = {
-  schemaVersion: 1
   files: ListedFile[]
   errorCode?: string
   reason?: string
@@ -118,9 +117,9 @@ export type TestFileRunResult = Omit<ListedFile, 'cases'> & {
 export type TestRunStatus = 'passed' | 'failed' | 'error' | 'empty'
 
 export type TestRunEvent =
-  | { schemaVersion: 1; type: 'case-started'; origin: CaseOrigin }
-  | { schemaVersion: 1; type: 'case-result'; origin: CaseOrigin; result: TestRunResult }
-  | { schemaVersion: 1; type: 'file-result'; file: string; result: TestRunResult }
+  | { type: 'case-started'; origin: CaseOrigin }
+  | { type: 'case-result'; origin: CaseOrigin; result: TestRunResult }
+  | { type: 'file-result'; file: string; result: TestRunResult }
 
 export type TestRunOptions = {
   targets?: readonly RunTarget[]
@@ -131,7 +130,6 @@ export type TestRunOptions = {
 }
 
 export type TestRunResult = {
-  schemaVersion: 1
   status: TestRunStatus
   errorCode?: string
   reason?: string

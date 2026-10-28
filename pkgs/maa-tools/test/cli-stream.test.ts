@@ -8,8 +8,9 @@ import test, { type TestContext } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import type { TestRunEvent, TestRunResult } from '../src/test/types.ts'
+import { assertNoSchemaVersion } from './assertions.ts'
 
-type StreamRecord = TestRunEvent | { schemaVersion: 1; type: 'run-result'; result: TestRunResult }
+type StreamRecord = TestRunEvent | { type: 'run-result'; result: TestRunResult }
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
 const filesSource = new URL('../src/test/files.ts', import.meta.url).href
@@ -106,12 +107,11 @@ async function run(root: string, args = ['test', '--jsonl']) {
 
 function finalOf(output: Awaited<ReturnType<typeof run>>) {
   assert.equal(output.signal, null, output.stderr)
+  assertNoSchemaVersion(output.records)
   assert.equal(output.records.filter(record => record.type === 'run-result').length, 1)
   const final = output.records.at(-1)!
   assert.equal(final.type, 'run-result')
-  assert.equal(final.schemaVersion, 1)
   assert.ok('result' in final)
-  assert.equal(final.result.schemaVersion, 1)
   return final.result
 }
 
@@ -178,9 +178,16 @@ test('配置、选择和执行展开错误也用 run-result，不混入裸 JSON'
     export default { interfacePath: 'unused', test: { cases: async () => { throw new Error('LOADER_BOOM'); } } };
   `
   )
+  await fs.writeFile(path.join(root, 'invalid.mts'), 'export default 17;')
+  await fs.writeFile(
+    path.join(root, 'malformed-cases.mts'),
+    `export default { interfacePath: 'unused', test: { cases: [null] } };`
+  )
   for (const [args, errorCode] of [
     [['test', '--jsonl', 'missing.mts'], 'config-load-failed'],
     [['test', '--jsonl', 'throwing.mts'], 'config-load-failed'],
+    [['test', '--jsonl', 'invalid.mts'], 'invalid-config'],
+    [['test', '--jsonl', 'malformed-cases.mts'], 'invalid-test-config'],
     [['test', '--jsonl', '--file', 'selected.json', '--case', '3'], 'invalid-case-selection'],
     [['test', '--jsonl', 'loader-error.mts'], 'test-cases-load-failed']
   ] as const) {
@@ -190,6 +197,35 @@ test('配置、选择和执行展开错误也用 run-result，不混入裸 JSON'
     assert.equal(output.records.length, 1)
     assert.equal(final.status, 'error')
     assert.equal(final.errorCode, errorCode)
+  }
+})
+
+test('缺 test、缺来源、坏文件和缺文件的进度及最终错误均保留完整报告', async t => {
+  const { root } = await fixture(t)
+  await fs.writeFile(
+    path.join(root, 'missing-test.mts'),
+    `export default { interfacePath: 'unused' };`
+  )
+  await fs.writeFile(
+    path.join(root, 'no-source.mts'),
+    `export default { interfacePath: 'unused', test: { cases: [{
+      configs: { controller: 'Desktop', resource: 'Local' },
+      cases: [{ image: 'missing.png', hits: ['A'] }]
+    }] } };`
+  )
+  await fs.writeFile(path.join(root, 'broken.json'), '{ invalid')
+  for (const [args, errorCode] of [
+    [['test', '--jsonl', 'missing-test.mts'], 'test-config-missing'],
+    [['test', '--jsonl', '--file', 'selected.json', 'no-source.mts'], 'test-source-missing'],
+    [['test', '--jsonl', '--file', 'broken.json'], 'test-file-error'],
+    [['test', '--jsonl', '--file', 'missing.json'], 'test-file-error']
+  ] as const) {
+    const output = await run(root, [...args])
+    const final = finalOf(output)
+    assert.equal(output.code, 1, output.stderr)
+    assert.equal(final.status, 'error')
+    assert.equal(final.errorCode, errorCode)
+    assert.ok(Number.isFinite(final.durationMs))
   }
 })
 

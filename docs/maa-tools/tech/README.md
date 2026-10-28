@@ -118,9 +118,11 @@ flowchart LR
 
 所有收集及 JSON 输出从配置加载前把 JavaScript 日志转到 stderr；收集列表、JSON 文档和流式记录使用保存的 stdout 出口。这个接管不拦截原生代码直接写文件描述符；识别进程另关闭原生 stdout 日志。
 
-选择 `--json` 或 `--jsonl` 后，参数、配置、测试文件、来源与运行错误都用相应机器格式输出。单独 `--list` 的错误只作文字说明，不混入 JSON；`--list --json` 保留完整错误 JSON。成功收集清单含 `schemaVersion` 和 `files`，顶层错误另带 `errorCode`、`reason` 等字段；两种列表都从同一 `collectTests` 结果格式化，不初始化 MaaFramework。运行报告仍使用完整 `TestRunResult`。
+选择 `--json` 或 `--jsonl` 后，参数、配置、测试文件、来源与运行错误都用相应机器格式输出。单独 `--list` 的错误只作文字说明，不混入 JSON；`--list --json` 保留完整错误 JSON。成功收集清单为 `{files: [...]}`，顶层错误另带 `errorCode`、`reason` 等字段；两种列表都从同一 `collectTests` 结果格式化，不初始化 MaaFramework。运行报告仍使用完整 `TestRunResult`。
 
 配置 `mode: 'json'` 控制内部日志输出，完整报告或逐行进度由 CLI 显式 `--json`、`--jsonl` 选择。`--version` 不加载配置并输出普通版本字符串。
+
+JSON 接口兼容性随 maa-tools 包版本管理，1.x 变更规则见[包版本与 JSON 兼容](../models/README.md#包版本与-json-兼容)。插件收集与运行读取已安装包的 `package.json` 检查稳定版 `>=1.2.0 <2.0.0`，不为每次操作额外执行 `--version`；状态栏仍优先查询 `--version`，并与兼容提示共用查询结果。包声明在范围内不能证明命令能运行，启动、退出和实际数据的必需结构、合法 `type`、来源覆盖及进度与最终结果一致性仍须检查。
 
 ## 即时事件与最终报告
 
@@ -132,7 +134,7 @@ flowchart LR
 
 事件队列串行等待 `onEvent`，识别任务仍按原计划并行。传给回调的是独立快照；回调抛错或拒绝时记录一次错误、停发后续事件，正式识别与最终结果继续。调用方不能依赖每个事件都必达，最终报告负责补全与核对。
 
-CLI 在 `--jsonl` 下把 `onEvent` 的三类进度依次写为标准输出行，最终再写唯一 `{schemaVersion: 1, type: 'run-result', result}`。`run-result` 由 CLI 写出，不属于框架的三类 `TestRunEvent`；参数或配置错误同样使用这个结束记录，包括原始参数含 `--jsonl` 的非法组合。
+CLI 在 `--jsonl` 下把 `onEvent` 的三类进度依次写为标准输出行，最终再写唯一 `{type: 'run-result', result}`。`run-result` 由 CLI 写出，不属于框架的三类 `TestRunEvent`；参数或配置错误同样使用这个结束记录，包括原始参数含 `--jsonl` 的非法组合。
 
 每行使用保存的 stdout 写入函数序列化，并等待标准流写入回调；日志走 stderr。扩展所有运行固定使用 `--jsonl`，子进程忽略标准输入，只使用标准输出和错误输出的管道。逐行解析处理分块、中文字符、Windows 换行（CRLF）、多行同块和大行，不能把一次 data 回调当成一条 JSON。
 
@@ -160,21 +162,22 @@ CLI 在 `--jsonl` 下把 `onEvent` 的三类进度依次写为标准输出行，
 
 测试文件按功能组织：
 
-| 文件（相对包目录）                                                           | 验证内容                                                        |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)       | 参数顺序、重复选项、原始下标和不支持的参数组合                  |
-| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置  |
-| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行            |
-| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围      |
-| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份      |
-| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误     |
-| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定            |
-| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标            |
-| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致          |
-| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                          |
-| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                |
-| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收          |
-| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐 |
+| 文件（相对包目录）                                                           | 验证内容                                                           |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [test/assertions.ts](../../../pkgs/maa-tools/test/assertions.ts)             | 递归检查清单、报告、快照与错误对象不含额外格式版本字段，供测试复用 |
+| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)       | 参数顺序、重复选项、原始下标和不支持的参数组合                     |
+| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置     |
+| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行               |
+| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围         |
+| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份         |
+| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误        |
+| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定               |
+| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标               |
+| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致             |
+| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                             |
+| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                   |
+| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收             |
+| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐    |
 
 ## 依赖与测试边界
 

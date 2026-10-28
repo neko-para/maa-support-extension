@@ -14,6 +14,7 @@ import type {
   TestRunResult
 } from '../src/test/types.ts'
 import type { TestCases } from '../src/types/config.ts'
+import { assertNoSchemaVersion } from './assertions.ts'
 
 const fileA = path.resolve('live-tests/a.json')
 const fileB = path.resolve('live-tests/b.json')
@@ -115,6 +116,8 @@ function matchingGroups(groups: TestGroupRunResult[], file: string, caseIndex?: 
 }
 
 function assertConsistent(events: TestRunEvent[], final: TestRunResult) {
+  assertNoSchemaVersion(events)
+  assertNoSchemaVersion(final)
   for (const event of completed(events)) {
     const file = event.type === 'case-result' ? event.origin.file : event.file
     const expected = final.files.find(result => result.file === file)

@@ -14,7 +14,6 @@ export async function collectTests(
 ): Promise<TestCollection> {
   if (!cfg.test) {
     return {
-      schemaVersion: 1,
       files: [],
       errorCode: 'test-config-missing',
       reason: '配置中缺少 test'
@@ -26,7 +25,6 @@ export async function collectTests(
   } catch (error) {
     const failure = error as { errorCode?: string; files?: TestCollection['files'] }
     return {
-      schemaVersion: 1,
       files: failure?.files ?? [],
       errorCode: failure?.errorCode ?? 'test-collection-failed',
       reason: error instanceof Error ? error.message : String(error)
@@ -60,7 +58,6 @@ export async function collectTests(
     }
   }
   return {
-    schemaVersion: 1,
     files: collected,
     ...(missingSources.length > 0
       ? {

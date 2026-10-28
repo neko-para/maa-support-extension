@@ -7,6 +7,7 @@ import test, { type TestContext } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import type { TestCliOptions } from '../src/cli-args.ts'
+import { assertNoSchemaVersion } from './assertions.ts'
 
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
@@ -48,19 +49,21 @@ function run(root: string, args: string[], directOptions?: TestCliOptions) {
 
 function payloadOf(child: ReturnType<typeof run>) {
   assert.notEqual(child.stdout.trim(), '', child.stderr)
+  let payload: ReturnType<typeof JSON.parse>
   try {
-    return JSON.parse(child.stdout)
+    payload = JSON.parse(child.stdout)
   } catch (error) {
     assert.fail(
       `stdout 不是一个完整 JSON：${child.stdout}\nstderr：${child.stderr}\n${String(error)}`
     )
   }
+  assertNoSchemaVersion(payload)
+  return payload
 }
 
 function assertError(child: ReturnType<typeof run>, errorCode: string) {
   const payload = payloadOf(child)
   assert.notEqual(child.status, 0)
-  assert.equal(payload.schemaVersion, 1)
   assert.equal(payload.status, 'error')
   assert.equal(payload.errorCode, errorCode)
   assert.ok(typeof payload.reason === 'string' && payload.reason.length > 0)
@@ -97,7 +100,7 @@ test('人类列表和 JSON 清单均从加载配置前把 console/stdout 日志�
     const child = run(root, ['test', ...flags, 'custom.mts'])
     assert.equal(child.status, 0, child.stderr)
     if (flags.includes('--json')) {
-      assert.deepEqual(payloadOf(child), { schemaVersion: 1, files: [] })
+      assert.deepEqual(payloadOf(child), { files: [] })
     } else {
       assert.equal(child.stdout, '没有收集到测试文件或用例。\n共 0 个文件，0 条用例。\n')
     }
@@ -233,7 +236,7 @@ test('runCli 直接调用也允许 list+json，并拒绝 list+case 和 jsonl 混
   assert.match(human.stdout, /没有收集到测试文件或用例/)
   const json = run(root, [], { list: true, json: true })
   assert.equal(json.status, 0, json.stderr)
-  assert.deepEqual(payloadOf(json), { schemaVersion: 1, files: [] })
+  assert.deepEqual(payloadOf(json), { files: [] })
   for (const options of [
     { json: true, jsonl: true },
     { list: true, jsonl: true }
@@ -297,7 +300,6 @@ test('普通运行没有 --case 时不报选择错误，零匹配返回 empty/no
   const child = run(root, ['test', '--json'])
   const payload = payloadOf(child)
   assert.equal(child.status, 1)
-  assert.equal(payload.schemaVersion, 1)
   assert.equal(payload.status, 'empty')
   assert.equal(payload.errorCode, 'no-tests-matched')
   assert.deepEqual(payload.groups, [])
@@ -370,6 +372,34 @@ test('缺少 test 或没有来源的程序组，list 返回完整错误而非不
   )
   assertError(run(root, ['test', '--list', '--json', 'missing-test.mts']), 'test-config-missing')
   assertError(run(root, ['test', '--list', '--json', 'no-source.mts']), 'collection-source-missing')
+  await fs.writeFile(path.join(root, 'selected.json'), testFileContent())
+  assertError(
+    run(root, ['test', '--json', '--file', 'selected.json', 'no-source.mts']),
+    'test-source-missing'
+  )
+})
+
+test('坏文件和缺文件的 JSON 清单及运行错误都保留文件信息', async t => {
+  const root = await fixture(t)
+  await fs.writeFile(path.join(root, 'broken.json'), '{ invalid')
+  await fs.writeFile(
+    path.join(root, 'maatools.config.mts'),
+    `export default { interfacePath: 'unused', test: { cases: [] } };`
+  )
+  for (const file of ['broken.json', 'missing.json']) {
+    for (const flags of [['--list', '--json'], ['--json']]) {
+      const child = run(root, ['test', ...flags, '--file', file])
+      const payload = payloadOf(child)
+      assert.equal(child.status, flags.includes('--list') ? 0 : 1, child.stderr)
+      assert.equal(payload.files[0].file, path.join(root, file))
+      assert.ok(payload.files[0].error)
+      assert.deepEqual(payload.files[0].cases, [])
+      if (!flags.includes('--list')) {
+        assert.equal(payload.status, 'error')
+        assert.equal(payload.errorCode, 'test-file-error')
+      }
+    }
+  }
 })
 
 test('--version 始终输出版本字符串，不需要配置也不输出 JSON', async t => {

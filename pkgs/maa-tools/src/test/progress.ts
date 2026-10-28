@@ -140,7 +140,6 @@ export class TestRunProgress {
     file.emitted = true
     if (this.onEvent) {
       await this.emit({
-        schemaVersion: 1,
         type: 'file-result',
         file: file.metadata.file,
         result: this.snapshot(file.metadata)
@@ -157,7 +156,6 @@ export class TestRunProgress {
     file.remaining -= 1
     if (this.onEvent) {
       await this.emit({
-        schemaVersion: 1,
         type: 'case-result',
         origin: state.origin,
         result: this.snapshot(file.metadata, state.origin.case)
@@ -185,7 +183,7 @@ export class TestRunProgress {
         return
       }
       state.started = true
-      await this.emit({ schemaVersion: 1, type: 'case-started', origin: state.origin })
+      await this.emit({ type: 'case-started', origin: state.origin })
     })
   }
 

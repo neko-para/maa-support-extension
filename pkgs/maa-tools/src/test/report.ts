@@ -161,7 +161,7 @@ function summarizeFile(file: ListedFile, input: RunReportInput): TestFileRunResu
 export function buildTestRunResult(input: RunReportInput): TestRunResult {
   const groups = [...input.groups]
   const files = input.files.map(file => summarizeFile(file, input))
-  const base = { schemaVersion: 1 as const, groups, files, durationMs: input.durationMs }
+  const base = { groups, files, durationMs: input.durationMs }
   if (input.errorCode && input.errorCode !== 'no-tests-matched') {
     return {
       ...base,

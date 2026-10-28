@@ -84,7 +84,7 @@ export async function runCliFromArgs(argv: readonly string[]): Promise<number> {
   if (!invocation) {
     if (jsonl || argv.includes('--json')) {
       const result = errorResult('invalid-cli-arguments', reason, startedAt)
-      await emitJson(jsonl ? { schemaVersion: 1, type: 'run-result', result } : result)
+      await emitJson(jsonl ? { type: 'run-result', result } : result)
     }
     return 2
   }
@@ -94,7 +94,7 @@ export async function runCliFromArgs(argv: readonly string[]): Promise<number> {
     console.error(error)
     if (invocation.cmd === 'test' && (jsonl || invocation.options.json)) {
       const result = errorResult(errorCodeOf(error, 'cli-failed'), describeError(error), startedAt)
-      await emitJson(jsonl ? { schemaVersion: 1, type: 'run-result', result } : result)
+      await emitJson(jsonl ? { type: 'run-result', result } : result)
     }
     return 1
   }
@@ -236,7 +236,7 @@ async function runConfiguredTest(
     stage = 'test-execution-failed'
     if (options.json || options.jsonl) {
       const result = await runTestDetailed(resolved, runOptions)
-      await emitJson(options.jsonl ? { schemaVersion: 1, type: 'run-result', result } : result)
+      await emitJson(options.jsonl ? { type: 'run-result', result } : result)
       return result.status === 'passed'
     }
     return await runTest(resolved, runOptions)
@@ -249,7 +249,7 @@ async function runConfiguredTest(
         startedAt,
         errorFiles(error)
       )
-      await emitJson(options.jsonl ? { schemaVersion: 1, type: 'run-result', result } : result)
+      await emitJson(options.jsonl ? { type: 'run-result', result } : result)
     }
     return false
   }

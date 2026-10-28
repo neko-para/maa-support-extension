@@ -4,7 +4,7 @@
 
 ## 包与使用者
 
-`@nekosu/maa-tools` 为 Maa pipeline 开发者提供命令行检查和识别测试，也可用于仓库的自动检查。实际版本见包的 `package.json`，或执行 `maa-tools --version`。
+`@nekosu/maa-tools` 为 Maa pipeline 开发者提供命令行检查和识别测试，也可用于仓库的自动检查。实际版本见包的 `package.json`，或执行 `maa-tools --version`。配套 1.2.0 当前是待发布代码版本，不能据此认为 npm 已提供该版本；SDK 与节点测试插件的配套 PR 须共同合并并发版。
 
 ## Pipeline 检查
 
@@ -41,6 +41,12 @@ npx @nekosu/maa-tools test [config-path] --jsonl --file tests/example/test_examp
 ```
 
 测试的定义来自配置中的 `test.cases`，可以是数组或异步函数。收集和运行都加载该配置并展开用例；收集不初始化 MaaFramework、不运行识别，也不以某个固定目录扫描代替实际配置。
+
+### 包版本与 JSON 兼容
+
+收集清单、运行报告和逐行记录的兼容性随 `@nekosu/maa-tools` 包版本管理。配套节点测试插件接受稳定版 `>=1.2.0 <2.0.0`，允许 `v` 前缀和构建元数据，不接受预发布版、未知或格式无效的版本。新主版本须等插件明确支持后才接收。
+
+1.x 内可以增加旧调用方可忽略的可选字段。改名、删除必需字段、改变字段类型或结论语义，以及增加旧插件必须处理的新记录 `type` 或枚举值，都属于不兼容变更，须发布新主版本。调用方仍须检查实际数据的必需结构、合法 `type`、来源、选择覆盖及进度与最终结果一致性。包版本声明不能证明命令可以正常启动。
 
 ### 读取文件与保留来源
 
@@ -82,7 +88,6 @@ origin: {
 
 ```json
 {
-  "schemaVersion": 1,
   "files": [
     {
       "file": "/repo/tests/example/test_example.json",
@@ -114,7 +119,6 @@ origin: {
 
 | 顶层字段              | 含义                                                   |
 | --------------------- | ------------------------------------------------------ |
-| `schemaVersion`       | 当前为 1，调用方应检查                                 |
 | `status`              | `passed`、`failed`、`error`、`empty`                   |
 | `files`               | 框架汇总的逐文件、逐用例与逐平台结果                   |
 | `groups`              | 按实际配置分组的原始结果，也支持无文件来源的全量库调用 |
@@ -156,15 +160,15 @@ origin: {
 
 `--json` 与 `--jsonl` 互斥；`--list` 不支持 `--jsonl` 或 `--case`。收集清单不是进度流。
 
-所有收集及 JSON 输出都在配置加载前把 JavaScript 日志转到 stderr。单独 `--list` 的配置或参数错误只作文字说明，`--list --json` 返回完整错误 JSON。运行错误使用所选格式，含 `--jsonl` 的非法组合也以 `run-result` 错误报告结束。机器调用方检查格式、范围与完整性，不解析人类日志。
+所有收集及 JSON 输出都在配置加载前把 JavaScript 日志转到 stderr。单独 `--list` 的配置或参数错误只作文字说明，`--list --json` 返回完整错误 JSON。运行错误使用所选格式，含 `--jsonl` 的非法组合也以 `run-result` 错误报告结束。机器调用方检查必需结构、合法记录 `type`、来源、范围与完整性，不解析人类日志；参数或配置错误的机器输出也遵守同一规则。
 
 `--version` 不加载配置，输出普通版本字符串，不是 JSON。库调用直接使用返回值；不要依赖终端颜色或日志文案来判断结果。
 
 ### 即时开始与完成
 
-`test --jsonl` 通过标准输出逐行返回进度，每行一个紧凑 JSON 并以换行结束；日志写到 stderr。三类进度之后，最后唯一一条 `{schemaVersion: 1, type: 'run-result', result: TestRunResult}` 包含完整报告。终端与编辑器都可以读取同一输出流；只需要最终报告时使用 `test --json`。
+`test --jsonl` 通过标准输出逐行返回进度，每行一个紧凑 JSON 并以换行结束；日志写到 stderr。三类进度之后，最后唯一一条 `{type: 'run-result', result: TestRunResult}` 包含完整报告。终端与编辑器都可以读取同一输出流；只需要最终报告时使用 `test --json`。
 
-框架的 `TestRunOptions.onEvent` 可接收以下 `TestRunEvent`，每条事件都带 `schemaVersion: 1`：
+框架的 `TestRunOptions.onEvent` 可接收以下 `TestRunEvent`，保留 `type` 区分事件：
 
 | type           | 内容与发出时机                                                                                           |
 | -------------- | -------------------------------------------------------------------------------------------------------- |

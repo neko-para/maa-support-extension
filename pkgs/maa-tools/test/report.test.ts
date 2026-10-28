@@ -7,6 +7,7 @@ import { expandTestGroups } from '../src/test/plan.ts'
 import { buildTestRunResult } from '../src/test/report.ts'
 import type { ListedFile, TestCaseRunResult, TestGroupRunResult } from '../src/test/types.ts'
 import type { TestCases } from '../src/types/config.ts'
+import { assertNoSchemaVersion } from './assertions.ts'
 
 const fileA = path.resolve('source-tests/a.json')
 const fileB = path.resolve('source-tests/b.json')
@@ -93,7 +94,7 @@ test('同名组仍按origin归位，文件case完整覆盖选中下标，保留�
     groups: [group([result(fileA), result(fileA, 2, 'fail')]), group([result(fileB)])],
     durationMs: 100
   })
-  assert.equal(report.schemaVersion, 1)
+  assertNoSchemaVersion(report)
   assert.equal(report.status, 'failed')
   assert.equal(report.durationMs, 100)
   assert.deepEqual(report.files[0].selectedCases, [0, 2])

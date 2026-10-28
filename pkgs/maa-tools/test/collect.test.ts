@@ -9,6 +9,7 @@ import { captureTestFileReads, loadAllTestCases, loadTestCases } from '../src/te
 import { expandTestGroups } from '../src/test/plan.ts'
 import { buildRunTargets } from '../src/test/selection.ts'
 import type { FullConfig, TestCases } from '../src/types/config.ts'
+import { assertNoSchemaVersion } from './assertions.ts'
 
 async function makeTree(files: Record<string, string>): Promise<string> {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'maa-pr92-sources-collect-'))
@@ -47,7 +48,7 @@ test('实际配置决定发现范围：支持自定义目录，保留坏文件�
     })
   )
   assert.equal(calls, 1)
-  assert.equal(collection.schemaVersion, 1)
+  assertNoSchemaVersion(collection)
   assert.equal(collection.errorCode, undefined)
   assert.deepEqual(
     collection.files.map(entry => entry.file),
@@ -187,6 +188,7 @@ test('请求缺失或未进入配置的有效文件时给独立错误，不把�
   assert.equal(collection.files[0].error, '找不到测试文件')
   assert.equal(collection.files[1].error, '测试文件没有进入当前配置展开的测试组')
   assert.deepEqual(collection.files[1].cases, [])
+  assertNoSchemaVersion(collection)
 })
 
 test('无来源程序组仍可全量展开，收集明确提示不完整，按文件选择报来源错误', async t => {
@@ -197,6 +199,7 @@ test('无来源程序组仍可全量展开，收集明确提示不完整，按�
   ])
   assert.equal((await expandTestGroups(cfg)).groups.length, 1)
   const collection = await collectTests(cfg)
+  assertNoSchemaVersion(collection)
   assert.equal(collection.errorCode, 'collection-source-missing')
   assert.deepEqual(collection.files, [])
   await assert.rejects(
@@ -208,14 +211,19 @@ test('无来源程序组仍可全量展开，收集明确提示不完整，按�
 })
 
 test('配置缺失、组形状错误和loader异常都有明确收集错误', async () => {
-  assert.equal((await collectTests({ interfacePath: 'unused' })).errorCode, 'test-config-missing')
-  assert.deepEqual(await collectTests(configFor('.', [])), { schemaVersion: 1, files: [] })
+  const missing = await collectTests({ interfacePath: 'unused' })
+  assertNoSchemaVersion(missing)
+  assert.equal(missing.errorCode, 'test-config-missing')
+  assert.deepEqual(await collectTests(configFor('.', [])), { files: [] })
   const malformed = configFor('.', [{} as TestCases])
-  assert.equal((await collectTests(malformed)).errorCode, 'invalid-test-config')
+  const invalid = await collectTests(malformed)
+  assertNoSchemaVersion(invalid)
+  assert.equal(invalid.errorCode, 'invalid-test-config')
   const throws = configFor('.', async () => {
     throw new Error('loader failed')
   })
   const failed = await collectTests(throws)
+  assertNoSchemaVersion(failed)
   assert.equal(failed.errorCode, 'test-cases-load-failed')
   assert.equal(failed.reason, 'loader failed')
 })
@@ -226,6 +234,7 @@ test('手写组的畸形origin给明确来源错误，不能抛路径类型错�
     cases: [{ image: 'a.png', hits: ['A'], origin: { case: 0 } }]
   } as unknown as TestCases
   const collection = await collectTests(configFor('.', [invalid]))
+  assertNoSchemaVersion(collection)
   assert.equal(collection.errorCode, 'test-source-invalid')
   assert.match(collection.reason ?? '', /origin/)
   await assert.rejects(

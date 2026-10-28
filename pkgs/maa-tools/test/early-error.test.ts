@@ -5,6 +5,7 @@ import test from 'node:test'
 
 import type { RunTarget } from '../src/test/selection.ts'
 import type { TestRunEvent } from '../src/test/types.ts'
+import { assertNoSchemaVersion } from './assertions.ts'
 
 test('配置缺失的前置错误也合并重复targets，完整发布两个选择后才结束文件', async () => {
   const { runTestDetailed } = await createJiti(import.meta.url, { fsCache: false }).import<
@@ -37,6 +38,8 @@ test('配置缺失的前置错误也合并重复targets，完整发布两个选�
       }
     }
   )
+  assertNoSchemaVersion(final)
+  assertNoSchemaVersion(events)
   assert.equal(final.status, 'error')
   assert.equal(final.errorCode, 'test-config-missing')
   assert.equal(final.files.length, 1)

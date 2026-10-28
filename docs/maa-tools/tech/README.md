@@ -2,106 +2,137 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
-本包遵循 [通用技术约定](../extra/common-tech.md)。
+本包遵循 [通用技术约定](../../extra/common-tech.md)。命令用法和结果字段见 [产品定义](../models/README.md)。
 
-## 模块架构
+## 模块职责
 
-```
-src/
-├── index.ts              # API 入口
-├── cli.ts                # CLI 调度器: runCli(cmd, cfg)
-├── pm.ts                 # Pipeline Manager 转导出
-├── check/
-│   ├── index.ts          # runCheck(cfg): 诊断执行和输出
-│   └── utils.ts          # calculateLocation() 偏移→行列转换
-├── test/
-│   ├── index.ts          # runTest(cfg): 测试调度和 workerpool 管理
-│   ├── types.ts          # RecoJob, RecoResult, GroupRecoResult
-│   ├── worker.ts         # Worker 进程入口 (MAA 识别执行)
-│   ├── env.d.ts          # 环境变量类型声明
-│   └── utils.ts          # checkRect() bounding box 验证
-├── types/
-│   └── config.ts         # 配置类型: BaseConfig, CheckConfig, TestConfig, FullConfig
-└── utils/
-    ├── bundle.ts         # InterfaceBundle 加载器
-    ├── config.ts         # jiti 配置加载器
-    ├── tools.ts          # 测试用例加载: loadTestCases(), loadAllTestCases()
-    ├── maa.ts            # MAA 框架生命周期: setupMaa(), loadMaa(modulePath, logDir)
-    │                     #   设置 maa.Global.log_dir = logDir（精确日志目录，
-    │                     #   check 默认 <cwd>/debug，test 默认 <cwd>）
-    └── utils.ts          # 通用工具: toArrayBuffer(), gzCompress(), makeFakeController()
-```
+下表路径相对 `pkgs/maa-tools/src/`。
 
-## 核心流程
+| 文件或目录                        | 职责                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------- |
+| `index.ts`                        | 公开包入口                                                                            |
+| `cli.ts`                          | 加载配置、调用检查/收集/运行、输出 JSON 或普通命令结果                                |
+| `cli-args.ts`                     | 参数解析及使用说明，拒绝非法下标和冲突参数                                            |
+| `pm.ts`                           | pipeline-manager API 转导出                                                           |
+| `check/`                          | 资源组合诊断、原生加载校验、定位和输出                                                |
+| `types/config.ts`                 | 仓库配置、测试组及单条用例来源类型                                                    |
+| `utils/config.ts`                 | 通过 jiti 加载配置                                                                    |
+| `utils/tools.ts`                  | 共用测试文件解析与校验、字符范围、来源注入、读取记录                                  |
+| `test/plan.ts`                    | 执行 `test.cases`、检查组结构、固定节点，应用过滤并整理实际来源文件                   |
+| `test/filter.ts`                  | 按来源文件和原始下标选择用例，保留完整组节点，不按名字推断来源                        |
+| `test/targets.ts`                 | 把命令文件和用例下标转换为选择目标，检查下标是否合法                                  |
+| `test/list.ts`                    | 调用同一展开入口，返回实际配置的文件与用例清单，不初始化 MaaFramework                 |
+| `test/index.ts`                   | `runTestDetailed` 调度识别、管理 worker、收结果；`runTest` 提供布尔结果和错误文件写入 |
+| `test/evaluate.ts`                | 根据完整组节点和识别结果检查单条用例、构造组结果                                      |
+| `test/report.ts`                  | 按精确来源汇总平台、用例、文件和整批结果，保留未完成项                                |
+| `test/utils.ts`                   | 图片路径、任务去重、同图耗时分摊与矩形包含检查                                        |
+| `test/schedule.ts`                | 稳定报告顺序、worker 数默认值、有序资源路径分组                                       |
+| `test/log-dir.ts`                 | 创建和释放活动日志轮次，只清理已结束轮次                                              |
+| `test/progress.ts`                | 实际计划槽位、图片判定后的逐项完成、事件队列与范围快照                                |
+| `test/types.ts`                   | 收集、识别任务、统一结果与 TestRunEvent 类型                                          |
+| `test/worker.ts`                  | 子进程加载 MaaFramework 与资源、执行识别并返回真实任务耗时                            |
+| `utils/bundle.ts`、`utils/maa.ts` | interface bundle、MaaFramework 版本准备和日志目录设置                                 |
 
-### check 流程
+公开 `runTest`、`runTestDetailed`、`collectTests` 及其结果类型；内部函数的源码导出用于模块协作和测试，不需要全都从包入口转导出。
 
-```
-1. loadConfig(configPath) → FullConfig
-2. setupMaa(cfg) → 下载/加载 MaaFramework
-3. 创建发现用 InterfaceBundle，解析 controller×resource 组合的最终资源路径
-4. 按有序路径列表合并等价组合
-5. 按 `check.job`（默认 `min(4, availableParallelism)`）启动并发任务
-6. 每个任务创建隔离的 InterfaceBundle 和 `maa.Resource`，共享只读文件内容缓存
-7. 在任务内执行 `performDiagnostic()`，并按路径顺序执行 `post_bundle()`
-8. 收集全部结果后按发现顺序格式化并输出诊断
-```
+## 检查流程
 
-并发调度在同一 Node.js 进程内完成，以兼容 `maatools.config.mts` 中不可序列化的自定义 parser 函数。每个任务拥有独立的可变 bundle 状态和 MaaFramework Resource；同一资源组内的多个路径仍顺序加载，保持资源覆盖语义。不同 controller/resource 组合若解析为完全相同的有序路径列表，只检查一次，输出标题会列出所有等价组合。
+1. 加载配置，准备 MaaFramework。
+2. 创建发现用 InterfaceBundle，求出控制器与资源组合的有序资源路径。
+3. 合并完全相同的有序路径列表。
+4. 按 `check.job` 启动有限个任务，每个任务独立创建 bundle 和 Resource。
+5. 执行诊断和顺序资源加载，应用严重级别配置。
+6. 全部结果就绪后按发现顺序输出，关闭 watcher。
 
-`CachedContentLoader` 在单次检查中缓存文件读取 Promise，使并发 bundle 共享同一份只读文件内容，避免公共资源文件被重复读取。`InterfaceBundle.stop()` 会完整关闭 interface、import、locale 与 resource watcher，确保 `runCheck()` 作为 API 调用时也能自然退出。
+并发调度在同一 Node.js 进程完成，以支持配置中的自定义 parser 函数。每个任务有独立的可变状态；单次检查的只读文件内容由 `CachedContentLoader` 共享缓存。相同路径但顺序不同不能合并，以保留资源覆盖语义。
 
-`runCheck()` 不是 watch 模式：它只使用 chokidar 的初始扫描生成待加载文件集，完成诊断后即关闭 watcher，项目变更后仍需重新调用 checker。一次性 snapshot 扫描已用 M9A 和 MaaEnd 验证：诊断输出完全一致，但两项目的中位耗时均增加，所以保留 chokidar 的初始扫描实现。
+`runCheck` 只借用 chokidar 的初始扫描生成加载文件集，不是持续监听命令。规划或检查完成后关闭相关 InterfaceBundle watcher，API 调用结束后不应因这些 watcher 挂住。
 
-### test 流程
+## 收集与运行共用的定义
 
-```
-1. loadConfig(configPath) → FullConfig
-2. setupMaa(cfg) → 下载/加载 MaaFramework
-3. 加载所有测试用例
-4. 解析每个 controller/resource 的有序资源路径，并合并路径完全相同的等价配置
-5. 每组创建一个 workerpool，分发该组的 RecoJob 后立即释放
-6. Worker: loadMaa() → setupInstance() → performReco()
-7. 收集结果，按原 controller/resource 排序和 mode 输出
-```
+`utils/tools.ts` 使用同一套 `parseTestContent`、`readTestFile` 产生运行对象与文件元数据。JSON 允许注释，不允许尾逗号；形状错误转为文件错误条目。成功读取时给每条用例写 `origin: {file: 绝对路径, case: 原始下标}`，组的 `source` 可保留文件路径，但单条身份以 origin 为准。
 
-worker 进程从环境变量一次性加载资源，因此不同有序路径组不能共享同一个 pool。调度器先创建保持报告顺序的结果槽位，再按 `JSON.stringify(resourcePaths)` 的结构键聚合执行计划；相同路径即使来自不同 controller/resource 也只创建一次 pool，路径顺序不同则保持隔离。任一组结束或抛错时均在 `finally` 中终止 pool，同时发现用 `InterfaceBundle` 在规划完成后关闭全部 watcher。
+配置加载和展开期间通过 `AsyncLocalStorage` 保存本次文件读取记录，包括失败文件。CLI 从配置加载前开始记录，因此配置模块顶层提前读取的坏文件也能报告。收集不额外猜测测试目录；配置可以改变扫描目录、glob 或直接提供数组。
 
-## MAA 日志目录
+`expandTestGroups` 在一次调用中执行配置用例函数、检查展开组结构，再固定 `nodes`。如果配置显式给出节点集合则使用它，否则从过滤前的完整组用例提取。之后才按控制器、资源、来源文件和原始下标过滤，所选组仍保留相同的完整 nodes。
 
-`loadMaa(modulePath, logDir)` 直接设置 `maa.Global.log_dir = logDir`，保留 `cfg.maaLogDir` 配置字段及其兼容性，不重命名、不引入 `config_init_option`。
+实际进入展开组的 origin 决定清单中的有效文件与原始下标。已读取但被配置主动排除的有效用例不列出；读取失败的文件记录保留。源文件的 controllers/resources 是显示元数据，不能把源声明中的所有控制器和资源组合作为应运行的平台。
 
-`setupMaa(cfg)` 在构造 `MaaVersionManager` 时同时注入 `maaCache` 和 `maaMirror`，使一次版本查询/安装从启动起使用确定的 registry。
+无 origin 的程序组可全量运行，但按文件选择明确报错；收集返回 `collection-source-missing` 和已识别文件。组名只用于日志与显示，不作为 map 身份，也不再用截图、期望节点或识别框推断归属。
 
-- **check 流程**：未显式配置 `maaLogDir` 时默认 `debug`，即日志写入 `<cwd>/debug/`，避免以工作区根目录为日志目录时 MaaFramework 递归清理仓库内旧 PNG（TODO-23）。
-- **test 流程**：保留原默认 `.`（cwd 根目录），通过 `MAAFW_LOG_DIR` 环境变量传入，worker 在其下按 pool/pid 建子目录隔离。
+## 识别执行
 
-## 依赖关系
+1. 展开与选择实际测试，得到 `groups` 和计划文件元数据；零匹配返回 empty。
+2. 解析每条用例实际图片路径，记录是否存在，按组内规范化绝对图片路径去重。
+3. 使用过滤前固定的 nodes 建任务，按 `maxNodePerJob` 分块。缺图保留 skipped；无待检查节点保留 error，不把零检查当通过。
+4. 仅当确有识别任务时准备 MaaFramework 与 bundle，解析有序资源路径；纯缺图或纯无节点不做初始化。
+5. 相同有序资源路径的组共用一个进程池，按配置并行任务。不同有序路径组分别创建池。
+6. 首次提交某来源相关识别任务时发 case-started；跨平台只开始一次。worker 返回节点识别结果和执行耗时，失败任务留下缺失结果，不能用空数组默认通过。
+7. 每张图的全部节点块完成后，立即用 `evaluateCase` 判定该图对应的所有用例，不等整个组或所有计划结束。检查使用同组完整节点：声明的应命中，未声明的不应命中；负例缺少节点结果也算失败。
+8. 规范化路径相同的图片只运行一份任务，其时间在对应的所选用例间均分，最后一条取余额。各条用例按自己的期望独立判定，记录到对应实际计划槽位；最后一个计划平台完成后发 case-result，文件全部所选用例完成后发 file-result。
+9. 在 finally 中终止池，全部 worker 停止后释放本次日志活动标记。资源规划用 bundle 完成后关闭 watcher。
 
-### 工作区依赖
+单条与整文件改变的是待验证截图范围，不是每张截图的断言。名字相同或同图但期望框不同的用例仍分别判定，并各自携带精确 origin。
 
-| 包                             | 角色                  |
-| ------------------------------ | --------------------- |
-| `@nekosu/maa-locale`           | 输出国际化            |
-| `@nekosu/maa-pipeline-manager` | Pipeline 加载/诊断    |
-| `@nekosu/maa-version-manager`  | MaaFramework 版本管理 |
+## 结果与错误
 
-### 外部依赖
+`evaluateCase` 直接返回 `TestCaseRunResult`，不并行维护另一份失败结果数组。`buildTestRunResult` 使用实际结果、文件计划和实际计划组统一构造文件与顶层结果；计划组用于辨别某个平台是否缺结果，不能从源文件声明补造平台。
 
-| 包              | 用途                    |
-| --------------- | ----------------------- |
-| `@actions/core` | GitHub Actions 注解输出 |
-| `chalk`         | 终端颜色                |
-| `jiti`          | 运行时 TS 配置加载      |
-| `jsonc-parser`  | 测试用例 JSONC 解析     |
-| `workerpool`    | 多进程并行测试          |
+文件结果保留 `selectedCases`，逐用例条目覆盖这些原始下标。计划中没有返回结果的用例或平台明确 error；零计划但显式选择的用例也保留错误说明。结果按路径与原始下标归位，不把重复组名压成一项。
 
-## 技术选型
+跨平台用例按 fail、error、skipped、pass 的顺序汇总。文件先看失败和错误，再看各平台是否至少完成过有效检查。部分平台缺图会让用例汇总为 skipped，但另一个平台已验证时文件仍可 pass；不能根据所有聚合用例都 skipped 判定全缺图。
 
-| 选择                             | 理由                                                                                |
-| -------------------------------- | ----------------------------------------------------------------------------------- |
-| `jiti` 配置加载                  | TypeScript 配置文件，IDE 类型检查                                                   |
-| `workerpool`                     | 多进程并行，隔离 MAA 实例                                                           |
-| check 进程内有限并发             | 保留自定义 parser 函数，并通过隔离 bundle/Resource 避免可变状态竞争                 |
-| 三态输出模式                     | 统一 CLI/CI/API 消费                                                                |
-| devDependency 作为 fallback 版本 | 从 devDeps 读取 `@maaxyz/maa-node`，使默认运行时版本与编译/类型检查版本保持单一来源 |
+顶层优先报告 error，其次 failed，再是 passed；零匹配为 empty。无来源全量调用按组中真实检查汇总，不因文件列表为空就说没有测试。没有任何有效检查不能返回 passed。
+
+`runTestDetailed` 返回这一完整结果。`runTest` 使用同一结果计算布尔值，并在 failed/error 时把完整 `TestRunResult` 写到指定错误文件；它不再维护用于文本推断的旧结果数组。
+
+组/用例的时间是实际识别任务时间及其分摊，顶层时间是本次运行实际经过的时间，包含准备、等待和清理；并行任务求和可能大于后者。
+
+## 命令行机器输出
+
+`--list` 选择收集操作，`--json` 选择 JSON 格式，二者可组合：单独 `--list` 输出人类列表，`--list --json` 输出同一完整收集清单。默认运行输出文本，`--json` 输出一份运行报告，`--jsonl` 每行输出进度并以唯一 `run-result` 结束。拒绝 `--json --jsonl`、`--list --jsonl` 和 `--list --case`。
+
+所有收集及 JSON 输出从配置加载前把 JavaScript 日志转到 stderr；收集列表、JSON 文档和流式记录使用保存的 stdout 出口。这个接管不拦截原生代码直接写文件描述符；识别进程另关闭原生 stdout 日志。
+
+选择 `--json` 或 `--jsonl` 后，参数、配置、测试文件、来源与运行错误都用相应机器格式输出。单独 `--list` 的错误只作文字说明，不混入 JSON；`--list --json` 保留完整错误 JSON。成功收集清单含 `schemaVersion` 和 `files`，顶层错误另带 `errorCode`、`reason` 等字段；两种列表都从同一 `collectTests` 结果格式化，不初始化 MaaFramework。运行报告仍使用完整 `TestRunResult`。
+
+配置 `mode: 'json'` 控制内部日志输出，完整报告或逐行进度由 CLI 显式 `--json`、`--jsonl` 选择。`--version` 不加载配置并输出普通版本字符串。
+
+## 即时事件与最终报告
+
+`TestRunOptions.onEvent` 接收从测试入口导出的 `TestRunEvent`。事件形状见 [即时开始与完成](../models/README.md#即时开始与完成)。`TestRunProgress` 按配置实际展开的组与用例槽位统计每个 origin 的待完成数，不用源声明的平台组合推断，也不用组名作身份。
+
+每张图的节点块都结束后，执行层给复用该图的各条用例独立判定并分摊时间。每记录一个实际槽位就减少来源的待完成数；归零才发布该来源的完成快照，文件的所选来源全完成才发布文件快照。缺图、无节点、坏文件和已知范围的无匹配条目直接产生确定结果，不发虚假的识别开始。
+
+快照只包含对应文件与原始下标，groups 也按该范围裁剪并重算组结论与时间。快照和最终报告均调用同一 `buildTestRunResult`；已完成槽位只写一次。异常收尾为未完成槽位补明确 error，不覆盖先前已完成的检查结果。
+
+事件队列串行等待 `onEvent`，识别任务仍按原计划并行。传给回调的是独立快照；回调抛错或拒绝时记录一次错误、停发后续事件，正式识别与最终结果继续。调用方不能依赖每个事件都必达，最终报告负责补全与核对。
+
+CLI 在 `--jsonl` 下把 `onEvent` 的三类进度依次写为标准输出行，最终再写唯一 `{schemaVersion: 1, type: 'run-result', result}`。`run-result` 由 CLI 写出，不属于框架的三类 `TestRunEvent`；参数或配置错误同样使用这个结束记录，包括原始参数含 `--jsonl` 的非法组合。
+
+每行使用保存的 stdout 写入函数序列化，并等待标准流写入回调；日志走 stderr。扩展所有运行固定使用 `--jsonl`，子进程忽略标准输入，只使用标准输出和错误输出的管道。逐行解析处理分块、中文字符、Windows 换行（CRLF）、多行同块和大行，不能把一次 data 回调当成一条 JSON。
+
+接收方拒绝未知记录、重复 `run-result`、其后又有记录或完整畸形行；正常结束缺少最后报告或留下截断行也报错。用户取消或信号终止时，只忽略末尾尚未完成的行，保留此前校验的完成事实；已经收到的完整错误记录仍优先报协议错误。取消由父进程终止子进程，面板跳过未完成项，不编造整批通过。
+
+## MaaFramework 日志目录
+
+`loadMaa(modulePath, logDir)` 设置 `maa.Global.log_dir`。`setupMaa` 在构造版本管理器时传入 `maaCache`、`maaMirror`，版本查询和安装使用配置的来源。
+
+- check 默认写 `<cwd>/debug`，`maaLogDir` 可覆盖，避免把框架日志清理指向仓库根。
+- test 每轮在日志根创建 `maa-tools-run-<n>`；活动轮次有所属进程标记，worker 再用 pool/pid 子目录隔离。
+- `test.maaLogKeep` 默认 10，表示保留的已结束轮次数。正在运行的目录全部保留，不占这 10 个名额；并发运行不能删别人的活动日志。
+- worker 全部退出后释放标记，进程正常 exit 也会清理本进程标记。被终止或崩溃遗留的标记在下次创建轮次时按进程存活状态回收。
+
+## 依赖与测试边界
+
+| 依赖                           | 作用                                 |
+| ------------------------------ | ------------------------------------ |
+| `@nekosu/maa-locale`           | 输出语言                             |
+| `@nekosu/maa-pipeline-manager` | Pipeline 及 interface 资源加载与诊断 |
+| `@nekosu/maa-version-manager`  | MaaFramework 版本准备                |
+| `jiti`                         | 加载 TypeScript 配置                 |
+| `jsonc-parser`                 | 带注释测试文件的解析与字符范围       |
+| `workerpool`                   | 隔离识别进程并行任务                 |
+| `@actions/core`、`chalk`       | 工作流注解与终端输出                 |
+
+来源、选择和汇总测试应覆盖重复组名、同图不同框、loader 改目录/排除条目、部分平台缺图和缺失结果；执行测试覆盖完整节点负例、任务去重和耗时求和。即时事件测试覆盖节点块乱序完成、跨平台最后一个才结束、直接完成项、回调失败和最终一致性。CLI 测试覆盖配置日志、错误结束记录、参数冲突、大行完整输出及单报告模式；扩展测试覆盖中文/CRLF/分块、多行、未知或重复记录、最后报告遗漏/截断、取消残片与最终校验。日志测试覆盖并发活动目录，编辑器不复制框架判定规则。

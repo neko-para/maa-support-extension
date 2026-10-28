@@ -1,0 +1,73 @@
+import * as path from 'node:path'
+
+import type { FullConfig } from '../types/config'
+import { isCaseOrigin, parseTestContent, readTestFile } from '../utils/tools.ts'
+import { expandTestGroups } from './plan.ts'
+import type { TestCollection, TestRunOptions } from './types'
+
+export { normalizeHits, normalizeName, normalizeStringList } from '../utils/tools.ts'
+export type { ListedCase, ListedFile, ListedFileBody, TestCollection } from './types'
+
+export function listTestContent(content: string) {
+  return parseTestContent(content).body
+}
+
+/** 收集实际配置展开出的来源，不初始化 MaaFW，不额外扫描约定目录。 */
+export async function collectTests(
+  cfg: FullConfig,
+  files: readonly string[] = [],
+  options: Pick<TestRunOptions, 'controllers' | 'resources'> = {}
+): Promise<TestCollection> {
+  if (!cfg.test) {
+    return {
+      schemaVersion: 1,
+      files: [],
+      errorCode: 'test-config-missing',
+      reason: '配置中缺少 test'
+    }
+  }
+  let expanded: Awaited<ReturnType<typeof expandTestGroups>>
+  try {
+    expanded = await expandTestGroups(cfg, options)
+  } catch (error) {
+    const failure = error as { errorCode?: string; files?: TestCollection['files'] }
+    return {
+      schemaVersion: 1,
+      files: failure?.files ?? [],
+      errorCode: failure?.errorCode ?? 'test-collection-failed',
+      reason: error instanceof Error ? error.message : String(error)
+    }
+  }
+  const missingSources = expanded.groups.filter(group =>
+    group.cases.some(testCase => !isCaseOrigin(testCase.origin))
+  )
+  let collected = expanded.files
+  if (files.length > 0) {
+    const requested = [...new Set(files.map(file => path.resolve(cfg.cwd ?? process.cwd(), file)))]
+    const actual = new Map(collected.map(file => [file.file, file]))
+    collected = []
+    for (const file of requested) {
+      const listed = actual.get(file)
+      if (listed) {
+        collected.push(listed)
+      } else {
+        const { listed: unloaded } = await readTestFile(file)
+        collected.push({
+          ...unloaded,
+          error: unloaded.error ?? '测试文件没有进入当前配置展开的测试组',
+          cases: []
+        })
+      }
+    }
+  }
+  return {
+    schemaVersion: 1,
+    files: collected,
+    ...(missingSources.length > 0
+      ? {
+          errorCode: 'collection-source-missing',
+          reason: `无法列出完整测试文件：${missingSources.length} 个测试组的用例没有原始来源，请让 loader 保留 loadTestCases 填写的 origin`
+        }
+      : {})
+  }
+}

@@ -208,6 +208,152 @@ passed 和 empty 不写错误报告，也不会删除之前留下的错误文件
 
 组结果中的 `controller`、`resource` 是组配置的原值，不是截图目录别名；组名只用于显示。识别检查明细记录期望命中或不命中、可选期望框、实际识别结果、是否通过和失败原因。
 
+下面用一个文件、一条用例、一个运行组的成功结果说明两种输出。假设在 `/repo` 下执行，加载器把用例展开为 `ControllerA` / `ResourceA`，节点 `Entry` 命中。路径、源码偏移、识别明细与耗时为说明用值；示例保留完整结果结构。
+
+执行单报告模式：
+
+```bash
+npx @nekosu/maa-tools test --json --file tests/example/test_example.json --case 0
+```
+
+stdout 只返回下面这一份 JSON，退出码为 `0`；这里为方便阅读加了缩进，实际 CLI 使用紧凑 JSON。配置加载、测试日志写到 stderr。
+
+```json
+{
+  "groups": [
+    {
+      "name": "示例",
+      "source": "/repo/tests/example/test_example.json",
+      "controller": "ControllerA",
+      "resource": "ResourceA",
+      "verdict": "pass",
+      "cases": [
+        {
+          "image": "example.png",
+          "imagePath": "/repo/test-images/ControllerA/ResourceA/example.png",
+          "origin": {
+            "file": "/repo/tests/example/test_example.json",
+            "case": 0
+          },
+          "verdict": "pass",
+          "checks": [
+            {
+              "node": "Entry",
+              "expected": "hit",
+              "hit": true,
+              "detail": {
+                "name": "Entry",
+                "algorithm": "DirectHit",
+                "hit": true,
+                "box": [0, 0, 1280, 720],
+                "detail": null,
+                "raw": {},
+                "draws": []
+              },
+              "ok": true
+            }
+          ],
+          "durationMs": 12
+        }
+      ],
+      "durationMs": 12
+    }
+  ],
+  "files": [
+    {
+      "file": "/repo/tests/example/test_example.json",
+      "name": "示例",
+      "controllers": ["ControllerA"],
+      "resources": ["ResourceA"],
+      "cases": [
+        {
+          "index": 0,
+          "name": null,
+          "image": "example.png",
+          "hits": ["Entry"],
+          "start": 120,
+          "end": 260,
+          "verdict": "pass",
+          "durationMs": 12,
+          "platforms": [
+            {
+              "controller": "ControllerA",
+              "resource": "ResourceA",
+              "result": {
+                "image": "example.png",
+                "imagePath": "/repo/test-images/ControllerA/ResourceA/example.png",
+                "origin": {
+                  "file": "/repo/tests/example/test_example.json",
+                  "case": 0
+                },
+                "verdict": "pass",
+                "checks": [
+                  {
+                    "node": "Entry",
+                    "expected": "hit",
+                    "hit": true,
+                    "detail": {
+                      "name": "Entry",
+                      "algorithm": "DirectHit",
+                      "hit": true,
+                      "box": [0, 0, 1280, 720],
+                      "detail": null,
+                      "raw": {},
+                      "draws": []
+                    },
+                    "ok": true
+                  }
+                ],
+                "durationMs": 12
+              }
+            }
+          ]
+        }
+      ],
+      "selectedCases": [0],
+      "verdict": "pass"
+    }
+  ],
+  "durationMs": 50,
+  "status": "passed"
+}
+```
+
+`files[0].cases[0].platforms[0].result` 与 `groups[0].cases[0]` 是同一次平台验证结果；前者便于按源文件显示，后者保留运行组视角。`origin.case: 0`、`index: 0`、`selectedCases: [0]` 始终对应原始用例下标。用例、组和文件的识别时间都是 `12` 毫秒；顶层 `50` 毫秒是整次运行经过的时间。`detail` 原样保留框架识别明细，算法不同，内部字段也会不同；示例中 `raw: {}` 是图像内存数据转成 JSON 后的表现，截图文件位置应读取 `imagePath`。
+
+#### JSONL 逐行输出示例
+
+对同一条用例改用逐行模式：
+
+```bash
+npx @nekosu/maa-tools test --jsonl --file tests/example/test_example.json --case 0
+```
+
+stdout 的完整输出如下。每行都是一个独立 JSON 对象，行间没有逗号，也没有外层数组；下面四行保留实际的逐行形式，复制后可以按行调用 `JSON.parse()`。
+
+<!-- prettier-ignore -->
+```jsonl
+{"type":"case-started","origin":{"file":"/repo/tests/example/test_example.json","case":0}}
+{"type":"case-result","origin":{"file":"/repo/tests/example/test_example.json","case":0},"result":{"groups":[{"name":"示例","source":"/repo/tests/example/test_example.json","controller":"ControllerA","resource":"ResourceA","verdict":"pass","cases":[{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}],"durationMs":12}],"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":35,"status":"passed"}}
+{"type":"file-result","file":"/repo/tests/example/test_example.json","result":{"groups":[{"name":"示例","source":"/repo/tests/example/test_example.json","controller":"ControllerA","resource":"ResourceA","verdict":"pass","cases":[{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}],"durationMs":12}],"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":36,"status":"passed"}}
+{"type":"run-result","result":{"groups":[{"name":"示例","source":"/repo/tests/example/test_example.json","controller":"ControllerA","resource":"ResourceA","verdict":"pass","cases":[{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}],"durationMs":12}],"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":50,"status":"passed"}}
+```
+
+四条记录分别表示用例开始、用例完成、文件完成和整批结束。这个例子只运行一个文件的一条用例，所以三个完成报告的范围相同，所带的完整结构也相同；前两个快照分别记录当时经过的 `35`、`36` 毫秒，最后报告记录整次运行的 `50` 毫秒。最后一条 `run-result.result` 与上面 `--json` 示例的完整报告一致，退出码同样为 `0`。各类记录的时机、取消和最后报告核对规则见[即时开始与完成](#即时开始与完成)。
+
+如果参数解析失败，还没有形成测试计划，就只有一条最终错误记录。例如：
+
+```bash
+npx @nekosu/maa-tools test --jsonl --case bad
+```
+
+<!-- prettier-ignore -->
+```jsonl
+{"type":"run-result","result":{"groups":[],"files":[],"durationMs":1,"status":"error","errorCode":"invalid-cli-arguments","reason":"--case 需要一个非负安全整数下标"}}
+```
+
+此时退出码为 `2`，错误原因也写到 stderr，`groups` 和 `files` 都为空，不会伪造用例开始或用例、文件完成事件。换成 `--json --case bad` 时，stdout 直接返回上面 `result` 内的错误对象，不带外层 `type` 和 `result`。
+
 ### 判定
 
 - 单平台用例：检查决定 pass/fail，应返回却缺失节点结果也为 fail；缺图为 skipped；没有待检查节点或计划未能执行为 error。没有结果不当成未命中，识别无明细会报错。用例设置了期望框时，识别必须返回实际框且完整落在期望框内；未设置期望框则不检查框。

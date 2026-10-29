@@ -32,7 +32,7 @@
 | [test/report.ts](../../../pkgs/maa-tools/src/test/report.ts)       | 将平台结果唯一汇总到文件，检查来源归属、选择覆盖并形成整批结论                           |
 | [test/progress.ts](../../../pkgs/maa-tools/src/test/progress.ts)   | 等待实际计划中的各平台和节点完成，调用判定与汇总，按序发布开始、完成和范围快照           |
 | [test/log-dir.ts](../../../pkgs/maa-tools/src/test/log-dir.ts)     | 分配日志轮次、跟踪活动运行、回收失效标记并清理已结束日志                                 |
-| [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告和进度事件的结构                                         |
+| [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告、进度事件与 JSONL 记录的结构                            |
 | [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径等环境变量提供类型                       |
 
 主包导出 `runCheck`、`runTest`、`runTestDetailed`、`collectTests`、配置与文件加载等公共接口。内部辅助函数按所属用途维护，包入口显式导出公共接口。
@@ -136,7 +136,7 @@ JSON 接口兼容性随 maa-tools 包版本管理，1.x 变更规则见[包版�
 
 事件队列串行等待 `onEvent`，识别任务仍按原计划并行。传给回调的是独立快照；回调抛错或拒绝时记录一次错误、停发后续事件，正式识别与最终结果继续。调用方不能依赖每个事件都必达，最终报告负责补全与核对。
 
-CLI 在 `--jsonl` 下把 `onEvent` 的三类进度依次写为标准输出行，最终再写唯一 `{type: 'run-result', result}`。`run-result` 由 CLI 写出，不属于框架的三类 `TestRunEvent`；参数或配置错误同样使用这个结束记录，包括原始参数含 `--jsonl` 的非法组合。
+CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 的三类进度和最后唯一的 `{type: 'run-result', result}`。`onEvent` 使用 `TestRunEvent`，库调用的最终报告由 `runTestDetailed` 返回，CLI 将它写为结束记录。参数或配置错误也使用结束记录，包括原始参数含 `--jsonl` 的非法组合。
 
 每行使用保存的 stdout 写入函数序列化，并等待标准流写入回调；日志走 stderr。扩展所有运行固定使用 `--jsonl`，子进程忽略标准输入，只使用标准输出和错误输出的管道。逐行解析处理分块、中文字符、Windows 换行（CRLF）、多行同块和大行，不能把一次 data 回调当成一条 JSON。
 

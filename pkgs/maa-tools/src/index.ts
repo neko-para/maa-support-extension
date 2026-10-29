@@ -21,6 +21,7 @@ export type {
   TestFileCaseResult,
   TestFileRunResult,
   TestRunEvent,
+  TestRunLine,
   TestRunOptions,
   TestRunResult,
   TestRunStatus

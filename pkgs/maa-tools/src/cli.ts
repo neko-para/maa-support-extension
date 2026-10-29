@@ -12,7 +12,7 @@ import { captureTestFileReads } from './test/files'
 import { buildTestRunResult } from './test/report'
 import { runTest, runTestDetailed } from './test/run'
 import { buildRunTargets } from './test/selection'
-import type { ListedFile, TestRunResult } from './test/types'
+import type { ListedFile, TestCollection, TestRunLine, TestRunResult } from './test/types'
 import type { FullConfig } from './types/config'
 import { loadConfig } from './utils/config'
 
@@ -255,7 +255,7 @@ async function runConfiguredTest(
 }
 
 /** 每次只写一个紧凑 JSON 行；等待标准流写入回调，不另建发送队列。 */
-function emitJson(payload: object): Promise<void> {
+function emitJson(payload: TestCollection | TestRunResult | TestRunLine): Promise<void> {
   return new Promise((resolve, reject) => {
     writeStdout(`${JSON.stringify(payload)}\n`, error => (error ? reject(error) : resolve()))
   })

@@ -359,7 +359,7 @@ npx @nekosu/maa-tools test --jsonl --case bad
 
 `test --jsonl` 通过标准输出逐行返回进度，每行一个紧凑 JSON 并以换行结束；日志写到 stderr。三类进度之后，最后唯一一条 `{type: 'run-result', result: TestRunResult}` 包含完整报告。终端与编辑器都可以读取同一输出流；只需要最终报告时使用 `test --json`。
 
-框架的 `TestRunOptions.onEvent` 可接收以下 `TestRunEvent`，以 `type` 区分事件：
+`test --jsonl` 的每行记录类型为 `TestRunLine`，包含三类进度事件和最终的 `run-result`。`TestRunOptions.onEvent` 的参数类型为 `TestRunEvent`，接收以下进度事件：
 
 | type           | 内容与发出时机                                                                                           |
 | -------------- | -------------------------------------------------------------------------------------------------------- |

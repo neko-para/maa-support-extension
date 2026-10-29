@@ -7,10 +7,9 @@ import { createInterface } from 'node:readline'
 import test, { type TestContext } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import type { TestRunEvent, TestRunResult } from '../src/test/types.ts'
+import type { TestRunLine } from '../src/index'
 import { assertPublicResult } from './assertions.ts'
 
-type StreamRecord = TestRunEvent | { type: 'run-result'; result: TestRunResult }
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
 const filesSource = new URL('../src/test/files.ts', import.meta.url).href
@@ -67,7 +66,7 @@ async function run(root: string, args = ['test', '--jsonl']) {
   let stdout = ''
   let stderr = ''
   let parseError: unknown
-  const records: StreamRecord[] = []
+  const records: TestRunLine[] = []
   child.stdout.setEncoding('utf8').on('data', chunk => {
     stdout += chunk
   })
@@ -77,7 +76,7 @@ async function run(root: string, args = ['test', '--jsonl']) {
   const lines = createInterface({ input: child.stdout, crlfDelay: Infinity })
   lines.on('line', line => {
     try {
-      records.push(JSON.parse(line) as StreamRecord)
+      records.push(JSON.parse(line) as TestRunLine)
     } catch (error) {
       parseError = error
     }

@@ -116,10 +116,14 @@ export type TestFileRunResult = Omit<ListedFile, 'cases'> & {
 
 export type TestRunStatus = 'passed' | 'failed' | 'error' | 'empty'
 
+/** 用例和文件的进度回调事件。 */
 export type TestRunEvent =
   | { type: 'case-started'; origin: CaseOrigin }
   | { type: 'case-result'; origin: CaseOrigin; result: TestRunResult }
   | { type: 'file-result'; file: string; result: TestRunResult }
+
+/** test --jsonl 标准输出中的单条记录。 */
+export type TestRunLine = TestRunEvent | { type: 'run-result'; result: TestRunResult }
 
 export type TestRunOptions = {
   targets?: readonly RunTarget[]

@@ -23,7 +23,7 @@
 | [check/location.ts](../../../pkgs/maa-tools/src/check/location.ts) | 用 `calculateLocation` 把诊断字符偏移转换为行、列位置                                    |
 | [test/files.ts](../../../pkgs/maa-tools/src/test/files.ts)         | 读取并校验允许注释的测试 JSON，保留源码范围、注入 origin，记录本次读取的文件             |
 | [test/selection.ts](../../../pkgs/maa-tools/src/test/selection.ts) | 构造与合并文件/下标目标，固定完整待检查节点，按平台和来源筛选用例并整理选择元数据        |
-| [test/plan.ts](../../../pkgs/maa-tools/src/test/plan.ts)           | 执行 `test.cases` 并校验已展开组，调用选择规则，再从有效 origin 反查实际文件清单         |
+| [test/plan.ts](../../../pkgs/maa-tools/src/test/plan.ts)           | 执行 `test.cases`，校验展开组与实际来源文件及原始下标，固定节点并选择范围                |
 | [test/collect.ts](../../../pkgs/maa-tools/src/test/collect.ts)     | 调用同一展开过程，生成收集清单及来源错误，不初始化框架                                   |
 | [test/run.ts](../../../pkgs/maa-tools/src/test/run.ts)             | 安排识别任务、计划顺序、并发数与资源分组，管理工作进程和日志；提供详细报告与布尔运行接口 |
 | [test/images.ts](../../../pkgs/maa-tools/src/test/images.ts)       | 解析截图路径，把去重截图和完整节点分成识别任务，分摊同图耗时                             |
@@ -35,7 +35,7 @@
 | [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告和进度事件的结构                                         |
 | [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径等环境变量提供类型                       |
 
-主包保留 `runCheck`、`runTest`、`runTestDetailed`、`collectTests`、配置与文件加载等公共接口。内部辅助函数按所属用途维护，包入口显式导出公共接口。
+主包导出 `runCheck`、`runTest`、`runTestDetailed`、`collectTests`、配置与文件加载等公共接口。内部辅助函数按所属用途维护，包入口显式导出公共接口。
 
 主要运行关系如下；命令行先解析参数并加载配置，库调用直接进入对应函数：
 
@@ -80,7 +80,7 @@ flowchart LR
 
 实际进入展开组的 origin 决定清单中的有效文件与原始下标。已读取但被配置主动排除的有效用例不列出；读取失败的文件记录保留。源文件的 controllers/resources 是显示元数据，不能把源声明中的所有控制器和资源组合作为应运行的平台。
 
-只支持文件测试，展开后的 `TestCases.cases.origin` 与 `TestCaseRunResult.origin` 在类型和运行时都必填。普通测试 JSON 只写 `name`、`image`、`hits` 等字段，`loadTestCases`/`loadAllTestCases` 自动注入来源；自定义 loader 必须保留，动态生成的展开对象也须关联实际文件和原始下标。缺少、格式无效或无法对应实际文件元数据与下标的来源在加载计划阶段报 `test-source-invalid`，不进入识别。组名只用于日志与显示，不作为 map 身份，也不再用截图、期望节点或识别框推断归属。
+只支持文件测试，展开后的 `TestCases.cases.origin` 与 `TestCaseRunResult.origin` 在类型和运行时都必填。普通测试 JSON 填写 `name`、`image`、`hits` 等字段，`loadTestCases`/`loadAllTestCases` 自动产生来源；自定义 loader 必须保留，动态生成的展开对象也须关联实际文件和原始下标。`expandTestGroups` 校验 origin 的结构，再读取或复用对应文件元数据，逐条匹配原始下标；缺少、格式无效或无法匹配的来源在加载计划阶段报 `test-source-invalid`，先于 MaaFramework 初始化。组名用于日志与显示，来源文件路径和原始下标共同确定用例身份。
 
 ## 识别执行
 
@@ -98,9 +98,9 @@ flowchart LR
 
 ## 结果与错误
 
-`evaluateCase` 直接返回 `TestCaseRunResult`，不并行维护另一份失败结果数组。执行层内部保留组结果和实际计划组，用于展开、固定节点、调度、并行判定及辨别某个平台是否缺结果，文本日志仍按组显示，不能从源文件声明补造平台。`buildTestRunResult` 将平台结果唯一汇总到所属文件用例的 `platforms[].result`，每个实际平台结果只出现一次。
+`evaluateCase` 返回包含检查明细与判定的 `TestCaseRunResult`。执行层的内部组结果和实际计划组负责展开、固定节点、调度、并行判定及辨别某个平台是否缺结果，文本日志按组显示；平台范围由实际展开配置确定。`buildTestRunResult` 将平台结果唯一汇总到所属文件用例的 `platforms[].result`，每个实际平台结果只出现一次。
 
-公开 `TestRunResult` 只有 `status`、`files`、`durationMs`、可选 `errorCode`/`reason`，无 `groups` 和 `schemaVersion`。每个 `TestCaseRunResult` 必须带有效 origin，与所属文件及用例原始下标一致。来源无法匹配文件元数据或原始下标时明确报告来源错误，不能静默丢弃后算通过。
+`TestRunResult` 包含 `status`、`files`、`durationMs` 和可选的 `errorCode`、`reason`，`files` 按文件、原始用例与实际平台组织结果。每个 `TestCaseRunResult` 必须带有效 origin，与所属文件及用例原始下标一致。来源无法匹配文件元数据或原始下标时明确报告来源错误，不能静默丢弃后算通过。
 
 文件结果保留 `selectedCases`，逐用例条目覆盖这些原始下标。过滤后本次 cases 为空且无文件错误时，文件为 `skipped`、reason 为 `no-cases-selected`，`selectedCases` 和 `cases` 都为空；它不影响其他文件的通过或失败，全部过滤为空时整批仍为 `empty`。有选择却缺结果、坏文件及全缺图无验证仍保留错误。没有用例的文件完成快照使用空计划，与最终文件结论一致。
 
@@ -110,7 +110,7 @@ flowchart LR
 
 顶层优先报告 error，其次 failed，再是 passed，文件错误仍使整批 error；零匹配为 empty。没有任何有效检查不能返回 passed。
 
-`runTestDetailed` 返回这一完整结果。`runTest` 使用同一结果计算布尔值，并在 failed/error 时把完整 `TestRunResult` 写到指定错误文件；它不再维护用于文本推断的旧结果数组。
+`runTestDetailed` 返回这一完整结果。`runTest` 使用同一结果计算布尔值，并在 failed/error 时把完整 `TestRunResult` 写到指定错误文件。
 
 内部组及公开用例的时间是实际识别任务时间及其分摊，顶层时间是本次运行实际经过的时间，包含准备、等待和清理；并行任务求和可能大于后者。
 
@@ -120,11 +120,11 @@ flowchart LR
 
 所有收集及 JSON 输出从配置加载前把 JavaScript 日志转到 stderr；收集列表、JSON 文档和流式记录使用保存的 stdout 出口。这个接管不拦截原生代码直接写文件描述符；识别进程另关闭原生 stdout 日志。
 
-选择 `--json` 或 `--jsonl` 后，参数、配置、测试文件、来源与运行错误都用相应机器格式输出。单独 `--list` 的错误只作文字说明，不混入 JSON；`--list --json` 保留完整错误 JSON。成功收集清单为 `{files: [...]}`，顶层错误另带 `errorCode`、`reason` 等字段；两种列表都从同一 `collectTests` 结果格式化，不初始化 MaaFramework。运行报告仍使用完整 `TestRunResult`。
+选择 `--json` 或 `--jsonl` 后，参数、配置、测试文件、来源与运行错误都用相应机器格式输出。单独 `--list` 的错误只作文字说明，不混入 JSON；`--list --json` 保留完整错误 JSON。成功收集清单为 `{files: [...]}`，顶层错误另带 `errorCode`、`reason` 等字段；两种列表都从同一 `collectTests` 结果格式化，不初始化 MaaFramework。运行报告使用完整 `TestRunResult`。
 
 配置 `mode: 'json'` 控制内部日志输出，完整报告或逐行进度由 CLI 显式 `--json`、`--jsonl` 选择。`--version` 不加载配置并输出普通版本字符串。
 
-JSON 接口兼容性随 maa-tools 包版本管理，1.x 变更规则见[包版本与 JSON 兼容](../models/README.md#包版本与-json-兼容)。插件收集与运行读取已安装包的 `package.json` 检查稳定版 `>=1.2.0 <2.0.0`，不为每次操作额外执行 `--version`；状态栏仍优先查询 `--version`，并与兼容提示共用查询结果。包声明在范围内不能证明命令能运行，启动、退出和实际数据的必需结构、合法 `type`、来源覆盖及进度与最终结果一致性仍须检查。
+JSON 接口兼容性随 maa-tools 包版本管理，1.x 变更规则见[包版本与 JSON 兼容](../models/README.md#包版本与-json-兼容)。插件收集与运行读取已安装包的 `package.json` 检查稳定版 `>=1.2.0 <2.0.0`，不为每次操作额外执行 `--version`；状态栏优先查询 `--version`，并与兼容提示共用查询结果。包声明在范围内不能证明命令能运行，启动、退出和实际数据的必需结构、合法 `type`、来源覆盖及进度与最终结果一致性仍须检查。
 
 ## 即时事件与最终报告
 
@@ -164,23 +164,23 @@ CLI 在 `--jsonl` 下把 `onEvent` 的三类进度依次写为标准输出行，
 
 测试文件按功能组织：
 
-| 文件（相对包目录）                                                           | 验证内容                                                                                      |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [test/assertions.ts](../../../pkgs/maa-tools/test/assertions.ts)             | `assertPublicResult()` 检查清单、报告、快照与错误输出不含内部执行组或格式版本字段，供测试复用 |
-| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)       | 参数顺序、重复选项、原始下标和不支持的参数组合                                                |
-| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置                                |
-| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行                                          |
-| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围                                    |
-| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份                                    |
-| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误                                   |
-| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定                                          |
-| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标                                          |
-| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                                        |
-| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                                                        |
-| [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                              |
-| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                              |
-| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                                        |
-| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐                               |
+| 文件（相对包目录）                                                           | 验证内容                                                                            |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [test/assertions.ts](../../../pkgs/maa-tools/test/assertions.ts)             | `assertPublicResult()` 检查公共输出的字段边界，供清单、报告、快照与错误输出测试复用 |
+| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)       | 参数顺序、重复选项、原始下标和不支持的参数组合                                      |
+| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置                      |
+| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行                                |
+| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围                          |
+| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份                          |
+| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误                         |
+| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定                                |
+| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标                                |
+| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                              |
+| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                                              |
+| [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
+| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
+| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |
+| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐                     |
 
 ## 依赖与测试边界
 

@@ -16,7 +16,8 @@ import { createRecoJobs, resolveTestImagePath } from './images'
 import { createRunLogDir, releaseRunLogDir, testLogRoot } from './log-dir'
 import { TestPlanError, expandTestGroups } from './plan'
 import { TestRunProgress } from './progress'
-import { TestSourceError, filesForTargets } from './selection'
+import { buildTestRunResult } from './report'
+import { filesForTargets } from './selection'
 import type {
   CaseCheckResult,
   ListedFile,
@@ -190,7 +191,7 @@ export async function runTestDetailed(
           : {
               image: testCase.image,
               imagePath: image.imagePath,
-              ...(testCase.origin ? { origin: testCase.origin } : {}),
+              origin: testCase.origin,
               verdict: 'skipped',
               checks: [],
               durationMs: 0
@@ -295,9 +296,14 @@ export async function runTestDetailed(
     }
     return done()
   } catch (error) {
-    if (error instanceof TestSourceError || error instanceof TestPlanError) {
-      files = error.files ?? files
-      errorCode = error.errorCode
+    if (error instanceof TestPlanError) {
+      return buildTestRunResult({
+        files: error.files ?? files,
+        groups: [],
+        durationMs: performance.now() - startedAt,
+        errorCode: error.errorCode,
+        reason: error.message
+      })
     }
     return done(errorCode, error instanceof Error ? error.message : String(error))
   }

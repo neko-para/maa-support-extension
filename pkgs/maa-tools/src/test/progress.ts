@@ -78,7 +78,7 @@ export class TestRunProgress {
     }
     for (const group of options.plannedGroups) {
       for (const testCase of group.cases) {
-        const state = testCase.origin ? this.origins.get(originKey(testCase.origin)) : undefined
+        const state = this.origins.get(originKey(testCase.origin))
         if (state) {
           state.pending += 1
         }
@@ -122,7 +122,6 @@ export class TestRunProgress {
       files: [{ ...file, cases }],
       groups: this.groupResults(
         result =>
-          result.origin !== undefined &&
           samePath(result.origin.file, file.file) &&
           (caseIndex === undefined || result.origin.case === caseIndex)
       ),
@@ -176,9 +175,9 @@ export class TestRunProgress {
     })
   }
 
-  startCase(origin: CaseOrigin | undefined) {
+  startCase(origin: CaseOrigin) {
     return this.enqueue(async () => {
-      const state = origin ? this.origins.get(originKey(origin)) : undefined
+      const state = this.origins.get(originKey(origin))
       if (!state || state.started || state.completed || !this.onEvent) {
         return
       }
@@ -193,7 +192,7 @@ export class TestRunProgress {
     }
     this.results[groupIndex][caseIndex] = result
     const planned = this.plannedGroups[groupIndex].cases[caseIndex]
-    const state = planned.origin ? this.origins.get(originKey(planned.origin)) : undefined
+    const state = this.origins.get(originKey(planned.origin))
     if (state) {
       state.pending -= 1
       await this.completeOrigin(state)
@@ -254,7 +253,7 @@ export class TestRunProgress {
           await this.storeCase(groupIndex, caseIndex, {
             image: testCase.image,
             imagePath: '',
-            ...(testCase.origin ? { origin: testCase.origin } : {}),
+            origin: testCase.origin,
             verdict: 'error',
             checks: [],
             durationMs: 0,

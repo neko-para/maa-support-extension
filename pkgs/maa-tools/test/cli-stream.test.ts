@@ -8,7 +8,7 @@ import test, { type TestContext } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import type { TestRunEvent, TestRunResult } from '../src/test/types.ts'
-import { assertNoSchemaVersion } from './assertions.ts'
+import { assertPublicResult } from './assertions.ts'
 
 type StreamRecord = TestRunEvent | { type: 'run-result'; result: TestRunResult }
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -107,7 +107,7 @@ async function run(root: string, args = ['test', '--jsonl']) {
 
 function finalOf(output: Awaited<ReturnType<typeof run>>) {
   assert.equal(output.signal, null, output.stderr)
-  assertNoSchemaVersion(output.records)
+  assertPublicResult(output.records)
   assert.equal(output.records.filter(record => record.type === 'run-result').length, 1)
   const final = output.records.at(-1)!
   assert.equal(final.type, 'run-result')
@@ -134,7 +134,7 @@ test('普通三管道逐条收到进度，最后唯一 run-result；配置日志
   }
   const fileResult = output.records.find(record => record.type === 'file-result')!
   assert.deepEqual(fileResult.result.files, final.files)
-  assert.deepEqual(fileResult.result.groups, final.groups)
+  assert.equal(Object.hasOwn(fileResult.result, 'casesWithoutSource'), false)
   for (const marker of ['CONFIG_LOG', 'CONFIG_INFO', 'CONFIG_DIRECT_WRITE']) {
     assert.ok(output.stderr.includes(marker))
     assert.ok(!output.stdout.includes(marker))
@@ -157,7 +157,7 @@ test('raw argv 含 --jsonl 时，互斥或其它参数错误均只输出一个�
     assert.equal(output.records.length, 1)
     assert.equal(final.status, 'error')
     assert.equal(final.errorCode, 'invalid-cli-arguments')
-    assert.deepEqual(final.groups, [])
+    assert.equal(Object.hasOwn(final, 'casesWithoutSource'), false)
     assert.deepEqual(final.files, [])
     assert.ok(final.reason)
     assert.ok(Number.isFinite(final.durationMs))
@@ -216,7 +216,7 @@ test('缺 test、缺来源、坏文件和缺文件的进度及最终错误均保
   await fs.writeFile(path.join(root, 'broken.json'), '{ invalid')
   for (const [args, errorCode] of [
     [['test', '--jsonl', 'missing-test.mts'], 'test-config-missing'],
-    [['test', '--jsonl', '--file', 'selected.json', 'no-source.mts'], 'test-source-missing'],
+    [['test', '--jsonl', '--file', 'selected.json', 'no-source.mts'], 'test-source-invalid'],
     [['test', '--jsonl', '--file', 'broken.json'], 'test-file-error'],
     [['test', '--jsonl', '--file', 'missing.json'], 'test-file-error']
   ] as const) {
@@ -241,6 +241,41 @@ test('大于 64 KiB 的中文快照和最终报告均完整，名称中的换行
   assert.equal(final.files[0].cases[0].name, name)
   for (const line of output.stdout.trimEnd().split('\n')) {
     assert.ok(Buffer.byteLength(line) > 65536)
+  }
+})
+
+test('全量和混合无来源CLI在计划阶段拒绝，只输出唯一最终错误', async t => {
+  const { root, file } = await fixture(t, 1)
+  for (const mixed of [false, true]) {
+    const config = path.join(root, 'generated.mts')
+    await fs.writeFile(
+      config,
+      `
+      import { loadTestCases } from ${JSON.stringify(filesSource)};
+      export default {
+        cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+        test: { cases: async () => {
+          const loaded = ${mixed ? `await loadTestCases(${JSON.stringify(file)})` : 'null'};
+          return [{
+            configs: { name: '程序生成组', controller: 'Desktop', resource: 'Local' },
+            source: '显示来源',
+            cases: [...(loaded?.cases ?? []), { image: 'generated.png', hits: ['A'] }]
+          }];
+        } }
+      };
+    `
+    )
+    const output = await run(root, ['test', '--jsonl', config])
+    const final = finalOf(output)
+    assert.equal(output.code, 1, output.stderr)
+    assert.equal(final.status, 'error')
+    assert.equal(final.errorCode, 'test-source-invalid')
+    assert.deepEqual(final.files, [])
+    assert.deepEqual(
+      output.records.map(record => record.type),
+      ['run-result']
+    )
+    assert.equal((await fs.readdir(root)).includes('debug'), false)
   }
 })
 

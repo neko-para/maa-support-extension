@@ -2,7 +2,7 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
-本包遵循 [通用代码规范](../extra/common-specs.md)，以下为 tools 特有的补充。
+本包遵循 [通用代码规范](../../extra/common-specs.md)，以下为 tools 特有的补充。
 
 ## 环境
 
@@ -58,6 +58,14 @@ type FullConfig = BaseConfig & { check?: CheckConfig; test?: TestConfig; vscode?
 - 增加旧插件必须处理的新记录 `type` 或枚举值。
 
 调用方先检查包版本范围，仍须校验实际启动与数据的必需结构、合法 `type`、来源、选择覆盖和进度与最终结果一致性；类型声明不能代替运行时校验。字段和事件说明见[产品定义](../models/README.md#包版本与-json-兼容)。
+
+### 报告与执行组的边界
+
+公开报告只有 `status`、`files`、`durationMs`、可选 `errorCode`/`reason`，不输出 `groups` 或 `schemaVersion`。执行层仍按内部 groups 展开、固定完整待检查节点、调度并行识别与判定，文本日志继续按组显示；不要为了报告结构改成逐文件执行，也不返回按组重复的结果副本。
+
+只支持文件测试。展开后的 `TestCases.cases.origin` 与 `TestCaseRunResult.origin` 在类型和运行时都必填，来源必须对应实际测试 JSON 文件的绝对路径及原始下标。普通测试 JSON 仍只写 `name`、`image`、`hits` 等字段，`loadTestCases`/`loadAllTestCases` 自动补齐 origin；自定义 loader 必须保留，动态生成的展开对象也须关联实际文件与原始下标。缺少、格式无效或无法对应文件与下标的来源在加载计划阶段报 `test-source-invalid`，不进入识别，不伪造文件或身份。
+
+每个实际平台用例结果只在 `files[].cases[].platforms[].result` 中出现一次，origin 与所属文件及原始下标一致。文件/用例快照只含对应范围的 files，仍严格检查来源结构与身份、原始下标、请求覆盖、汇总、重复矛盾、取消和最终一致性；编辑辅助和未知字段检查不能代替这些校验。文件 verdict 先看用例 fail，再看文件 error 或用例 error；整批 status 以 error 优先，文件错误仍使整批 error。
 
 ### 库 API
 

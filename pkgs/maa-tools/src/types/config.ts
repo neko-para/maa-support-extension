@@ -47,7 +47,7 @@ export type TestCases = {
   }
   cases: {
     name?: string
-    origin?: CaseOrigin
+    origin: CaseOrigin
     image: string
     hits: (
       | string

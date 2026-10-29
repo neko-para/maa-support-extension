@@ -14,6 +14,7 @@ import type { TestCases } from '../src/types/config.ts'
 type TestCase = TestCases['cases'][number]
 
 const IMAGE_PATH = '/repo/tests/Testset/a.png'
+const ORIGIN = { file: '/repo/tests/test_a.json', case: 0 }
 
 function detailOf(box?: maa.Rect): maa.RecoDetail {
   return { hit: true, box } as unknown as maa.RecoDetail
@@ -55,7 +56,7 @@ test('期望命中且命中：保留来源并通过', () => {
 
 test('期望命中但没命中：should-hit', () => {
   const result = evaluateCase(
-    { image: 'a.png', hits: ['X'] },
+    { origin: ORIGIN, image: 'a.png', hits: ['X'] },
     IMAGE_PATH,
     [reco('X', false, detailOf())],
     ['X']
@@ -67,7 +68,7 @@ test('期望命中但没命中：should-hit', () => {
 
 test('期望框包含识别框：通过', () => {
   const result = evaluateCase(
-    { image: 'a.png', hits: [{ node: 'X', box: [10, 10, 100, 100] }] },
+    { origin: ORIGIN, image: 'a.png', hits: [{ node: 'X', box: [10, 10, 100, 100] }] },
     IMAGE_PATH,
     [reco('X', true, detailOf([20, 20, 50, 50]))],
     ['X']
@@ -80,7 +81,7 @@ test('期望框包含识别框：通过', () => {
 test('识别框超出期望框或没有框：box-mismatch', () => {
   for (const box of [[10, 10, 200, 200], undefined] as const) {
     const result = evaluateCase(
-      { image: 'a.png', hits: [{ node: 'X', box: [10, 10, 100, 100] }] },
+      { origin: ORIGIN, image: 'a.png', hits: [{ node: 'X', box: [10, 10, 100, 100] }] },
       IMAGE_PATH,
       [reco('X', true, detailOf(box ? [...box] : undefined))],
       ['X']
@@ -93,7 +94,7 @@ test('识别框超出期望框或没有框：box-mismatch', () => {
 
 test('期望不命中却命中：should-miss', () => {
   const result = evaluateCase(
-    { image: 'a.png', hits: [] },
+    { origin: ORIGIN, image: 'a.png', hits: [] },
     IMAGE_PATH,
     [reco('X', true, detailOf())],
     ['X']
@@ -106,7 +107,7 @@ test('期望不命中却命中：should-miss', () => {
 
 test('期望不命中且没命中：留下通过的检查明细', () => {
   const result = evaluateCase(
-    { image: 'a.png', hits: [] },
+    { origin: ORIGIN, image: 'a.png', hits: [] },
     IMAGE_PATH,
     [reco('X', false, detailOf())],
     ['X']
@@ -120,7 +121,7 @@ test('期望不命中且没命中：留下通过的检查明细', () => {
 test('识别跑了但没有明细：期望命中和不命中都报 missing-detail', () => {
   for (const hits of [[], ['X']]) {
     const result = evaluateCase(
-      { image: 'a.png', hits },
+      { origin: ORIGIN, image: 'a.png', hits },
       IMAGE_PATH,
       [reco('X', false, null)],
       ['X']
@@ -132,7 +133,12 @@ test('识别跑了但没有明细：期望命中和不命中都报 missing-detai
 })
 
 test('期望命中的节点没有任何识别结果：no-result', () => {
-  const result = evaluateCase({ image: 'a.png', hits: ['X'] }, IMAGE_PATH, [], ['X'])
+  const result = evaluateCase(
+    { origin: ORIGIN, image: 'a.png', hits: ['X'] },
+    IMAGE_PATH,
+    [],
+    ['X']
+  )
 
   assert.equal(result.verdict, 'fail')
   assert.equal(checkOf(result.checks, 'X').expected, 'hit')
@@ -141,7 +147,7 @@ test('期望命中的节点没有任何识别结果：no-result', () => {
 
 test('有正例结果但负例节点的任务失踪：负例必须补 no-result', () => {
   const result = evaluateCase(
-    { image: 'a.png', hits: ['X'] },
+    { origin: ORIGIN, image: 'a.png', hits: ['X'] },
     IMAGE_PATH,
     [reco('X', true, detailOf())],
     ['X', 'Y']
@@ -154,7 +160,12 @@ test('有正例结果但负例节点的任务失踪：负例必须补 no-result'
 })
 
 test('整张截图零结果：所有正负例节点逐一报 no-result', () => {
-  const result = evaluateCase({ image: 'a.png', hits: ['X'] }, IMAGE_PATH, [], ['X', 'Y'])
+  const result = evaluateCase(
+    { origin: ORIGIN, image: 'a.png', hits: ['X'] },
+    IMAGE_PATH,
+    [],
+    ['X', 'Y']
+  )
 
   assert.equal(result.verdict, 'fail')
   assert.equal(result.error, 'no reco result for this image')
@@ -168,7 +179,7 @@ test('整张截图零结果：所有正负例节点逐一报 no-result', () => {
 })
 
 test('纯负例组没有任何待检查节点：明确报没验证，不通过', () => {
-  const result = evaluateCase({ image: 'a.png', hits: [] }, IMAGE_PATH, [], [])
+  const result = evaluateCase({ origin: ORIGIN, image: 'a.png', hits: [] }, IMAGE_PATH, [], [])
 
   assert.equal(result.verdict, 'error')
   assert.equal(result.error, 'no nodes to check')
@@ -177,7 +188,7 @@ test('纯负例组没有任何待检查节点：明确报没验证，不通过',
 
 test('完整组节点用于单条负例：保留其它用例贡献的所有断言', () => {
   const completeNodes = ['X', 'Y']
-  const selectedCase: TestCase = { image: 'a.png', hits: [] }
+  const selectedCase: TestCase = { origin: ORIGIN, image: 'a.png', hits: [] }
   const jobs = createRecoJobs(
     [{ image: selectedCase.image, imagePath: IMAGE_PATH }],
     completeNodes,
@@ -203,7 +214,7 @@ test('完整组节点用于单条负例：保留其它用例贡献的所有断�
 
 test('其他图片的识别结果不参与判定，也不能掩盖本图缺结果', () => {
   const result = evaluateCase(
-    { image: 'a.png', hits: ['X', 'Y'] },
+    { origin: ORIGIN, image: 'a.png', hits: ['X', 'Y'] },
     IMAGE_PATH,
     [reco('X', true, detailOf()), reco('Y', true, detailOf(), '/repo/other.png')],
     ['X', 'Y']
@@ -279,7 +290,7 @@ test('节点分块大小非法时明确报错，避免零步长或遗漏节点',
 })
 
 function caseResult(verdict: CaseVerdict, durationMs = 0): TestCaseRunResult {
-  return { image: 'a.png', imagePath: IMAGE_PATH, verdict, checks: [], durationMs }
+  return { origin: ORIGIN, image: 'a.png', imagePath: IMAGE_PATH, verdict, checks: [], durationMs }
 }
 
 const GROUP: TestCases = {
@@ -333,7 +344,7 @@ test('结果组保留来源与 controller/resource 声明值', () => {
         resource: '官服',
         imageRoot: 'Official_CN'
       },
-      cases: [{ image: 'a.png', hits: ['X'] }]
+      cases: [{ origin: ORIGIN, image: 'a.png', hits: ['X'] }]
     },
     [caseResult('pass', 12), caseResult('skipped')]
   )

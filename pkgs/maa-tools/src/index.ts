@@ -20,7 +20,6 @@ export type {
   TestCollection,
   TestFileCaseResult,
   TestFileRunResult,
-  TestGroupRunResult,
   TestRunEvent,
   TestRunOptions,
   TestRunResult,

@@ -7,7 +7,7 @@ import test, { type TestContext } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import type { TestCliOptions } from '../src/cli-args.ts'
-import { assertNoSchemaVersion } from './assertions.ts'
+import { assertPublicResult } from './assertions.ts'
 
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
@@ -57,7 +57,7 @@ function payloadOf(child: ReturnType<typeof run>) {
       `stdout 不是一个完整 JSON：${child.stdout}\nstderr：${child.stderr}\n${String(error)}`
     )
   }
-  assertNoSchemaVersion(payload)
+  assertPublicResult(payload)
   return payload
 }
 
@@ -67,7 +67,7 @@ function assertError(child: ReturnType<typeof run>, errorCode: string) {
   assert.equal(payload.status, 'error')
   assert.equal(payload.errorCode, errorCode)
   assert.ok(typeof payload.reason === 'string' && payload.reason.length > 0)
-  assert.ok(Array.isArray(payload.groups))
+  assert.equal(Object.hasOwn(payload, 'casesWithoutSource'), false)
   assert.ok(Array.isArray(payload.files))
   assert.ok(Number.isFinite(payload.durationMs) && payload.durationMs >= 0)
   return payload
@@ -302,7 +302,7 @@ test('普通运行没有 --case 时不报选择错误，零匹配返回 empty/no
   assert.equal(child.status, 1)
   assert.equal(payload.status, 'empty')
   assert.equal(payload.errorCode, 'no-tests-matched')
-  assert.deepEqual(payload.groups, [])
+  assert.equal(Object.hasOwn(payload, 'casesWithoutSource'), false)
   assert.deepEqual(payload.files, [])
   assert.ok(Number.isFinite(payload.durationMs))
   assert.match(child.stderr, /RUN_CONFIG_LOG/)
@@ -371,11 +371,11 @@ test('缺少 test 或没有来源的程序组，list 返回完整错误而非不
   `
   )
   assertError(run(root, ['test', '--list', '--json', 'missing-test.mts']), 'test-config-missing')
-  assertError(run(root, ['test', '--list', '--json', 'no-source.mts']), 'collection-source-missing')
+  assertError(run(root, ['test', '--list', '--json', 'no-source.mts']), 'test-source-invalid')
   await fs.writeFile(path.join(root, 'selected.json'), testFileContent())
   assertError(
     run(root, ['test', '--json', '--file', 'selected.json', 'no-source.mts']),
-    'test-source-missing'
+    'test-source-invalid'
   )
 })
 
@@ -400,6 +400,94 @@ test('坏文件和缺文件的 JSON 清单及运行错误都保留文件信息',
       }
     }
   }
+})
+
+test('无来源JSON与文本入口明确拒绝，保存报告仅保留files', async t => {
+  const root = await fixture(t)
+  await fs.writeFile(path.join(root, 'exists.png'), '')
+  await fs.writeFile(
+    path.join(root, 'generated.mts'),
+    `
+    export default {
+      cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+      test: { errorDetailsPath: 'reports/generated.json', cases: [{
+        configs: { name: '程序生成的显示组', controller: 'Desktop', resource: 'Local' },
+        source: '显示来源', nodes: ['A'], cases: [{ image: 'exists.png', hits: [] }]
+      }] }
+    };
+  `
+  )
+  const machine = run(root, ['test', '--json', 'generated.mts'])
+  const report = assertError(machine, 'test-source-invalid')
+  assert.deepEqual(report.files, [])
+  const savedPath = path.join(root, 'reports/generated.json')
+  await assert.rejects(fs.access(savedPath), { code: 'ENOENT' })
+  const human = run(root, ['test', 'generated.mts'])
+  assert.equal(human.status, 1, human.stderr)
+  assert.equal(human.stdout, '')
+  assert.match(human.stderr, /origin/)
+  const saved = JSON.parse(await fs.readFile(savedPath, 'utf8'))
+  assertPublicResult(saved)
+  assert.equal(saved.status, report.status)
+  assert.equal(saved.errorCode, report.errorCode)
+  assert.deepEqual(saved.files, report.files)
+  assert.equal((await fs.readdir(root)).includes('debug'), false)
+})
+
+test('缺失或畸形origin在text/json/jsonl/list全部拒绝，图片存在也不触发框架准备', async t => {
+  const root = await fixture(t)
+  const file = path.join(root, 'selected.json')
+  const marker = path.join(root, 'setup-entered')
+  await fs.writeFile(file, testFileContent())
+  await fs.writeFile(path.join(root, '0.png'), '')
+  const variants = [
+    undefined,
+    { file: 'relative.json', case: 0 },
+    { file, case: -1 },
+    { file, case: 0.5 },
+    { file, case: Number.MAX_SAFE_INTEGER + 1 },
+    { file, case: '0' }
+  ]
+  for (const origin of variants) {
+    await fs.writeFile(
+      path.join(root, 'invalid-source.mts'),
+      `
+      import { writeFileSync } from 'node:fs';
+      import { loadTestCases } from ${JSON.stringify(filesSource)};
+      export default {
+        cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+        get maaCache() { writeFileSync(${JSON.stringify(marker)}, 'entered'); throw new Error('SETUP_ENTERED'); },
+        test: { cases: async () => {
+          const loaded = await loadTestCases(${JSON.stringify(file)});
+          const invalid = { ...loaded.cases[0] };
+          ${origin === undefined ? 'delete invalid.origin;' : `invalid.origin = ${JSON.stringify(origin)};`}
+          return [{ ...loaded, cases: [...loaded.cases, invalid] }];
+        } }
+      };
+    `
+    )
+    for (const flags of [[], ['--json'], ['--jsonl'], ['--list'], ['--list', '--json']]) {
+      const child = run(root, ['test', ...flags, '--file', file, 'invalid-source.mts'])
+      assert.equal(child.status, 1, child.stderr)
+      if (flags.includes('--jsonl')) {
+        const record = payloadOf(child)
+        assert.equal(record.type, 'run-result')
+        assert.equal(record.result.errorCode, 'test-source-invalid')
+        assert.equal(child.stdout.trim().split('\n').length, 1)
+      } else if (flags.includes('--json')) {
+        assertError(child, 'test-source-invalid')
+      } else {
+        assert.match(child.stderr, /origin/)
+      }
+      await assert.rejects(fs.access(marker), { code: 'ENOENT' })
+    }
+    const saved = JSON.parse(
+      await fs.readFile(path.join(root, 'maatoolsErrorDetails.json'), 'utf8')
+    )
+    assertPublicResult(saved)
+    assert.equal(saved.errorCode, 'test-source-invalid')
+  }
+  assert.equal((await fs.readdir(root)).includes('debug'), false)
 })
 
 test('--version 始终输出版本字符串，不需要配置也不输出 JSON', async t => {

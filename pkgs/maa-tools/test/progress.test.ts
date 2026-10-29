@@ -2,19 +2,17 @@ import assert from 'node:assert/strict'
 import * as path from 'node:path'
 import test from 'node:test'
 
-import { groupVerdict } from '../src/test/evaluate.ts'
 import { createRecoJobs } from '../src/test/images.ts'
 import { TestRunProgress } from '../src/test/progress.ts'
 import type {
   ListedFile,
   RecoJobOutcome,
   TestCaseRunResult,
-  TestGroupRunResult,
   TestRunEvent,
   TestRunResult
 } from '../src/test/types.ts'
 import type { TestCases } from '../src/types/config.ts'
-import { assertNoSchemaVersion } from './assertions.ts'
+import { assertPublicResult } from './assertions.ts'
 
 const fileA = path.resolve('live-tests/a.json')
 const fileB = path.resolve('live-tests/b.json')
@@ -95,29 +93,9 @@ function completed(events: TestRunEvent[]): ResultEvent[] {
   return events.filter((event): event is ResultEvent => event.type !== 'case-started')
 }
 
-function matchingGroups(groups: TestGroupRunResult[], file: string, caseIndex?: number) {
-  return groups.flatMap(group => {
-    const cases = group.cases.filter(
-      result =>
-        result.origin?.file === file &&
-        (caseIndex === undefined || result.origin.case === caseIndex)
-    )
-    return cases.length === 0
-      ? []
-      : [
-          {
-            ...group,
-            cases,
-            verdict: groupVerdict(cases),
-            durationMs: cases.reduce((sum, result) => sum + result.durationMs, 0)
-          }
-        ]
-  })
-}
-
 function assertConsistent(events: TestRunEvent[], final: TestRunResult) {
-  assertNoSchemaVersion(events)
-  assertNoSchemaVersion(final)
+  assertPublicResult(events)
+  assertPublicResult(final)
   for (const event of completed(events)) {
     const file = event.type === 'case-result' ? event.origin.file : event.file
     const expected = final.files.find(result => result.file === file)
@@ -132,14 +110,7 @@ function assertConsistent(events: TestRunEvent[], final: TestRunResult) {
     } else {
       assert.deepEqual(event.result.files[0], expected)
     }
-    assert.deepEqual(
-      event.result.groups,
-      matchingGroups(
-        final.groups,
-        file,
-        event.type === 'case-result' ? event.origin.case : undefined
-      )
-    )
+    assert.equal(Object.hasOwn(event.result, 'casesWithoutSource'), false)
   }
 }
 
@@ -237,15 +208,15 @@ test('并行图片可先完成后提交的用例，最终文件和组仍保持�
   )
   assert.deepEqual(final.files[0].selectedCases, [0, 2, 5])
   assert.deepEqual(
-    final.groups[0].cases.map(result => result.origin?.case),
+    final.files[0].cases.map(result => result.index),
     [0, 2, 5]
   )
   const passingSnapshot = events.find(
     event => event.type === 'case-result' && event.origin.case === 2
   ) as ResultEvent
   assert.equal(passingSnapshot.result.status, 'passed')
-  assert.equal(passingSnapshot.result.groups[0].verdict, 'pass')
-  assert.equal(passingSnapshot.result.groups[0].durationMs, 10)
+  assert.equal(passingSnapshot.result.files[0].verdict, 'pass')
+  assert.equal(passingSnapshot.result.files[0].cases[0].durationMs, 10)
   assertConsistent(events, final)
 })
 
@@ -282,7 +253,6 @@ test('同图复用只提交一次节点批次，各自保留负例和框期望�
     final.files[0].cases.map(result => result.verdict),
     ['pass', 'fail', 'fail']
   )
-  assert.equal(final.groups[0].durationMs, 31)
   assert.equal(
     final.files[0].cases.reduce((sum, result) => sum + result.durationMs, 0),
     31
@@ -333,8 +303,8 @@ test('同名文件/组由origin区分，混合组的文件快照只含该文件�
     event => event.type === 'file-result' && event.file === fileB
   ) as ResultEvent
   assert.equal(second.result.status, 'passed')
-  assert.equal(second.result.groups[0].cases.length, 1)
-  assert.equal(second.result.groups[0].verdict, 'pass')
+  assert.equal(second.result.files[0].cases.length, 1)
+  assert.equal(second.result.files[0].verdict, 'pass')
   assertConsistent(events, final)
 })
 
@@ -507,8 +477,8 @@ test('回调修改origin、检查和快照数组不会污染后续事件或最�
       }
       if (event.type !== 'case-started') {
         event.result.files[0].cases[0].verdict = 'fail'
-        event.result.groups[0].cases[0].checks[0].ok = false
-        event.result.groups.length = 0
+        event.result.files[0].cases[0].platforms[0].result.checks[0].ok = false
+        event.result.files.length = 0
       }
     }
   })
@@ -517,23 +487,123 @@ test('回调修改origin、检查和快照数组不会污染后续事件或最�
   const final = await progress.finish()
   assert.equal(final.status, 'passed')
   assert.equal(final.files[0].cases[0].index, 0)
-  assert.equal(final.groups[0].cases[0].origin?.case, 0)
-  assert.equal(final.groups[0].cases[0].checks[0].ok, true)
+  assert.equal(final.files[0].cases[0].platforms[0].result.origin?.case, 0)
+  assert.equal(final.files[0].cases[0].platforms[0].result.checks[0].ok, true)
 })
 
-test('没有onEvent就不构建快照；没有origin的库调用仍返回真实groups', async () => {
-  const group = planned()
-  group.cases[0].origin = undefined
-  const progress = new TestRunProgress({ files: [], plannedGroups: [group], elapsed: () => 1 })
+test('没有onEvent就不构建快照，文件结果仍完整返回', async () => {
+  const progress = new TestRunProgress({
+    files: [metadata()],
+    plannedGroups: [planned()],
+    elapsed: () => 1
+  })
   progress.snapshot = () => {
     throw new Error('No snapshot should be built')
   }
-  await progress.startCase(undefined)
-  await progress.recordCase(0, 0, { ...caseResult(), origin: undefined })
+  await progress.startCase({ file: fileA, case: 0 })
+  await progress.recordCase(0, 0, caseResult())
   const final = await progress.finish()
   assert.equal(final.status, 'passed')
-  assert.deepEqual(final.files, [])
-  assert.equal(final.groups.length, 1)
+  assert.equal(final.files[0].cases[0].platforms.length, 1)
+  assertPublicResult(final)
+})
+
+for (const verdict of ['pass', 'fail', 'error', 'skipped'] as const) {
+  test(`混合文件组${verdict}分别生成文件快照，各平台结果只出现一次`, async () => {
+    const events: TestRunEvent[] = []
+    const group = planned()
+    group.cases.push(planned(fileC, [1]).cases[0], planned(fileB, [2]).cases[0])
+    const progress = coordinator(
+      [metadata(), metadata(fileB, [2]), metadata(fileC, [1])],
+      [group],
+      events
+    )
+    await progress.initialize()
+    await progress.startCase(group.cases[1].origin)
+    await progress.recordCase(0, 1, caseResult(fileC, 1, verdict, 17))
+    const firstSnapshot = completed(events).at(-1)!
+    assert.equal(firstSnapshot.result.files.length, 1)
+    assert.equal(firstSnapshot.result.files[0].file, fileC)
+    assert.deepEqual(firstSnapshot.result.files[0].selectedCases, [1])
+    await progress.startCase(group.cases[0].origin)
+    await progress.recordCase(0, 0, caseResult())
+    await progress.startCase(group.cases[2].origin)
+    await progress.recordCase(0, 2, caseResult(fileB, 2))
+    const final = await progress.finish()
+    assert.equal(
+      final.status,
+      verdict === 'fail'
+        ? 'failed'
+        : verdict === 'error' || verdict === 'skipped'
+          ? 'error'
+          : 'passed'
+    )
+    assert.equal(final.files[2].cases[0].platforms[0].result.durationMs, 17)
+    assert.equal(final.files.flatMap(file => file.cases.flatMap(item => item.platforms)).length, 3)
+    assertConsistent(events, final)
+  })
+
+  test(`同文件${verdict}跨平台保留每个平台结果，来源只开始一次`, async () => {
+    const events: TestRunEvent[] = []
+    const first = planned()
+    const second = planned(fileA, [0], 'C2')
+    const progress = coordinator([metadata()], [first, second], events)
+    await progress.initialize()
+    await progress.startCase(first.cases[0].origin)
+    await progress.startCase(second.cases[0].origin)
+    for (const index of [0, 1]) {
+      await progress.recordCase(index, 0, caseResult(fileA, 0, verdict))
+    }
+    const final = await progress.finish()
+    assertPublicResult(final)
+    assert.equal(
+      final.status,
+      verdict === 'pass' ? 'passed' : verdict === 'fail' ? 'failed' : 'error'
+    )
+    assert.deepEqual(
+      final.files[0].cases[0].platforms.map(item => item.controller),
+      ['C1', 'C2']
+    )
+    assert.deepEqual(
+      events.map(event => event.type),
+      ['case-started', 'case-result', 'file-result']
+    )
+    assertConsistent(events, final)
+  })
+}
+
+test('异常收尾保留已完成文件结果，并为尚未完成的平台补完整error', async () => {
+  const events: TestRunEvent[] = []
+  const group = planned(fileA, [0, 1])
+  group.cases[0].image = 'first.png'
+  group.cases[1].image = 'second.png'
+  const progress = coordinator([metadata(fileA, [0, 1])], [group], events)
+  await progress.recordCase(0, 0, { ...caseResult(), image: 'first.png' })
+  const final = await progress.finish('test-execution-failed', 'worker stopped')
+  assertPublicResult(final)
+  assert.equal(final.errorCode, 'test-execution-failed')
+  assert.deepEqual(
+    final.files[0].cases.map(item => item.verdict),
+    ['pass', 'error']
+  )
+  const missing = final.files[0].cases[1].platforms[0].result
+  assert.equal(missing.error, 'worker stopped')
+  assert.equal(missing.imagePath, '')
+  assert.deepEqual(missing.origin, { file: fileA, case: 1 })
+  assertConsistent(events, final)
+})
+
+test('进度收到元数据之外的合法origin时最终明确来源错误，不用无来源数组补漏', async () => {
+  const events: TestRunEvent[] = []
+  const progress = coordinator([], [planned()], events)
+  await progress.startCase({ file: fileA, case: 0 })
+  await progress.recordCase(0, 0, caseResult())
+  const final = await progress.finish()
+  assertPublicResult(final)
+  assert.deepEqual(events, [])
+  assert.equal(final.status, 'error')
+  assert.equal(final.errorCode, 'test-source-invalid')
+  assert.equal(Object.hasOwn(final, 'casesWithoutSource'), false)
 })
 
 for (const verdict of ['pass', 'fail'] as const) {

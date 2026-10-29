@@ -128,7 +128,7 @@ test(
     assert.equal(final.files[0].file, alias)
     assert.equal(final.files[0].verdict, 'pass')
     assert.equal(final.files[0].cases[0].platforms.length, 2)
-    assert.equal(final.groups[0].cases[0].origin?.file, original)
+    assert.equal(final.files[0].cases[0].platforms[0].result.origin?.file, original)
     assert.deepEqual(
       events.map(event => event.type),
       ['case-started', 'case-result', 'file-result']

@@ -187,7 +187,6 @@ async function runConfiguredTest(
             ? {
                 ...collection,
                 status: 'error',
-                groups: [],
                 durationMs: performance.now() - startedAt
               }
             : collection

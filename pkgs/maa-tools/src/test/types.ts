@@ -52,7 +52,7 @@ export type TestCaseRunResult = {
   /** 复用截图的识别耗时在该组的用例间分摊，避免重复累计。 */
   durationMs: number
   error?: string
-  origin?: CaseOrigin
+  origin: CaseOrigin
 }
 
 export type TestGroupRunResult = {
@@ -133,7 +133,6 @@ export type TestRunResult = {
   status: TestRunStatus
   errorCode?: string
   reason?: string
-  groups: TestGroupRunResult[]
   files: TestFileRunResult[]
   /** 整次运行的墙钟耗时。 */
   durationMs: number

@@ -59,11 +59,11 @@ origin: {
 }
 ```
 
-`file` 为规范化绝对路径，`case` 为源文件 `cases` 数组下标，从 0 开始。loader 展开控制器或资源时要保留用例的 `origin`，复制时可保留 `...testCase`。显示组名、截图名、期望节点和识别框都不用于猜来源。
+`file` 为实际测试 JSON 文件的规范化绝对路径，`case` 为源文件 `cases` 数组下标，从 0 开始，须为非负安全整数。普通测试 JSON 仍只写 `name`、`image`、`hits` 等字段，不用手写 origin；上面的来源由文件加载函数自动补齐。loader 展开控制器或资源时要保留用例的 `origin`，复制时可保留 `...testCase`。动态生成的展开对象也须关联实际文件和原始下标。显示组名、截图名、期望节点和识别框都不用于猜来源。
+
+只支持文件测试，展开后的 `TestCases.cases.origin` 与 `TestCaseRunResult.origin` 在类型和运行时都必填。缺少、格式无效或无法对应实际文件元数据与原始下标的 origin，在加载计划阶段报 `test-source-invalid`，不能进入识别。
 
 收集只列实际进入展开结果的有效来源与原始下标；有效文件或用例被配置主动排除后，不再因“曾经读取过”而出现在清单中。读取失败的文件保留错误条目，正常文件仍可收集和运行。
-
-没有来源的程序生成组可以通过全量库调用运行，结果放在 `groups` 中；它不能按源码文件精确选择。收集会报告 `collection-source-missing` 并保留已识别的文件，不伪造完整清单。
 
 ### 选择范围
 
@@ -111,7 +111,7 @@ origin: {
 
 源码范围 `start`/`end` 从 0 开始，end 不包含在范围内。`index` 保留原始下标，返回的用例不必连续。`name` 没写时为 null；节点名 `hits` 是用于显示的去重字符串列表。`controllers` 和 `resources` 保留源文件声明值，只供显示，不能据此补出配置没有展开的运行平台。
 
-坏文件以 `file`、`error` 和空数组字段保留。顶层收集错误还会带 `errorCode`、`reason`，命令行错误结果同时提供 `status: 'error'`、`groups` 和 `durationMs` 等错误信息；已识别的文件仍可保留。单个坏文件不会把整个清单变成无法解析的输出。
+坏文件以 `file`、`error` 和空数组字段保留。顶层收集错误还会带 `errorCode`、`reason`，命令行错误结果同时提供 `status: 'error'` 和 `durationMs` 等错误信息；已识别的文件仍可保留。单个坏文件不会把整个清单变成无法解析的输出。
 
 ### 运行输出
 
@@ -184,7 +184,7 @@ ControllerA:ResourceA
 
 格式合法但超出文件用例范围的 `--case` 属于选择失败，返回 `1`。
 
-普通文本运行进入 `runTest()` 后，如果有 `test` 配置且最终状态为 failed 或 error，会把完整 `TestRunResult` 写到 `test.errorDetailsPath`，默认文件名为 `maatoolsErrorDetails.json`。相对路径以配置的 `cwd` 为基准，未设置 `cwd` 时使用当前工作目录；父目录会自动创建。报告包含整批状态、文件及组结果、检查明细、原因和耗时，不只是失败检查数组。
+普通文本运行进入 `runTest()` 后，如果有 `test` 配置且最终状态为 failed 或 error，会把完整 `TestRunResult` 写到 `test.errorDetailsPath`，默认文件名为 `maatoolsErrorDetails.json`。相对路径以配置的 `cwd` 为基准，未设置 `cwd` 时使用当前工作目录；父目录会自动创建。报告包含整批状态、文件结果、检查明细、原因和耗时，不只是失败检查数组。
 
 passed 和 empty 不写错误报告，也不会删除之前留下的错误文件。参数解析、配置加载或进入 `runTest()` 前的选择错误不保证生成这个文件。自动化应根据本次退出码或机器报告判断结果，不能只检查旧错误文件是否存在。
 
@@ -194,19 +194,22 @@ passed 和 empty 不写错误报告，也不会删除之前留下的错误文件
 
 `--json` 返回一份完整 `TestRunResult`；`--jsonl` 最后 `run-result` 的 `result` 也是同一结构：
 
-| 顶层字段              | 含义                                                   |
-| --------------------- | ------------------------------------------------------ |
-| `status`              | `passed`、`failed`、`error`、`empty`                   |
-| `files`               | 框架汇总的逐文件、逐用例与逐平台结果                   |
-| `groups`              | 按实际配置分组的原始结果，也支持无文件来源的全量库调用 |
-| `durationMs`          | 本次运行实际经过的时间                                 |
-| `errorCode`、`reason` | 可选的错误代码与说明，不要求调用方解析英文日志         |
+| 顶层字段              | 含义                                           |
+| --------------------- | ---------------------------------------------- |
+| `status`              | `passed`、`failed`、`error`、`empty`           |
+| `files`               | 框架汇总的逐文件、逐用例与逐平台结果           |
+| `durationMs`          | 本次运行实际经过的时间                         |
+| `errorCode`、`reason` | 可选的错误代码与说明，不要求调用方解析英文日志 |
+
+公开报告只有上述字段，不含 `groups` 或 `schemaVersion`。`files` 是全部结果的唯一公开明细；内部测试组仍用于展开、固定节点、调度和并行判定，文本输出继续按组显示。
 
 文件结果包含元数据、`selectedCases`、`verdict`（pass/fail/error/skipped）、可选 `reason` 和 `cases`。`selectedCases` 是本次计划下标，`cases` 必须完整覆盖它。过滤后本次 cases 为空且无文件错误时，文件为 `skipped`，reason 为 `no-cases-selected`，两数组均为空；有计划却缺结果不能改成跳过。
 
 文件下每条用例包含源码元数据、`verdict`、`durationMs`、可选 `reason`，以及 `platforms`。平台项包含 `controller`、`resource` 和实际 `result`，其中给出单个 `origin`、`imagePath`、`checks` 和识别时间。已解析的图片路径为绝对路径；尚未执行的 error 占位结果可以用空字符串表示还没有实际路径。平台来自配置实际展开的组，不能从源文件声明中的所有控制器和资源组合补造。
 
-组结果中的 `controller`、`resource` 是组配置的原值，不是截图目录别名；组名只用于显示。识别检查明细记录期望命中或不命中、可选期望框、实际识别结果、是否通过和失败原因。
+平台项中的 `controller`、`resource` 是组配置的原值，不是截图目录别名。识别检查明细记录期望命中或不命中、可选期望框、实际识别结果、是否通过和失败原因。
+
+每个实际平台用例结果只在 `files[].cases[].platforms[].result` 中出现一次，且必须带有效 origin，与所属文件和用例原始下标一致。
 
 下面用一个文件、一条用例、一个运行组的成功结果说明两种输出。假设在 `/repo` 下执行，加载器把用例展开为 `ControllerA` / `ResourceA`，节点 `Entry` 命中。路径、源码偏移、识别明细与耗时为说明用值；示例保留完整结果结构。
 
@@ -220,45 +223,6 @@ stdout 只返回下面这一份 JSON，退出码为 `0`；这里为方便阅读�
 
 ```json
 {
-  "groups": [
-    {
-      "name": "示例",
-      "source": "/repo/tests/example/test_example.json",
-      "controller": "ControllerA",
-      "resource": "ResourceA",
-      "verdict": "pass",
-      "cases": [
-        {
-          "image": "example.png",
-          "imagePath": "/repo/test-images/ControllerA/ResourceA/example.png",
-          "origin": {
-            "file": "/repo/tests/example/test_example.json",
-            "case": 0
-          },
-          "verdict": "pass",
-          "checks": [
-            {
-              "node": "Entry",
-              "expected": "hit",
-              "hit": true,
-              "detail": {
-                "name": "Entry",
-                "algorithm": "DirectHit",
-                "hit": true,
-                "box": [0, 0, 1280, 720],
-                "detail": null,
-                "raw": {},
-                "draws": []
-              },
-              "ok": true
-            }
-          ],
-          "durationMs": 12
-        }
-      ],
-      "durationMs": 12
-    }
-  ],
   "files": [
     {
       "file": "/repo/tests/example/test_example.json",
@@ -319,7 +283,7 @@ stdout 只返回下面这一份 JSON，退出码为 `0`；这里为方便阅读�
 }
 ```
 
-`files[0].cases[0].platforms[0].result` 与 `groups[0].cases[0]` 是同一次平台验证结果；前者便于按源文件显示，后者保留运行组视角。`origin.case: 0`、`index: 0`、`selectedCases: [0]` 始终对应原始用例下标。用例、组和文件的识别时间都是 `12` 毫秒；顶层 `50` 毫秒是整次运行经过的时间。`detail` 原样保留框架识别明细，算法不同，内部字段也会不同；示例中 `raw: {}` 是图像内存数据转成 JSON 后的表现，截图文件位置应读取 `imagePath`。
+`files[0].cases[0].platforms[0].result` 是这次平台验证的唯一公开明细。`origin.case: 0`、`index: 0`、`selectedCases: [0]` 始终对应原始用例下标。用例和文件的识别时间都是 `12` 毫秒；顶层 `50` 毫秒是整次运行经过的时间。`detail` 原样保留框架识别明细，算法不同，内部字段也会不同；示例中 `raw: {}` 是图像内存数据转成 JSON 后的表现，截图文件位置应读取 `imagePath`。
 
 #### JSONL 逐行输出示例
 
@@ -334,9 +298,9 @@ stdout 的完整输出如下。每行都是一个独立 JSON 对象，行间没�
 <!-- prettier-ignore -->
 ```jsonl
 {"type":"case-started","origin":{"file":"/repo/tests/example/test_example.json","case":0}}
-{"type":"case-result","origin":{"file":"/repo/tests/example/test_example.json","case":0},"result":{"groups":[{"name":"示例","source":"/repo/tests/example/test_example.json","controller":"ControllerA","resource":"ResourceA","verdict":"pass","cases":[{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}],"durationMs":12}],"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":35,"status":"passed"}}
-{"type":"file-result","file":"/repo/tests/example/test_example.json","result":{"groups":[{"name":"示例","source":"/repo/tests/example/test_example.json","controller":"ControllerA","resource":"ResourceA","verdict":"pass","cases":[{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}],"durationMs":12}],"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":36,"status":"passed"}}
-{"type":"run-result","result":{"groups":[{"name":"示例","source":"/repo/tests/example/test_example.json","controller":"ControllerA","resource":"ResourceA","verdict":"pass","cases":[{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}],"durationMs":12}],"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":50,"status":"passed"}}
+{"type":"case-result","origin":{"file":"/repo/tests/example/test_example.json","case":0},"result":{"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":35,"status":"passed"}}
+{"type":"file-result","file":"/repo/tests/example/test_example.json","result":{"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":36,"status":"passed"}}
+{"type":"run-result","result":{"files":[{"file":"/repo/tests/example/test_example.json","name":"示例","controllers":["ControllerA"],"resources":["ResourceA"],"cases":[{"index":0,"name":null,"image":"example.png","hits":["Entry"],"start":120,"end":260,"verdict":"pass","durationMs":12,"platforms":[{"controller":"ControllerA","resource":"ResourceA","result":{"image":"example.png","imagePath":"/repo/test-images/ControllerA/ResourceA/example.png","origin":{"file":"/repo/tests/example/test_example.json","case":0},"verdict":"pass","checks":[{"node":"Entry","expected":"hit","hit":true,"detail":{"name":"Entry","algorithm":"DirectHit","hit":true,"box":[0,0,1280,720],"detail":null,"raw":{},"draws":[]},"ok":true}],"durationMs":12}}]}],"selectedCases":[0],"verdict":"pass"}],"durationMs":50,"status":"passed"}}
 ```
 
 四条记录分别表示用例开始、用例完成、文件完成和整批结束。这个例子只运行一个文件的一条用例，所以三个完成报告的范围相同，所带的完整结构也相同；前两个快照分别记录当时经过的 `35`、`36` 毫秒，最后报告记录整次运行的 `50` 毫秒。最后一条 `run-result.result` 与上面 `--json` 示例的完整报告一致，退出码同样为 `0`。各类记录的时机、取消和最后报告核对规则见[即时开始与完成](#即时开始与完成)。
@@ -349,17 +313,19 @@ npx @nekosu/maa-tools test --jsonl --case bad
 
 <!-- prettier-ignore -->
 ```jsonl
-{"type":"run-result","result":{"groups":[],"files":[],"durationMs":1,"status":"error","errorCode":"invalid-cli-arguments","reason":"--case 需要一个非负安全整数下标"}}
+{"type":"run-result","result":{"files":[],"durationMs":1,"status":"error","errorCode":"invalid-cli-arguments","reason":"--case 需要一个非负安全整数下标"}}
 ```
 
-此时退出码为 `2`，错误原因也写到 stderr，`groups` 和 `files` 都为空，不会伪造用例开始或用例、文件完成事件。换成 `--json --case bad` 时，stdout 直接返回上面 `result` 内的错误对象，不带外层 `type` 和 `result`。
+此时退出码为 `2`，错误原因也写到 stderr，`files` 为空，不会伪造用例开始或用例、文件完成事件。换成 `--json --case bad` 时，stdout 直接返回上面 `result` 内的错误对象，不带外层 `type` 和 `result`。
+
+配置展开后缺少或带有无效 origin 时，在加载计划阶段返回同样结构的 `test-source-invalid` 错误报告，退出码为 `1`，没有开始事件；正常文件由加载函数读取时自动产生 origin。
 
 ### 判定
 
 - 单平台用例：检查决定 pass/fail，应返回却缺失节点结果也为 fail；缺图为 skipped；没有待检查节点或计划未能执行为 error。没有结果不当成未命中，识别无明细会报错。用例设置了期望框时，识别必须返回实际框且完整落在期望框内；未设置期望框则不检查框。
 - 跨平台用例：fail 优先，其次 error；没有失败但有缺图平台时为 skipped，其余为 pass。
-- 文件：无文件错误且过滤后本次没有用例时为 skipped；其余有用例失败为 fail，其次 error。至少一个平台完成有效检查、其余仅缺图时可 pass；坏文件、缺结果或全缺图无验证仍为 error。
-- 整批：error 优先于 failed，再是 passed；过滤后的空文件不影响其他文件的真实通过或失败，全部过滤为空仍为 empty。无文件来源的全量调用按实际组结果汇总，不能因 `files` 为空就判 empty。
+- 文件：有用例失败时为 fail，其次看文件 error 或用例 error；无文件错误且过滤后本次没有用例时为 skipped。至少一个平台完成有效检查、其余仅缺图时可 pass；坏文件、缺结果或全缺图无验证仍为 error。
+- 整批：error 优先于 failed，再是 passed，文件错误仍使整批 error；过滤后的空文件不影响其他文件的真实通过或失败，全部过滤为空仍为 empty。
 
 例如 A 平台有效检查通过、B 平台缺图：该用例汇总为 skipped，文件可以通过，但必须列明 B 未验证。所有聚合用例均为 skipped 不等于所有平台都没有验证；调用方直接使用框架给出的文件 verdict。所有平台均缺图，或没有有效检查，则不能返回 passed；纯缺图和没有节点可检查时也无需初始化 MaaFramework。
 
@@ -367,7 +333,7 @@ npx @nekosu/maa-tools test --jsonl --case bad
 
 `test.job` 限制每个资源路径组的 worker 数，为大于等于 1 的整数；默认是逻辑 CPU 数除以 4 后向下取整，最少 1。相同有序资源路径的组复用 workerpool，不同路径顺序分别处理。
 
-同组使用规范化绝对截图路径复用识别任务。同图对应多个所选用例时，真实识别时间在这些用例间分摊，最后一条取余额避免累计偏差。组的 `durationMs` 等于用例时间之和；文件时间为对应各平台用例时间之和。并行任务的时间求和可能大于本次运行实际经过的时间。
+同组使用规范化绝对截图路径复用识别任务。同图对应多个所选用例时，真实识别时间在这些用例间分摊，最后一条取余额避免累计偏差。内部组的识别时间等于用例时间之和，不作为公开报告字段；文件时间为对应各平台用例时间之和。并行任务的时间求和可能大于本次运行实际经过的时间。
 
 ### 机器输出与错误
 
@@ -384,6 +350,8 @@ npx @nekosu/maa-tools test --jsonl --case bad
 `--json` 与 `--jsonl` 互斥；`--list` 不支持 `--jsonl` 或 `--case`。收集清单不是进度流。
 
 所有收集及 JSON 输出都在配置加载前把 JavaScript 日志转到 stderr。单独 `--list` 的配置或参数错误只作文字说明，`--list --json` 返回完整错误 JSON。运行错误使用所选格式，含 `--jsonl` 的非法组合也以 `run-result` 错误报告结束。机器调用方检查必需结构、合法记录 `type`、来源、范围与完整性，不解析人类日志；参数或配置错误的机器输出也遵守同一规则。
+
+编辑辅助解析和未知字段检查不能代替来源的结构、类型及身份校验。
 
 `--version` 不加载配置，输出普通版本字符串，不是 JSON。库调用直接使用返回值；不要依赖终端颜色或日志文案来判断结果。
 
@@ -403,7 +371,7 @@ npx @nekosu/maa-tools test --jsonl --case bad
 
 已知文件计划中的缺图、无节点、坏文件和无匹配条目也可直接得到完成结果，不伪造识别开始。尚未得到测试计划的配置或参数错误由最终错误 JSON 说明。
 
-事件快照复用正式报告的汇总逻辑，所带 groups 也限定到对应范围。接收方检查来源、范围与快照完整性；最后 `run-result.result` 补全未报告项，并核对已完成事实。快照只对应当时及其范围，不要求其整批状态或经过时间等于最终整批值。
+事件快照复用正式报告的汇总逻辑，只含对应范围的 `files`。接收方检查必需结构、合法 `type`、来源、原始下标、请求覆盖、汇总与快照完整性；最后 `run-result.result` 补全未报告项，并核对已完成事实。快照只对应当时及其范围，不要求其整批状态或经过时间等于最终整批值。相同重复消息不重复发布，矛盾消息或最终不一致报协议错误，取消不能忽略此前完整记录中的错误。
 
 标准输出按行解析，不能把一次读取当成一个 JSON；需要处理中文、Windows 换行（CRLF）、多行同次到达和大行。未知记录、重复最后报告、报告之后还有记录或完整畸形行都报协议错误。正常结束没有完整 `run-result` 也不能算通过；取消或信号终止时，未完成末行不覆盖此前已校验的完成事实。
 

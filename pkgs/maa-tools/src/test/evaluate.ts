@@ -73,7 +73,7 @@ export function evaluateCase(
   return {
     image: testCase.image,
     imagePath,
-    ...(testCase.origin ? { origin: testCase.origin } : {}),
+    origin: testCase.origin,
     verdict: nodes.size === 0 ? 'error' : checks.some(check => !check.ok) ? 'fail' : 'pass',
     checks,
     durationMs: 0,

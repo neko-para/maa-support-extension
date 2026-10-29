@@ -2,7 +2,7 @@ import * as path from 'node:path'
 
 import type { FullConfig } from '../types/config'
 import { pathKey } from '../utils/paths.ts'
-import { isCaseOrigin, readTestFile } from './files.ts'
+import { readTestFile } from './files.ts'
 import { expandTestGroups } from './plan.ts'
 import type { TestCollection, TestRunOptions } from './types'
 
@@ -30,9 +30,6 @@ export async function collectTests(
       reason: error instanceof Error ? error.message : String(error)
     }
   }
-  const missingSources = expanded.groups.filter(group =>
-    group.cases.some(testCase => !isCaseOrigin(testCase.origin))
-  )
   let collected = expanded.files
   if (files.length > 0) {
     const requested = new Map<string, string>()
@@ -57,13 +54,5 @@ export async function collectTests(
       }
     }
   }
-  return {
-    files: collected,
-    ...(missingSources.length > 0
-      ? {
-          errorCode: 'collection-source-missing',
-          reason: `无法列出完整测试文件：${missingSources.length} 个测试组的用例没有原始来源，请让 loader 保留 loadTestCases 填写的 origin`
-        }
-      : {})
-  }
+  return { files: collected }
 }

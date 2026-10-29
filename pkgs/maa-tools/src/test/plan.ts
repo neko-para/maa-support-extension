@@ -4,7 +4,6 @@ import type { FullConfig, TestCases } from '../types/config'
 import { pathKey } from '../utils/paths.ts'
 import { captureTestFileReads, isCaseOrigin, readTestFile } from './files.ts'
 import {
-  TestSourceError,
   filesForTargets,
   filterGroupsByPlatform,
   filterGroupsForFiles,
@@ -48,9 +47,7 @@ function validateGroup(value: unknown): TestCases {
       'test.cases 必须返回已展开的测试组，包含 controller、resource 和合法 cases'
     )
   }
-  if (
-    group.cases.some(testCase => testCase.origin !== undefined && !isCaseOrigin(testCase.origin))
-  ) {
+  if (group.cases.some(testCase => !isCaseOrigin(testCase.origin))) {
     throw new TestPlanError(
       'test-source-invalid',
       '用例 origin 必须包含绝对文件路径和从 0 开始的原始下标'
@@ -67,9 +64,6 @@ async function filesForGroups(
   for (const group of groups) {
     for (const testCase of group.cases) {
       const origin = testCase.origin
-      if (!isCaseOrigin(origin)) {
-        continue
-      }
       const key = pathKey(origin.file)
       const entry = indexes.get(key) ?? {
         file: path.resolve(origin.file),
@@ -134,17 +128,26 @@ export async function expandTestGroups(
       : [...reads.values()].filter(file => file.error)
     throw loaded.error
   }
+  const sourceFiles = await filesForGroups(loaded.groups, reads)
+  const sourceEntries = new Map(sourceFiles.map(file => [pathKey(file.file), file]))
+  for (const group of loaded.groups) {
+    for (const testCase of group.cases) {
+      const origin = testCase.origin
+      const file = sourceEntries.get(pathKey(origin.file))
+      if (!file?.cases.some(item => item.index === origin.case)) {
+        const error = new TestPlanError(
+          'test-source-invalid',
+          `用例 origin 无法对应实际测试文件与原始下标：${origin.file} [${origin.case}]`
+        )
+        error.files = options.targets?.length ? filesForTargets(options.targets) : sourceFiles
+        throw error
+      }
+    }
+  }
   const groups = filterGroupsByPlatform(loaded.groups, options)
   if (!options.targets || options.targets.length === 0) {
-    return { groups, files: await filesForGroups(groups, reads) }
+    return { groups, files: await filesForGroups(groups, sourceEntries) }
   }
   const files = filesForTargets(options.targets, groups)
-  try {
-    return { ...filterGroupsForFiles(groups, options.targets), files }
-  } catch (error) {
-    if (error instanceof TestSourceError) {
-      error.files = files
-    }
-    throw error
-  }
+  return { ...filterGroupsForFiles(groups, options.targets), files }
 }

@@ -2,6 +2,7 @@ import * as path from 'node:path'
 
 import type { TestCases } from '../types/config'
 import { samePath } from '../utils/paths.ts'
+import { isCaseOrigin } from './files.ts'
 import type {
   CaseVerdict,
   ListedCase,
@@ -52,7 +53,7 @@ function summarizeCase(
   for (const group of input.groups) {
     for (const result of group.cases) {
       if (
-        result.origin &&
+        isCaseOrigin(result.origin) &&
         samePath(result.origin.file, file.file) &&
         result.origin.case === testCase.index
       ) {
@@ -66,7 +67,9 @@ function summarizeCase(
   const planned = (input.plannedGroups ?? []).filter(group =>
     group.cases.some(
       item =>
-        item.origin && samePath(item.origin.file, file.file) && item.origin.case === testCase.index
+        isCaseOrigin(item.origin) &&
+        samePath(item.origin.file, file.file) &&
+        item.origin.case === testCase.index
     )
   )
   const missingCode =
@@ -159,15 +162,41 @@ function summarizeFile(file: ListedFile, input: RunReportInput): TestFileRunResu
 
 /** 文件与顶层结论在框架内统一生成，调用方只需检查完整性并转换显示。 */
 export function buildTestRunResult(input: RunReportInput): TestRunResult {
-  const groups = [...input.groups]
+  const groups = input.groups
   const files = input.files.map(file => summarizeFile(file, input))
-  const base = { groups, files, durationMs: input.durationMs }
+  const base = {
+    files,
+    durationMs: input.durationMs
+  }
   if (input.errorCode && input.errorCode !== 'no-tests-matched') {
     return {
       ...base,
       status: 'error',
       errorCode: input.errorCode,
       reason: input.reason ?? input.errorCode
+    }
+  }
+  const invalidSource = groups
+    .flatMap(group => group.cases)
+    .find(result => {
+      const origin = result.origin
+      return (
+        !isCaseOrigin(origin) ||
+        !input.files.some(
+          file =>
+            samePath(origin.file, file.file) &&
+            file.cases.some(testCase => testCase.index === origin.case)
+        )
+      )
+    })
+  if (invalidSource && !input.files.some(file => file.error)) {
+    return {
+      ...base,
+      status: 'error',
+      errorCode: 'test-source-invalid',
+      reason: isCaseOrigin(invalidSource.origin)
+        ? `用例来源未包含在文件元数据中：${invalidSource.origin.file} [${invalidSource.origin.case}]`
+        : '用例 origin 必须包含绝对文件路径和从 0 开始的原始下标'
     }
   }
   if (

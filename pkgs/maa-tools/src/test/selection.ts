@@ -2,17 +2,12 @@ import * as path from 'node:path'
 
 import type { TestCases } from '../types/config'
 import { pathKey, samePath } from '../utils/paths.ts'
-import { isCaseOrigin, normalizeHits, readTestFile } from './files.ts'
+import { normalizeHits, readTestFile } from './files.ts'
 import type { ListedFile, TestRunOptions } from './types'
 
 export type RunTarget = ListedFile & {
   /** 原始下标；不填表示整个文件。 */
   selected?: number[]
-}
-
-export class TestSourceError extends Error {
-  readonly errorCode = 'test-source-missing'
-  files?: ListedFile[]
 }
 
 /** 必须在过滤前计算，单条运行也检查同组其它用例声明的节点。 */
@@ -51,11 +46,6 @@ export function filterGroupsForFiles(
     const group = withGroupNodes(original)
     const cases = group.cases.filter(testCase => {
       const origin = testCase.origin
-      if (!isCaseOrigin(origin)) {
-        throw new TestSourceError(
-          `测试组 ${group.configs.name ?? `${group.configs.controller}:${group.configs.resource}`} 的用例缺少原始来源；按文件选择需要 loader 保留 loadTestCases 填写的 origin`
-        )
-      }
       const file = pathKey(origin.file)
       return selected.has(file) && (selected.get(file)?.has(origin.case) ?? true)
     })
@@ -135,9 +125,7 @@ function selectedFile(target: RunTarget, groups?: readonly TestCases[]): ListedF
     ? new Set(
         groups.flatMap(group =>
           group.cases.flatMap(testCase =>
-            testCase.origin && samePath(testCase.origin.file, target.file)
-              ? [testCase.origin.case]
-              : []
+            samePath(testCase.origin.file, target.file) ? [testCase.origin.case] : []
           )
         )
       )

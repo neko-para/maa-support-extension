@@ -4,10 +4,10 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import test from 'node:test'
 
+import { TestPlanError, expandTestGroups } from '../src/test/plan.ts'
 import {
   type RunTarget,
   TestSelectionError,
-  TestSourceError,
   buildRunTargets,
   filterGroupsForFiles
 } from '../src/test/selection.ts'
@@ -86,12 +86,21 @@ test('loader已固定的nodes过滤后照样保留，组名可以任意改变', 
   assert.equal(groups[0].cases[0].origin?.case, 4)
 })
 
-test('没有原始origin时按文件选择明确报来源错误，不拿source或内容猜下标', () => {
-  const original = { ...group([{ image: 'same.png', hits: ['A'] }]), source: fileA }
-  assert.throws(
-    () => filterGroupsForFiles([original], [target(fileA, [0])]),
-    (error: unknown) =>
-      error instanceof TestSourceError && error.errorCode === 'test-source-missing'
+test('没有原始origin时在加载计划阶段拒绝，不拿source或内容猜下标', async t => {
+  const root = await fixture()
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const fileA = path.join(root, 'good.json')
+  const original = {
+    configs: { controller: 'C', resource: 'R' },
+    source: fileA,
+    cases: [{ image: 'same.png', hits: ['A'] }]
+  } as unknown as TestCases
+  await assert.rejects(
+    expandTestGroups(
+      { interfacePath: 'unused', test: { cases: [original] } },
+      { targets: [target(fileA, [0])] }
+    ),
+    (error: unknown) => error instanceof TestPlanError && error.errorCode === 'test-source-invalid'
   )
 })
 

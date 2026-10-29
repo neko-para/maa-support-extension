@@ -62,8 +62,28 @@ function processIsAlive(pid: number): boolean {
   }
 }
 
+function warnLogCleanup(target: string, error: unknown) {
+  console.warn(`failed to clean test logs at ${target}:`, error)
+}
+
+async function removeLogPath(target: string, recursive = false): Promise<boolean> {
+  try {
+    await fs.rm(target, { recursive, force: true })
+    return true
+  } catch (error) {
+    warnLogCleanup(target, error)
+    return false
+  }
+}
+
 async function cleanFinishedRunDirs(logRoot: string, keep: number): Promise<void> {
-  const entries = await fs.readdir(logRoot, { withFileTypes: true })
+  let entries
+  try {
+    entries = await fs.readdir(logRoot, { withFileTypes: true })
+  } catch (error) {
+    warnLogCleanup(logRoot, error)
+    return
+  }
   const activeNumbers = new Set<number>()
   for (const entry of entries) {
     const matched = ACTIVE_MARKER_PATTERN.exec(entry.name)
@@ -77,7 +97,7 @@ async function cleanFinishedRunDirs(logRoot: string, keep: number): Promise<void
       activeNumbers.add(Number(matched[1]))
     } else {
       // 每份标记都有唯一名字，不会误删另一轮刚创建的标记。
-      await fs.rm(marker, { force: true })
+      await removeLogPath(marker)
     }
   }
   const finished = entries
@@ -89,7 +109,7 @@ async function cleanFinishedRunDirs(logRoot: string, keep: number): Promise<void
     })
   for (const name of staleRunDirNames(finished, keep)) {
     // 名字已经通过严格匹配，只删除 logRoot 的直接子目录，不跟随符号链接。
-    await fs.rm(path.join(logRoot, name), { recursive: true, force: true })
+    await removeLogPath(path.join(logRoot, name), true)
   }
 }
 
@@ -109,13 +129,17 @@ export async function createRunLogDir(logRoot: string, keep = KEEP_RUN_LOG_DIRS)
     const marker = path.join(root, `.maa-tools-run-${number}-${process.pid}-${randomUUID()}.active`)
     // 创建中也视为活动。Map 按标记区分同时竞争同一个编号的调用。
     activeRuns.set(marker, { marker, keep: keepCount })
+    let markerCreated = false
     try {
       await fs.writeFile(marker, '', { flag: 'wx' })
+      markerCreated = true
       await fs.mkdir(runLogDir)
     } catch (error) {
       activeRuns.delete(marker)
-      await fs.rm(marker, { force: true })
-      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+      if (markerCreated) {
+        await removeLogPath(marker)
+      }
+      if (markerCreated && (error as NodeJS.ErrnoException).code === 'EEXIST') {
         number += 1
         continue
       }
@@ -123,13 +147,8 @@ export async function createRunLogDir(logRoot: string, keep = KEEP_RUN_LOG_DIRS)
     }
     activeRuns.delete(marker)
     activeRuns.set(runLogDir, { marker, keep: keepCount })
-    try {
-      await cleanFinishedRunDirs(root, keepCount)
-      return runLogDir
-    } catch (error) {
-      await releaseRunLogDir(runLogDir)
-      throw error
-    }
+    await cleanFinishedRunDirs(root, keepCount)
+    return runLogDir
   }
 }
 
@@ -140,7 +159,8 @@ export async function releaseRunLogDir(runLogDir: string): Promise<void> {
   if (!run) {
     return
   }
-  await fs.rm(run.marker, { force: true })
-  activeRuns.delete(dir)
+  if (await removeLogPath(run.marker)) {
+    activeRuns.delete(dir)
+  }
   await cleanFinishedRunDirs(path.dirname(dir), run.keep)
 }

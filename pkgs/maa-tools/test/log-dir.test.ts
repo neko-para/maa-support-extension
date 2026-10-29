@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { once } from 'node:events'
-import * as fs from 'node:fs/promises'
+import fs from 'node:fs/promises'
+import { syncBuiltinESMExports } from 'node:module'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import { createInterface } from 'node:readline'
@@ -195,4 +196,143 @@ test('清理不删除非轮次目录，也不跟随轮次名字的符号链接',
   await releaseRunLogDir(run)
   assert.equal(await fs.readFile(path.join(unrelated, 'keep.log'), 'utf8'), 'keep')
   assert.equal((await fs.lstat(path.join(root, 'maa-tools-run-1'))).isSymbolicLink(), true)
+})
+
+function syncMock(t: TestContext, restore: () => void) {
+  syncBuiltinESMExports()
+  t.after(() => {
+    restore()
+    syncBuiltinESMExports()
+  })
+}
+
+for (const code of ['EPERM', 'EBUSY']) {
+  test(`${code} 锁住一轮旧日志时，创建与释放仍完成并继续清理其他旧目录`, async t => {
+    const root = await logFixture(t)
+    for (let number = 1; number <= 4; number++) {
+      await fs.mkdir(path.join(root, `maa-tools-run-${number}`))
+    }
+    const blocked = path.join(root, 'maa-tools-run-1')
+    const failure = Object.assign(new Error(`${code}: locked log`), { code })
+    const remove = fs.rm
+    const mock = t.mock.method(fs, 'rm', async (...[target, options]: Parameters<typeof fs.rm>) => {
+      if (String(target) === blocked) {
+        throw failure
+      }
+      return remove(target, options)
+    })
+    syncMock(t, () => mock.mock.restore())
+    const warning = t.mock.method(console, 'warn', () => {})
+    const run = await createRunLogDir(root, 1)
+    assert.deepEqual(
+      (await fs.readdir(root)).filter(name => name.startsWith('maa-tools-run-')).sort(),
+      ['maa-tools-run-1', 'maa-tools-run-4', 'maa-tools-run-5']
+    )
+    await releaseRunLogDir(run)
+    assert.deepEqual((await fs.readdir(root)).sort(), ['maa-tools-run-1', 'maa-tools-run-5'])
+    assert.ok(warning.mock.calls.length >= 2)
+    for (const { arguments: args } of warning.mock.calls) {
+      assert.match(String(args[0]), new RegExp(path.basename(blocked)))
+      assert.equal(args[1], failure)
+    }
+  })
+}
+
+test('清理阶段无法读取日志根时只警告，新轮次仍可创建和释放', async t => {
+  const root = await logFixture(t)
+  const failure = Object.assign(new Error('EBUSY: directory scan'), { code: 'EBUSY' })
+  const readdir = fs.readdir
+  const mock = t.mock.method(
+    fs,
+    'readdir',
+    (...[target, options]: Parameters<typeof fs.readdir>) => {
+      if (String(target) === root && typeof options === 'object' && options?.withFileTypes) {
+        return Promise.reject(failure)
+      }
+      return readdir(target, options)
+    }
+  )
+  syncMock(t, () => mock.mock.restore())
+  const warning = t.mock.method(console, 'warn', () => {})
+  const run = await createRunLogDir(root, 1)
+  await releaseRunLogDir(run)
+  assert.deepEqual(await fs.readdir(root), [path.basename(run)])
+  assert.equal(warning.mock.calls.length, 2)
+  assert.ok(warning.mock.calls.every(call => call.arguments[1] === failure))
+})
+
+test('活动标记暂时无法释放时继续保护本轮，后续释放可以重试', async t => {
+  const root = await logFixture(t)
+  const first = await createRunLogDir(root, 1)
+  const marker = (await fs.readdir(root)).find(name => name.endsWith('.active'))!
+  const remove = fs.rm
+  const mock = t.mock.method(fs, 'rm', async (...[target, options]: Parameters<typeof fs.rm>) => {
+    if (String(target) === path.join(root, marker)) {
+      throw Object.assign(new Error('EBUSY: active marker'), { code: 'EBUSY' })
+    }
+    return remove(target, options)
+  })
+  syncMock(t, () => mock.mock.restore())
+  t.mock.method(console, 'warn', () => {})
+  await releaseRunLogDir(first)
+  const second = await createRunLogDir(root, 1)
+  await releaseRunLogDir(second)
+  assert.equal((await fs.stat(first)).isDirectory(), true)
+  mock.mock.restore()
+  syncBuiltinESMExports()
+  await releaseRunLogDir(first)
+  assert.deepEqual(await fs.readdir(root), [path.basename(second)])
+})
+
+test('新活动标记创建失败仍抛原错误，不假装已分配日志目录', async t => {
+  const root = await logFixture(t)
+  const failure = Object.assign(new Error('EPERM: create marker'), { code: 'EPERM' })
+  const writeFile = fs.writeFile
+  const mock = t.mock.method(
+    fs,
+    'writeFile',
+    async (...[target, data, options]: Parameters<typeof fs.writeFile>) => {
+      if (String(target).endsWith('.active')) {
+        throw failure
+      }
+      return writeFile(target, data, options)
+    }
+  )
+  syncMock(t, () => mock.mock.restore())
+  await assert.rejects(createRunLogDir(root), error => error === failure)
+  assert.deepEqual(await fs.readdir(root), [])
+})
+
+test('新轮次目录创建失败时，回收标记的错误不能覆盖原创建错误', async t => {
+  const root = await logFixture(t)
+  const failure = Object.assign(new Error('EPERM: create run directory'), { code: 'EPERM' })
+  const mkdir = fs.mkdir
+  const make = t.mock.method(fs, 'mkdir', (...[target, options]: Parameters<typeof fs.mkdir>) => {
+    if (path.basename(String(target)).startsWith('maa-tools-run-')) {
+      return Promise.reject(failure)
+    }
+    return mkdir(target, options)
+  })
+  const remove = fs.rm
+  const cleanup = t.mock.method(
+    fs,
+    'rm',
+    async (...[target, options]: Parameters<typeof fs.rm>) => {
+      if (String(target).endsWith('.active')) {
+        throw Object.assign(new Error('EBUSY: remove marker'), { code: 'EBUSY' })
+      }
+      return remove(target, options)
+    }
+  )
+  syncMock(t, () => {
+    make.mock.restore()
+    cleanup.mock.restore()
+  })
+  const warning = t.mock.method(console, 'warn', () => {})
+  await assert.rejects(createRunLogDir(root), error => error === failure)
+  assert.equal(
+    (await fs.readdir(root)).some(name => name.startsWith('maa-tools-run-')),
+    false
+  )
+  assert.equal(warning.mock.calls.length, 1)
 })

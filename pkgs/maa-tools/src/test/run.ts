@@ -92,6 +92,13 @@ export async function runTestDetailed(
   if (!testConfig) {
     return done('test-config-missing', 'test config missing')
   }
+  const configuredJobs = testConfig.job
+  if (
+    configuredJobs !== undefined &&
+    (!Number.isSafeInteger(configuredJobs) || configuredJobs < 1)
+  ) {
+    return done('invalid-test-config', 'test.job 必须是大于等于 1 的安全整数')
+  }
 
   const putLog = (log: string) => {
     if (cfg.mode === 'github') {
@@ -232,11 +239,12 @@ export async function runTestDetailed(
 
       errorCode = 'test-execution-failed'
       const runLogDir = await createRunLogDir(testLogRoot(cfg), testConfig.maaLogKeep)
+      putLog(`MaaFW log directory: ${runLogDir}`)
       let finished = 0
       try {
         for (const [poolIndex, group] of groupResourcePlans(activePlans).entries()) {
           const pool = workerpool.pool(path.join(import.meta.dirname, 'test', 'worker.mjs'), {
-            maxWorkers: testConfig.job ?? getDefaultTestJobCount(os.cpus().length),
+            maxWorkers: configuredJobs ?? getDefaultTestJobCount(os.cpus().length),
             workerType: 'process',
             forkOpts: {
               env: {

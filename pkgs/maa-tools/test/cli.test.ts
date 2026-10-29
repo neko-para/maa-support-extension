@@ -1,3 +1,4 @@
+import { createJiti } from 'jiti'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import * as fs from 'node:fs/promises'
@@ -7,7 +8,13 @@ import test, { type TestContext } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import type { TestCliOptions } from '../src/cli-args.ts'
+import type { FullConfig } from '../src/types/config.ts'
 import { assertPublicResult } from './assertions.ts'
+
+const { collectTests, loadConfig, loadTestCases, parseCliArgs, runTestDetailed } = await createJiti(
+  import.meta.url,
+  { fsCache: false }
+).import<typeof import('../src/index.ts')>('../src/index.ts')
 
 const toolsRoot = fileURLToPath(new URL('..', import.meta.url))
 const cliSource = fileURLToPath(new URL('../src/cli.ts', import.meta.url))
@@ -209,9 +216,7 @@ test('单 --list 的配置和参数错误只给人话，收集错误也不输出
   )
   for (const [args, status] of [
     [['test', '--list', 'missing.mts'], 1],
-    [['test', '--list', 'throw.mts'], 1],
-    [['test', '--list', '--file', 'a.json', '--case', '0'], 2],
-    [['test', '--list', '--resource'], 2]
+    [['test', '--list', 'throw.mts'], 1]
   ] as const) {
     const child = run(root, [...args])
     assert.equal(child.status, status, child.stderr)
@@ -257,35 +262,48 @@ test('runCli 直接调用也允许 list+json，并拒绝 list+case 和 jsonl 混
   )
 })
 
-test('配置缺失、配置抛错和非法配置对象，显式 JSON 均返回完整错误', async t => {
+test('配置读取负例走公共接口，JSON 入口保留配置缺失、抛错和非法对象的完整错误', async t => {
   const root = await fixture(t)
   await fs.writeFile(
     path.join(root, 'throwing.mts'),
     `console.info('BEFORE_THROW'); throw new Error('CONFIG_BOOM');`
   )
   await fs.writeFile(path.join(root, 'invalid.mts'), 'export default 17;')
-  for (const flags of [['--json'], ['--list', '--json']]) {
-    assertError(run(root, ['test', ...flags, 'missing.mts']), 'config-load-failed')
-    const throwing = run(root, ['test', ...flags, 'throwing.mts'])
-    assertError(throwing, 'config-load-failed')
-    assert.match(throwing.stderr, /BEFORE_THROW/)
-    assertError(run(root, ['test', ...flags, 'invalid.mts']), 'invalid-config')
-  }
+  t.mock.method(console, 'log', () => {})
+  t.mock.method(console, 'info', () => {})
+  assert.equal(await loadConfig(path.join(root, 'missing.mts')), null)
+  assert.equal(await loadConfig(path.join(root, 'throwing.mts')), null)
+  assert.equal(await loadConfig(path.join(root, 'invalid.mts')), 17)
+
+  assertError(run(root, ['test', '--json', 'missing.mts']), 'config-load-failed')
+  const throwing = run(root, ['test', '--list', '--json', 'throwing.mts'])
+  assertError(throwing, 'config-load-failed')
+  assert.match(throwing.stderr, /BEFORE_THROW/)
+  assertError(run(root, ['test', '--json', 'invalid.mts']), 'invalid-config')
 })
 
-test('机器模式参数错误也返回完整 JSON，不加载配置且保持参数错误退出码', async t => {
+test('公共参数解析覆盖非法格式，真实入口返回完整 JSON 且保持参数错误退出码', async t => {
   const root = await fixture(t)
   for (const args of [
     ['test', '--json', '--file', 'a.json', '--case', '1.5'],
     ['test', '--json', '--file', 'a.json', '--case', '1abc'],
     ['test', '--list', '--json', '--file', 'a.json', '--case', '0'],
     ['test', '--list', '--json', '--controller'],
-    ['test', '--json', '--file', '--json']
+    ['test', '--json', '--file', '--json'],
+    ['test', '--list', '--file', 'a.json', '--case', '0'],
+    ['test', '--list', '--resource']
   ]) {
-    const child = run(root, args)
-    assertError(child, 'invalid-cli-arguments')
-    assert.equal(child.status, 2)
+    const errors: string[] = []
+    assert.equal(
+      parseCliArgs(args, message => errors.push(message)),
+      null
+    )
+    assert.equal(errors.length, 1)
+    assert.ok(errors[0].length > 0)
   }
+  const child = run(root, ['test', '--json', '--file', 'a.json', '--case', '1.5'])
+  assertError(child, 'invalid-cli-arguments')
+  assert.equal(child.status, 2)
 })
 
 test('普通运行没有 --case 时不报选择错误，零匹配返回 empty/no-tests-matched', async t => {
@@ -348,12 +366,23 @@ test('实际用例函数抛错和展开组形状错误，list/json 都给完整�
     export default { interfacePath: 'unused', test: { cases: [null] } };
   `
   )
-  for (const flags of [['--list', '--json'], ['--json']]) {
-    const throwing = run(root, ['test', ...flags, 'throwing-cases.mts'])
-    assertError(throwing, 'test-cases-load-failed')
-    assert.match(throwing.stderr, /LOADER_LOG/)
-    assertError(run(root, ['test', ...flags, 'malformed-cases.mts']), 'invalid-test-config')
+  t.mock.method(console, 'info', () => {})
+  for (const [config, errorCode] of [
+    ['throwing-cases.mts', 'test-cases-load-failed'],
+    ['malformed-cases.mts', 'invalid-test-config']
+  ]) {
+    const cfg = (await loadConfig(path.join(root, config)))!
+    const collection = await collectTests(cfg)
+    const result = await runTestDetailed(cfg)
+    assertPublicResult([collection, result])
+    assert.equal(collection.errorCode, errorCode)
+    assert.equal(result.status, 'error')
+    assert.equal(result.errorCode, errorCode)
   }
+  const throwing = run(root, ['test', '--list', '--json', 'throwing-cases.mts'])
+  assertError(throwing, 'test-cases-load-failed')
+  assert.match(throwing.stderr, /LOADER_LOG/)
+  assertError(run(root, ['test', '--json', 'malformed-cases.mts']), 'invalid-test-config')
 })
 
 test('缺少 test 或没有来源的程序组，list 返回完整错误而非不完整清单', async t => {
@@ -362,42 +391,40 @@ test('缺少 test 或没有来源的程序组，list 返回完整错误而非不
     path.join(root, 'missing-test.mts'),
     `export default { interfacePath: 'unused' };`
   )
+  await fs.writeFile(path.join(root, 'selected.json'), testFileContent())
   await fs.writeFile(
     path.join(root, 'no-source.mts'),
     `
-    export default { interfacePath: 'unused', test: { cases: [{
-      configs: { controller: 'Desktop', resource: 'Local' }, cases: [{ image: 'x.png', hits: ['A'] }]
-    }] } };
+    import { loadTestCases } from ${JSON.stringify(filesSource)};
+    const loaded = await loadTestCases(${JSON.stringify(path.join(root, 'selected.json'))});
+    delete loaded.cases[0].origin;
+    export default { interfacePath: 'unused', test: { cases: [loaded] } };
   `
   )
   assertError(run(root, ['test', '--list', '--json', 'missing-test.mts']), 'test-config-missing')
   assertError(run(root, ['test', '--list', '--json', 'no-source.mts']), 'test-source-invalid')
-  await fs.writeFile(path.join(root, 'selected.json'), testFileContent())
   assertError(
     run(root, ['test', '--json', '--file', 'selected.json', 'no-source.mts']),
     'test-source-invalid'
   )
 })
 
-test('坏文件和缺文件的 JSON 清单及运行错误都保留文件信息', async t => {
+test('坏文件和缺文件的公共收集及运行错误都保留文件信息', async t => {
   const root = await fixture(t)
   await fs.writeFile(path.join(root, 'broken.json'), '{ invalid')
-  await fs.writeFile(
-    path.join(root, 'maatools.config.mts'),
-    `export default { interfacePath: 'unused', test: { cases: [] } };`
-  )
-  for (const file of ['broken.json', 'missing.json']) {
-    for (const flags of [['--list', '--json'], ['--json']]) {
-      const child = run(root, ['test', ...flags, '--file', file])
-      const payload = payloadOf(child)
-      assert.equal(child.status, flags.includes('--list') ? 0 : 1, child.stderr)
-      assert.equal(payload.files[0].file, path.join(root, file))
+  const cfg: FullConfig = { cwd: root, interfacePath: 'unused', test: { cases: [] } }
+  for (const name of ['broken.json', 'missing.json']) {
+    const file = path.join(root, name)
+    const collection = await collectTests(cfg, [file])
+    const result = await runTestDetailed(cfg, { targets: collection.files })
+    assertPublicResult([collection, result])
+    assert.equal(collection.errorCode, undefined)
+    assert.equal(result.status, 'error')
+    assert.equal(result.errorCode, 'test-file-error')
+    for (const payload of [collection, result]) {
+      assert.equal(payload.files[0].file, file)
       assert.ok(payload.files[0].error)
       assert.deepEqual(payload.files[0].cases, [])
-      if (!flags.includes('--list')) {
-        assert.equal(payload.status, 'error')
-        assert.equal(payload.errorCode, 'test-file-error')
-      }
     }
   }
 })
@@ -405,14 +432,20 @@ test('坏文件和缺文件的 JSON 清单及运行错误都保留文件信息',
 test('无来源JSON与文本入口明确拒绝，保存报告仅保留files', async t => {
   const root = await fixture(t)
   await fs.writeFile(path.join(root, 'exists.png'), '')
+  await fs.writeFile(path.join(root, 'selected.json'), testFileContent())
   await fs.writeFile(
     path.join(root, 'generated.mts'),
     `
+    import { loadTestCases } from ${JSON.stringify(filesSource)};
+    const loaded = await loadTestCases(${JSON.stringify(path.join(root, 'selected.json'))});
+    const invalid = { ...loaded.cases[0], image: 'exists.png', hits: [] };
+    delete invalid.origin;
     export default {
       cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
       test: { errorDetailsPath: 'reports/generated.json', cases: [{
-        configs: { name: '程序生成的显示组', controller: 'Desktop', resource: 'Local' },
-        source: '显示来源', nodes: ['A'], cases: [{ image: 'exists.png', hits: [] }]
+        ...loaded,
+        configs: { ...loaded.configs, name: '程序生成的显示组' },
+        nodes: ['A'], cases: [invalid]
       }] }
     };
   `
@@ -434,12 +467,13 @@ test('无来源JSON与文本入口明确拒绝，保存报告仅保留files', as
   assert.equal((await fs.readdir(root)).includes('debug'), false)
 })
 
-test('缺失或畸形origin在text/json/jsonl/list全部拒绝，图片存在也不触发框架准备', async t => {
+test('公共接口拒绝全部畸形 origin，CLI 各格式拒绝缺失 origin 且不准备框架', async t => {
   const root = await fixture(t)
   const file = path.join(root, 'selected.json')
   const marker = path.join(root, 'setup-entered')
   await fs.writeFile(file, testFileContent())
   await fs.writeFile(path.join(root, '0.png'), '')
+  const loaded = (await loadTestCases(file))!
   const variants = [
     undefined,
     { file: 'relative.json', case: 0 },
@@ -448,45 +482,69 @@ test('缺失或畸形origin在text/json/jsonl/list全部拒绝，图片存在也
     { file, case: Number.MAX_SAFE_INTEGER + 1 },
     { file, case: '0' }
   ]
+  let setupCalls = 0
   for (const origin of variants) {
-    await fs.writeFile(
-      path.join(root, 'invalid-source.mts'),
-      `
-      import { writeFileSync } from 'node:fs';
-      import { loadTestCases } from ${JSON.stringify(filesSource)};
-      export default {
-        cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
-        get maaCache() { writeFileSync(${JSON.stringify(marker)}, 'entered'); throw new Error('SETUP_ENTERED'); },
-        test: { cases: async () => {
-          const loaded = await loadTestCases(${JSON.stringify(file)});
-          const invalid = { ...loaded.cases[0] };
-          ${origin === undefined ? 'delete invalid.origin;' : `invalid.origin = ${JSON.stringify(origin)};`}
-          return [{ ...loaded, cases: [...loaded.cases, invalid] }];
-        } }
-      };
-    `
-    )
-    for (const flags of [[], ['--json'], ['--jsonl'], ['--list'], ['--list', '--json']]) {
-      const child = run(root, ['test', ...flags, '--file', file, 'invalid-source.mts'])
-      assert.equal(child.status, 1, child.stderr)
-      if (flags.includes('--jsonl')) {
-        const record = payloadOf(child)
-        assert.equal(record.type, 'run-result')
-        assert.equal(record.result.errorCode, 'test-source-invalid')
-        assert.equal(child.stdout.trim().split('\n').length, 1)
-      } else if (flags.includes('--json')) {
-        assertError(child, 'test-source-invalid')
-      } else {
-        assert.match(child.stderr, /origin/)
-      }
-      await assert.rejects(fs.access(marker), { code: 'ENOENT' })
+    const invalid = { ...loaded.cases[0] }
+    if (origin === undefined) {
+      Reflect.deleteProperty(invalid, 'origin')
+    } else {
+      Object.assign(invalid, { origin })
     }
-    const saved = JSON.parse(
-      await fs.readFile(path.join(root, 'maatoolsErrorDetails.json'), 'utf8')
-    )
-    assertPublicResult(saved)
-    assert.equal(saved.errorCode, 'test-source-invalid')
+    const cfg: FullConfig = {
+      cwd: root,
+      interfacePath: 'unused',
+      get maaCache(): string {
+        setupCalls++
+        throw new Error('SETUP_ENTERED')
+      },
+      test: { cases: [{ ...loaded, cases: [...loaded.cases, invalid] }] }
+    }
+    const collection = await collectTests(cfg)
+    const result = await runTestDetailed(cfg)
+    assertPublicResult([collection, result])
+    assert.equal(collection.errorCode, 'test-source-invalid')
+    assert.equal(result.status, 'error')
+    assert.equal(result.errorCode, 'test-source-invalid')
+    assert.match(collection.reason!, /origin/)
+    assert.match(result.reason!, /origin/)
   }
+  assert.equal(setupCalls, 0)
+
+  await fs.writeFile(
+    path.join(root, 'invalid-source.mts'),
+    `
+    import { writeFileSync } from 'node:fs';
+    import { loadTestCases } from ${JSON.stringify(filesSource)};
+    export default {
+      cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+      get maaCache() { writeFileSync(${JSON.stringify(marker)}, 'entered'); throw new Error('SETUP_ENTERED'); },
+      test: { cases: async () => {
+        const loaded = await loadTestCases(${JSON.stringify(file)});
+        const invalid = { ...loaded.cases[0] };
+        delete invalid.origin;
+        return [{ ...loaded, cases: [...loaded.cases, invalid] }];
+      } }
+    };
+  `
+  )
+  for (const flags of [[], ['--json'], ['--jsonl'], ['--list'], ['--list', '--json']]) {
+    const child = run(root, ['test', ...flags, '--file', file, 'invalid-source.mts'])
+    assert.equal(child.status, 1, child.stderr)
+    if (flags.includes('--jsonl')) {
+      const record = payloadOf(child)
+      assert.equal(record.type, 'run-result')
+      assert.equal(record.result.errorCode, 'test-source-invalid')
+      assert.equal(child.stdout.trim().split('\n').length, 1)
+    } else if (flags.includes('--json')) {
+      assertError(child, 'test-source-invalid')
+    } else {
+      assert.match(child.stderr, /origin/)
+    }
+    await assert.rejects(fs.access(marker), { code: 'ENOENT' })
+  }
+  const saved = JSON.parse(await fs.readFile(path.join(root, 'maatoolsErrorDetails.json'), 'utf8'))
+  assertPublicResult(saved)
+  assert.equal(saved.errorCode, 'test-source-invalid')
   assert.equal((await fs.readdir(root)).includes('debug'), false)
 })
 

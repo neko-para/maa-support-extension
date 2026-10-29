@@ -104,7 +104,6 @@ export function buildGroupRunResult(
 ): TestGroupRunResult {
   return {
     name: groupNameOf(testCases),
-    ...(testCases.source ? { source: testCases.source } : {}),
     controller: testCases.configs.controller,
     resource: testCases.configs.resource,
     verdict: groupVerdict(cases),

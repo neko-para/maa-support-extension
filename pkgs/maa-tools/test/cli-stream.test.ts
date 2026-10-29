@@ -207,10 +207,10 @@ test('缺 test、缺来源、坏文件和缺文件的进度及最终错误均保
   )
   await fs.writeFile(
     path.join(root, 'no-source.mts'),
-    `export default { interfacePath: 'unused', test: { cases: [{
-      configs: { controller: 'Desktop', resource: 'Local' },
-      cases: [{ image: 'missing.png', hits: ['A'] }]
-    }] } };`
+    `import { loadTestCases } from ${JSON.stringify(filesSource)};
+    const loaded = await loadTestCases(${JSON.stringify(path.join(root, 'selected.json'))});
+    delete loaded.cases[0].origin;
+    export default { interfacePath: 'unused', test: { cases: [loaded] } };`
   )
   await fs.writeFile(path.join(root, 'broken.json'), '{ invalid')
   for (const [args, errorCode] of [
@@ -254,11 +254,13 @@ test('全量和混合无来源CLI在计划阶段拒绝，只输出唯一最终�
       export default {
         cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
         test: { cases: async () => {
-          const loaded = ${mixed ? `await loadTestCases(${JSON.stringify(file)})` : 'null'};
+          const loaded = await loadTestCases(${JSON.stringify(file)});
+          const generated = { ...loaded.cases[0], image: 'generated.png' };
+          delete generated.origin;
           return [{
-            configs: { name: '程序生成组', controller: 'Desktop', resource: 'Local' },
-            source: '显示来源',
-            cases: [...(loaded?.cases ?? []), { image: 'generated.png', hits: ['A'] }]
+            ...loaded,
+            configs: { ...loaded.configs, name: '程序生成组' },
+            cases: [...(${mixed} ? loaded.cases : []), generated]
           }];
         } }
       };

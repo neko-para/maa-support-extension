@@ -72,7 +72,7 @@ test('loader排除的有效文件和原始下标不进清单，改组名、重�
   const cfg = configFor(dir, async () => {
     const all = await loadFolder(dir)
     return all
-      .filter(group => group.source?.endsWith('keep.json'))
+      .filter(group => group.cases[0].origin.file === path.join(dir, 'custom-cases/keep.json'))
       .map(group => ({
         configs: { ...group.configs, name: '任意名字' },
         cases: [group.cases[2], group.cases[0]]
@@ -130,7 +130,6 @@ test('loadTestCases从原文件填origin，loader展开自然保留；读取和�
   const file = path.join(dir, 'custom-cases/normal.json')
   const loaded = await loadTestCases(file)
   assert.ok(loaded)
-  assert.equal(loaded.source, file)
   assert.deepEqual(
     loaded.cases.map(testCase => testCase.origin),
     [

@@ -155,7 +155,6 @@ export async function readTestFile(file: string): Promise<{
   const testCases = parsed.testCases
     ? {
         ...parsed.testCases,
-        source: absolute,
         cases: parsed.testCases.cases.map((testCase, index) => ({
           ...testCase,
           hits: testCase.hits.filter(hit => hitNodeName(hit) !== null),

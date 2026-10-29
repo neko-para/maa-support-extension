@@ -36,7 +36,6 @@ export type CaseOrigin = {
 }
 
 export type TestCases = {
-  source?: string
   /** 本组完整的待检查节点，展开时在用例过滤前固定。 */
   nodes?: string[]
   configs: {

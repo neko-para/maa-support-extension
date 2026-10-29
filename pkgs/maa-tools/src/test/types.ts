@@ -57,7 +57,6 @@ export type TestCaseRunResult = {
 
 export type TestGroupRunResult = {
   name: string
-  source?: string
   /** configs 中声明的原值，不是截图目录别名。 */
   controller: string
   resource: string

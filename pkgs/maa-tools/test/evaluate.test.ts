@@ -334,10 +334,9 @@ test('组结论：失败、错误、通过、跳过以及没有用例分别处�
   assert.equal(groupVerdict([]), 'error')
 })
 
-test('结果组保留来源与 controller/resource 声明值', () => {
+test('结果组保留逐用例来源与 controller/resource 声明值', () => {
   const group = buildGroupRunResult(
     {
-      source: '/repo/tests/Common/Button/test_close_button.json',
       configs: {
         name: '关闭按钮',
         controller: 'Win32',
@@ -350,7 +349,10 @@ test('结果组保留来源与 controller/resource 声明值', () => {
   )
 
   assert.equal(group.name, '关闭按钮')
-  assert.equal(group.source, '/repo/tests/Common/Button/test_close_button.json')
+  assert.deepEqual(
+    group.cases.map(testCase => testCase.origin),
+    [ORIGIN, ORIGIN]
+  )
   assert.equal(group.controller, 'Win32')
   assert.equal(group.resource, '官服')
   assert.equal(group.verdict, 'pass')
@@ -358,13 +360,12 @@ test('结果组保留来源与 controller/resource 声明值', () => {
   assert.equal(group.cases.length, 2)
 })
 
-test('没写 name 时用 controller:resource，没有 source 就不添加', () => {
+test('没写 name 时用 controller:resource', () => {
   const group = buildGroupRunResult(
     { configs: { controller: 'Controller', resource: 'Resource' }, cases: [] },
     [caseResult('skipped')]
   )
 
   assert.equal(group.name, 'Controller:Resource')
-  assert.equal('source' in group, false)
   assert.equal(group.verdict, 'skipped')
 })

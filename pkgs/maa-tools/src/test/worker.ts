@@ -2,9 +2,8 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
-import { makeFakeController, toArrayBuffer } from '../utils'
-import { loadMaa } from '../utils/maa'
-import type { RecoJob, RecoResult } from './types'
+import { loadMaa, makeFakeController, toArrayBuffer } from '../utils/maa'
+import type { RecoJob, RecoJobOutcome, RecoResult } from './types'
 
 await loadMaa(
   process.env.MAAFW_MODULE_PATH,
@@ -58,34 +57,52 @@ async function setup() {
   })
 }
 
-async function performReco(job: RecoJob) {
+async function performReco(job: RecoJob): Promise<RecoJobOutcome> {
   if (!inst) {
     await setup()
   }
 
-  const image = toArrayBuffer(await fs.readFile(job.imagePath))
-  const result: RecoResult[] = []
-
+  // 只累计读图和识别工作，排除 worker 初始化与任务队列中的等待。
+  const readStartedAt = performance.now()
+  let image: ArrayBuffer
+  try {
+    image = toArrayBuffer(await fs.readFile(job.imagePath))
+  } catch (error) {
+    console.error(error)
+    return { results: [], durationMs: performance.now() - readStartedAt }
+  }
+  let durationMs = performance.now() - readStartedAt
+  const results: RecoResult[] = []
   const { promise, resolve } = Promise.withResolvers<void>()
 
   taskQueue.push(async context => {
-    for (const node of job.nodes) {
-      const detail = await context.run_recognition(node, image)
-      result.push({
-        imagePath: job.imagePath,
-        imagePathRaw: job.imagePathRaw,
-        node: node,
-        hit: !!detail?.hit,
-        detail,
-        pid: process.pid
-      })
+    const startedAt = performance.now()
+    try {
+      for (const node of job.nodes) {
+        try {
+          const detail = await context.run_recognition(node, image)
+          results.push({
+            imagePath: job.imagePath,
+            imagePathRaw: job.imagePathRaw,
+            node,
+            hit: !!detail?.hit,
+            detail,
+            pid: process.pid
+          })
+        } catch (error) {
+          // 缺失节点由 evaluateCase 记为 no-result，不能让队列等待永不结束。
+          console.error(error)
+        }
+      }
+    } finally {
+      durationMs += performance.now() - startedAt
+      resolve()
     }
-    resolve()
   })
   taskAddResolve()
   await promise
 
-  return result
+  return { results, durationMs }
 }
 
 workerpool.worker(

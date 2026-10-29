@@ -1,6 +1,33 @@
-export type * from './types/config'
-export * from './check'
-export * from './test'
-export * from './cli'
-export * from './utils/config'
-export * from './utils/tools'
+export type {
+  BaseConfig,
+  CheckConfig,
+  CaseOrigin,
+  TestCases,
+  TestConfig,
+  VscodeConfig,
+  FullConfig
+} from './types/config'
+export { runCheck } from './check'
+export { collectTests } from './test/collect'
+export { runTest, runTestDetailed } from './test/run'
+export type {
+  CaseCheckResult,
+  CaseVerdict,
+  CheckFailureReason,
+  ListedCase,
+  ListedFile,
+  TestCaseRunResult,
+  TestCollection,
+  TestFileCaseResult,
+  TestFileRunResult,
+  TestRunEvent,
+  TestRunLine,
+  TestRunOptions,
+  TestRunResult,
+  TestRunStatus
+} from './test/types'
+
+export { parseCliArgs, runCli, runCliFromArgs } from './cli'
+export type { CliInvocation, TestCliOptions } from './cli-args'
+export { loadConfig } from './utils/config'
+export { loadAllTestCases, loadTestCases } from './test/files'

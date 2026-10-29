@@ -15,7 +15,7 @@ import {
 import type { FullConfig } from '../types/config'
 import { CachedContentLoader, loadBundle } from '../utils/bundle'
 import { loadMaa, setupMaa } from '../utils/maa'
-import { calucateLocation } from './utils'
+import { calculateLocation } from './location'
 
 type CheckTarget = {
   controller: string
@@ -147,7 +147,10 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
   if (!modulePath) {
     return false
   }
-  await loadMaa(modulePath, path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? 'debug'))
+  await loadMaa(
+    modulePath,
+    path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? 'debug', 'check')
+  )
   if (cfg.maaStdoutLevel) {
     maa.Global.stdout_level = cfg.maaStdoutLevel
   }
@@ -184,7 +187,7 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
       content = fs.readFile(file, 'utf8')
       files.set(file, content)
     }
-    return calucateLocation(await content, offset)
+    return calculateLocation(await content, offset)
   }
 
   let loadResourceFailed = false

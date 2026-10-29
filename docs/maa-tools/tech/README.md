@@ -2,106 +2,204 @@
 
 > ⚠️ 本文档由 AI 生成，主要用于辅助 AI 理解项目。内容可能与实际代码不同步，请注意甄别。
 
-本包遵循 [通用技术约定](../extra/common-tech.md)。
+本包遵循 [通用技术约定](../../extra/common-tech.md)。命令用法和结果字段见 [产品定义](../models/README.md)。
 
-## 模块架构
+## 模块职责
 
-```
-src/
-├── index.ts              # API 入口
-├── cli.ts                # CLI 调度器: runCli(cmd, cfg)
-├── pm.ts                 # Pipeline Manager 转导出
-├── check/
-│   ├── index.ts          # runCheck(cfg): 诊断执行和输出
-│   └── utils.ts          # calculateLocation() 偏移→行列转换
-├── test/
-│   ├── index.ts          # runTest(cfg): 测试调度和 workerpool 管理
-│   ├── types.ts          # RecoJob, RecoResult, GroupRecoResult
-│   ├── worker.ts         # Worker 进程入口 (MAA 识别执行)
-│   ├── env.d.ts          # 环境变量类型声明
-│   └── utils.ts          # checkRect() bounding box 验证
-├── types/
-│   └── config.ts         # 配置类型: BaseConfig, CheckConfig, TestConfig, FullConfig
-└── utils/
-    ├── bundle.ts         # InterfaceBundle 加载器
-    ├── config.ts         # jiti 配置加载器
-    ├── tools.ts          # 测试用例加载: loadTestCases(), loadAllTestCases()
-    ├── maa.ts            # MAA 框架生命周期: setupMaa(), loadMaa(modulePath, logDir)
-    │                     #   设置 maa.Global.log_dir = logDir（精确日志目录，
-    │                     #   check 默认 <cwd>/debug，test 默认 <cwd>）
-    └── utils.ts          # 通用工具: toArrayBuffer(), gzCompress(), makeFakeController()
-```
+下表逐一列出包内源码，路径相对 `pkgs/maa-tools/src/`。收集和运行共用文件读取、配置展开与选择规则；识别工作进程和结果判定分别维护。
 
-## 核心流程
+| 文件                                                               | 用途                                                                                     |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| [index.ts](../../../pkgs/maa-tools/src/index.ts)                   | 主包公开入口，导出检查、收集、运行、CLI、配置加载、测试文件加载函数及相关类型            |
+| [cli.ts](../../../pkgs/maa-tools/src/cli.ts)                       | 加载配置，分派检查、收集和运行，输出文本、JSON 文档或逐行进度，处理命令错误              |
+| [cli-args.ts](../../../pkgs/maa-tools/src/cli-args.ts)             | 解析命令、配置路径和过滤参数，提供帮助，拒绝非法下标与参数组合                           |
+| [pm.ts](../../../pkgs/maa-tools/src/pm.ts)                         | 提供 `@nekosu/maa-tools/pm` 入口，转导出 pipeline-manager 的接口                         |
+| [types/config.ts](../../../pkgs/maa-tools/src/types/config.ts)     | 定义公共配置、检查设置、已展开测试组和单条用例的来源类型                                 |
+| [utils/config.ts](../../../pkgs/maa-tools/src/utils/config.ts)     | 用 jiti 加载 TypeScript 配置文件，返回配置对象                                           |
+| [utils/paths.ts](../../../pkgs/maa-tools/src/utils/paths.ts)       | 生成来源路径比较键；Windows 忽略大小写，其他系统区分；显示数据由调用方保留原样           |
+| [utils/bundle.ts](../../../pkgs/maa-tools/src/utils/bundle.ts)     | 加载 interface bundle，提供单次检查共用的文件内容缓存                                    |
+| [utils/maa.ts](../../../pkgs/maa-tools/src/utils/maa.ts)           | 准备框架版本、加载原生模块并设置日志目录；提供图片缓冲区转换和识别用空图片控制器         |
+| [check/index.ts](../../../pkgs/maa-tools/src/check/index.ts)       | 组织资源组合检查、控制并发，执行 pipeline 诊断和原生资源加载校验并输出结果               |
+| [check/location.ts](../../../pkgs/maa-tools/src/check/location.ts) | 用 `calculateLocation` 把诊断字符偏移转换为行、列位置                                    |
+| [test/files.ts](../../../pkgs/maa-tools/src/test/files.ts)         | 读取并校验允许注释的测试 JSON，保留源码范围、注入 origin，记录本次读取的文件             |
+| [test/selection.ts](../../../pkgs/maa-tools/src/test/selection.ts) | 构造与合并文件/下标目标，固定完整待检查节点，按平台和来源筛选用例并整理选择元数据        |
+| [test/plan.ts](../../../pkgs/maa-tools/src/test/plan.ts)           | 执行 `test.cases`，校验展开组与实际来源文件及原始下标，固定节点并选择范围                |
+| [test/collect.ts](../../../pkgs/maa-tools/src/test/collect.ts)     | 调用同一展开过程，生成收集清单及来源错误，不初始化框架                                   |
+| [test/run.ts](../../../pkgs/maa-tools/src/test/run.ts)             | 安排识别任务、计划顺序、并发数与资源分组，管理工作进程和日志；提供详细报告与布尔运行接口 |
+| [test/images.ts](../../../pkgs/maa-tools/src/test/images.ts)       | 解析截图路径，把去重截图和完整节点分成识别任务，分摊同图耗时                             |
+| [test/worker.ts](../../../pkgs/maa-tools/src/test/worker.ts)       | 在子进程加载指定框架和资源，用截图执行识别，返回原始结果与真实任务耗时                   |
+| [test/evaluate.ts](../../../pkgs/maa-tools/src/test/evaluate.ts)   | 按完整节点、预期命中和识别框判定单条用例，构造组结果                                     |
+| [test/report.ts](../../../pkgs/maa-tools/src/test/report.ts)       | 将平台结果唯一汇总到文件，检查来源归属、选择覆盖并形成整批结论                           |
+| [test/progress.ts](../../../pkgs/maa-tools/src/test/progress.ts)   | 等待实际计划中的各平台和节点完成，调用判定与汇总，按序发布开始、完成和范围快照           |
+| [test/log-dir.ts](../../../pkgs/maa-tools/src/test/log-dir.ts)     | 分配日志轮次、跟踪活动运行、回收失效标记并清理已结束日志                                 |
+| [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告、进度事件与 JSONL 记录的结构                            |
+| [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径等环境变量提供类型                       |
 
-### check 流程
+主包导出 `runCheck`、`runTest`、`runTestDetailed`、`collectTests`、配置与文件加载等公共接口。内部辅助函数按所属用途维护，包入口显式导出公共接口。
 
-```
-1. loadConfig(configPath) → FullConfig
-2. setupMaa(cfg) → 下载/加载 MaaFramework
-3. 创建发现用 InterfaceBundle，解析 controller×resource 组合的最终资源路径
-4. 按有序路径列表合并等价组合
-5. 按 `check.job`（默认 `min(4, availableParallelism)`）启动并发任务
-6. 每个任务创建隔离的 InterfaceBundle 和 `maa.Resource`，共享只读文件内容缓存
-7. 在任务内执行 `performDiagnostic()`，并按路径顺序执行 `post_bundle()`
-8. 收集全部结果后按发现顺序格式化并输出诊断
-```
+主要运行关系如下；命令行先解析参数并加载配置，库调用直接进入对应函数：
 
-并发调度在同一 Node.js 进程内完成，以兼容 `maatools.config.mts` 中不可序列化的自定义 parser 函数。每个任务拥有独立的可变 bundle 状态和 MaaFramework Resource；同一资源组内的多个路径仍顺序加载，保持资源覆盖语义。不同 controller/resource 组合若解析为完全相同的有序路径列表，只检查一次，输出标题会列出所有等价组合。
-
-`CachedContentLoader` 在单次检查中缓存文件读取 Promise，使并发 bundle 共享同一份只读文件内容，避免公共资源文件被重复读取。`InterfaceBundle.stop()` 会完整关闭 interface、import、locale 与 resource watcher，确保 `runCheck()` 作为 API 调用时也能自然退出。
-
-`runCheck()` 不是 watch 模式：它只使用 chokidar 的初始扫描生成待加载文件集，完成诊断后即关闭 watcher，项目变更后仍需重新调用 checker。一次性 snapshot 扫描已用 M9A 和 MaaEnd 验证：诊断输出完全一致，但两项目的中位耗时均增加，所以保留 chokidar 的初始扫描实现。
-
-### test 流程
-
-```
-1. loadConfig(configPath) → FullConfig
-2. setupMaa(cfg) → 下载/加载 MaaFramework
-3. 加载所有测试用例
-4. 解析每个 controller/resource 的有序资源路径，并合并路径完全相同的等价配置
-5. 每组创建一个 workerpool，分发该组的 RecoJob 后立即释放
-6. Worker: loadMaa() → setupInstance() → performReco()
-7. 收集结果，按原 controller/resource 排序和 mode 输出
+```mermaid
+flowchart LR
+    cli["cli.ts"] --> check["check/index.ts：资源检查"]
+    cli --> collect["test/collect.ts：收集"]
+    cli --> run["test/run.ts：运行"]
+    collect --> plan["test/plan.ts：展开配置"]
+    run --> plan
+    plan --> files["test/files.ts：读取来源"]
+    plan --> selection["test/selection.ts：选择范围"]
+    run --> images["test/images.ts：准备任务"]
+    run --> worker["test/worker.ts：执行识别"]
+    worker -->|结果和耗时| progress["test/progress.ts：完成结果"]
+    progress --> evaluate["test/evaluate.ts：判定"]
+    progress --> report["test/report.ts：汇总"]
 ```
 
-worker 进程从环境变量一次性加载资源，因此不同有序路径组不能共享同一个 pool。调度器先创建保持报告顺序的结果槽位，再按 `JSON.stringify(resourcePaths)` 的结构键聚合执行计划；相同路径即使来自不同 controller/resource 也只创建一次 pool，路径顺序不同则保持隔离。任一组结束或抛错时均在 `finally` 中终止 pool，同时发现用 `InterfaceBundle` 在规划完成后关闭全部 watcher。
+收集与运行共用配置展开及来源选择；识别结果返回后由进度模块调用判定和报告。框架版本准备与原生辅助由 [utils/maa.ts](../../../pkgs/maa-tools/src/utils/maa.ts) 提供，工作进程负责每张截图的识别执行。
 
-## MAA 日志目录
+## 检查流程
 
-`loadMaa(modulePath, logDir)` 直接设置 `maa.Global.log_dir = logDir`，保留 `cfg.maaLogDir` 配置字段及其兼容性，不重命名、不引入 `config_init_option`。
+1. 加载配置，准备 MaaFramework。
+2. 创建发现用 InterfaceBundle，求出控制器与资源组合的有序资源路径。
+3. 合并完全相同的有序路径列表。
+4. 按 `check.job` 启动有限个任务，每个任务独立创建 bundle 和 Resource。
+5. 执行诊断和顺序资源加载，应用严重级别配置。
+6. 全部结果就绪后按发现顺序输出，关闭 watcher。
 
-`setupMaa(cfg)` 在构造 `MaaVersionManager` 时同时注入 `maaCache` 和 `maaMirror`，使一次版本查询/安装从启动起使用确定的 registry。
+并发调度在同一 Node.js 进程完成，以支持配置中的自定义 parser 函数。每个任务有独立的可变状态；单次检查的只读文件内容由 `CachedContentLoader` 共享缓存。相同路径但顺序不同不能合并，以保留资源覆盖语义。
 
-- **check 流程**：未显式配置 `maaLogDir` 时默认 `debug`，即日志写入 `<cwd>/debug/`，避免以工作区根目录为日志目录时 MaaFramework 递归清理仓库内旧 PNG（TODO-23）。
-- **test 流程**：保留原默认 `.`（cwd 根目录），通过 `MAAFW_LOG_DIR` 环境变量传入，worker 在其下按 pool/pid 建子目录隔离。
+`runCheck` 只借用 chokidar 的初始扫描生成加载文件集，不是持续监听命令。规划或检查完成后关闭相关 InterfaceBundle watcher，API 调用结束后不应因这些 watcher 挂住。
 
-## 依赖关系
+## 收集与运行共用的定义
 
-### 工作区依赖
+[test/files.ts](../../../pkgs/maa-tools/src/test/files.ts) 使用同一套 `parseTestContent`、`readTestFile` 产生运行对象与文件元数据。JSON 允许注释，不允许尾逗号；形状错误转为文件错误条目。成功读取时给每条用例写 `origin: {file: 绝对路径, case: 原始下标}`，选择与结果关联都使用这份来源。
 
-| 包                             | 角色                  |
-| ------------------------------ | --------------------- |
-| `@nekosu/maa-locale`           | 输出国际化            |
-| `@nekosu/maa-pipeline-manager` | Pipeline 加载/诊断    |
-| `@nekosu/maa-version-manager`  | MaaFramework 版本管理 |
+配置加载和展开期间通过 `AsyncLocalStorage` 保存本次文件读取记录，包括失败文件。CLI 从配置加载前开始记录，因此配置模块顶层提前读取的坏文件也能报告。收集不额外猜测测试目录；配置可以改变扫描目录、glob 或直接提供数组。
 
-### 外部依赖
+`expandTestGroups` 在一次调用中执行配置用例函数、检查展开组结构，再固定 `nodes`。如果配置显式给出节点集合则使用它，否则从过滤前的完整组用例提取。之后才按控制器、资源、来源文件和原始下标过滤，所选组仍保留相同的完整 nodes。
 
-| 包              | 用途                    |
-| --------------- | ----------------------- |
-| `@actions/core` | GitHub Actions 注解输出 |
-| `chalk`         | 终端颜色                |
-| `jiti`          | 运行时 TS 配置加载      |
-| `jsonc-parser`  | 测试用例 JSONC 解析     |
-| `workerpool`    | 多进程并行测试          |
+实际进入展开组的 origin 决定清单中的有效文件与原始下标。已读取但被配置主动排除的有效用例不列出；读取失败的文件记录保留。源文件的 controllers/resources 是显示元数据，不能把源声明中的所有控制器和资源组合作为应运行的平台。
 
-## 技术选型
+只支持文件测试，展开后的 `TestCases.cases.origin` 与 `TestCaseRunResult.origin` 在类型和运行时都必填。普通测试 JSON 填写 `name`、`image`、`hits` 等字段，`loadTestCases`/`loadAllTestCases` 自动产生来源；自定义 loader 必须保留，动态生成的展开对象也须关联实际文件和原始下标。`expandTestGroups` 校验 origin 的结构，再读取或复用对应文件元数据，逐条匹配原始下标；缺少、格式无效或无法匹配的来源在加载计划阶段报 `test-source-invalid`，先于 MaaFramework 初始化。组名用于日志与显示，来源文件路径和原始下标共同确定用例身份。
 
-| 选择                             | 理由                                                                                |
-| -------------------------------- | ----------------------------------------------------------------------------------- |
-| `jiti` 配置加载                  | TypeScript 配置文件，IDE 类型检查                                                   |
-| `workerpool`                     | 多进程并行，隔离 MAA 实例                                                           |
-| check 进程内有限并发             | 保留自定义 parser 函数，并通过隔离 bundle/Resource 避免可变状态竞争                 |
-| 三态输出模式                     | 统一 CLI/CI/API 消费                                                                |
-| devDependency 作为 fallback 版本 | 从 devDeps 读取 `@maaxyz/maa-node`，使默认运行时版本与编译/类型检查版本保持单一来源 |
+## 识别执行
+
+1. 展开与选择实际测试，得到内部 `groups` 和计划文件元数据；没有任何用例匹配时返回 empty。
+2. 解析每条用例实际图片路径，记录是否存在，按组内规范化绝对图片路径去重。
+3. 使用过滤前固定的 nodes 建任务，按 `maxNodePerJob` 分块。缺图保留 skipped；无待检查节点保留 error，不把零检查当通过。
+4. 仅当确有识别任务时准备 MaaFramework 与 bundle，解析有序资源路径；纯缺图或纯无节点不做初始化。
+5. 相同有序资源路径的组共用一个进程池，按配置并行任务。不同有序路径组分别创建池。
+6. 首次提交某来源相关识别任务时发 case-started；跨平台只开始一次。worker 返回节点识别结果和执行耗时，失败任务留下缺失结果，不能用空数组默认通过。
+7. 每张图的全部节点块完成后，立即用 `evaluateCase` 判定该图对应的所有用例，不等整个组或所有计划结束。检查使用同组完整节点：声明的应命中，未声明的不应命中；负例缺少节点结果也算失败。
+8. 规范化路径相同的图片只运行一份任务，其时间在对应的所选用例间均分，最后一条取余额。各条用例按自己的期望独立判定，记录到对应实际计划槽位；最后一个计划平台完成后发 case-result，文件全部所选用例完成后发 file-result。
+9. 在 finally 中终止池，全部 worker 停止后释放本次日志活动标记。资源规划用 bundle 完成后关闭 watcher。
+
+单条与整文件改变的是待验证截图范围，不是每张截图的断言。名字相同或同图但期望框不同的用例仍分别判定，并各自携带精确 origin。
+
+## 结果与错误
+
+`evaluateCase` 返回包含检查明细与判定的 `TestCaseRunResult`。执行层的内部组结果和实际计划组负责展开、固定节点、调度、并行判定及辨别某个平台是否缺结果，文本日志按组显示；平台范围由实际展开配置确定。`buildTestRunResult` 将平台结果唯一汇总到所属文件用例的 `platforms[].result`，每个实际平台结果只出现一次。
+
+`TestRunResult` 包含 `status`、`files`、`durationMs` 和可选的 `errorCode`、`reason`，`files` 按文件、原始用例与实际平台组织结果。每个 `TestCaseRunResult` 必须带有效 origin，与所属文件及用例原始下标一致。来源无法匹配文件元数据或原始下标时明确报告来源错误，不能静默丢弃后算通过。
+
+文件结果保留 `selectedCases`，逐用例条目覆盖这些原始下标。过滤后本次 cases 为空且无文件错误时，文件为 `skipped`、reason 为 `no-cases-selected`，`selectedCases` 和 `cases` 都为空；它不影响其他文件的通过或失败，全部过滤为空时整批仍为 `empty`。有选择却缺结果、坏文件及全缺图无验证仍保留错误。没有用例的文件完成快照使用空计划，与最终文件结论一致。
+
+来源文件路径统一使用 `pathKey`/`samePath` 比较：Windows 规范化后忽略大小写，其他系统保留大小写区分；请求、读取记录、来源筛选、报告和进度均按此匹配与去重，返回路径保留原有大小写。
+
+跨平台用例按 fail、error、skipped、pass 的顺序汇总。文件先看用例 fail，再看文件 error 或用例 error，之后检查各平台是否至少完成过有效检查。部分平台缺图会让用例汇总为 skipped，但另一个平台已验证时文件仍可 pass；不能根据所有聚合用例都 skipped 判定全缺图。
+
+顶层优先报告 error，其次 failed，再是 passed，文件错误仍使整批 error；零匹配为 empty。没有任何有效检查不能返回 passed。
+
+`runTestDetailed` 返回这一完整结果。`runTest` 使用同一结果计算布尔值，并在 failed/error 时把完整 `TestRunResult` 写到指定错误文件。
+
+内部组及公开用例的时间是实际识别任务时间及其分摊，顶层时间是本次运行实际经过的时间，包含准备、等待和清理；并行任务求和可能大于后者。
+
+`runTestDetailed` 在展开用例前检查显式 `test.job`，要求大于等于 1 的安全整数，非法值返回 `invalid-test-config`。默认并发数由逻辑 CPU 数除以 4 向下取整，最少 1；workerpool 使用已校验的配置值。
+
+## 命令行机器输出
+
+`--list` 选择收集操作，`--json` 选择 JSON 格式，二者可组合：单独 `--list` 输出人类列表，`--list --json` 输出同一完整收集清单。默认运行输出文本，`--json` 输出一份运行报告，`--jsonl` 每行输出进度并以唯一 `run-result` 结束。拒绝 `--json --jsonl`、`--list --jsonl` 和 `--list --case`。
+
+所有收集及 JSON 输出从配置加载前把 JavaScript 日志转到 stderr；收集列表、JSON 文档和流式记录使用保存的 stdout 出口。这个接管不拦截原生代码直接写文件描述符；识别进程另关闭原生 stdout 日志。
+
+选择 `--json` 或 `--jsonl` 后，参数、配置、测试文件、来源与运行错误都用相应机器格式输出。单独 `--list` 的错误只作文字说明，不混入 JSON；`--list --json` 保留完整错误 JSON。成功收集清单为 `{files: [...]}`，顶层错误另带 `errorCode`、`reason` 等字段；两种列表都从同一 `collectTests` 结果格式化，不初始化 MaaFramework。运行报告使用完整 `TestRunResult`。
+
+配置 `mode: 'json'` 控制内部日志输出，完整报告或逐行进度由 CLI 显式 `--json`、`--jsonl` 选择。`--version` 不加载配置并输出普通版本字符串。
+
+JSON 接口兼容性随 maa-tools 包版本管理，1.x 变更规则见[包版本与 JSON 兼容](../models/README.md#包版本与-json-兼容)。插件收集与运行读取已安装包的 `package.json` 检查稳定版 `>=1.2.0 <2.0.0`，不为每次操作额外执行 `--version`；状态栏优先查询 `--version`，并与兼容提示共用查询结果。包声明在范围内不能证明命令能运行，启动、退出和实际数据的必需结构、合法 `type`、来源覆盖及进度与最终结果一致性仍须检查。
+
+## 即时事件与最终报告
+
+`TestRunOptions.onEvent` 接收从测试入口导出的 `TestRunEvent`。事件形状见 [即时开始与完成](../models/README.md#即时开始与完成)。`TestRunProgress` 按配置实际展开的组与用例槽位统计每个 origin 的待完成数，不用源声明的平台组合推断，也不用组名作身份。
+
+每张图的节点块都结束后，执行层给复用该图的各条用例独立判定并分摊时间。每记录一个实际槽位就减少来源的待完成数；归零才发布该来源的完成快照，文件的所选来源全完成才发布文件快照。缺图、无节点、坏文件和已知范围的无匹配条目直接产生确定结果，不发虚假的识别开始。
+
+快照只包含对应范围的 `files` 与原始下标。快照和最终报告均调用同一 `buildTestRunResult`；已完成槽位只写一次。异常收尾为未完成槽位补明确 error，不覆盖先前已完成的检查结果。接收方仍校验来源结构与身份、原始下标、请求覆盖、汇总、重复矛盾与最终一致性，不能只检查未知字段。
+
+事件队列串行等待 `onEvent`，识别任务仍按原计划并行。传给回调的是独立快照；回调抛错或拒绝时记录一次错误、停发后续事件，正式识别与最终结果继续。调用方不能依赖每个事件都必达，最终报告负责补全与核对。
+
+CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 的三类进度和最后唯一的 `{type: 'run-result', result}`。`onEvent` 使用 `TestRunEvent`，库调用的最终报告由 `runTestDetailed` 返回，CLI 将它写为结束记录。参数或配置错误也使用结束记录，包括原始参数含 `--jsonl` 的非法组合。
+
+每行使用保存的 stdout 写入函数序列化，并等待标准流写入回调；日志走 stderr。扩展所有运行固定使用 `--jsonl`，子进程忽略标准输入，只使用标准输出和错误输出的管道。逐行解析处理分块、中文字符、Windows 换行（CRLF）、多行同块和大行，不能把一次 data 回调当成一条 JSON。
+
+接收方拒绝未知记录、重复 `run-result`、其后又有记录或完整畸形行；正常结束缺少最后报告或留下截断行也报错。用户取消或信号终止时，只忽略末尾尚未完成的行，保留此前校验的完成事实；已经收到的完整错误记录仍优先报协议错误。取消由父进程终止子进程，面板跳过未完成项，不编造整批通过。
+
+## MaaFramework 日志目录
+
+`loadMaa(modulePath, logDir)` 设置 `maa.Global.log_dir`。`setupMaa` 在构造版本管理器时传入 `maaCache`、`maaMirror`，版本查询和安装使用配置的来源。
+
+- `maaLogDir` 是相对 `cwd` 解析的日志根，默认 `<cwd>/debug`。check 使用根下的 `check` 子目录，test 使用同级的 `maa-tools-run-<n>`；框架只接收所属子目录，递归清理不涉及其他操作。
+- test 创建轮次后用 `putLog` 输出绝对路径，JSON 模式写 stderr；活动轮次有所属进程标记，worker 用 pool/pid 子目录隔离。
+- `test.maaLogKeep` 默认 10，表示保留的已结束轮次数。正在运行的目录全部保留，不占这 10 个名额；并发运行不能删别人的活动日志。
+- worker 全部退出后释放标记，进程正常 exit 也会清理本进程标记。被终止或崩溃遗留的标记在下次创建轮次时按进程存活状态回收。
+- 日志管理层逐项处理清理失败，以 stderr 警告报告目标路径和异常；锁定目录不阻断其他回收，也不覆盖识别结果。释放标记失败时保留活动保护，可再次释放或在正常退出时重试。创建日志根、新标记或本轮目录失败则向运行入口返回原异常。
+
+## 构建与验证入口
+
+下表路径相对包目录 `pkgs/maa-tools/`：
+
+| 文件                                                           | 用途                                                                           |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [package.json](../../../pkgs/maa-tools/package.json)           | 定义命令入口、主包和 `pm` 子入口、依赖；`lint` 做类型检查，`test` 运行源码测试 |
+| [bin/maa-tools](../../../pkgs/maa-tools/bin/maa-tools)         | 可执行命令入口，调用构建后主包的 `runCliFromArgs`，设置退出码并等待标准流排空  |
+| [tsdown.config.mts](../../../pkgs/maa-tools/tsdown.config.mts) | 构建主包、`pm` 和识别工作进程三个入口，生成模块、类型声明和源码映射            |
+| [tsconfig.json](../../../pkgs/maa-tools/tsconfig.json)         | 配置模块解析、MaaFramework/Node 类型及源码和测试的检查范围                     |
+
+测试文件按功能组织：
+
+| 文件（相对包目录）                                                           | 验证内容                                                                            |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [test/assertions.ts](../../../pkgs/maa-tools/test/assertions.ts)             | `assertPublicResult()` 检查公共输出的字段边界，供清单、报告、快照与错误输出测试复用 |
+| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)       | 参数顺序、重复选项、原始下标和不支持的参数组合                                      |
+| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置                      |
+| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行                                |
+| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围                          |
+| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份                          |
+| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误                         |
+| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定                                |
+| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标                                |
+| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                              |
+| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                                              |
+| [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
+| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
+| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |
+| [test/run-runtime.test.ts](../../../pkgs/maa-tools/test/run-runtime.test.ts) | 真实文件通过执行边界替身验证清理错误与原结论、并发配置、检查与测试日志隔离          |
+| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐                     |
+
+包发布由仓库的 [Release 工作流](../../../.github/workflows/release.yml) 管理：`main` 构建通过后，读取包的 `package.json` 版本，npm 已存在则跳过，否则发布该版本。普通功能分支只构建和验证。
+
+需要计划新的版本号时使用 [version-packages.mjs](../../../scripts/version-packages.mjs)。`minor`、`patch`、`major` 以当前版本递增；显式版本必须严格大于当前版本。发布使用包中已有的版本，不要求先执行版本递增脚本。
+
+## 依赖与测试边界
+
+| 依赖                           | 作用                                 |
+| ------------------------------ | ------------------------------------ |
+| `@nekosu/maa-locale`           | 输出语言                             |
+| `@nekosu/maa-pipeline-manager` | Pipeline 及 interface 资源加载与诊断 |
+| `@nekosu/maa-version-manager`  | MaaFramework 版本准备                |
+| `jiti`                         | 加载 TypeScript 配置                 |
+| `jsonc-parser`                 | 带注释测试文件的解析与字符范围       |
+| `workerpool`                   | 隔离识别进程并行任务                 |
+| `@actions/core`、`chalk`       | 工作流注解与终端输出                 |
+
+来源、选择和汇总测试应覆盖重复组名、同图不同框、loader 改目录/排除条目、缺少或无效 origin 在计划阶段拒绝、部分平台缺图和缺失结果；执行测试覆盖真实文件加载、完整节点负例、任务去重、耗时求和与完整报告保存。即时事件测试覆盖节点块乱序完成、跨平台最后一个才结束、直接完成项、回调失败和最终一致性。CLI 测试覆盖配置日志、错误结束记录、参数冲突、大行完整输出及单报告模式；扩展测试覆盖中文/CRLF/分块、多行、未知或重复记录、最后报告遗漏/截断、取消残片、来源结构与身份、原始下标、请求覆盖、汇总及最终校验，编辑辅助和未知字段检查不能替代来源校验。日志测试覆盖并发活动目录，编辑器不复制框架判定规则。

@@ -1,4 +1,4 @@
-export function calucateLocation(content: string, offset: number): [line: number, col: number] {
+export function calculateLocation(content: string, offset: number): [line: number, col: number] {
   const previous = content.slice(0, offset)
   let line = 0
   let last = 0

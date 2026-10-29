@@ -1,11 +1,5 @@
 #!/usr/bin/env node
-import * as path from 'node:path'
+import { runCliFromArgs } from '../dist/index.mjs'
 
-import { runCli } from '../dist/index.mjs'
-
-runCli(
-  process.argv[2] ?? 'help',
-  process.argv[3] ?? path.join(process.cwd(), 'maatools.config.mts')
-).then(succ => {
-  process.exit(succ ? 0 : 1)
-})
+// 让 Node 等待 stdout/stderr 写完，避免 process.exit 截断较大的 JSON。
+process.exitCode = await runCliFromArgs(process.argv.slice(2))

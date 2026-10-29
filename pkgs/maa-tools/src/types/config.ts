@@ -28,7 +28,16 @@ export type CheckConfig = {
   override?: Partial<Record<DiagnosticType, 'ignore' | 'warning' | 'error'>>
 }
 
+export type CaseOrigin = {
+  /** 来源测试文件的绝对路径。 */
+  file: string
+  /** 原始文件 cases 数组中的下标，不随展开或过滤改变。 */
+  case: number
+}
+
 export type TestCases = {
+  /** 本组完整的待检查节点，展开时在用例过滤前固定。 */
+  nodes?: string[]
   configs: {
     name?: string
     resource: string
@@ -36,6 +45,8 @@ export type TestCases = {
     imageRoot?: string
   }
   cases: {
+    name?: string
+    origin: CaseOrigin
     image: string
     hits: (
       | string
@@ -51,6 +62,9 @@ export type TestConfig = {
   casesCwd?: string
   cases: TestCases[] | (() => Promise<TestCases[]>)
   errorDetailsPath?: string
+
+  /** 识别日志保留最近几轮（maa-tools-run-<n> 目录），默认 10，至少 1 */
+  maaLogKeep?: number
 
   job?: number
   maxNodePerJob?: number

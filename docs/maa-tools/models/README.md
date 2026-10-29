@@ -50,7 +50,11 @@ npx @nekosu/maa-tools test [config-path] --jsonl --file tests/example/test_examp
 
 ### 读取文件与保留来源
 
-`loadTestCases(file)` 和 `loadAllTestCases(folder, pattern)` 共用读取、JSON 解析与结构校验。测试文件允许注释，不允许尾逗号。读取时会记录文件元数据、字符范围，并给每条用例填：
+`loadTestCases(file)` 和 `loadAllTestCases(folder, pattern)` 共用读取、JSON 解析与结构校验。测试文件允许注释，不允许尾逗号。文件中的 `configs.controller` 和 `configs.resource` 可以是非空字符串或非空字符串数组。`loadAllTestCases` 返回 `[文件对象数组, 读取失败文件名数组]`。
+
+`test.cases` 提供已展开的测试组数组，或返回该数组的异步函数。每个执行组的 `configs.controller`、`configs.resource` 都是单个非空字符串；loader 按仓库配置选择有效组合并完成展开，复制用例时保留 `origin`。文件加载函数读取的是文件定义，不能把含控制器或资源数组的对象直接作为执行组。
+
+读取时会记录文件元数据、字符范围，并给每条用例填：
 
 ```ts
 origin: {
@@ -331,7 +335,7 @@ npx @nekosu/maa-tools test --jsonl --case bad
 
 ### 并行与耗时
 
-`test.job` 限制每个资源路径组的 worker 数，为大于等于 1 的整数；默认是逻辑 CPU 数除以 4 后向下取整，最少 1。相同有序资源路径的组复用 workerpool，不同路径顺序分别处理。
+`test.job` 限制每个资源路径组的 worker 数，须为大于等于 1 的安全整数；非法值在展开用例和初始化 MaaFramework 前返回 `invalid-test-config`。默认是逻辑 CPU 数除以 4 后向下取整，最少 1。相同有序资源路径的组复用 workerpool，不同路径顺序分别处理。
 
 同组使用规范化绝对截图路径复用识别任务。同图对应多个所选用例时，真实识别时间在这些用例间分摊，最后一条取余额避免累计偏差。内部组的识别时间等于用例时间之和；文件下各条用例的时间为对应平台结果的识别时间之和。并行任务的时间求和可能大于本次运行实际经过的时间。
 
@@ -350,6 +354,34 @@ npx @nekosu/maa-tools test --jsonl --case bad
 `--json` 与 `--jsonl` 互斥；`--list` 不支持 `--jsonl` 或 `--case`。收集清单不是进度流。
 
 所有收集及 JSON 输出都在配置加载前把 JavaScript 日志转到 stderr。单独 `--list` 的配置或参数错误只作文字说明，`--list --json` 返回完整错误 JSON。运行错误使用所选格式，含 `--jsonl` 的非法组合也以 `run-result` 错误报告结束。机器调用方检查必需结构、合法记录 `type`、来源、范围与完整性，不解析人类日志；参数或配置错误的机器输出也遵守同一规则。
+
+#### 错误代码
+
+收集清单和运行报告的 `errorCode` 用于程序判断，`reason` 提供具体说明。下表列出框架定义的代码；1.x 内保持已列代码的名称和含义。`errorCode` 是开放字符串，可以增加新值；调用方遇到未知值时显示 `reason` 并保留原始代码，按报告的 `status` 处理结果。
+
+| `errorCode`               | 含义与触发条件                                       |
+| ------------------------- | ---------------------------------------------------- |
+| `invalid-cli-arguments`   | 命令参数无法解析，或输出、收集与选择参数组合不合法   |
+| `config-load-failed`      | 配置文件无法加载                                     |
+| `invalid-config`          | 配置文件没有导出配置对象                             |
+| `cli-failed`              | 命令入口发生未分类异常                               |
+| `test-config-missing`     | 配置中缺少 `test`                                    |
+| `invalid-test-config`     | 测试组结构或执行配置不合法                           |
+| `test-cases-load-failed`  | 执行 `test.cases` 函数或读取其定义时抛出异常         |
+| `test-expansion-failed`   | 建立执行计划时发生未分类异常                         |
+| `test-source-invalid`     | 用例来源缺失、格式无效，或无法对应实际文件及原始下标 |
+| `test-collection-failed`  | 收集测试文件与用例时发生未分类异常                   |
+| `invalid-case-selection`  | 用例下标不合法、越界，或未限定为单个文件             |
+| `target-selection-failed` | 建立文件或用例选择目标时发生未分类异常               |
+| `maa-setup-failed`        | MaaFramework 准备或加载失败                          |
+| `resource-bundle-failed`  | interface bundle 或资源规划加载失败                  |
+| `test-execution-failed`   | 识别执行阶段发生异常                                 |
+| `test-file-error`         | 测试文件读取、解析或结构校验失败                     |
+| `test-verification-error` | 文件、用例或平台未完成要求的验证                     |
+| `no-tests-verified`       | 没有实际完成的有效节点检查，无法判定通过             |
+| `no-tests-matched`        | 配置和筛选条件没有匹配项，报告状态为 `empty`         |
+
+断言不满足时，运行状态为 `failed`，通过检查明细说明原因。文件和用例的 `reason` 还可表示 `no-cases-selected`（筛选后未选择用例）、`missing-image`（缺图跳过）、`some-platforms-skipped`（文件已通过但存在未验证平台）、`no-result`（缺少要求的结果），或包含具体错误文字；这些说明不属于顶层 `errorCode` 词表。
 
 编辑辅助解析和未知字段检查不能代替来源的结构、类型及身份校验。
 
@@ -395,9 +427,10 @@ maa-tools 不依赖 VS Code。编辑器调用它的收集和运行接口，负�
 
 ## MaaFramework 日志目录
 
-`check` 和 `test` 都把框架日志放在独立目录，避免框架日志清理影响仓库图片，见 [TODO-23](../../TODO.md)。
+`maaLogDir` 指定框架日志的根目录，相对路径以 `cwd` 解析，默认是 `<cwd>/debug`。`check` 与 `test` 使用根目录下各自的子目录，框架的递归日志清理限定在所属目录，见 [TODO-23](../../TODO.md)。
 
-- `check` 默认使用 `<cwd>/debug`，可由 `maaLogDir` 覆盖。
-- `test` 每轮创建 `maa-tools-run-<n>`，默认在 `<cwd>/debug` 下；配置了 `maaLogDir` 就在其下创建。worker 使用各自子目录，避免互相覆盖。
+- `check` 使用日志根下的 `check` 子目录，默认是 `<cwd>/debug/check`。
+- `test` 每轮在日志根下创建 `maa-tools-run-<n>`，创建后打印该轮次的绝对路径；机器输出模式将路径信息写到 stderr。worker 使用各自子目录，避免互相覆盖。
 - `test.maaLogKeep` 默认保留最近 10 个**已结束**轮次，至少 1 个；活动轮次不计入数量，也不会被另一轮清理。
-- 运行结束后在 worker 停止后释放活动标记；正常进程退出也会释放。进程被终止或崩溃留下的标记，在后续创建轮次时按进程是否存活回收。
+- worker 停止后释放活动标记；正常进程退出也会释放。进程被终止或崩溃留下的标记，在后续创建轮次时按进程是否存活回收。
+- 旧日志或活动标记因占用、权限等原因无法清理时，stderr 输出路径和错误，运行结论不受影响；单个目录失败不阻止其他旧目录清理，实际保留数量可能暂时超出配置。创建本轮日志目录或新活动标记失败时，运行返回执行错误。

@@ -57,7 +57,7 @@ type FullConfig = BaseConfig & { check?: CheckConfig; test?: TestConfig; vscode?
 - 改变通过、失败、错误、跳过或空运行等结论语义。
 - 增加旧插件必须处理的新记录 `type` 或枚举值。
 
-`TestRunLine` 描述 JSONL 的单行输出，包含 `TestRunEvent` 的三类进度以及最终的 `run-result`；`TestRunOptions.onEvent` 的参数类型为 `TestRunEvent`。调用方先检查包版本范围，仍须校验实际启动与数据的必需结构、合法 `type`、来源、选择覆盖和进度与最终结果一致性；类型声明不能代替运行时校验。字段和事件说明见[产品定义](../models/README.md#包版本与-json-兼容)。
+`TestRunLine` 描述 JSONL 的单行输出，包含 `TestRunEvent` 的三类进度以及最终的 `run-result`；`TestRunOptions.onEvent` 的参数类型为 `TestRunEvent`。调用方先检查包版本范围，仍须校验实际启动与数据的必需结构、合法 `type`、来源、选择覆盖和进度与最终结果一致性；类型声明不能代替运行时校验。`errorCode` 为开放字符串，1.x 内已定义名称和含义稳定，未知代码按报告状态和 `reason` 显示。字段、事件和[错误代码](../models/README.md#错误代码)见产品定义。
 
 ### 报告与执行组的边界
 

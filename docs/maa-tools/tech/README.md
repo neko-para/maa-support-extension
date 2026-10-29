@@ -72,7 +72,7 @@ flowchart LR
 
 ## 收集与运行共用的定义
 
-[test/files.ts](../../../pkgs/maa-tools/src/test/files.ts) 使用同一套 `parseTestContent`、`readTestFile` 产生运行对象与文件元数据。JSON 允许注释，不允许尾逗号；形状错误转为文件错误条目。成功读取时给每条用例写 `origin: {file: 绝对路径, case: 原始下标}`，组的 `source` 可保留文件路径，但单条身份以 origin 为准。
+[test/files.ts](../../../pkgs/maa-tools/src/test/files.ts) 使用同一套 `parseTestContent`、`readTestFile` 产生运行对象与文件元数据。JSON 允许注释，不允许尾逗号；形状错误转为文件错误条目。成功读取时给每条用例写 `origin: {file: 绝对路径, case: 原始下标}`，选择与结果关联都使用这份来源。
 
 配置加载和展开期间通过 `AsyncLocalStorage` 保存本次文件读取记录，包括失败文件。CLI 从配置加载前开始记录，因此配置模块顶层提前读取的坏文件也能报告。收集不额外猜测测试目录；配置可以改变扫描目录、glob 或直接提供数组。
 
@@ -114,6 +114,8 @@ flowchart LR
 
 内部组及公开用例的时间是实际识别任务时间及其分摊，顶层时间是本次运行实际经过的时间，包含准备、等待和清理；并行任务求和可能大于后者。
 
+`runTestDetailed` 在展开用例前检查显式 `test.job`，要求大于等于 1 的安全整数，非法值返回 `invalid-test-config`。默认并发数由逻辑 CPU 数除以 4 向下取整，最少 1；workerpool 使用已校验的配置值。
+
 ## 命令行机器输出
 
 `--list` 选择收集操作，`--json` 选择 JSON 格式，二者可组合：单独 `--list` 输出人类列表，`--list --json` 输出同一完整收集清单。默认运行输出文本，`--json` 输出一份运行报告，`--jsonl` 每行输出进度并以唯一 `run-result` 结束。拒绝 `--json --jsonl`、`--list --jsonl` 和 `--list --case`。
@@ -146,10 +148,11 @@ CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 
 
 `loadMaa(modulePath, logDir)` 设置 `maa.Global.log_dir`。`setupMaa` 在构造版本管理器时传入 `maaCache`、`maaMirror`，版本查询和安装使用配置的来源。
 
-- check 默认写 `<cwd>/debug`，`maaLogDir` 可覆盖，避免把框架日志清理指向仓库根。
-- test 每轮在日志根创建 `maa-tools-run-<n>`；活动轮次有所属进程标记，worker 再用 pool/pid 子目录隔离。
+- `maaLogDir` 是相对 `cwd` 解析的日志根，默认 `<cwd>/debug`。check 使用根下的 `check` 子目录，test 使用同级的 `maa-tools-run-<n>`；框架只接收所属子目录，递归清理不涉及其他操作。
+- test 创建轮次后用 `putLog` 输出绝对路径，JSON 模式写 stderr；活动轮次有所属进程标记，worker 用 pool/pid 子目录隔离。
 - `test.maaLogKeep` 默认 10，表示保留的已结束轮次数。正在运行的目录全部保留，不占这 10 个名额；并发运行不能删别人的活动日志。
 - worker 全部退出后释放标记，进程正常 exit 也会清理本进程标记。被终止或崩溃遗留的标记在下次创建轮次时按进程存活状态回收。
+- 日志管理层逐项处理清理失败，以 stderr 警告报告目标路径和异常；锁定目录不阻断其他回收，也不覆盖识别结果。释放标记失败时保留活动保护，可再次释放或在正常退出时重试。创建日志根、新标记或本轮目录失败则向运行入口返回原异常。
 
 ## 构建与验证入口
 
@@ -180,7 +183,12 @@ CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 
 | [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
 | [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
 | [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |
+| [test/run-runtime.test.ts](../../../pkgs/maa-tools/test/run-runtime.test.ts) | 真实文件通过执行边界替身验证清理错误与原结论、并发配置、检查与测试日志隔离          |
 | [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐                     |
+
+包发布由仓库的 [Release 工作流](../../../.github/workflows/release.yml) 管理：`main` 构建通过后，读取包的 `package.json` 版本，npm 已存在则跳过，否则发布该版本。普通功能分支只构建和验证。
+
+需要计划新的版本号时使用 [version-packages.mjs](../../../scripts/version-packages.mjs)。`minor`、`patch`、`major` 以当前版本递增；显式版本必须严格大于当前版本。发布使用包中已有的版本，不要求先执行版本递增脚本。
 
 ## 依赖与测试边界
 

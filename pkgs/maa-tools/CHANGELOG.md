@@ -1,3 +1,7 @@
+- 1.2.1
+
+Fix test worker not inheriting parent environment variables
+
 - 1.2.0
 
 Collect test cases from files and match results by file and original case index

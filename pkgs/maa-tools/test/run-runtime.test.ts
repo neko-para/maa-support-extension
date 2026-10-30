@@ -15,7 +15,7 @@ const runtime = createJiti(import.meta.url, { fsCache: false })
 
 type PoolOptions = {
   maxWorkers: number
-  forkOpts: { env: { MAAFW_LOG_DIR: string } }
+  forkOpts: { env: NodeJS.ProcessEnv }
 }
 
 async function fixture(t: TestContext) {
@@ -189,6 +189,34 @@ for (const job of [undefined, 1, 3]) {
     assert.equal(state.terminated, 1)
   })
 }
+
+test('worker 继承父进程环境变量，工具自身的框架配置优先', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  const sentinel = 'MAATOOLS_TEST_SENTINEL'
+  const previousSentinel: string | undefined = process.env[sentinel]
+  const previousLogDir: string | undefined = process.env.MAAFW_LOG_DIR
+  process.env[sentinel] = 'inherited'
+  process.env.MAAFW_LOG_DIR = 'parent-provided'
+  t.after(() => {
+    for (const [key, value] of [
+      [sentinel, previousSentinel],
+      ['MAAFW_LOG_DIR', previousLogDir]
+    ] as const) {
+      if (value === undefined) {
+        delete process.env[key]
+      } else {
+        process.env[key] = value
+      }
+    }
+  })
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'passed')
+  assert.equal(state.poolOptions.length, 1)
+  const env = state.poolOptions[0].forkOpts.env
+  assert.equal(env[sentinel], 'inherited')
+  assert.notEqual(env.MAAFW_LOG_DIR, 'parent-provided')
+})
 
 for (const maaLogDir of [undefined, 'custom-logs']) {
   test(`check 在${maaLogDir ?? '默认日志根'}中递归清理也保留测试轮次和活动标记`, async t => {

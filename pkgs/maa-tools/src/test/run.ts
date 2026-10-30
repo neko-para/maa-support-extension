@@ -248,6 +248,7 @@ export async function runTestDetailed(
             workerType: 'process',
             forkOpts: {
               env: {
+                ...process.env,
                 MAAFW_MODULE_PATH: modulePath,
                 MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
                 MAAFW_LOG_DIR: runLogDir,

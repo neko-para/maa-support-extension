@@ -62,7 +62,7 @@ export class AgentService extends BaseService {
       PI_INTERFACE_VERSION: 'v2.5.0',
       PI_CLIENT_NAME: 'VsCode',
       PI_CLIENT_VERSION: pkg.version,
-      PI_CLIENT_LANGUAGE: locale,
+      PI_CLIENT_LANGUAGE: locale === 'en' ? 'en_us' : 'zh_cn',
       PI_CLIENT_MAAFW_VERSION: nativeService.version,
       PI_VERSION: '',
       PI_CONTROLLER: '{}',

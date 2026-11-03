@@ -143,13 +143,72 @@ async function spawnAgent(config: ResolvedAgentConfig, identifier: string, logPa
 }
 
 /**
- * 连接超时必须交给 native 侧：Node binding 的 connect 是 AsyncWork，JS 侧计时后
- * destroy 会与仍在执行的握手并发（use-after-free）。设好 timeout 后等待 connect
- * 自己 settle，清理只在 settle 之后进行。
+ * connect 是 binding 的 AsyncWork，仍在 native 线程里执行时销毁 client 会 use-after-free。
+ * 握手期间被进程退出提前打断时，把 client 记在这里，等 connect 真正 settle 后再销毁。
  */
-async function connectAgent(client: maa.Client, config: ResolvedAgentConfig) {
+const pendingConnectClients = new WeakSet<maa.Client>()
+
+function destroyClientIfSettled(client: maa.Client) {
+  if (pendingConnectClients.has(client)) {
+    return
+  }
+  try {
+    client.destroy()
+  } catch {
+    // 句柄已失效时忽略，不覆盖原始错误。
+  }
+}
+
+/** 连接/启动失败时补上子进程真正的退出状态，区分崩溃、缺 DLL、版本不匹配。 */
+function exitDetail(child: ChildProcess | undefined) {
+  if (!child || (child.exitCode === null && child.signalCode === null)) {
+    return ''
+  }
+  return `；进程状态：exitCode=${child.exitCode ?? 'null'}, signal=${child.signalCode ?? 'null'}（常见原因：缺少 DLL 或版本不匹配）`
+}
+
+/**
+ * 连接超时必须交给 native 侧：设好 timeout 后等待 connect settle，清理只在 settle 之后。
+ * 但子进程若在握手期间已经退出（CI 里缺 DLL/版本不对很常见），native 仍会等满 timeout；
+ * 这里 race 子进程 exit，只做提前失败，不销毁仍在握手的 client。
+ */
+async function connectAgent(client: maa.Client, config: ResolvedAgentConfig, child: ChildProcess) {
   client.timeout = String(config.connectTimeoutMs)
-  await client.connect()
+  const connect = client.connect()
+  let settled = false
+  const settledConnect = connect.finally(() => {
+    settled = true
+  })
+  settledConnect.catch(() => {})
+  const exit = new Promise<never>((_, reject) => {
+    // 退出码/信号由外层统一补到初始化失败文案里，避免重复。
+    const fail = () => reject(new AgentSetupError('agent 进程在连接握手期间退出'))
+    if (child.exitCode !== null || child.signalCode !== null) {
+      fail()
+      return
+    }
+    child.once('exit', () => fail())
+  })
+  exit.catch(() => {})
+  try {
+    await Promise.race([settledConnect, exit])
+  } catch (error) {
+    if (!settled) {
+      // connect 仍在 native 线程执行：等它 settle 后再销毁 client。
+      pendingConnectClients.add(client)
+      settledConnect
+        .finally(() => {
+          pendingConnectClients.delete(client)
+          try {
+            client.destroy()
+          } catch {
+            // worker 被强杀时这里可能不会执行，进程退出会一并回收。
+          }
+        })
+        .catch(() => {})
+    }
+    throw error
+  }
   if (!client.connected || !client.alive) {
     throw new AgentSetupError('连接后 agent 不可用')
   }
@@ -191,18 +250,15 @@ async function startAgents(
       try {
         child = await spawnAgent(config, identifier, logPath)
         client.bind_resource(res)
-        await connectAgent(client, config)
+        await connectAgent(client, config, child)
       } catch (error) {
         child?.kill()
         // 不做 disconnect 握手：被 kill 的 agent 可能让 send_and_recv 永久等待。
-        try {
-          client.destroy()
-        } catch {
-          // 句柄已失效时忽略，不覆盖原始错误。
-        }
+        // connect 仍在进行时不能销毁 client，destroyClientIfSettled 会跳过并等待 settle。
+        destroyClientIfSettled(client)
         const message = error instanceof AgentSetupError ? error.message : errorMessage(error)
         throw new AgentSetupError(
-          `agent 初始化失败：${config.childExec}（${message}）；日志：${logPath}`
+          `agent 初始化失败：${config.childExec}（${message}${exitDetail(child)}）；日志：${logPath}`
         )
       }
       agents.push({ client, child, label: config.childExec, logPath })

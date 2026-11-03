@@ -1,3 +1,13 @@
+- 1.3.0
+
+Support testing Custom recognitions through `test.agent` AgentServer subprocesses
+Start one agent per worker only when planned nodes need Custom recognition
+Report `test-agent-invalid` / `test-agent-failed` instead of missing recognition results
+Add parent-side watchdog for prepare and agent recognition calls
+Support And/Or node-name references and MaaFW 5.12/5.13 node dump shapes
+Inject PI v2.5.0 client environment variables into agent processes
+Clean up agent processes on early exit, worker crash and forced termination
+
 - 1.2.1
 
 Fix test worker not inheriting parent environment variables

@@ -143,12 +143,12 @@ export async function runCheck(cfg: FullConfig): Promise<boolean> {
     return false
   }
 
-  const modulePath = await setupMaa(cfg)
-  if (!modulePath) {
+  const maaSetup = await setupMaa(cfg)
+  if (!maaSetup) {
     return false
   }
   await loadMaa(
-    modulePath,
+    maaSetup.modulePath,
     path.resolve(cfg.cwd ?? process.cwd(), cfg.maaLogDir ?? 'debug', 'check')
   )
   if (cfg.maaStdoutLevel) {

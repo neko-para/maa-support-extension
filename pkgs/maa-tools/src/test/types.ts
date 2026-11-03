@@ -22,7 +22,16 @@ export type RecoResult = {
 export type RecoJobOutcome = {
   results: RecoResult[]
   durationMs: number
+  /** agent 等运行环境错误；有值时整批按执行错误处理，不能当成识别未命中。 */
+  error?: string
+  /** 错误来源：setup 表示框架/资源准备，agent 表示 agent 生命周期。 */
+  errorKind?: 'setup' | 'agent'
 }
+
+/** worker 初始化结果；失败类别用于区分"环境没准备好"与"agent 不可用"。 */
+export type PrepareOutcome =
+  | { ok: true; agentsStarted: boolean }
+  | { ok: false; kind: 'setup' | 'agent'; error: string }
 
 export type CheckFailureReason =
   | 'missing-detail'

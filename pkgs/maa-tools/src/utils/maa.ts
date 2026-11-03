@@ -1,3 +1,4 @@
+import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import * as url from 'node:url'
@@ -40,7 +41,13 @@ export async function makeFakeController() {
   return ctrl
 }
 
-export async function setupMaa(cfg: FullConfig) {
+export type MaaSetup = {
+  modulePath: string
+  /** 实际加载的框架版本，供 PI_CLIENT_MAAFW_VERSION 与日志使用。 */
+  version: string
+}
+
+export async function setupMaa(cfg: FullConfig): Promise<MaaSetup | null> {
   const versionManager = new MaaVersionManager(
     cfg.maaCache ?? path.join(os.homedir(), '.maa-tools'),
     MaaVersionManager.registries[cfg.maaMirror ?? 'npm']
@@ -77,7 +84,21 @@ export async function setupMaa(cfg: FullConfig) {
   ) {
     return null
   }
-  return versionManager.moduleFolder(maaVersion)
+  const modulePath = versionManager.moduleFolder(maaVersion)
+  let version = maaVersion
+  try {
+    const content = await fs.readFile(
+      path.join(modulePath, '@maaxyz/maa-node/package.json'),
+      'utf8'
+    )
+    const installed = JSON.parse(content) as { version?: unknown }
+    if (typeof installed.version === 'string' && installed.version) {
+      version = installed.version
+    }
+  } catch {
+    // 读不到已安装版本时回退到配置值；只影响 PI_CLIENT_MAAFW_VERSION 的精确度。
+  }
+  return { modulePath, version }
 }
 
 export async function loadMaa(modulePath: string, logDir: string) {

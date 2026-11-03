@@ -166,7 +166,7 @@ CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 
 
 | 文件                                                           | 用途                                                                           |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [package.json](../../../pkgs/maa-tools/package.json)           | 定义命令入口、主包和 `pm` 子入口、依赖；`lint` 做类型检查，`test` 运行源码测试 |
+| [package.json](../../../pkgs/maa-tools/package.json)           | 定义命令入口、主包和 `pm` 子入口、依赖；`lint` 做类型检查，`test` 运行源码测试、`test:integration` 手动跑真实 MaaFW 集成测试 |
 | [bin/maa-tools](../../../pkgs/maa-tools/bin/maa-tools)         | 可执行命令入口，调用构建后主包的 `runCliFromArgs`，设置退出码并等待标准流排空  |
 | [tsdown.config.mts](../../../pkgs/maa-tools/tsdown.config.mts) | 构建主包、`pm` 和识别工作进程三个入口，生成模块、类型声明和源码映射            |
 | [tsconfig.json](../../../pkgs/maa-tools/tsconfig.json)         | 配置模块解析、MaaFramework/Node 类型及源码和测试的检查范围                     |
@@ -187,6 +187,8 @@ CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 
 | [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                              |
 | [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                                              |
 | [test/agents.test.ts](../../../pkgs/maa-tools/test/agents.test.ts)           | agent 配置解析、PI 环境变量、Custom 识别需求递归汇总与报错文案                      |
+| [test/agent-handshake.test.ts](../../../pkgs/maa-tools/test/agent-handshake.test.ts) | 握手期子进程退出快速失败、connect 仍在途时的延迟销毁                            |
+| [test/worker-agent.integration.ts](../../../pkgs/maa-tools/test/worker-agent.integration.ts) | 真实进程池 + 真实 MaaFW 的 fake agent 集成测试（需 dist 与本机框架缓存，手动运行） |
 | [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
 | [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
 | [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |

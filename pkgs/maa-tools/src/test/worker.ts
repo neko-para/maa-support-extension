@@ -5,6 +5,7 @@ import * as path from 'node:path'
 import * as workerpool from 'workerpool'
 
 import { loadMaa, makeFakeController, toArrayBuffer } from '../utils/maa'
+import { AgentHandshakeError, raceAgentHandshake } from './agent-handshake'
 import {
   AGENTS_ENV,
   type CustomRecognitionRequirement,
@@ -169,43 +170,30 @@ function exitDetail(child: ChildProcess | undefined) {
 
 /**
  * 连接超时必须交给 native 侧：设好 timeout 后等待 connect settle，清理只在 settle 之后。
- * 但子进程若在握手期间已经退出（CI 里缺 DLL/版本不对很常见），native 仍会等满 timeout；
- * 这里 race 子进程 exit，只做提前失败，不销毁仍在握手的 client。
+ * 子进程在握手期间退出（CI 里缺 DLL/版本不对很常见）时由 raceAgentHandshake 提前失败，
+ * native connect 可能仍在执行，此时延迟到 settle 后再销毁 client。
  */
 async function connectAgent(client: maa.Client, config: ResolvedAgentConfig, child: ChildProcess) {
   client.timeout = String(config.connectTimeoutMs)
-  const connect = client.connect()
-  let settled = false
-  const settledConnect = connect.finally(() => {
-    settled = true
-  })
-  settledConnect.catch(() => {})
-  const exit = new Promise<never>((_, reject) => {
-    // 退出码/信号由外层统一补到初始化失败文案里，避免重复。
-    const fail = () => reject(new AgentSetupError('agent 进程在连接握手期间退出'))
-    if (child.exitCode !== null || child.signalCode !== null) {
-      fail()
-      return
-    }
-    child.once('exit', () => fail())
-  })
-  exit.catch(() => {})
   try {
-    await Promise.race([settledConnect, exit])
+    await raceAgentHandshake(client.connect(), child, {
+      onStranded: settled => {
+        pendingConnectClients.add(client)
+        void settled
+          .finally(() => {
+            pendingConnectClients.delete(client)
+            try {
+              client.destroy()
+            } catch {
+              // worker 被强杀时这里可能不会执行，进程退出会一并回收。
+            }
+          })
+          .catch(() => {})
+      }
+    })
   } catch (error) {
-    if (!settled) {
-      // connect 仍在 native 线程执行：等它 settle 后再销毁 client。
-      pendingConnectClients.add(client)
-      settledConnect
-        .finally(() => {
-          pendingConnectClients.delete(client)
-          try {
-            client.destroy()
-          } catch {
-            // worker 被强杀时这里可能不会执行，进程退出会一并回收。
-          }
-        })
-        .catch(() => {})
+    if (error instanceof AgentHandshakeError) {
+      throw new AgentSetupError(error.message)
     }
     throw error
   }

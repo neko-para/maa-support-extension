@@ -24,7 +24,8 @@
   },
   "scripts": {
     "lint": "tsc -p . --noEmit",
-    "test": "node --test \"test/*.test.ts\""
+    "test": "node --test \"test/*.test.ts\"",
+    "test:integration": "node --test \"test/*.integration.ts\""
   },
   "dependencies": {
     "@actions/core": "^3.0.0",

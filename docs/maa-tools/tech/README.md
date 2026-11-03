@@ -18,22 +18,23 @@
 | [utils/config.ts](../../../pkgs/maa-tools/src/utils/config.ts)     | 用 jiti 加载 TypeScript 配置文件，返回配置对象                                           |
 | [utils/paths.ts](../../../pkgs/maa-tools/src/utils/paths.ts)       | 生成来源路径比较键；Windows 忽略大小写，其他系统区分；显示数据由调用方保留原样           |
 | [utils/bundle.ts](../../../pkgs/maa-tools/src/utils/bundle.ts)     | 加载 interface bundle，提供单次检查共用的文件内容缓存                                    |
-| [utils/maa.ts](../../../pkgs/maa-tools/src/utils/maa.ts)           | 准备框架版本、加载原生模块并设置日志目录；提供图片缓冲区转换和识别用空图片控制器         |
+| [utils/maa.ts](../../../pkgs/maa-tools/src/utils/maa.ts)           | 准备框架版本并返回实际版本号、加载原生模块并设置日志目录；提供图片缓冲区转换和识别用空图片控制器 |
 | [check/index.ts](../../../pkgs/maa-tools/src/check/index.ts)       | 组织资源组合检查、控制并发，执行 pipeline 诊断和原生资源加载校验并输出结果               |
 | [check/location.ts](../../../pkgs/maa-tools/src/check/location.ts) | 用 `calculateLocation` 把诊断字符偏移转换为行、列位置                                    |
 | [test/files.ts](../../../pkgs/maa-tools/src/test/files.ts)         | 读取并校验允许注释的测试 JSON，保留源码范围、注入 origin，记录本次读取的文件             |
 | [test/selection.ts](../../../pkgs/maa-tools/src/test/selection.ts) | 构造与合并文件/下标目标，固定完整待检查节点，按平台和来源筛选用例并整理选择元数据        |
 | [test/plan.ts](../../../pkgs/maa-tools/src/test/plan.ts)           | 执行 `test.cases`，校验展开组与实际来源文件及原始下标，固定节点并选择范围                |
 | [test/collect.ts](../../../pkgs/maa-tools/src/test/collect.ts)     | 调用同一展开过程，生成收集清单及来源错误，不初始化框架                                   |
-| [test/run.ts](../../../pkgs/maa-tools/src/test/run.ts)             | 安排识别任务、计划顺序、并发数与资源分组，管理工作进程和日志；提供详细报告与布尔运行接口 |
+| [test/run.ts](../../../pkgs/maa-tools/src/test/run.ts)             | 安排识别任务、计划顺序、并发数与资源分组，解析并传递 agent 配置，管理工作进程和日志；提供详细报告与布尔运行接口 |
 | [test/images.ts](../../../pkgs/maa-tools/src/test/images.ts)       | 解析截图路径，把去重截图和完整节点分成识别任务，分摊同图耗时                             |
-| [test/worker.ts](../../../pkgs/maa-tools/src/test/worker.ts)       | 在子进程加载指定框架和资源，用截图执行识别，返回原始结果与真实任务耗时                   |
+| [test/agents.ts](../../../pkgs/maa-tools/src/test/agents.ts)       | 解析 `test.agent` 与 interface agent、生成 PI 环境变量、汇总待测节点的 Custom 识别需求并构造缺失/未注册报错 |
+| [test/worker.ts](../../../pkgs/maa-tools/src/test/worker.ts)       | 在子进程加载指定框架和资源，按需启动并连接 agent，用截图执行识别，返回原始结果与真实任务耗时 |
 | [test/evaluate.ts](../../../pkgs/maa-tools/src/test/evaluate.ts)   | 按完整节点、预期命中和识别框判定单条用例，构造组结果                                     |
 | [test/report.ts](../../../pkgs/maa-tools/src/test/report.ts)       | 将平台结果唯一汇总到文件，检查来源归属、选择覆盖并形成整批结论                           |
 | [test/progress.ts](../../../pkgs/maa-tools/src/test/progress.ts)   | 等待实际计划中的各平台和节点完成，调用判定与汇总，按序发布开始、完成和范围快照           |
 | [test/log-dir.ts](../../../pkgs/maa-tools/src/test/log-dir.ts)     | 分配日志轮次、跟踪活动运行、回收失效标记并清理已结束日志                                 |
 | [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告、进度事件与 JSONL 记录的结构                            |
-| [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径等环境变量提供类型                       |
+| [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径与 agent/节点配置提供环境变量类型         |
 
 主包导出 `runCheck`、`runTest`、`runTestDetailed`、`collectTests`、配置与文件加载等公共接口。内部辅助函数按所属用途维护，包入口显式导出公共接口。
 
@@ -49,7 +50,9 @@ flowchart LR
     plan --> files["test/files.ts：读取来源"]
     plan --> selection["test/selection.ts：选择范围"]
     run --> images["test/images.ts：准备任务"]
+    run --> agents["test/agents.ts：agent 解析"]
     run --> worker["test/worker.ts：执行识别"]
+    agents -->|进程池环境| worker
     worker -->|结果和耗时| progress["test/progress.ts：完成结果"]
     progress --> evaluate["test/evaluate.ts：判定"]
     progress --> report["test/report.ts：汇总"]
@@ -87,12 +90,13 @@ flowchart LR
 1. 展开与选择实际测试，得到内部 `groups` 和计划文件元数据；没有任何用例匹配时返回 empty。
 2. 解析每条用例实际图片路径，记录是否存在，按组内规范化绝对图片路径去重。
 3. 使用过滤前固定的 nodes 建任务，按 `maxNodePerJob` 分块。缺图保留 skipped；无待检查节点保留 error，不把零检查当通过。
-4. 仅当确有识别任务时准备 MaaFramework 与 bundle，解析有序资源路径；纯缺图或纯无节点不做初始化。
-5. 相同有序资源路径的组共用一个进程池，按配置并行任务。不同有序路径组分别创建池。
-6. 首次提交某来源相关识别任务时发 case-started；跨平台只开始一次。worker 返回节点识别结果和执行耗时，失败任务留下缺失结果，不能用空数组默认通过。
-7. 每张图的全部节点块完成后，立即用 `evaluateCase` 判定该图对应的所有用例，不等整个组或所有计划结束。检查使用同组完整节点：声明的应命中，未声明的不应命中；负例缺少节点结果也算失败。
-8. 规范化路径相同的图片只运行一份任务，其时间在对应的所选用例间均分，最后一条取余额。各条用例按自己的期望独立判定，记录到对应实际计划槽位；最后一个计划平台完成后发 case-result，文件全部所选用例完成后发 file-result。
-9. 在 finally 中终止池，全部 worker 停止后释放本次日志活动标记。资源规划用 bundle 完成后关闭 watcher。
+4. 仅当确有识别任务时准备 MaaFramework 与 bundle，解析有序资源路径，并按 `test.agent`（默认 interface.json 的 agent 声明）解析 agent；纯缺图或纯无节点不做初始化。
+5. 相同有序资源路径的组共用一个进程池，按配置并行任务；agent 列表与池内待测节点并集通过环境变量传给 worker。不同有序路径组分别创建池。
+6. worker 首次准备时，只在实际待测节点含 Custom 识别时启动并连接 agent；要求的名不在 `custom_recognition_list` 里就整批报 `test-agent-failed`，不能退化成识别未命中。池里只有一个 worker 先做预检，其余 worker 在首个任务前各自准备。父侧对 `prepare` 加 120s 超时；只有 worker 报告已启动 agent 时才对每次 `performReco` 加 watchdog（默认 60s，可用 `timeoutMs` 调整）。watchdog 用 workerpool 的 `promise.timeout`，从任务真正开始执行才计时，排队等待不计入。超时记 agent 错误并强制终止进程池；agent 子进程随 worker 终止回收，强杀场景由 worker 增量写下的 pid 文件兜底。
+7. 首次提交某来源相关识别任务时发 case-started；跨平台只开始一次。worker 返回节点识别结果和执行耗时，失败任务留下缺失结果，不能用空数组默认通过。
+8. 每张图的全部节点块完成后，立即用 `evaluateCase` 判定该图对应的所有用例，不等整个组或所有计划结束。检查使用同组完整节点：声明的应命中，未声明的不应命中；负例缺少节点结果也算失败。
+9. 规范化路径相同的图片只运行一份任务，其时间在对应的所选用例间均分，最后一条取余额。各条用例按自己的期望独立判定，记录到对应实际计划槽位；最后一个计划平台完成后发 case-result，文件全部所选用例完成后发 file-result。
+10. 在 finally 中终止池，全部 worker 停止后释放本次日志活动标记。资源规划用 bundle 完成后关闭 watcher。
 
 单条与整文件改变的是待验证截图范围，不是每张截图的断言。名字相同或同图但期望框不同的用例仍分别判定，并各自携带精确 origin。
 
@@ -115,6 +119,8 @@ flowchart LR
 内部组及公开用例的时间是实际识别任务时间及其分摊，顶层时间是本次运行实际经过的时间，包含准备、等待和清理；并行任务求和可能大于后者。
 
 `runTestDetailed` 在展开用例前检查显式 `test.job`，要求大于等于 1 的安全整数，非法值返回 `invalid-test-config`。默认并发数由逻辑 CPU 数除以 4 向下取整，最少 1；workerpool 使用已校验的配置值。
+
+`test.agent` 配置非法（缺 `child_exec`、字段类型错误、超时越界等）返回 `test-agent-invalid`；agent 无法启动或连接、两次调用之间检测到退出、未注册待测节点要求的 Custom 识别名，或调用超过 watchdog 返回 `test-agent-failed`。worker 的框架/资源准备失败仍按 `test-execution-failed` 上报，不归到 agent。两者都是整批 `error`，中止后强制终止进程池，不再把排队任务记成用例失败；agent 日志与框架日志同在本次运行目录下。
 
 ## 命令行机器输出
 
@@ -180,6 +186,7 @@ CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 
 | [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标                                |
 | [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                              |
 | [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                                              |
+| [test/agents.test.ts](../../../pkgs/maa-tools/test/agents.test.ts)           | agent 配置解析、PI 环境变量、Custom 识别需求递归汇总与报错文案                      |
 | [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
 | [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
 | [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |

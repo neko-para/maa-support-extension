@@ -11,6 +11,14 @@ import { joinPath } from '@nekosu/maa-pipeline-manager'
 import type { FullConfig, TestCases } from '../types/config'
 import { loadBundle } from '../utils/bundle'
 import { setupMaa } from '../utils/maa'
+import {
+  AGENTS_ENV,
+  type AgentDeclaration,
+  PLANNED_NODES_ENV,
+  type ResolvedAgentConfig,
+  buildTestAgentEnv,
+  resolveTestAgents
+} from './agents'
 import { buildGroupRunResult, evaluateCase, groupNameOf } from './evaluate'
 import { createRecoJobs, resolveTestImagePath } from './images'
 import { createRunLogDir, releaseRunLogDir, testLogRoot } from './log-dir'
@@ -21,6 +29,7 @@ import { filesForTargets } from './selection'
 import type {
   CaseCheckResult,
   ListedFile,
+  PrepareOutcome,
   RecoJob,
   RecoJobOutcome,
   TestCaseRunResult,
@@ -30,6 +39,76 @@ import type {
 
 type ResourcePlan = {
   resourcePaths: readonly string[]
+}
+
+/** 运行环境（agent 等）错误：整批按 error 处理，不能退化成识别未命中。 */
+class TestRunFailure extends Error {
+  constructor(
+    readonly errorCode: string,
+    message: string
+  ) {
+    super(message)
+  }
+}
+
+/** 父侧 watchdog：native 调用可能永久阻塞（agent 挂死），必须有兜底。 */
+const DEFAULT_AGENT_JOB_TIMEOUT_MS = 60_000
+const MIN_EXPLICIT_AGENT_JOB_TIMEOUT_MS = 1_000
+/** 准备工作含 worker 启动与资源加载，超时只防挂死，不参与识别排队。 */
+const PREPARE_WATCHDOG_MS = 120_000
+
+/**
+ * force terminate 会直接杀掉 worker，命中 onTerminate 的机会消失；worker 在启动 agent 时
+ * 增量写 pid 文件，这里按文件回收残留的 agent 进程。只覆盖直接子进程，孙进程不处理；
+ * pid 理论上可能被系统复用，属已知低概率风险。
+ */
+async function cleanupOrphanAgents(logDir: string) {
+  let files: string[]
+  try {
+    files = await fs.readdir(logDir)
+  } catch {
+    return
+  }
+  for (const file of files) {
+    if (!file.startsWith('agent-pids-') || !file.endsWith('.json')) {
+      continue
+    }
+    const full = path.join(logDir, file)
+    try {
+      const pids = JSON.parse(await fs.readFile(full, 'utf8')) as unknown
+      if (Array.isArray(pids)) {
+        for (const pid of pids) {
+          if (typeof pid === 'number' && Number.isSafeInteger(pid)) {
+            try {
+              process.kill(pid)
+            } catch {
+              // 进程已退出时忽略。
+            }
+          }
+        }
+      }
+    } catch {
+      // 文件损坏时只删除。
+    }
+    await fs.rm(full, { force: true }).catch(() => {})
+  }
+}
+
+function agentJobTimeoutMs(configs: readonly ResolvedAgentConfig[]) {
+  let explicit = 0
+  for (const config of configs) {
+    if (config.timeoutMs > 0) {
+      explicit = Math.max(explicit, config.timeoutMs)
+    }
+  }
+  return explicit > 0
+    ? Math.max(MIN_EXPLICIT_AGENT_JOB_TIMEOUT_MS, explicit)
+    : DEFAULT_AGENT_JOB_TIMEOUT_MS
+}
+
+/** workerpool 的 promise.timeout 拒绝值是 name 为 TimeoutError 的 Error。 */
+function isWorkerpoolTimeout(error: unknown) {
+  return error instanceof Error && error.name === 'TimeoutError'
 }
 
 export function getDefaultTestJobCount(cpuCount: number) {
@@ -86,6 +165,13 @@ export async function runTestDetailed(
   const done = (errorCode?: string, reason?: string) => {
     progress ??= createProgress()
     return progress.finish(errorCode, reason)
+  }
+  // 运行环境错误会中止整批；中止后要拦住仍在排队的任务，避免它们被当成
+  // "正常空结果"记成失败，或把进度报成 100%。
+  let abortError: TestRunFailure | undefined = undefined
+  const fail = (errorCode: string, message: string): never => {
+    abortError = new TestRunFailure(errorCode, message)
+    throw abortError
   }
 
   const testConfig = cfg.test
@@ -218,8 +304,8 @@ export async function runTestDetailed(
     )
     if (activePlans.length > 0) {
       errorCode = 'maa-setup-failed'
-      const modulePath = await setupMaa(cfg)
-      if (!modulePath) {
+      const maaSetup = await setupMaa(cfg)
+      if (!maaSetup) {
         return done(errorCode, 'MaaFW setup failed')
       }
       errorCode = 'resource-bundle-failed'
@@ -227,16 +313,40 @@ export async function runTestDetailed(
       if (!bundle) {
         return done(errorCode, 'failed to load resource bundle')
       }
+      let agentConfigs: ResolvedAgentConfig[] = []
       try {
         for (const plan of activePlans) {
           plan.resourcePaths = bundle
             .resolvePaths(plan.testCases.configs.controller, plan.testCases.configs.resource)
             .map(folder => joinPath(bundle.root, folder))
         }
+
+        const interfaceObject = bundle.content?.object
+        const interfaceAgents: AgentDeclaration[] = interfaceObject?.agent
+          ? Array.isArray(interfaceObject.agent)
+            ? interfaceObject.agent
+            : [interfaceObject.agent]
+          : []
+        const resolvedAgents = resolveTestAgents({
+          setting: testConfig.agent,
+          interfaceAgents,
+          interfaceRoot: bundle.root,
+          cwd: cfg.cwd ?? process.cwd(),
+          baseEnv: buildTestAgentEnv({
+            locale: cfg.locale,
+            maafwVersion: maaSetup.version,
+            interfaceVersion: interfaceObject?.version
+          })
+        })
+        if (resolvedAgents.error) {
+          fail('test-agent-invalid', resolvedAgents.error)
+        }
+        agentConfigs = resolvedAgents.agents
       } finally {
         bundle.stop()
       }
 
+      const recognitionTimeoutMs = agentJobTimeoutMs(agentConfigs)
       errorCode = 'test-execution-failed'
       const runLogDir = await createRunLogDir(testLogRoot(cfg), testConfig.maaLogKeep)
       putLog(`MaaFW log directory: ${runLogDir}`)
@@ -249,15 +359,42 @@ export async function runTestDetailed(
             forkOpts: {
               env: {
                 ...process.env,
-                MAAFW_MODULE_PATH: modulePath,
+                MAAFW_MODULE_PATH: maaSetup.modulePath,
                 MAAFW_STDOUT_LEVEL: cfg.mode === 'json' ? 'Off' : cfg.maaStdoutLevel,
                 MAAFW_LOG_DIR: runLogDir,
                 MAAFW_RESOURCE_PATHS: group[0].resourcePaths.join(path.delimiter),
-                MAATOOLS_POOL_ID: String(poolIndex)
+                MAATOOLS_POOL_ID: String(poolIndex),
+                [AGENTS_ENV]: JSON.stringify(agentConfigs),
+                [PLANNED_NODES_ENV]: JSON.stringify([...new Set(group.flatMap(plan => plan.nodes))])
               }
             }
           })
           try {
+            const prepared = await pool
+              .exec<() => Promise<PrepareOutcome>>('prepare', [])
+              .timeout(PREPARE_WATCHDOG_MS)
+              .catch((error): PrepareOutcome => {
+                if (isWorkerpoolTimeout(error)) {
+                  fail('test-execution-failed', `worker 准备超时（${PREPARE_WATCHDOG_MS}ms）`)
+                }
+                const message = error instanceof Error ? error.message : String(error)
+                console.error(error)
+                return {
+                  ok: false,
+                  kind: 'setup',
+                  error: /not found|Unknown method/i.test(message)
+                    ? `worker 未实现 prepare，maa-tools 与 worker 版本不一致：${message}`
+                    : message
+                }
+              })
+            if (!prepared || !prepared.ok) {
+              fail(
+                prepared?.kind === 'agent' ? 'test-agent-failed' : 'test-execution-failed',
+                prepared?.error ?? 'worker 未返回准备结果（maa-tools 与 worker 版本不一致？）'
+              )
+            }
+            // 没有真的启动 agent 时不启用识别 watchdog：纯 pipeline 套件恢复旧行为。
+            const jobTimeoutMs = prepared.ok && prepared.agentsStarted ? recognitionTimeoutMs : 0
             for (const plan of group) {
               const jobsByImage = new Map<string, RecoJob[]>()
               for (const job of plan.jobs) {
@@ -275,12 +412,38 @@ export async function runTestDetailed(
                     caseIndexes,
                     jobs,
                     async job => {
-                      const outcome = await pool
-                        .exec<(job: RecoJob) => RecoJobOutcome>('performReco', [job])
-                        .catch(error => {
-                          console.error(error)
-                          return { results: [], durationMs: 0 } satisfies RecoJobOutcome
-                        })
+                      const exec = pool.exec<(job: RecoJob) => RecoJobOutcome>('performReco', [job])
+                      // promise.timeout 从任务真正开始执行时计时，排队等待不计入。
+                      const watched = jobTimeoutMs > 0 ? exec.timeout(jobTimeoutMs) : exec
+                      const outcome = await watched.catch((error): never => {
+                        // 中止时排队任务会被 pool 拒绝，不能记成空结果。
+                        if (abortError) {
+                          throw abortError
+                        }
+                        if (isWorkerpoolTimeout(error)) {
+                          fail(
+                            'test-agent-failed',
+                            `节点识别（${job.nodes.join(', ')}）超时（${jobTimeoutMs}ms），agent 无响应`
+                          )
+                        }
+                        // worker 崩溃/池拒绝等异常不能退化成用例失败。
+                        abortError ??= new TestRunFailure(
+                          'test-execution-failed',
+                          `worker 执行失败：${error instanceof Error ? error.message : String(error)}`
+                        )
+                        throw abortError
+                      })
+                      if (abortError) {
+                        throw abortError
+                      }
+                      if (outcome.error) {
+                        fail(
+                          outcome.errorKind === 'setup'
+                            ? 'test-execution-failed'
+                            : 'test-agent-failed',
+                          outcome.error
+                        )
+                      }
                       finished += job.nodes.length
                       process.stderr.write(
                         `${((finished * 100) / taskCount).toFixed(2)}% ${finished} / ${taskCount}\r`
@@ -296,7 +459,18 @@ export async function runTestDetailed(
               logGroup(plan)
             }
           } finally {
-            await pool.terminate()
+            // 一律 force：非 agent 错误（如 stdout EPIPE）时 abortError 也可能为空，
+            // 非 force 的 terminate 会等在途 native 调用而挂死。
+            try {
+              await pool.terminate(true)
+            } catch (error) {
+              console.error(error)
+            }
+            try {
+              await cleanupOrphanAgents(runLogDir)
+            } catch (error) {
+              console.error(error)
+            }
           }
         }
       } finally {
@@ -305,6 +479,9 @@ export async function runTestDetailed(
     }
     return done()
   } catch (error) {
+    if (error instanceof TestRunFailure) {
+      return done(error.errorCode, error.message)
+    }
     if (error instanceof TestPlanError) {
       return buildTestRunResult({
         files: error.files ?? files,

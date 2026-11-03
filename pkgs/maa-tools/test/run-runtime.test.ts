@@ -27,6 +27,17 @@ async function fixture(t: TestContext) {
   const state = {
     hit: true,
     setupCalls: 0,
+    prepareError: undefined as string | undefined,
+    prepareKind: 'agent' as 'agent' | 'setup',
+    jobError: undefined as string | undefined,
+    jobErrorKind: undefined as 'setup' | 'agent' | undefined,
+    hang: undefined as 'prepare' | 'performReco' | undefined,
+    timeoutError: undefined as 'prepare' | 'performReco' | undefined,
+    rejectExec: undefined as Error | undefined,
+    prepareReject: undefined as Error | undefined,
+    prepareUndefined: false,
+    timeoutCalls: [] as [string, number][],
+    terminateForce: undefined as boolean | undefined,
     poolOptions: [] as PoolOptions[],
     terminated: 0,
     logDirs: [] as string[],
@@ -54,7 +65,7 @@ async function fixture(t: TestContext) {
   mockModule('../src/utils/maa.ts', {
     setupMaa: async () => {
       state.setupCalls++
-      return 'mock-maafw'
+      return { modulePath: 'mock-maafw', version: 'mock-version' }
     },
     loadMaa: async (_modulePath: string, logDir: string) => {
       state.logDirs.push(logDir)
@@ -80,27 +91,76 @@ async function fixture(t: TestContext) {
       }
       state.poolOptions.push(options)
       return {
-        exec: async (_name: string, [job]: [RecoJob]): Promise<RecoJobOutcome> => ({
-          results: job.nodes.map(node => ({
-            imagePath: job.imagePath,
-            imagePathRaw: job.imagePathRaw,
-            node,
-            hit: state.hit,
-            detail: {
-              name: node,
-              algorithm: 'DirectHit',
-              hit: state.hit,
-              box: [0, 0, 1, 1] as maa.Rect,
-              detail: null,
-              raw: new ArrayBuffer(0),
-              draws: []
-            },
-            pid: 1
-          })),
-          durationMs: 4
-        }),
-        terminate: async () => {
+        exec: (name: string, args: unknown[]) => {
+          const agents = JSON.parse(
+            (options.forkOpts.env.MAATOOLS_AGENTS as string | undefined) ?? '[]'
+          ) as unknown[]
+          const result = (async (): Promise<unknown> => {
+            if (name === 'prepare') {
+              if (state.prepareReject) {
+                throw state.prepareReject
+              }
+              if (state.prepareUndefined) {
+                return undefined
+              }
+              return state.prepareError === undefined
+                ? { ok: true, agentsStarted: agents.length > 0 }
+                : { ok: false, kind: state.prepareKind, error: state.prepareError }
+            }
+            if (state.hang === name) {
+              // 模拟 agent/native 调用永久挂起，父侧 watchdog 必须兜底。
+              return new Promise(() => {})
+            }
+            if (state.rejectExec) {
+              throw state.rejectExec
+            }
+            if (state.jobError) {
+              return {
+                results: [],
+                durationMs: 0,
+                error: state.jobError,
+                errorKind: state.jobErrorKind
+              } satisfies RecoJobOutcome
+            }
+            const [job] = args as [RecoJob]
+            return {
+              results: job.nodes.map(node => ({
+                imagePath: job.imagePath,
+                imagePathRaw: job.imagePathRaw,
+                node,
+                hit: state.hit,
+                detail: {
+                  name: node,
+                  algorithm: 'DirectHit',
+                  hit: state.hit,
+                  box: [0, 0, 1, 1] as maa.Rect,
+                  detail: null,
+                  raw: new ArrayBuffer(0),
+                  draws: []
+                },
+                pid: 1
+              })),
+              durationMs: 4
+            } satisfies RecoJobOutcome
+          })()
+          // workerpool 的 exec 返回带 timeout 的 promise，且从任务真正开始执行时计时。
+          const tracked = result as Promise<unknown> & {
+            timeout: (delay: number) => Promise<unknown>
+          }
+          tracked.timeout = (delay: number) => {
+            state.timeoutCalls.push([name, delay])
+            if (state.timeoutError === name) {
+              const error = new Error(`Promise timed out after ${delay} ms`)
+              error.name = 'TimeoutError'
+              return Promise.reject(error)
+            }
+            return result
+          }
+          return tracked
+        },
+        terminate: async (force?: boolean) => {
           state.terminated++
+          state.terminateForce = force === true
         }
       }
     }
@@ -216,6 +276,155 @@ test('worker 继承父进程环境变量，工具自身的框架配置优先', a
   const env = state.poolOptions[0].forkOpts.env
   assert.equal(env[sentinel], 'inherited')
   assert.notEqual(env.MAAFW_LOG_DIR, 'parent-provided')
+  assert.deepEqual(JSON.parse(env.MAATOOLS_NODES!), ['A'])
+  assert.deepEqual(JSON.parse(env.MAATOOLS_AGENTS!), [])
+})
+
+test('识别阶段框架准备失败不归咎于 agent', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.jobError = 'MaaFW resource load failed'
+  state.jobErrorKind = 'setup'
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-execution-failed')
+})
+
+test('旧 worker 未实现 prepare 时给出明确错误', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.prepareReject = new Error("Method 'prepare' not found")
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-execution-failed')
+  assert.match(result.reason ?? '', /worker 未实现 prepare/)
+})
+
+test('prepare 没有返回值时按执行错误处理', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.prepareUndefined = true
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-execution-failed')
+  assert.match(result.reason ?? '', /worker 未返回准备结果/)
+})
+
+test('worker 准备挂死时 watchdog 按执行错误中止', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.hang = 'prepare'
+  state.timeoutError = 'prepare'
+  cfg.test!.agent = [{ child_exec: 'node', timeoutMs: 50 }]
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-execution-failed')
+  assert.match(result.reason ?? '', /准备超时（120000ms）/)
+  assert.equal(state.terminated, 1)
+  assert.equal(state.terminateForce, true)
+})
+
+test('识别挂死时 watchdog 按 agent 错误中止', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.hang = 'performReco'
+  state.timeoutError = 'performReco'
+  cfg.test!.agent = [{ child_exec: 'node', timeoutMs: 50 }]
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-agent-failed')
+  assert.match(result.reason ?? '', /超时（1000ms）/)
+  assert.equal(state.terminated, 1)
+  assert.equal(state.terminateForce, true)
+})
+
+test('没有启动 agent 时不启用识别 watchdog，纯 pipeline 套件不受排队影响', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'passed')
+  // 只对 prepare 设了超时，performReco 没有 timeout 包裹。
+  assert.deepEqual(state.timeoutCalls, [['prepare', 120_000]])
+})
+
+test('启动 agent 后识别 watchdog 使用默认 60s，终止时始终 force', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  cfg.test!.agent = [{ child_exec: 'node' }]
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'passed')
+  assert.deepEqual(state.timeoutCalls, [
+    ['prepare', 120_000],
+    ['performReco', 60_000]
+  ])
+  assert.equal(state.terminateForce, true)
+})
+
+test('worker 崩溃/池拒绝按执行错误返回，不退化成用例失败', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.rejectExec = new Error('worker crashed')
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-execution-failed')
+  assert.match(result.reason ?? '', /worker 执行失败：worker crashed/)
+  assert.equal(state.terminateForce, true)
+})
+
+test('test.agent 显式配置会解析进 worker 环境变量', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  cfg.test!.agent = [{ child_exec: 'node', child_args: ['agent.mjs'], env: { FOO: 'bar' } }]
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'passed')
+  const agents = JSON.parse(state.poolOptions[0].forkOpts.env.MAATOOLS_AGENTS!) as Array<{
+    childExec: string
+    childArgs: string[]
+    env: Record<string, string>
+  }>
+  assert.equal(agents.length, 1)
+  assert.equal(agents[0].childExec, 'node')
+  assert.deepEqual(agents[0].childArgs, ['agent.mjs'])
+  assert.equal(agents[0].env.FOO, 'bar')
+})
+
+test('worker 框架准备失败按执行错误返回，不归咎于 agent', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.prepareKind = 'setup'
+  state.prepareError = 'MaaFW setup failed'
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-execution-failed')
+  assert.equal(result.reason, 'MaaFW setup failed')
+  assert.equal(state.terminated, 1)
+})
+
+test('识别过程中 agent 失联按 agent 执行错误返回', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.jobError = 'agent 进程已退出或已失联：node'
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-agent-failed')
+  assert.equal(result.reason, 'agent 进程已退出或已失联：node')
+  assert.equal(state.terminated, 1)
+  // 中止后不能把排队任务的空结果记成失败用例
+  assert.equal(result.files[0].cases[0].verdict, 'error')
+  const platform = result.files[0].cases[0].platforms[0]
+  assert.equal(platform?.result.verdict, 'error')
+  assert.equal(platform?.result.checks.length, 0)
+})
+
+test('worker 准备失败按 agent 执行错误返回，而不是退化成未命中', async t => {
+  const { state, cfg, runTestDetailed } = await fixture(t)
+  state.prepareError = 'agent 未注册这些 Custom 识别：X（节点 A）'
+  const result = await runTestDetailed(cfg)
+  assertPublicResult(result)
+  assert.equal(result.status, 'error')
+  assert.equal(result.errorCode, 'test-agent-failed')
+  assert.equal(result.reason, 'agent 未注册这些 Custom 识别：X（节点 A）')
+  assert.equal(state.terminated, 1)
 })
 
 for (const maaLogDir of [undefined, 'custom-logs']) {

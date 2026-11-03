@@ -58,6 +58,31 @@ export type TestCases = {
   }[]
 }
 
+/**
+ * 识别测试期间启动的 AgentServer 子进程，字段与 interface.json 的 agent 声明一致。
+ * 显式配置的相对路径以 cwd 解析；从 interface 读取时以 interface.json 所在目录解析。
+ */
+export type TestAgentConfig = {
+  child_exec: string
+  child_args?: string[]
+  /** 连接标识符前缀；实际会追加 worker/进程后缀保证唯一 */
+  identifier?: string
+  /** 子进程工作目录，相对 cwd；默认与 child_exec 的解析根一致 */
+  cwd?: string
+  /** 在继承的进程环境和 PI 变量之上追加的环境变量 */
+  env?: Record<string, string>
+  /** 连接 AgentServer 的超时，默认 30000ms */
+  connectTimeoutMs?: number
+  /** 工具侧 watchdog 的单次等待上限（不是 MaaFW IPC 超时）；0 或省略=60s，小于 1s 按 1s 计，超时按 test-agent-failed 上报 */
+  timeoutMs?: number
+}
+
+/**
+ * `'interface'`（默认）读取 interface.json 顶层 agent 声明；`false` 关闭；
+ * 对象或数组显式声明并覆盖 interface。
+ */
+export type TestAgentSetting = 'interface' | false | TestAgentConfig | TestAgentConfig[]
+
 export type TestConfig = {
   casesCwd?: string
   cases: TestCases[] | (() => Promise<TestCases[]>)
@@ -68,6 +93,9 @@ export type TestConfig = {
 
   job?: number
   maxNodePerJob?: number
+
+  /** Custom 识别的 AgentServer；默认读取 interface.json，只在待测节点确实用到 Custom 识别时启动 */
+  agent?: TestAgentSetting
 }
 
 export type VscodeConfig = {

@@ -31,6 +31,10 @@ CLI 将其映射为进程退出码。
 
 识别测试的 worker pool 必须按解析后的完整有序资源路径列表隔离，使用数组的结构化序列化作为内部键。不得拼接 controller/resource 名称作为缓存键，因为名称组合可能碰撞，也无法识别路径等价的不同配置。执行计划可按资源组重排，但结果槽位和最终报告必须保持稳定的 controller/resource 顺序。
 
+### Test Agent 生命周期
+
+`test.agent`（默认 interface.json 声明）解析出的 agent 列表通过环境变量传给 worker；每个 worker 各自启动并连接一套 agent，绑定自己的 Resource，不能由父进程或其它 worker 共享，也不能假设所有 worker 使用同一 identifier。worker 首次准备时只在待测节点包含 Custom 识别时启动 agent；启动、连接、进程中途退出或 `custom_recognition_list` 未覆盖所需识别名都必须作为整批执行错误上报，不得退化成识别未命中。连接与单次调用超时由配置控制，worker 终止时必须结束 agent 子进程。任何可能阻塞 native 调用的路径（connect / disconnect / run_recognition / pool.terminate）都必须有父侧超时兜底；清理 agent 时先全部结束子进程，再只 destroy 客户端，不做关闭握手。
+
 ### 配置类型
 
 使用交集类型组合配置：

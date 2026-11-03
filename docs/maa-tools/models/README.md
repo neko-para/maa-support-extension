@@ -42,6 +42,35 @@ npx @nekosu/maa-tools test [config-path] --jsonl --file tests/example/test_examp
 
 测试的定义来自配置中的 `test.cases`，可以是数组或异步函数。收集和运行都加载该配置并展开用例；收集不初始化 MaaFramework、不运行识别，也不以某个固定目录扫描代替实际配置。
 
+### Agent 与 Custom 识别
+
+Pipeline 节点使用 `recognition: "Custom"` 时，识别由 AgentServer 子进程提供。`test.agent` 控制 agent 来源，默认 `'interface'`：读取 `interfacePath` 指向的 interface.json 顶层 `agent` 声明，`child_exec` 与子进程默认工作目录相对 interface.json 所在目录解析，`child_args` 按顺序传递（其中 `{PROJECT_DIR}` 会展开），末尾追加实际 identifier，与通用 Client 启动 agent 的约定一致。显式 `test.agent` 的相对路径以配置 `cwd` 为解析根。
+
+```ts
+const config: FullConfig = {
+  interfacePath: 'assets/interface.json',
+  test: {
+    // 默认 'interface'；显式声明覆盖 interface；false 关闭
+    agent: [
+      {
+        child_exec: 'install/agent/cpp-algo',
+        cwd: 'install',
+        env: { PI_CLIENT_LANGUAGE: 'zh_cn' }
+      }
+    ],
+    cases: [/* ... */]
+  }
+}
+```
+
+- 只在本批待测节点（展开时过滤前固定的整组 `nodes`，配置也可显式指定）确实需要 Custom 识别时启动 agent；没有 Custom 节点时不产生子进程。`And` / `Or` 的子项若是节点名，会递归展开被引用节点的识别，避免漏检。
+- 每个 worker 进程各启动一套 agent 并绑定自己的 Resource；`connectTimeoutMs`（默认 30000ms）走 native 连接超时；`timeoutMs`（0/省略=60s，小于 1s 按 1s 计）是工具侧 watchdog 的单次等待上限：只在本 worker 真的启动了 agent 时启用，且从识别任务真正开始执行时计时，排队等待不计入；超时按 `test-agent-failed` 上报，不会退化成识别未命中。准备工作另有 120s 超时（按 `test-execution-failed` 上报）。worker 终止时先全部结束子进程再销毁客户端，不做关闭握手。
+- 声明的 `identifier` 只作为前缀，实际会追加 worker/进程后缀保证唯一；MaaFW 在 Windows 上降级到 TCP 时还会改写标识符，因此子进程拿到的是实际值。agent 数量随 worker 数增长，只支持单实例的 agent 建议配 `test.job: 1`。
+- 启动子进程时注入 PI 协议变量：`PI_INTERFACE_VERSION`、`PI_CLIENT_NAME`（`MaaTools`）、`PI_CLIENT_VERSION`、`PI_CLIENT_LANGUAGE`、`PI_CLIENT_MAAFW_VERSION`、`PI_VERSION`。`PI_CONTROLLER` / `PI_RESOURCE` 描述真实 UI 选择，测试没有真实选择，不注入；需要时用 `env` 自行提供。
+- 失败按整批 `error` 处理，不能退化成「未命中」：配置非法返回 `test-agent-invalid`；agent 无法启动/连接、两次调用之间检测到进程退出，或 `custom_recognition_list` 没有覆盖待测节点要求的 Custom 识别名时返回 `test-agent-failed`；调用在途中挂死由 watchdog 兜底为同一错误。缺少 agent、未注册识别名的报错带识别名与节点；启动/连接/退出带 agent 路径与日志。agent 日志写到本次运行日志目录的 `agent-<pool>-<pid>-<n>.log`。
+- 池中只用一个 worker 做启动预检；其余 worker 在首个任务前各自准备并校验，失败同样中止整批。
+- `child_exec` / `cwd` / `child_args` 里的 `{PROJECT_DIR}` 按解析根展开。当前只把 Resource 绑定给 agent，不注册 controller/tasker/context sink，依赖事件回调的 agent 在测试中收不到事件；Windows 下 `.cmd` / `.bat` 不能直接作为 `child_exec`（Node spawn 限制），请填写可执行文件或包装脚本。
+
 ### 包版本与 JSON 兼容
 
 收集清单、运行报告和逐行记录的兼容性随 `@nekosu/maa-tools` 包版本管理。配套节点测试插件接受稳定版 `>=1.2.0 <2.0.0`，允许 `v` 前缀和构建元数据，不接受预发布版、未知或格式无效的版本。新主版本须等插件明确支持后才接收。
@@ -378,6 +407,8 @@ worker 是独立子进程，继承父进程环境变量，依赖 `LD_LIBRARY_PAT
 | `maa-setup-failed`        | MaaFramework 准备或加载失败                          |
 | `resource-bundle-failed`  | interface bundle 或资源规划加载失败                  |
 | `test-execution-failed`   | 识别执行阶段发生异常                                 |
+| `test-agent-invalid`      | `test.agent` 配置结构不合法                          |
+| `test-agent-failed`       | agent 无法启动/连接、中途退出或未注册所需的 Custom 识别 |
 | `test-file-error`         | 测试文件读取、解析或结构校验失败                     |
 | `test-verification-error` | 文件、用例或平台未完成要求的验证                     |
 | `no-tests-verified`       | 没有实际完成的有效节点检查，无法判定通过             |

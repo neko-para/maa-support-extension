@@ -2,6 +2,8 @@ export type {
   BaseConfig,
   CheckConfig,
   CaseOrigin,
+  TestAgentConfig,
+  TestAgentSetting,
   TestCases,
   TestConfig,
   VscodeConfig,

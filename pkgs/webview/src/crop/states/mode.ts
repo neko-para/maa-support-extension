@@ -4,7 +4,7 @@ import { ref } from 'vue'
  * 画布当前操作模式。任意时刻只有一个模式生效，点选/框选/涂绿互斥。
  * 各工具通过本模块的 setMode 切换，不再各自维护独立布尔。
  */
-export type CropMode = 'pointer' | 'pick-point' | 'pick-rect' | 'mask'
+export type CropMode = 'pointer' | 'pick-point' | 'pick-rect' | 'mask' | 'lasso'
 
 export const mode = ref<CropMode>('pointer')
 

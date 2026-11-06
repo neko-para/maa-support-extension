@@ -19,6 +19,8 @@ import * as pickSt from '../states/pick'
 import * as matchSt from '../states/quickMatch'
 import * as recoSt from '../states/reco'
 import * as settingsSt from '../states/settings'
+import * as subjectMaskSt from '../states/subjectMask'
+import * as subjectSelectSt from '../states/subjectSelect'
 
 const drawOptions = computed(() =>
   (['all', 'best', 'filtered'] as const).map(value => ({
@@ -45,6 +47,19 @@ const autoMaskMethods = computed(() => [
   { label: t('maa.crop.tools.auto-mask-border-grow'), value: 'border-grow' },
   { label: t('maa.crop.tools.auto-mask-threshold'), value: 'threshold' }
 ])
+
+const subjectMaskErrorText = computed(() => {
+  switch (subjectMaskSt.error.value) {
+    case 'no-region':
+      return t('maa.crop.tools.subject-mask-no-region')
+    case 'bad-selection':
+      return t('maa.crop.tools.subject-mask-bad-selection')
+    case null:
+      return null
+    default:
+      return t('maa.crop.tools.subject-mask-failed')
+  }
+})
 
 const autoMaskErrorText = computed(() => {
   if (!autoMaskSt.error.value) {
@@ -142,6 +157,32 @@ async function applyAutoMask() {
   greenMaskSt.markApplied(previous)
   matchSt.greenMask.value = true
   autoMaskSt.setEnabled(false)
+}
+
+function toggleLasso() {
+  if (subjectSelectSt.active.value) {
+    subjectSelectSt.cancel()
+  } else {
+    subjectSelectSt.start()
+  }
+}
+
+function clearLasso() {
+  subjectSelectSt.clear()
+  subjectMaskSt.disable()
+}
+
+async function applySubjectMask() {
+  const newData = subjectMaskSt.apply()
+  if (!newData) {
+    return
+  }
+  const previous = imageSt.data.value
+  await imageSt.set(newData)
+  greenMaskSt.markApplied(previous)
+  matchSt.greenMask.value = true
+  subjectMaskSt.disable()
+  subjectSelectSt.clear()
 }
 
 async function undoApplyGreenMask() {
@@ -513,6 +554,56 @@ async function undoApplyGreenMask() {
         </n-text>
         <n-text depth="3" style="font-size: 12px">
           {{ t('maa.crop.tools.auto-mask-scope') }}
+        </n-text>
+
+        <n-divider style="margin: 4px 0">{{ t('maa.crop.tools.subject-select') }}</n-divider>
+        <n-flex align="center" wrap>
+          <n-button
+            size="small"
+            :type="subjectSelectSt.active.value ? 'primary' : 'default'"
+            @click="toggleLasso()"
+          >
+            {{
+              subjectSelectSt.active.value
+                ? t('maa.crop.tools.subject-select-stop')
+                : subjectSelectSt.hasRegion.value
+                  ? t('maa.crop.tools.subject-select-restart')
+                  : t('maa.crop.tools.subject-select-start')
+            }}
+          </n-button>
+          <n-button
+            size="small"
+            :disabled="!subjectSelectSt.hasRegion.value"
+            @click="subjectMaskSt.generate()"
+          >
+            {{ t('maa.crop.tools.subject-mask-generate') }}
+          </n-button>
+          <n-button
+            size="small"
+            type="primary"
+            :disabled="!subjectMaskSt.previewCanvas.value"
+            @click="applySubjectMask()"
+          >
+            {{ t('maa.crop.tools.subject-mask-apply') }}
+          </n-button>
+          <n-button v-if="subjectSelectSt.hasRegion.value" size="small" @click="clearLasso()">
+            {{ t('maa.crop.tools.subject-select-clear') }}
+          </n-button>
+        </n-flex>
+        <n-text depth="3" style="font-size: 12px">
+          {{ t('maa.crop.tools.subject-mask-hint') }}
+        </n-text>
+        <n-text v-if="subjectMaskErrorText" type="error" style="font-size: 12px">
+          {{ subjectMaskErrorText }}
+        </n-text>
+        <n-text v-else-if="subjectMaskSt.previewCanvas.value" depth="3" style="font-size: 12px">
+          {{
+            t(
+              'maa.crop.tools.subject-mask-stats',
+              subjectMaskSt.subjectRatio.value.toFixed(2),
+              (100 - subjectMaskSt.subjectRatio.value).toFixed(2)
+            )
+          }}
         </n-text>
       </n-flex>
     </n-card>

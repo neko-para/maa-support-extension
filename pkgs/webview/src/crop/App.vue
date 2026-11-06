@@ -34,6 +34,8 @@ const activeMode = computed(() => {
   switch (modeSt.mode.value) {
     case 'mask':
       return t('maa.crop.overlay.mode-masking')
+    case 'lasso':
+      return t('maa.crop.overlay.mode-lasso')
     case 'pick-rect':
       return t('maa.crop.overlay.mode-selecting')
     case 'pick-point':

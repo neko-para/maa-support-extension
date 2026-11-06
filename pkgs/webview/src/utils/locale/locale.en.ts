@@ -87,6 +87,8 @@ export default {
   'maa.crop.overlay.mode-selecting':
     'Rect mode: drag on the image to select a region (Esc to exit)',
   'maa.crop.overlay.mode-masking': 'Mask mode: hold left button to paint (Esc to exit)',
+  'maa.crop.overlay.mode-lasso':
+    'Lasso subject: hold left button to outline it, release to create the region (Esc to cancel)',
   'maa.crop.screencap': 'Screencap',
   'maa.crop.upload': 'Upload',
   'maa.crop.download': 'Download',
@@ -148,6 +150,21 @@ export default {
   'maa.crop.tools.auto-mask-empty':
     'No recognizable background; try a larger tolerance or another method',
   'maa.crop.tools.auto-mask-failed': 'Auto green mask failed, see the extension log',
+  'maa.crop.tools.subject-select': 'Lasso subject',
+  'maa.crop.tools.subject-select-start': 'Start lasso',
+  'maa.crop.tools.subject-select-stop': 'Exit lasso',
+  'maa.crop.tools.subject-select-restart': 'Re-lasso',
+  'maa.crop.tools.subject-select-clear': 'Clear lasso',
+  'maa.crop.tools.subject-mask-generate': 'Generate preview',
+  'maa.crop.tools.subject-mask-apply': 'Apply green mask',
+  'maa.crop.tools.subject-mask-hint':
+    'Draw a rough loop around the subject (keep a little background margin); outside becomes green, inside is split by color',
+  'maa.crop.tools.subject-mask-stats': 'subject {0}% · background {1}%',
+  'maa.crop.tools.subject-mask-no-region': 'No lasso region yet',
+  'maa.crop.tools.subject-mask-bad-selection':
+    'Cannot tell subject from background in this region; make the loop larger or use the manual brush',
+  'maa.crop.tools.subject-mask-failed':
+    'Failed to generate the green mask; retry or use the manual brush',
   'maa.crop.tools.brush-size': 'Brush Size',
   'maa.crop.tools.eraser': 'Eraser',
   'maa.crop.tools.undo': 'Undo',

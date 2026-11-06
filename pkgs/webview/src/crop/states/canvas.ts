@@ -20,6 +20,8 @@ import * as imageSt from './image'
 import * as pickSt from './pick'
 import * as matchSt from './quickMatch'
 import * as settingsSt from './settings'
+import * as subjectMaskSt from './subjectMask'
+import * as subjectSelectSt from './subjectSelect'
 
 export const size = ref<Size>(Size.from(0, 0))
 let dashOffset = 0
@@ -79,6 +81,19 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ctx.restore()
     }
 
+    const regionOverlay = subjectSelectSt.regionCanvas.value
+    if (regionOverlay) {
+      ctx.save()
+      ctx.drawImage(
+        regionOverlay,
+        0,
+        0,
+        ...imageSt.size.value.flat(),
+        ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+      )
+      ctx.restore()
+    }
+
     const autoPreview = autoMaskSt.previewCanvas.value
     if (autoMaskSt.enabled.value && autoPreview) {
       const [offsetX, offsetY] = autoMaskSt.previewOffset.value
@@ -92,6 +107,28 @@ export function draw(ctx: CanvasRenderingContext2D) {
         ...controlSt.viewport.value
           .toView(
             Box.from(Pos.from(offsetX, offsetY), Size.from(autoPreview.width, autoPreview.height))
+          )
+          .flat()
+      )
+      ctx.restore()
+    }
+
+    const subjectPreview = subjectMaskSt.previewCanvas.value
+    if (subjectMaskSt.enabled.value && subjectPreview) {
+      const [offsetX, offsetY] = subjectMaskSt.previewOffset.value
+      ctx.save()
+      ctx.drawImage(
+        subjectPreview,
+        0,
+        0,
+        subjectPreview.width,
+        subjectPreview.height,
+        ...controlSt.viewport.value
+          .toView(
+            Box.from(
+              Pos.from(offsetX, offsetY),
+              Size.from(subjectPreview.width, subjectPreview.height)
+            )
           )
           .flat()
       )
@@ -180,6 +217,23 @@ export function draw(ctx: CanvasRenderingContext2D) {
     for (const step of drawSteps) {
       ctx.save()
       step(ctx, controlSt.viewport.value)
+      ctx.restore()
+    }
+
+    if (subjectSelectSt.active.value && subjectSelectSt.points.value.length > 1) {
+      const view = controlSt.viewport.value
+      const first = view.toView(subjectSelectSt.points.value[0]!)
+      ctx.save()
+      ctx.strokeStyle = 'rgba(80, 160, 255, 0.95)'
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([6, 4])
+      ctx.beginPath()
+      ctx.moveTo(first.x, first.y)
+      for (const point of subjectSelectSt.points.value.slice(1)) {
+        const pos = view.toView(point)
+        ctx.lineTo(pos.x, pos.y)
+      }
+      ctx.stroke()
       ctx.restore()
     }
 

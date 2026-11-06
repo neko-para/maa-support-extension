@@ -15,6 +15,7 @@ import * as imageSt from './image'
 import { exitMode, mode } from './mode'
 import * as pickSt from './pick'
 import * as settingsSt from './settings'
+import * as subjectSelectSt from './subjectSelect'
 
 export const cursor = ref<string>('default')
 export const current = ref<Pos>(new Pos())
@@ -87,6 +88,14 @@ export function onPointerDown(event: PointerEvent) {
     const pos = viewport.value.fromView(mp)
     greenMaskSt.drawAt(pos.x, pos.y)
     greenMaskPointerDown.value = true
+    ;(event.target as Element).setPointerCapture(event.pointerId)
+    return
+  }
+
+  if (subjectSelectSt.active.value && event.button === 0) {
+    const pos = viewport.value.fromView(mp)
+    subjectSelectSt.begin(pos)
+    cursor.value = 'crosshair'
     ;(event.target as Element).setPointerCapture(event.pointerId)
     return
   }
@@ -173,6 +182,11 @@ export function onPointerMove(event: PointerEvent) {
     return
   }
 
+  if (subjectSelectSt.active.value && subjectSelectSt.drawing.value) {
+    subjectSelectSt.extend(viewport.value.fromView(mp))
+    return
+  }
+
   if (selectDrag.value.state) {
     selectDrag.value.move(mp)
     pickSt.selectBox.value = selectDrag.value.box
@@ -254,6 +268,13 @@ export function onPointerUp(event: PointerEvent) {
     greenMaskSt.endStroke()
     greenMaskPointerDown.value = false
     ;(event.target as Element).releasePointerCapture(event.pointerId)
+    return
+  }
+
+  if (subjectSelectSt.drawing.value) {
+    subjectSelectSt.finish()
+    ;(event.target as Element).releasePointerCapture(event.pointerId)
+    cursor.value = 'crosshair'
     return
   }
 

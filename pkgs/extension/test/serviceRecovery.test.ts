@@ -10,6 +10,7 @@ const serverSource = await read('../src/service/server.ts')
 const launchSource = await read('../src/service/launch.ts')
 const rpcSource = await read('../src/service/utils/rpc.ts')
 const maaServerMaaSource = await read('../../maa-server/src/maa.ts')
+const maaServerAgentSource = await read('../../maa-server/src/agent.ts')
 
 test('IPC dispatcher 收口 handler 的异步拒绝', () => {
   // maa-server 侧同一约定由 pkgs/maa-server/test/ipc.test.ts 行为级验证
@@ -18,10 +19,12 @@ test('IPC dispatcher 收口 handler 的异步拒绝', () => {
 })
 
 test('清理类 IPC 调用不再产生未捕获拒绝', () => {
-  // 除 stopAgentSilently 自身外，不得存在裸的 ipc.stopAgent(...) 调用
-  assert.equal((maaServerMaaSource.match(/ipc\.stopAgent\(/g) ?? []).length, 1)
-  assert.match(maaServerMaaSource, /function stopAgentSilently\(id: string\)/)
-  assert.match(maaServerMaaSource, /\.catch\(err => \{\s*\n\s*logger\.warn\(`stopAgent/)
+  // 除 stopAgentSilently 自身外，不得存在裸的 ipc.stopAgent(...) 调用；
+  // stopAgentSilently 收口在 maa-server 的 agent.ts（maa.ts 只引用）
+  assert.equal((maaServerAgentSource.match(/ipc\.stopAgent\(/g) ?? []).length, 1)
+  assert.equal((maaServerMaaSource.match(/ipc\.stopAgent\(/g) ?? []).length, 0)
+  assert.match(maaServerAgentSource, /function stopAgentSilently\(id: string\)/)
+  assert.match(maaServerAgentSource, /\.catch\(err => \{\s*\n\s*logger\.warn\(`stopAgent/)
 
   // 两个 tasker sink 的 pushNotify 都必须接住拒绝
   assert.equal(

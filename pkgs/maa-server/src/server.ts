@@ -21,8 +21,9 @@ import {
   updateCtrl
 } from './maa'
 import { option } from './options'
+import { performColorMatch } from './tools/colorMatch'
 import { performOcr } from './tools/ocr'
-import { performReco } from './tools/reco'
+import { performReco, releaseQuickRecoSession } from './tools/reco'
 import { performTemplateMatch } from './tools/templateMatch'
 
 function makePromise<T>() {
@@ -91,7 +92,12 @@ export async function initServer() {
       ipc.resize = resize
       ipc.performOcr = performOcr
       ipc.performTemplateMatch = performTemplateMatch
+      ipc.performColorMatch = performColorMatch
       ipc.performReco = performReco
+      // 协议层 MarkReturnPromise 要求返回值包一层 Promise，释放本身是同步的
+      ipc.releaseRecoSession = async () => {
+        releaseQuickRecoSession()
+      }
 
       ipc.refreshAdb = async (adbPath?: string) => {
         return (await maa.AdbController.find(adbPath)) ?? []

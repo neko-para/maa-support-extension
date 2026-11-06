@@ -1,19 +1,6 @@
-import * as fs from 'fs/promises'
-import * as path from 'node:path'
-import * as os from 'os'
-
 import { logger } from '../server'
+import { setupFakeResource } from './fakeResource'
 import { convertImage, setupFixedController } from './utils'
-
-async function setupFakeResource() {
-  const temp = path.join(os.tmpdir(), 'maavsc-matches')
-  logger.info(`create fake resource under ${temp}`)
-
-  await fs.mkdir(path.join(temp, 'pipeline'), { recursive: true })
-  await fs.writeFile(path.join(temp, 'pipeline', '1.json'), '{}')
-
-  return temp
-}
 
 export async function performTemplateMatch(
   imageBase64: string,

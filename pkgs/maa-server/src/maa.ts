@@ -1,21 +1,23 @@
-import { EventEmitter } from 'node:events'
 import { existsSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as url from 'node:url'
 import { v4 } from 'uuid'
 
-import type {
-  AgentRuntime,
-  ControllerRuntime,
-  InterfaceRuntime
-} from '@nekosu/maa-pipeline-manager'
+import type { ControllerRuntime, InterfaceRuntime } from '@nekosu/maa-pipeline-manager'
 
+import {
+  type AgentInfo,
+  destroyAgent,
+  destroyResourceAfterAgentCleanup,
+  notifyAgentStopped,
+  startAgent
+} from './agent'
 import { ipc } from './apis'
 import { option } from './options'
 import { logger } from './server'
+import { releaseQuickRecoSession } from './tools/reco'
 import { convertImage } from './tools/utils'
-import { makePromise } from './utils'
 
 export async function initMaa() {
   const importTarget = path.join(option.module, '@maaxyz/maa-node/dist/index-client.js')
@@ -32,16 +34,11 @@ type InstanceCache = {
   controller: maa.Controller
 }
 
-type TaskerAgentInfo = {
-  client: maa.Client
-  agent: string
-}
-
 type TaskerInstance = {
   tasker: maa.Tasker
   resource: maa.Resource
   controller: maa.Controller
-  agents: TaskerAgentInfo[]
+  agents: AgentInfo[]
 }
 
 let cache: InstanceCache | undefined
@@ -49,10 +46,6 @@ let cacheKey: string | undefined
 let taskerInst: TaskerInstance | undefined
 
 const taskerMap: Record<string, TaskerInstance> = {}
-
-const events = new EventEmitter<{
-  agentStopped: [id: string]
-}>()
 
 // 从 gamescope 实例列表中按 display_no 匹配目标实例，用于解析 pw_node_id / eis_socket_path。
 // 匹配不到（或匹配到的实例没有 PipeWire 节点，即 pipewire_node_id === 0）时，
@@ -211,115 +204,10 @@ export async function updateCtrl(runtime: ControllerRuntime) {
   }
 }
 
-// 清理路径不参与控制流：ipc.stopAgent 是 JSON-RPC 请求，对端 handler 的异步拒绝会以
-// ResponseError 弹回本进程，不接住就会变成进程级未捕获拒绝（崩溃日志里的裸栈即由此产生）。
-function stopAgentSilently(id: string) {
-  ipc.stopAgent(id).catch(err => {
-    logger.warn(`stopAgent ${id} failed: ${err}`)
-  })
-}
-
-async function setupAgent(
-  agentConfig: AgentRuntime,
-  runtime: InterfaceRuntime,
-  resource: maa.Resource,
-  timeout: number
-): Promise<TaskerAgentInfo | null> {
-  const client = new maa.Client(agentConfig.identifier)
-  const identifier = client.identifier ?? 'vsc-no-identifier'
-
-  logger.info(`AgentClient listening ${identifier}`)
-
-  let agent: string | undefined = undefined
-  const env = {
-    VSCODE_MAAFW_AGENT: '1',
-    VSCODE_MAAFW_AGENT_ROOT: runtime.root,
-    VSCODE_MAAFW_AGENT_RESOURCE: runtime.resource.paths
-      .map(p => path.resolve(runtime.root, p))
-      .join(path.delimiter)
-  }
-  if (agentConfig.debug_session) {
-    const handle = await ipc.startDebugSession(agentConfig.debug_session, identifier, env)
-    if (!handle) {
-      client.destroy()
-      return null
-    }
-    agent = handle
-  } else if (agentConfig.child_exec) {
-    const handle = await ipc.startTask(
-      agentConfig.child_exec,
-      (agentConfig.child_args ?? []).concat([identifier]),
-      runtime.root,
-      env
-    )
-    if (!handle) {
-      client.destroy()
-      return null
-    }
-    agent = handle
-  } else {
-    return null
-  }
-
-  const [agentStopPromise, agentStopResolve] = makePromise<void>()
-  const watcher = (id: string) => {
-    if (id !== agent) {
-      return
-    }
-    agentStopResolve()
-  }
-  events.on('agentStopped', watcher)
-
-  if (timeout >= 0) {
-    client.timeout = timeout.toString()
-  }
-  client.bind_resource(resource)
-  logger.info(`AgentClient start connecting ${identifier}`)
-
-  const connectPromise = client.connect()
-
-  const succ = await Promise.race([
-    connectPromise.then(() => true),
-    agentStopPromise.then(() => false)
-  ])
-
-  logger.info(`agent start race result ${succ}`)
-  events.off('agentStopped', watcher)
-
-  if (!succ) {
-    logger.info(`AgentClient connect failed`)
-    connectPromise.then(() => {
-      client?.destroy()
-      if (agent) {
-        stopAgentSilently(agent)
-      }
-    })
-    return null
-  }
-
-  if (!(client.connected && client.alive)) {
-    logger.info(`AgentClient connect failed`)
-    client?.destroy()
-    if (agent) {
-      stopAgentSilently(agent)
-    }
-    return null
-  } else {
-    logger.info(`AgentClient connect succeeded`)
-  }
-  if (timeout >= 0) {
-    client.timeout = Number.MAX_SAFE_INTEGER.toString()
-  }
-  return {
-    agent,
-    client
-  }
-}
-
 async function setupResource(
   runtime: InterfaceRuntime,
   timeout: number
-): Promise<{ resource: maa.Resource; agents: TaskerAgentInfo[] } | null> {
+): Promise<{ resource: maa.Resource; agents: AgentInfo[] } | null> {
   const resource = new maa.Resource()
 
   resource.add_sink((_, msg) => {
@@ -333,15 +221,23 @@ async function setupResource(
     await resource.post_bundle(path.resolve(runtime.root, p)).wait()
   }
 
-  const agents: TaskerAgentInfo[] = []
+  const agents: AgentInfo[] = []
   for (const agentConfig of runtime.agent) {
-    const info = await setupAgent(agentConfig, runtime, resource, timeout)
+    const info = await startAgent(
+      agentConfig,
+      {
+        root: runtime.root,
+        resources: runtime.resource.paths,
+        timeout
+      },
+      resource
+    )
     if (!info) {
       for (const agent of agents) {
-        agent.client.destroy()
-        stopAgentSilently(agent.agent)
+        destroyAgent(agent)
       }
-      resource.destroy()
+      // 失败分支的 client 可能仍在 connect 清理中，Resource 不能抢先销毁
+      destroyResourceAfterAgentCleanup(resource)
       return null
     }
     agents.push(info)
@@ -360,9 +256,12 @@ export async function setupInst(
   handle?: string
   error?: string
 }> {
+  // 启动正式实例前释放快速识别缓存的 agent 会话：同名 identifier / 同一 AgentServer
+  // 重复启动会互相抢占，且面板复用时缓存已无意义
+  releaseQuickRecoSession()
+
   for (const agent of taskerInst?.agents ?? []) {
-    agent.client.destroy()
-    stopAgentSilently(agent.agent)
+    destroyAgent(agent)
   }
   taskerInst?.tasker.destroy()
   taskerInst?.resource.destroy()
@@ -410,11 +309,10 @@ export async function setupInst(
 
   if (!tasker.inited) {
     for (const agent of resourceInfo.agents) {
-      agent.client.destroy()
-      stopAgentSilently(agent.agent)
+      destroyAgent(agent)
     }
     tasker.destroy()
-    resourceInfo.resource.destroy()
+    destroyResourceAfterAgentCleanup(resourceInfo.resource)
     return {
       error: 'maa.debug.init-instance-failed'
     }
@@ -513,8 +411,7 @@ export async function destroyInstance(id: string) {
   delete taskerMap[id]
 
   for (const agent of inst.agents) {
-    agent.client.destroy()
-    stopAgentSilently(agent.agent)
+    destroyAgent(agent)
   }
   inst.tasker.destroy()
   inst.resource.destroy()
@@ -571,5 +468,5 @@ export async function getNode(id: string, task: string) {
 }
 
 export async function agentStopped(id: string) {
-  events.emit('agentStopped', id)
+  notifyAgentStopped(id)
 }

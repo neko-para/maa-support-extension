@@ -144,6 +144,34 @@ export default {
   'maa.core.load-maafw-failed': 'Load MaaFramework failed',
 
   'maa.crop.warning.no-resource': 'resource of interface not configured, will save directly',
+  'maa.crop.common.failure.no-resource': 'No interface resource is available',
+  'maa.crop.common.failure.controller':
+    'Cannot connect to the controller, check the device configuration',
+  'maa.crop.common.failure.ipc':
+    'Failed to communicate with the Maa service, see the extension log',
+  'maa.crop.screencap.failure.capture': 'Screenshot failed, check the device connection',
+  'maa.crop.upload.failure.read': 'Failed to read the image file',
+  'maa.crop.ocr.failure.failed': 'OCR recognition failed, see the Maa output',
+  'maa.crop.template.failure.failed': 'Template matching failed, see the Maa output',
+  'maa.crop.save.failure.failed': 'Save failed: {0}',
+  'maa.crop.reco.failure.no-agent':
+    'The node uses Custom recognition but no agent is available: {0}. Check the agent declaration in interface.json and make sure the agent executable is built',
+  'maa.crop.reco.failure.unregistered': 'The agent did not register these Custom recognitions: {0}',
+  'maa.crop.reco.failure.agent-exited': 'The agent exited during recognition: {0}. See Maa output',
+  'maa.crop.reco.failure.agent-start-failed':
+    'Failed to start or connect the agent: {0}. See Maa output',
+  'maa.crop.reco.failure.busy': 'The previous recognition is still running, try again later',
+  'maa.crop.reco.failure.no-resource': 'No interface resource is available, cannot run recognition',
+  'maa.crop.reco.failure.ipc': 'Failed to communicate with the Maa service, see the extension log',
+  'maa.crop.reco.failure.resource-load-failed':
+    'Failed to load resources, check resource directories and the Maa output',
+  'maa.crop.reco.failure.controller-create-failed': 'Failed to create the image controller',
+  'maa.crop.reco.failure.tasker-create-failed': 'Failed to create the recognition instance',
+  'maa.crop.reco.failure.scan-failed': 'Failed to analyze the node Custom recognition requirements',
+  'maa.crop.reco.failure.invalid-options': 'Invalid recognition parameters',
+  'maa.crop.reco.failure.custom-recognition-failed':
+    'Custom recognition returned no result, the agent may be unresponsive',
+  'maa.crop.reco.failure.internal-error': 'Internal recognition error, see the extension log',
 
   'maa.screencap.no-runtime': 'No runtime resource project is available for screenshots',
   'maa.screencap.multiple-resources':

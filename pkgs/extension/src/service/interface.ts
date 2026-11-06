@@ -8,6 +8,7 @@ import * as vscode from 'vscode'
 import { t } from '@nekosu/maa-locale'
 import type {
   AgentConfig,
+  AgentRuntime,
   ControllerRuntime,
   InterfaceConfig,
   InterfaceRuntime
@@ -281,6 +282,79 @@ export class InterfaceService extends BaseService {
     return this.resourcePaths.length > 0 ? this.resourcePaths[this.resourcePaths.length - 1] : null
   }
 
+  /**
+   * 一次性识别工具（裁剪工具的快速识别）需要的 agent 上下文：只读取 interface 声明，
+   * 不构建 controller/task，因此没有控制器或设备时也能取到。
+   */
+  async buildAgentRuntime(): Promise<{
+    root: string
+    resources: string[]
+    agents: AgentRuntime[]
+  } | null> {
+    if (!rootService.activeResource || !this.interfaceBundle) {
+      return null
+    }
+
+    const projectDir = vscode.Uri.joinPath(
+      rootService.activeResource.workspace,
+      rootService.activeResource.dirRelative
+    ).fsPath
+    const replaceVar = (x: string) => x.replaceAll('{PROJECT_DIR}', projectDir)
+    const debugSessionMapper = await this.loadDebugSessionMapper()
+
+    const data = this.interfaceJson
+    const declared: AgentConfig[] = []
+    if (data.agent) {
+      if (Array.isArray(data.agent)) {
+        declared.push(...data.agent)
+      } else {
+        declared.push(data.agent)
+      }
+    }
+
+    const agents: AgentRuntime[] = []
+    for (const agent of declared) {
+      if (!agent.child_exec) {
+        continue
+      }
+
+      agents.push({
+        child_exec: replaceVar(agent.child_exec),
+        child_args: agent.child_args?.map(replaceVar),
+        identifier: agent.identifier,
+        debug_session: debugSessionMapper[agent.child_exec]
+      })
+    }
+
+    return {
+      root: projectDir,
+      resources: this.interfaceBundle.paths,
+      agents
+    }
+  }
+
+  /** `mse_config.json` 与 maatools 配置里把 agent 的 child_exec 映射到调试会话名 */
+  private async loadDebugSessionMapper(): Promise<Record<string, string>> {
+    const cfgPath = vscode.Uri.joinPath(
+      rootService.activeResource!.workspace,
+      '.vscode',
+      'mse_config.json'
+    ).fsPath
+    const debugSessionMapper: Record<string, string> = {}
+    if (existsSync(cfgPath)) {
+      const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {
+        'agent.debug'?: Record<string, string>
+      }
+      if (cfg['agent.debug']) {
+        Object.assign(debugSessionMapper, cfg['agent.debug'])
+      }
+    }
+    if (rootService.config?.vscode?.agents) {
+      Object.assign(debugSessionMapper, rootService.config.vscode.agents)
+    }
+    return debugSessionMapper
+  }
+
   resolveRelative(uri: vscode.Uri) {
     for (const res of this.resourcePaths) {
       if (uri.fsPath.startsWith(res.fsPath)) {
@@ -367,10 +441,6 @@ export class InterfaceService extends BaseService {
       rootService.activeResource.dirRelative
     ).fsPath
 
-    const replaceVar = (x: string) => {
-      return x.replaceAll('{PROJECT_DIR}', projectDir)
-    }
-
     const data = this.interfaceJson
     const config = this.interfaceConfigJson
 
@@ -403,49 +473,11 @@ export class InterfaceService extends BaseService {
       result.task = taskRt
     }
 
-    const cfgPath = vscode.Uri.joinPath(
-      rootService.activeResource.workspace,
-      '.vscode',
-      'mse_config.json'
-    ).fsPath
-    const debugSessionMapper: Record<string, string> = {}
-    if (existsSync(cfgPath)) {
-      const cfg = JSON.parse(await fs.readFile(cfgPath, 'utf8')) as {
-        'agent.debug'?: Record<string, string>
-      }
-      if (cfg['agent.debug']) {
-        Object.assign(debugSessionMapper, cfg['agent.debug'])
-      }
+    const agentRuntime = await this.buildAgentRuntime()
+    if (!agentRuntime) {
+      return '无interface'
     }
-    if (rootService.config?.vscode?.agents) {
-      Object.assign(debugSessionMapper, rootService.config.vscode.agents)
-    }
-
-    const agents: AgentConfig[] = []
-    if (data.agent) {
-      if (Array.isArray(data.agent)) {
-        agents.push(...data.agent)
-      } else {
-        agents.push(data.agent)
-      }
-    }
-
-    result.agent = []
-    for (const agent of agents) {
-      if (!agent.child_exec) {
-        continue
-      }
-
-      const debug_session = debugSessionMapper[agent.child_exec]
-
-      result.agent.push({
-        child_exec: agent.child_exec ? replaceVar(agent.child_exec) : undefined,
-        child_args: agent.child_args?.map(replaceVar),
-        identifier: agent.identifier,
-
-        debug_session
-      })
-    }
+    result.agent = agentRuntime.agents
 
     return result as InterfaceRuntime
   }

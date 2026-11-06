@@ -1,15 +1,27 @@
 import { computed, ref, shallowRef } from 'vue'
 
+import type { CropImageResult, CropSaveResult } from '@nekosu/maa-types'
+
+import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
 import * as pickSt from './pick'
 
-export const loadingCounter = ref<number>(0)
-export const loading = computed(() => {
-  return loadingCounter.value > 0
-})
+/** 按动作拆分 loading，避免点截图时上传/下载一起转圈 */
+export const screencapLoading = ref(false)
+export const uploadLoading = ref(false)
+export const downloadLoading = ref(false)
+/** 各动作最近一次失败/成功信息（A2：失败不再静默、不再和「未命中」混淆） */
+export const screencapError = ref<string | null>(null)
+export const uploadError = ref<string | null>(null)
+export const saveError = ref<string | null>(null)
+export const saveInfo = ref<string | null>(null)
+export const savedPath = ref<string | null>(null)
+export const savedRelativePath = ref<string | null>(null)
+/** 空 ROI 时先提示，确认为保存整图后才真正落盘（P0-F） */
+export const emptyRoiWarning = ref(false)
 
 export const data = ref<string | null>(null)
 export const element = shallowRef<HTMLImageElement | null>(null)
@@ -76,7 +88,6 @@ function pushHistory(url: string, img: HTMLImageElement) {
 }
 
 async function applyImage(url: string): Promise<boolean> {
-  loadingCounter.value += 1
   try {
     const img = await loadImage(url)
     commitImage(url, img)
@@ -85,8 +96,6 @@ async function applyImage(url: string): Promise<boolean> {
     data.value = null
     element.value = null
     return false
-  } finally {
-    loadingCounter.value -= 1
   }
 }
 
@@ -96,49 +105,66 @@ export async function set(url: string) {
   }
 }
 
+/** 恢复一张已载入过的图像但不写入历史（用于撤销「应用涂绿」） */
+export async function restoreWithoutHistory(url: string) {
+  const img = await loadImage(url)
+  commitImage(url, img)
+}
+
 export async function switchTo(index: number) {
   const entry = history.value[index]
   if (!entry || index === historyCursor.value) {
     return
   }
-  loadingCounter.value += 1
   try {
     const img = await loadImage(entry.image)
     commitImage(entry.image, img)
     historyCursor.value = index
   } catch (_err) {
     // 保留当前显示的图像，仅游标不动
-  } finally {
-    loadingCounter.value -= 1
   }
 }
 
 export async function screencap() {
-  loadingCounter.value += 1
-
-  const image = (await ipc.call({
-    command: 'requestScreencap'
-  })) as string | null
-
-  if (image) {
-    set(image)
+  screencapLoading.value = true
+  screencapError.value = null
+  try {
+    const resp = (await ipc.call({
+      command: 'requestScreencap'
+    })) as CropImageResult | null
+    if (resp?.image) {
+      await set(resp.image)
+    } else {
+      screencapError.value = resp?.failure?.message ?? t('maa.crop.failure.unknown')
+    }
+  } catch {
+    screencapError.value = t('maa.crop.failure.unknown')
+  } finally {
+    screencapLoading.value = false
   }
-
-  loadingCounter.value -= 1
 }
 
 export async function upload() {
-  loadingCounter.value += 1
-
-  const image = (await ipc.call({
-    command: 'requestUpload'
-  })) as string | null
-
-  if (image) {
-    set(image)
+  uploadLoading.value = true
+  uploadError.value = null
+  try {
+    const resp = (await ipc.call({
+      command: 'requestUpload'
+    })) as CropImageResult | null
+    if (resp === null) {
+      // 用户取消选择文件
+      return
+    }
+    if (resp.image) {
+      await set(resp.image)
+    } else {
+      uploadError.value = resp.failure?.message ?? t('maa.crop.failure.unknown')
+    }
+  } catch {
+    uploadError.value = t('maa.crop.failure.unknown')
+  } finally {
+    uploadLoading.value = false
   }
-
-  loadingCounter.value -= 1
 }
 
 export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
@@ -146,10 +172,7 @@ export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
     return [null, null]
   }
 
-  controlSt.cropCeil()
-  controlSt.cropBound()
-
-  const cropPos = controlSt.cropBox.value.flat()
+  const cropPos = controlSt.requestRoi()
   if (cropPos[2] === 0 || cropPos[3] === 0) {
     return [data.value, [0, 0, size.value.w, size.value.h]]
   }
@@ -157,23 +180,77 @@ export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
   return [data.value, cropPos]
 }
 
-export async function download() {
-  loadingCounter.value += 1
+export async function download(force = false) {
+  if (!force) {
+    const roi = controlSt.requestRoi()
+    if (roi[2] === 0 || roi[3] === 0) {
+      emptyRoiWarning.value = true
+      return
+    }
+  }
+  emptyRoiWarning.value = false
+  downloadLoading.value = true
+  saveError.value = null
+  saveInfo.value = null
+  try {
+    const [data, crop] = await cropImage()
+    if (!data || !crop) {
+      return
+    }
 
-  const [data, crop] = await cropImage()
-  if (!data || !crop) {
-    loadingCounter.value -= 1
+    const resp = (await ipc.call({
+      command: 'requestSave',
+      image: data,
+      crop,
+      roi: controlSt.cropBox.value.flat(),
+      expandRoi: controlSt.cropBoxExpand.value.flat()
+    })) as CropSaveResult | null
+
+    if (resp === null) {
+      // 用户取消命名/另存为
+      return
+    }
+    if (resp.failure) {
+      saveError.value = resp.failure.message
+    } else if (resp.path) {
+      savedPath.value = resp.path
+      savedRelativePath.value = resp.relativePath ?? null
+      saveInfo.value = t('maa.crop.save.saved', resp.path)
+    }
+  } catch {
+    saveError.value = t('maa.crop.failure.unknown')
+  } finally {
+    downloadLoading.value = false
+  }
+}
+
+export function clearSaveInfo() {
+  saveInfo.value = null
+  savedPath.value = null
+  savedRelativePath.value = null
+}
+
+/** 保存成功后可一键复制 `template` 片段；仅在模板确实带绿幕时附加 green_mask */
+export function copyTemplateSnippet(includeGreenMask = false) {
+  const relative = savedRelativePath.value
+  if (!relative) {
     return
   }
+  const lines = [`"template": ${JSON.stringify(relative)},`]
+  if (includeGreenMask) {
+    lines.push('"green_mask": true')
+  }
+  ipc.send({ command: 'writeClipboard', text: lines.join('\n') })
+}
 
-  await ipc.call({
-    command: 'requestSave',
-    image: data,
-    crop,
-    roi: controlSt.cropBox.value.flat(),
-    expandRoi: controlSt.cropBoxExpand.value.flat()
-  })
-  loadingCounter.value -= 1
+export function cancelEmptyRoiWarning() {
+  emptyRoiWarning.value = false
+}
+
+export function revealSaved() {
+  if (savedPath.value) {
+    ipc.send({ command: 'requestReveal', path: savedPath.value })
+  }
 }
 
 export async function resize() {

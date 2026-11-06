@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { NButton, NFlex } from 'naive-ui'
+import { NAlert, NButton, NFlex } from 'naive-ui'
 
 import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
+import * as matchSt from '../states/quickMatch'
 import { showTab, toggleShow } from '../states/visible'
 </script>
 
@@ -13,7 +14,11 @@ import { showTab, toggleShow } from '../states/visible'
     <n-flex align="center">
       <Tooltip trigger="hover">
         <template #trigger>
-          <n-button :loading="imageSt.loading.value" @click="imageSt.screencap()" size="small">
+          <n-button
+            :loading="imageSt.screencapLoading.value"
+            @click="imageSt.screencap()"
+            size="small"
+          >
             {{ t('maa.crop.screencap') }}
           </n-button>
         </template>
@@ -21,7 +26,7 @@ import { showTab, toggleShow } from '../states/visible'
       </Tooltip>
       <Tooltip trigger="hover">
         <template #trigger>
-          <n-button :loading="imageSt.loading.value" @click="imageSt.upload()" size="small">
+          <n-button :loading="imageSt.uploadLoading.value" @click="imageSt.upload()" size="small">
             {{ t('maa.crop.upload') }}
           </n-button>
         </template>
@@ -30,7 +35,7 @@ import { showTab, toggleShow } from '../states/visible'
       <Tooltip trigger="hover">
         <template #trigger>
           <n-button
-            :loading="imageSt.loading.value"
+            :loading="imageSt.downloadLoading.value"
             :disabled="!imageSt.data.value"
             @click="imageSt.download()"
             size="small"
@@ -125,6 +130,14 @@ import { showTab, toggleShow } from '../states/visible'
           </template>
           {{ t('maa.crop.tooltip.paste-roi') }}
         </Tooltip>
+        <Tooltip trigger="hover">
+          <template #trigger>
+            <n-button @click="controlSt.copyRoiField()" size="small">
+              {{ t('maa.crop.copy-field') }}
+            </n-button>
+          </template>
+          {{ t('maa.crop.tooltip.copy-roi-field') }}
+        </Tooltip>
       </n-flex>
       <n-flex align="center">
         <Tooltip trigger="hover">
@@ -144,5 +157,56 @@ import { showTab, toggleShow } from '../states/visible'
         </Tooltip>
       </n-flex>
     </n-flex>
+
+    <n-alert
+      v-if="imageSt.screencapError.value"
+      type="error"
+      closable
+      @close="imageSt.screencapError.value = null"
+    >
+      {{ imageSt.screencapError.value }}
+    </n-alert>
+    <n-alert
+      v-if="imageSt.uploadError.value"
+      type="error"
+      closable
+      @close="imageSt.uploadError.value = null"
+    >
+      {{ imageSt.uploadError.value }}
+    </n-alert>
+    <n-alert
+      v-if="imageSt.saveError.value"
+      type="error"
+      closable
+      @close="imageSt.saveError.value = null"
+    >
+      {{ imageSt.saveError.value }}
+    </n-alert>
+    <n-alert v-if="imageSt.saveInfo.value" type="success" closable @close="imageSt.clearSaveInfo()">
+      <n-flex align="center">
+        <span>{{ imageSt.saveInfo.value }}</span>
+        <n-button size="tiny" @click="imageSt.revealSaved()">
+          {{ t('maa.crop.save.open-folder') }}
+        </n-button>
+        <n-button
+          v-if="imageSt.savedRelativePath.value"
+          size="tiny"
+          @click="imageSt.copyTemplateSnippet(matchSt.greenMask.value)"
+        >
+          {{ t('maa.crop.save.copy-template') }}
+        </n-button>
+      </n-flex>
+    </n-alert>
+    <n-alert v-if="imageSt.emptyRoiWarning.value" type="warning">
+      <n-flex align="center">
+        <span>{{ t('maa.crop.save.empty-roi') }}</span>
+        <n-button size="tiny" @click="imageSt.download(true)">
+          {{ t('maa.crop.save.save-whole') }}
+        </n-button>
+        <n-button size="tiny" @click="imageSt.cancelEmptyRoiWarning()">
+          {{ t('maa.control.stop') }}
+        </n-button>
+      </n-flex>
+    </n-alert>
   </n-flex>
 </template>

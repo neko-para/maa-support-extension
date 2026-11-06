@@ -12,6 +12,7 @@ import {
 } from '../utils/detect'
 import * as greenMaskSt from './greenMask'
 import * as imageSt from './image'
+import { exitMode, mode } from './mode'
 import * as pickSt from './pick'
 import * as settingsSt from './settings'
 
@@ -52,13 +53,9 @@ const selectDrag = ref<DragHandler>(new DragHandler())
 
 export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
-    if (greenMaskSt.drawing.value) {
-      greenMaskSt.drawing.value = false
-    } else if (pickSt.selecting.value) {
-      pickSt.selecting.value = false
-      pickSt.selectBox.value = null
-    } else if (pickSt.picking.value) {
-      pickSt.picking.value = false
+    if (mode.value !== 'pointer') {
+      // 当前只有一个模式在生效，一次 Esc 只退一层
+      exitMode()
     } else {
       cropBox.value = new Box()
     }
@@ -310,6 +307,14 @@ export function cropBound() {
   cropBox.value = cropBox.value.intersect(Box.from(new Pos(), imageSt.size.value))
 }
 
+/**
+ * 请求用的 ROI：只做取整与图像内裁剪，不修改用户的 cropBox。
+ * 识别/下载不再隐式改动用户框（P0-E）。
+ */
+export function requestRoi(): maa.Rect {
+  return cropBox.value.intersect(Box.from(new Pos(), imageSt.size.value)).ceiled().flat()
+}
+
 export function extractRect(text: string): [number, number, number, number] | null {
   const nums = [...text.matchAll(/-?\d+/g)].map(m => parseInt(m[0])).filter(x => !isNaN(x))
   if (nums.length !== 4) {
@@ -339,6 +344,15 @@ export function writeClipboard(text: string) {
 
 export function copyRoi() {
   writeClipboard(roiText())
+}
+
+/** 复制为 pipeline 字段形式：`"roi": [x, y, w, h]` */
+export function roiFieldText() {
+  return `"roi": ${roiText()}`
+}
+
+export function copyRoiField() {
+  writeClipboard(roiFieldText())
 }
 
 export async function pasteRoi() {

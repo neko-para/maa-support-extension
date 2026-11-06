@@ -133,24 +133,6 @@ async function pickSaveDir() {
       </n-flex>
     </n-card>
 
-    <n-card :title="t('maa.crop.settings.group.pick')" size="small">
-      <n-flex vertical>
-        <settings-input-number
-          :inst="settingsSt.pickColorThreshold"
-          :title="t('maa.crop.settings.pick-color-threshold')"
-          :min="0"
-          :show-button="false"
-        ></settings-input-number>
-        <settings-input-number
-          :inst="settingsSt.templateMatchThreshold"
-          :title="t('maa.crop.settings.template-match-threshold')"
-          :min="0"
-          :max="1"
-          :step="0.01"
-        ></settings-input-number>
-      </n-flex>
-    </n-card>
-
     <n-card :title="t('maa.crop.settings.group.display')" size="small">
       <n-flex vertical>
         <settings-input

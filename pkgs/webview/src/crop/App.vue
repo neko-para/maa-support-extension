@@ -9,9 +9,8 @@ import { useTheme } from '../utils/theme'
 import HistoryStrip from './components/HistoryStrip.vue'
 import * as canvasSt from './states/canvas'
 import * as controlSt from './states/control'
-import * as greenMaskSt from './states/greenMask'
 import * as imageSt from './states/image'
-import * as pickSt from './states/pick'
+import * as modeSt from './states/mode'
 import { showTab } from './states/visible'
 import ControlView from './views/ControlView.vue'
 import SettingsView from './views/SettingsView.vue'
@@ -32,16 +31,16 @@ onUnmounted(() => {
 })
 
 const activeMode = computed(() => {
-  if (greenMaskSt.drawing.value) {
-    return t('maa.crop.overlay.mode-masking')
+  switch (modeSt.mode.value) {
+    case 'mask':
+      return t('maa.crop.overlay.mode-masking')
+    case 'pick-rect':
+      return t('maa.crop.overlay.mode-selecting')
+    case 'pick-point':
+      return t('maa.crop.overlay.mode-picking')
+    default:
+      return null
   }
-  if (pickSt.selecting.value) {
-    return t('maa.crop.overlay.mode-selecting')
-  }
-  if (pickSt.picking.value) {
-    return t('maa.crop.overlay.mode-picking')
-  }
-  return null
 })
 </script>
 

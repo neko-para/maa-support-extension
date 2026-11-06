@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
     "types": ["@maaxyz/maa-node", "@types/vscode-webview", "@types/node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "test/**/*.ts"]
 }

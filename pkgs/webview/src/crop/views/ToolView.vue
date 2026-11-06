@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import { NAlert, NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import Tooltip from '../../components/AppTooltip.vue'
@@ -8,7 +8,11 @@ import { t } from '../../utils/locale'
 import ColorBox from '../components/ColorBox.vue'
 import RecoDetail from '../components/RecoDetail.vue'
 import RoiEdit from '../components/RoiEdit.vue'
+import { ipc } from '../ipc'
 import { hostState } from '../state'
+import * as autoMaskSt from '../states/autoMask'
+import * as colorPreviewSt from '../states/colorPreview'
+import * as controlSt from '../states/control'
 import * as greenMaskSt from '../states/greenMask'
 import * as imageSt from '../states/image'
 import * as pickSt from '../states/pick'
@@ -16,7 +20,53 @@ import * as matchSt from '../states/quickMatch'
 import * as recoSt from '../states/reco'
 import * as settingsSt from '../states/settings'
 
-const drawOptions = ['all', 'best', 'filtered'].map(x => ({ value: x, label: x }))
+const drawOptions = computed(() =>
+  (['all', 'best', 'filtered'] as const).map(value => ({
+    value,
+    label: t(`maa.crop.tools.draw-${value}`)
+  }))
+)
+
+const colorMethodLabel = computed<Record<4 | 40 | 6, string>>(() => ({
+  4: 'RGB',
+  40: 'HSV',
+  6: t('maa.crop.tools.gray')
+}))
+
+/** OpenCV 模板匹配算法，用可读名称代替裸数字 */
+const templateMatchMethods = [
+  { value: 10001 as const, label: 'SQDIFF_NORMED' },
+  { value: 3 as const, label: 'CCORR_NORMED' },
+  { value: 5 as const, label: 'CCOEFF_NORMED' }
+]
+
+// ColorMatch 的结果范围来自取色采样，这里把来源展示给用户
+const autoMaskMethods = computed(() => [
+  { label: t('maa.crop.tools.auto-mask-border-grow'), value: 'border-grow' },
+  { label: t('maa.crop.tools.auto-mask-threshold'), value: 'threshold' }
+])
+
+const autoMaskErrorText = computed(() => {
+  if (!autoMaskSt.error.value) {
+    return null
+  }
+  return autoMaskSt.error.value === 'empty'
+    ? t('maa.crop.tools.auto-mask-empty')
+    : t('maa.crop.tools.auto-mask-failed')
+})
+
+const colorSourceText = computed(() => {
+  const threshold = hostState.value.pickColorThreshold ?? 10
+  if (!pickSt.recommendedRanges(threshold)) {
+    return t('maa.crop.tools.color-source-empty')
+  }
+  return t(
+    'maa.crop.tools.color-source',
+    `${pickSt.samplePoints.value.length}`,
+    colorMethodLabel.value[pickSt.colorMethod.value],
+    `${threshold}`
+  )
+})
 
 const roiX = ref<maa.Rect | undefined>([0, 0, 0, 0])
 const roiY = ref<maa.Rect | undefined>([0, 0, 0, 0])
@@ -51,11 +101,54 @@ function startGreenMask() {
   greenMaskSt.drawing.value = true
 }
 
-function applyGreenMask() {
+async function applyGreenMask() {
   const newData = greenMaskSt.applyMask()
   if (newData) {
-    imageSt.set(newData)
+    const previous = imageSt.data.value
+    await imageSt.set(newData)
+    // set 会重置 mask 状态，快照必须在上图之后记录
+    greenMaskSt.markApplied(previous)
     greenMaskSt.drawing.value = false
+    // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂
+    matchSt.greenMask.value = true
+  }
+}
+
+function copyColorSnippet() {
+  const ranges = pickSt.recommendedRanges(hostState.value.pickColorThreshold ?? 10)
+  if (!ranges) {
+    return
+  }
+  const roi = controlSt.requestRoi()
+  const text = [
+    '"recognition": "ColorMatch",',
+    `"roi": [${roi.join(', ')}],`,
+    `"method": ${pickSt.colorMethod.value},`,
+    `"lower": ${JSON.stringify(ranges.lower)},`,
+    `"upper": ${JSON.stringify(ranges.upper)},`,
+    `"count": ${Math.max(Math.round(matchSt.colorCount.value ?? 1), 1)},`,
+    `"connected": ${matchSt.colorConnected.value}`
+  ].join('\n')
+  ipc.send({ command: 'writeClipboard', text })
+}
+
+async function applyAutoMask() {
+  const newData = autoMaskSt.apply()
+  if (!newData) {
+    return
+  }
+  const previous = imageSt.data.value
+  await imageSt.set(newData)
+  greenMaskSt.markApplied(previous)
+  matchSt.greenMask.value = true
+  autoMaskSt.setEnabled(false)
+}
+
+async function undoApplyGreenMask() {
+  const previous = greenMaskSt.appliedFrom.value
+  if (previous) {
+    await imageSt.restoreWithoutHistory(previous)
+    greenMaskSt.markRestored()
   }
 }
 </script>
@@ -128,7 +221,7 @@ function applyGreenMask() {
           <Tooltip trigger="hover">
             <template #trigger>
               <n-button size="small" @click="pickSt.copyArray(0, 6)">
-                Gray: {{ pickSt.arrayText(0, 6) }}
+                {{ t('maa.crop.tools.gray') }}: {{ pickSt.arrayText(0, 6) }}
               </n-button>
             </template>
             {{ t('maa.crop.tooltip.copy-gray') }}
@@ -146,7 +239,7 @@ function applyGreenMask() {
                   :options="[
                     { label: 'RGB', value: 4 },
                     { label: 'HSV', value: 40 },
-                    { label: 'Gray', value: 6 }
+                    { label: t('maa.crop.tools.gray'), value: 6 }
                   ]"
                   size="small"
                   style="width: 80px"
@@ -176,6 +269,44 @@ function applyGreenMask() {
               </template>
               {{ t('maa.crop.tooltip.clear-samples') }}
             </Tooltip>
+            <Tooltip trigger="hover">
+              <template #trigger>
+                <n-input-number
+                  v-model:value="settingsSt.pickColorThreshold.val"
+                  :min="0"
+                  :show-button="false"
+                  size="small"
+                  style="width: 84px"
+                />
+              </template>
+              {{ t('maa.crop.tooltip.pick-color-threshold') }}
+            </Tooltip>
+            <n-text>{{ t('maa.crop.settings.pick-color-threshold') }}</n-text>
+            <Tooltip trigger="hover">
+              <template #trigger>
+                <n-button
+                  size="small"
+                  :type="colorPreviewSt.enabled.value ? 'primary' : 'default'"
+                  @click="colorPreviewSt.setEnabled(!colorPreviewSt.enabled.value)"
+                >
+                  {{
+                    colorPreviewSt.enabled.value
+                      ? t('maa.crop.tools.color-preview-stop')
+                      : t('maa.crop.tools.color-preview')
+                  }}
+                </n-button>
+              </template>
+              {{ t('maa.crop.tooltip.color-preview') }}
+            </Tooltip>
+            <n-text v-if="colorPreviewSt.enabled.value" depth="3" style="font-size: 12px">
+              {{
+                t(
+                  'maa.crop.tools.color-preview-stats',
+                  `${colorPreviewSt.matched.value}`,
+                  colorPreviewSt.ratio.value.toFixed(2)
+                )
+              }}
+            </n-text>
           </n-flex>
           <n-text strong>{{ t('maa.crop.tools.recommended-range') }}</n-text>
           <template v-if="pickSt.recommendedColors.value">
@@ -221,6 +352,14 @@ function applyGreenMask() {
                   </n-button>
                 </template>
                 {{ t('maa.crop.tooltip.copy-upper-expanded') }}
+              </Tooltip>
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <n-button size="small" @click="copyColorSnippet()">
+                    {{ t('maa.crop.tools.copy-color-snippet') }}
+                  </n-button>
+                </template>
+                {{ t('maa.crop.tooltip.copy-color-snippet') }}
               </Tooltip>
             </n-flex>
           </template>
@@ -313,7 +452,65 @@ function applyGreenMask() {
             </template>
             {{ t('maa.crop.tooltip.apply-mask') }}
           </Tooltip>
+          <n-button v-if="greenMaskSt.appliedFrom.value" size="small" @click="undoApplyGreenMask()">
+            {{ t('maa.crop.tools.undo-apply') }}
+          </n-button>
         </n-flex>
+        <n-text v-if="greenMaskSt.appliedFrom.value" depth="3" style="font-size: 12px">
+          {{ t('maa.crop.tools.mask-applied') }}
+        </n-text>
+
+        <n-divider style="margin: 4px 0">{{ t('maa.crop.tools.auto-mask') }}</n-divider>
+        <n-flex align="center" wrap>
+          <n-select
+            v-model:value="autoMaskSt.method.value"
+            :options="autoMaskMethods"
+            size="small"
+            style="width: 120px"
+          ></n-select>
+          <n-text>{{ t('maa.crop.tools.auto-mask-tolerance') }}</n-text>
+          <n-input-number
+            v-model:value="autoMaskSt.tolerance.value"
+            :min="0"
+            :max="255"
+            size="small"
+            style="width: 84px"
+          />
+          <n-text>{{ t('maa.crop.tools.auto-mask-expand') }}</n-text>
+          <n-input-number
+            v-model:value="autoMaskSt.expand.value"
+            :min="0"
+            :max="8"
+            size="small"
+            style="width: 76px"
+          />
+          <n-button
+            size="small"
+            :type="autoMaskSt.enabled.value ? 'primary' : 'default'"
+            @click="autoMaskSt.setEnabled(!autoMaskSt.enabled.value)"
+          >
+            {{
+              autoMaskSt.enabled.value
+                ? t('maa.crop.tools.auto-mask-stop')
+                : t('maa.crop.tools.auto-mask-preview')
+            }}
+          </n-button>
+          <n-button size="small" type="primary" @click="applyAutoMask()">
+            {{ t('maa.crop.tools.auto-mask-apply') }}
+          </n-button>
+        </n-flex>
+        <n-text v-if="autoMaskErrorText" type="error" style="font-size: 12px">
+          {{ autoMaskErrorText }}
+        </n-text>
+        <n-text v-else-if="autoMaskSt.enabled.value" depth="3" style="font-size: 12px">
+          {{
+            t(
+              'maa.crop.tools.auto-mask-stats',
+              `${autoMaskSt.backgroundPixels.value}`,
+              autoMaskSt.ratio.value.toFixed(2)
+            )
+          }}
+        </n-text>
       </n-flex>
     </n-card>
 
@@ -347,11 +544,7 @@ function applyGreenMask() {
         <n-flex>
           <Tooltip trigger="hover">
             <template #trigger>
-              <n-button
-                size="small"
-                :loading="matchSt.loading.value"
-                @click="matchSt.perform('requestOCR')"
-              >
+              <n-button size="small" :loading="matchSt.loading.value" @click="matchSt.runOcr()">
                 {{ t('maa.crop.tools.quick-match-ocr') }}
               </n-button>
             </template>
@@ -362,13 +555,68 @@ function applyGreenMask() {
               <n-button
                 size="small"
                 :loading="matchSt.loading.value"
-                @click="matchSt.perform('requestTemplateMatch')"
+                @click="matchSt.runTemplateMatch()"
               >
                 {{ t('maa.crop.tools.quick-match-tmpl') }}
               </n-button>
             </template>
             {{ t('maa.crop.tooltip.quick-template') }}
           </Tooltip>
+          <Tooltip trigger="hover">
+            <template #trigger>
+              <!-- 禁用态按钮不派发鼠标事件，套一层 span 保证 tooltip 仍可展示 -->
+              <span style="display: inline-flex">
+                <n-button
+                  size="small"
+                  :loading="matchSt.loading.value"
+                  :disabled="!pickSt.recommendedColors.value"
+                  @click="matchSt.runColorMatch()"
+                >
+                  {{ t('maa.crop.tools.quick-match-color') }}
+                </n-button>
+              </span>
+            </template>
+            {{
+              pickSt.recommendedColors.value
+                ? t('maa.crop.tooltip.quick-color')
+                : t('maa.crop.tools.color-source-empty')
+            }}
+          </Tooltip>
+        </n-flex>
+      </template>
+
+      <n-alert v-if="matchSt.error.value" type="error" style="margin-bottom: 8px">
+        {{ matchSt.error.value }}
+      </n-alert>
+
+      <!-- 参数常驻：跑之前就能改，不再只在结果分支里出现（P0-C） -->
+      <n-flex align="center" wrap style="margin-bottom: 8px">
+        <template v-if="matchSt.selectedKind.value === 'ocr'">
+          <n-switch v-model:value="matchSt.onlyRec.value" />
+          <n-text> only_rec </n-text>
+        </template>
+        <template v-else-if="matchSt.selectedKind.value === 'template'">
+          <n-switch v-model:value="matchSt.greenMask.value" />
+          <n-text> green_mask </n-text>
+          <n-text
+            v-if="greenMaskSt.hasContent.value || greenMaskSt.appliedFrom.value"
+            depth="3"
+            style="font-size: 12px"
+          >
+            {{ t('maa.crop.tools.green-mask-source') }}
+          </n-text>
+          <Tooltip trigger="hover">
+            <template #trigger>
+              <n-select
+                :options="templateMatchMethods"
+                v-model:value="matchSt.method.value"
+                size="small"
+                style="width: 160px"
+              ></n-select>
+            </template>
+            {{ t('maa.crop.tooltip.match-method') }}
+          </Tooltip>
+          <n-text> method </n-text>
           <n-input-number
             :value="settingsSt.templateMatchThreshold.eff"
             @update:value="
@@ -379,49 +627,60 @@ function applyGreenMask() {
             :min="0"
             :max="1"
             :step="0.01"
-            placeholder=""
             size="small"
             style="width: 90px"
           />
-        </n-flex>
-      </template>
+          <n-text> threshold </n-text>
+        </template>
+        <template v-else>
+          <Tooltip trigger="hover">
+            <template #trigger>
+              <n-input-number
+                v-model:value="matchSt.colorCount.value"
+                :min="1"
+                :precision="0"
+                size="small"
+                style="width: 90px"
+              />
+            </template>
+            {{ t('maa.crop.tooltip.color-count') }}
+          </Tooltip>
+          <n-text> {{ t('maa.crop.tools.color-count') }} </n-text>
+          <Tooltip trigger="hover">
+            <template #trigger>
+              <n-switch v-model:value="matchSt.colorConnected.value" />
+            </template>
+            {{ t('maa.crop.tooltip.color-connected') }}
+          </Tooltip>
+          <n-text> {{ t('maa.crop.tools.color-connected') }} </n-text>
+          <n-text depth="3" style="font-size: 12px">{{ colorSourceText }}</n-text>
+        </template>
+      </n-flex>
 
-      <template v-if="matchSt.result">
+      <template v-if="matchSt.resultKind.value">
         <n-flex vertical>
           <n-flex align="center">
             <n-switch v-model:value="matchSt.draw.value"> </n-switch>
             <n-text> {{ t('maa.crop.tools.draw') }} </n-text>
-
             <div style="flex: 1"></div>
-
-            <n-switch v-model:value="matchSt.onlyRec.value"> </n-switch>
-            <n-text> only_rec </n-text>
-
-            <n-switch v-model:value="matchSt.greenMask.value"> </n-switch>
-            <n-text> green_mask </n-text>
-
-            <div>
-              <n-select
-                :options="
-                  [10001, 3, 5].map(v => ({
-                    label: `${v}`,
-                    value: v
-                  }))
-                "
-                v-model:value="matchSt.method.value"
-                size="small"
-                style="width: 90px"
-              ></n-select>
-            </div>
-            <n-text> method </n-text>
           </n-flex>
-          <n-text> {{ t('maa.crop.tools.draw-mode') }} </n-text>
-          <n-select
-            v-model:value="matchSt.drawType.value"
-            :options="drawOptions"
-            size="small"
-          ></n-select>
-          <json-code :code="matchSt.result.value ?? ''"></json-code>
+
+          <template v-if="matchSt.result.value">
+            <n-text> {{ t('maa.crop.tools.draw-mode') }} </n-text>
+            <n-select
+              v-model:value="matchSt.drawType.value"
+              :options="drawOptions"
+              size="small"
+            ></n-select>
+            <reco-detail
+              v-if="matchSt.resultObject.value"
+              :detail="matchSt.resultObject.value"
+            ></reco-detail>
+            <json-code :code="matchSt.result.value"></json-code>
+          </template>
+          <n-text v-else-if="!matchSt.error.value" depth="3">
+            {{ t('maa.crop.reco.no-result') }}
+          </n-text>
         </n-flex>
       </template>
     </n-card>
@@ -431,22 +690,27 @@ function applyGreenMask() {
         <Tooltip trigger="hover">
           <template #trigger>
             <n-button size="small" :loading="recoSt.loading.value" @click="recoSt.perform()">
-              {{ t('maa.control.launch') }}
+              {{ t('maa.crop.tools.quick-reco-run') }}
             </n-button>
           </template>
           {{ t('maa.crop.tooltip.quick-reco') }}
         </Tooltip>
       </template>
 
-      <template v-if="recoSt.result">
-        <n-flex vertical>
+      <n-flex vertical>
+        <n-alert v-if="recoSt.error.value" type="error">{{ recoSt.error.value }}</n-alert>
+        <template v-if="recoSt.result.value">
           <reco-detail
             v-if="recoSt.resultObject.value"
             :detail="recoSt.resultObject.value"
           ></reco-detail>
-          <json-code :code="recoSt.result.value ?? ''"></json-code>
-        </n-flex>
-      </template>
+          <json-code :code="recoSt.result.value"></json-code>
+        </template>
+        <n-text v-else-if="recoSt.ran.value && !recoSt.error.value" depth="3">
+          {{ t('maa.crop.reco.no-result') }}
+        </n-text>
+        <n-text depth="3" style="font-size: 12px">{{ t('maa.crop.reco.agent-hint') }}</n-text>
+      </n-flex>
     </n-card>
   </n-flex>
 </template>

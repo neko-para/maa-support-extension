@@ -1,11 +1,38 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { ipc } from '../ipc'
 import { Box } from '../utils/2d'
+import { exitMode, mode, setMode } from './mode'
 
-export const picking = ref(false)
-export const selecting = ref(false)
+/** 取色（点选）/ 框选共享单一画布模式，避免两个布尔同时为真 */
+export const picking = computed({
+  get: () => mode.value === 'pick-point',
+  set: active => {
+    if (active) {
+      setMode('pick-point')
+    } else if (mode.value === 'pick-point') {
+      exitMode()
+    }
+  }
+})
+export const selecting = computed({
+  get: () => mode.value === 'pick-rect',
+  set: active => {
+    if (active) {
+      setMode('pick-rect')
+    } else if (mode.value === 'pick-rect') {
+      exitMode()
+    }
+  }
+})
 export const selectBox = ref<Box | null>(null)
+
+// 离开框选模式时清掉尚未提交的选区
+watch(mode, current => {
+  if (current !== 'pick-rect') {
+    selectBox.value = null
+  }
+})
 
 export const color = ref<[r: number, g: number, b: number] | null>(null)
 
@@ -111,14 +138,12 @@ export const hsvColor = computed<[h: number, s: number, v: number] | null>(() =>
 })
 
 export function start() {
-  picking.value = true
-  selecting.value = false
+  setMode('pick-point')
   color.value = null
 }
 
 export function startSelect() {
-  selecting.value = true
-  picking.value = false
+  setMode('pick-rect')
   selectBox.value = null
 }
 
@@ -306,13 +331,19 @@ export const recommendedColors = computed(() => {
   }
 })
 
-function formatRangeText(
+export type NumericRanges = { lower: number[][]; upper: number[][] }
+
+/**
+ * 把推荐范围按阈值扩展为可直接喂给 Pipeline 的数值区间。
+ * HSV 色相环形（跨 0）或扩展后覆盖全色相时会输出多个 / 全区间，其余方法均为单区间。
+ */
+function expandRanges(
   method: ColorMethod,
   lower: number[],
   upper: number[],
-  threshold?: number
-): { lower: string; upper: string } {
-  const t = threshold ?? 0
+  threshold: number
+): NumericRanges {
+  const t = threshold
 
   if (method === 40) {
     let hLower: number
@@ -338,21 +369,61 @@ function formatRangeText(
 
     if (hLower <= hUpper) {
       return {
-        lower: `[${[hLower, ...lRest].join(', ')}]`,
-        upper: `[${[hUpper, ...uRest].join(', ')}]`
+        lower: [[hLower, ...lRest]],
+        upper: [[hUpper, ...uRest]]
       }
     }
     return {
-      lower: `[[${hLower}, ${lRest.join(', ')}], [0, ${lRest.join(', ')}]]`,
-      upper: `[[179, ${uRest.join(', ')}], [${hUpper}, ${uRest.join(', ')}]]`
+      lower: [
+        [hLower, ...lRest],
+        [0, ...lRest]
+      ],
+      upper: [
+        [179, ...uRest],
+        [hUpper, ...uRest]
+      ]
     }
   }
 
   const lo = lower.map(v => Math.max(v - t, 0))
   const uo = upper.map((v, i) => Math.min(v + t, channelMax(i, method)))
   return {
-    lower: `[${lo.join(', ')}]`,
-    upper: `[${uo.join(', ')}]`
+    lower: [lo],
+    upper: [uo]
+  }
+}
+
+/** 采样推荐范围按阈值扩展后的数值形式，供快速匹配 ColorMatch 直接使用 */
+export function recommendedRanges(threshold = 0): NumericRanges | null {
+  if (!recommendedColors.value) {
+    return null
+  }
+  return expandRanges(
+    colorMethod.value,
+    recommendedColors.value.lower,
+    recommendedColors.value.upper,
+    threshold
+  )
+}
+
+function formatRangeText(
+  method: ColorMethod,
+  lower: number[],
+  upper: number[],
+  threshold?: number
+): { lower: string; upper: string } {
+  const ranges = expandRanges(method, lower, upper, threshold ?? 0)
+
+  const format = (rs: number[][]) => {
+    if (rs.length === 1) {
+      return `[${rs[0]!.join(', ')}]`
+    }
+    return `[${rs.map(r => `[${r.join(', ')}]`).join(', ')}]`
+  }
+
+  return {
+    lower: format(ranges.lower),
+    upper: format(ranges.upper)
   }
 }
 

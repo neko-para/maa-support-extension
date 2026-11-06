@@ -12,6 +12,8 @@ import {
 
 import { editorBackgroundColor } from '../../utils/theme'
 import { Box, Pos, Size, Viewport } from '../utils/2d'
+import * as autoMaskSt from './autoMask'
+import * as colorPreviewSt from './colorPreview'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
 import * as imageSt from './image'
@@ -69,6 +71,32 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ctx.globalCompositeOperation = 'source-over'
       ctx.drawImage(
         maskCanvas,
+        0,
+        0,
+        ...imageSt.size.value.flat(),
+        ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+      )
+      ctx.restore()
+    }
+
+    const autoPreview = autoMaskSt.previewCanvas.value
+    if (autoMaskSt.enabled.value && autoPreview) {
+      ctx.save()
+      ctx.drawImage(
+        autoPreview,
+        0,
+        0,
+        ...imageSt.size.value.flat(),
+        ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+      )
+      ctx.restore()
+    }
+
+    const preview = colorPreviewSt.previewCanvas.value
+    if (colorPreviewSt.enabled.value && preview) {
+      ctx.save()
+      ctx.drawImage(
+        preview,
         0,
         0,
         ...imageSt.size.value.flat(),

@@ -1,10 +1,33 @@
-import { ref, shallowRef, triggerRef } from 'vue'
+import { computed, ref, shallowRef, triggerRef, watch } from 'vue'
 
 import * as imageSt from './image'
+import { exitMode, mode, setMode } from './mode'
 
-export const drawing = ref(false)
+/** 涂绿模式是画布单一模式的一种，不再单独维护布尔 */
+export const drawing = computed({
+  get: () => mode.value === 'mask',
+  set: active => {
+    if (active) {
+      setMode('mask')
+    } else if (mode.value === 'mask') {
+      exitMode()
+    }
+  }
+})
+
+// 离开涂绿模式时结束当前笔画，避免半截笔画继续吃掉后续事件
+watch(mode, current => {
+  if (current !== 'mask') {
+    endStroke()
+  }
+})
 export const brushSize = ref(1)
 export const isEraser = ref(false)
+
+/** 是否至少画过一笔（用于模板匹配参数区提示与 green_mask 联动） */
+export const hasContent = ref(false)
+/** 「应用」把绿幕烘焙进图像前的快照，用于撤销应用 */
+export const appliedFrom = ref<string | null>(null)
 
 const maskCanvas = shallowRef<HTMLCanvasElement | null>(null)
 const maskCtx = shallowRef<CanvasRenderingContext2D | null>(null)
@@ -21,6 +44,8 @@ export function init(width: number, height: number) {
   maskCanvas.value = canvas
   maskCtx.value = ctx
   history.length = 0
+  hasContent.value = false
+  appliedFrom.value = null
 }
 
 export function clear() {
@@ -28,6 +53,7 @@ export function clear() {
     saveHistory()
     maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height)
     triggerRef(maskCanvas)
+    hasContent.value = false
   }
 }
 
@@ -36,6 +62,8 @@ export function reset() {
   maskCtx.value = null
   history.length = 0
   isDrawingStroke.value = false
+  hasContent.value = false
+  appliedFrom.value = null
 }
 
 function saveHistory() {
@@ -63,6 +91,7 @@ export function undo() {
 
 export function drawAt(x: number, y: number) {
   if (!maskCanvas.value || !maskCtx.value) return
+  hasContent.value = true
 
   if (history.length === 0 || !isDrawingStroke.value) {
     saveHistory()
@@ -112,6 +141,15 @@ export function endStroke() {
 
 export function getMaskCanvas(): HTMLCanvasElement | null {
   return maskCanvas.value
+}
+
+/** 记录应用前的图像，供「撤销应用」恢复 */
+export function markApplied(previousImage: string | null) {
+  appliedFrom.value = previousImage
+}
+
+export function markRestored() {
+  appliedFrom.value = null
 }
 
 export function applyMask(): string | null {

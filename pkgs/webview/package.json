@@ -2,7 +2,8 @@
   "name": "@mse/webview",
   "type": "module",
   "scripts": {
-    "lint": "vue-tsc -p . --noEmit"
+    "lint": "vue-tsc -p . --noEmit",
+    "test": "node --test \"test/*.test.ts\""
   },
   "devDependencies": {
     "@maaxyz/maa-node": "5.13.0",

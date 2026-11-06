@@ -36,6 +36,8 @@ Control 协议通过 `ControlHostState.saveDraw` 同步识别绘图落盘状态�
 
 Crop 协议的 `CropSettings` 仅同步用户可配置的裁剪交互和可视化参数（含自定义下载保存目录 `saveDir`，配合 `requestPickFolder` 命令选取）；Canvas 背景色不属于协议设置，由 Webview 直接跟随 VS Code 编辑器主题。
 
+Crop 协议的一次性识别结果统一为 `CropToolResult = { detail, failure? }`：`detail` 是 `maa.RecoDetailWithoutDraws` 的 JSON，`failure.message` 是宿主已本地化的文案（Webview 不再需要维护 agent 相关文案）。`requestReco` 返回 `CropToolResult | null`（`null` 表示用户取消了节点选择）；`requestColorMatch` 携带 `ColorMatchOptions`（roi/method/lower/upper/count/connected，`lower`/`upper` 为多区间数组）。快速识别的 agent 会话由宿主在面板全部关闭或 interface/pipeline/资源变更时主动释放（不经过 webview 协议）。截图/上传返回 `CropImageResult`、保存返回 `CropSaveResult`（含相对资源 image 目录的 `relativePath`，用户取消时为 `null`）：失败原因由宿主本地化，Webview 用 `null` 表示用户取消、用 `failure` 表示失败；`requestReveal` 用于显式打开保存目录，避免保存后自动抢焦点。
+
 ### 2. 通用协议基类型
 
 `src/webview/base.ts` 定义：

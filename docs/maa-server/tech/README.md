@@ -20,15 +20,20 @@ src/
 │                     #   - setupIpc(): 创建双向 RPC Proxy
 │                     #   - ipc.$.method = handler → 本地注册
 │                     #   - ipc.method(args) → 远程调用
-├── maa.ts            # MaaFramework 核心包装 (~467 行)
+├── maa.ts            # MaaFramework 核心包装
 │                     #   - 控制器管理 (ADB/Win32/PlayCover/Gamepad/Linux/Custom)
-│                     #   - 资源/任务器/Agent 管理
-│                     #   - 所有 IPC 处理器的实际实现
+│                     #   - 资源/任务器管理、正式实例生命周期
+│                     #   - 大部分 IPC 处理器的实际实现
+├── agent.ts          # agent 子进程/调试会话启动与连接、宿主终止通知跟踪
 ├── utils.ts          # makePromise(): 延迟 Promise 工厂
 └── tools/            # 一次性识别工具
     ├── utils.ts      # convertImage(), setupFixedController()
+    ├── fakeResource.ts # 共用 fake resource（空 pipeline）
     ├── ocr.ts        # OCR 工具 (throwaway MAA 实例)
-    ├── reco.ts       # 识别测试工具
+    ├── reco.ts       # 节点识别测试：资源 + Custom 识别 agent 会话缓存
+    ├── customReco.ts # 节点定义里的 Custom 识别需求扫描
+    ├── colorRange.ts # ColorMatch 参数校验/归一化（纯函数）
+    ├── colorMatch.ts # ColorMatch 工具
     └── templateMatch.ts # 模板匹配工具
 ```
 

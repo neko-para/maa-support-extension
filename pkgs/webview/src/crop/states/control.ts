@@ -272,7 +272,7 @@ export function onPointerUp(event: PointerEvent) {
   }
 
   if (subjectSelectSt.drawing.value) {
-    subjectSelectSt.finish()
+    subjectSelectSt.finish(imageSt.size.value.w, imageSt.size.value.h)
     ;(event.target as Element).releasePointerCapture(event.pointerId)
     cursor.value = 'crosshair'
     return

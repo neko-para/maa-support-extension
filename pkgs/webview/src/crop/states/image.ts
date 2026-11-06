@@ -8,6 +8,7 @@ import { Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
 import * as pickSt from './pick'
+import * as subjectSelectSt from './subjectSelect'
 
 /** 按动作拆分 loading，避免点截图时上传/下载一起转圈 */
 export const screencapLoading = ref(false)
@@ -67,6 +68,7 @@ function commitImage(url: string, img: HTMLImageElement) {
   greenMaskSt.drawing.value = false
   greenMaskSt.reset()
   pickSt.clearSamplePoints()
+  subjectSelectSt.resetForImageChange()
   controlSt.cropBound()
 }
 

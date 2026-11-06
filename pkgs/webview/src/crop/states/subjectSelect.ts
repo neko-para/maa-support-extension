@@ -1,7 +1,6 @@
 import { computed, ref, shallowRef, watch } from 'vue'
 
 import { Pos } from '../utils/2d'
-import * as imageSt from './image'
 import { exitMode, mode, setMode } from './mode'
 
 /**
@@ -49,13 +48,12 @@ export function extend(pos: Pos) {
   points.value = [...points.value, pos]
 }
 
-export function finish() {
+export function finish(width: number, height: number) {
   if (!drawing.value) {
     return
   }
   drawing.value = false
-  const img = imageSt.element.value
-  if (!img || points.value.length < 3) {
+  if (!width || !height || points.value.length < 3) {
     points.value = []
     return
   }
@@ -70,8 +68,8 @@ export function finish() {
 
   // 算法 mask
   const maskCanvas = document.createElement('canvas')
-  maskCanvas.width = img.width
-  maskCanvas.height = img.height
+  maskCanvas.width = width
+  maskCanvas.height = height
   const maskCtx = maskCanvas.getContext('2d')!
   maskCtx.fillStyle = '#fff'
   maskCtx.fill(shape)
@@ -83,8 +81,8 @@ export function finish() {
 
   // 显示叠加
   const display = document.createElement('canvas')
-  display.width = img.width
-  display.height = img.height
+  display.width = width
+  display.height = height
   const displayCtx = display.getContext('2d')!
   displayCtx.fillStyle = 'rgba(80, 160, 255, 0.32)'
   displayCtx.fill(shape)
@@ -102,15 +100,13 @@ export function clear() {
   regionCanvas.value = null
 }
 
-watch(
-  () => imageSt.data.value,
-  () => {
-    clear()
-    if (mode.value === 'lasso') {
-      exitMode()
-    }
+/** 图片切换/被替换时由 image.ts 调用：清掉旧圈选并退出圈选模式 */
+export function resetForImageChange() {
+  clear()
+  if (mode.value === 'lasso') {
+    exitMode()
   }
-)
+}
 
 watch(mode, current => {
   if (current !== 'lasso' && drawing.value) {

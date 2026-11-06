@@ -511,6 +511,9 @@ async function undoApplyGreenMask() {
             )
           }}
         </n-text>
+        <n-text depth="3" style="font-size: 12px">
+          {{ t('maa.crop.tools.auto-mask-scope') }}
+        </n-text>
       </n-flex>
     </n-card>
 

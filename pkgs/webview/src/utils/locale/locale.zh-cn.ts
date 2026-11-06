@@ -136,6 +136,8 @@ export default {
   'maa.crop.tools.auto-mask-stop': '停止预览',
   'maa.crop.tools.auto-mask-apply': '应用自动涂绿',
   'maa.crop.tools.auto-mask-stats': '背景 {0} 像素 · {1}%',
+  'maa.crop.tools.auto-mask-scope':
+    '以当前 ROI 四边为背景样本，只在 ROI 内预览/应用；未框选时使用整图',
   'maa.crop.tools.auto-mask-empty': '未检测到可识别的背景，试试调大容差或换方法',
   'maa.crop.tools.auto-mask-failed': '自动涂绿计算失败，请查看扩展日志',
   'maa.crop.tools.brush-size': '画笔大小',

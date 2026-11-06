@@ -81,13 +81,19 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
     const autoPreview = autoMaskSt.previewCanvas.value
     if (autoMaskSt.enabled.value && autoPreview) {
+      const [offsetX, offsetY] = autoMaskSt.previewOffset.value
       ctx.save()
       ctx.drawImage(
         autoPreview,
         0,
         0,
-        ...imageSt.size.value.flat(),
-        ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+        autoPreview.width,
+        autoPreview.height,
+        ...controlSt.viewport.value
+          .toView(
+            Box.from(Pos.from(offsetX, offsetY), Size.from(autoPreview.width, autoPreview.height))
+          )
+          .flat()
       )
       ctx.restore()
     }

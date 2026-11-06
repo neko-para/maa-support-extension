@@ -143,6 +143,8 @@ export default {
   'maa.crop.tools.auto-mask-stop': 'Stop preview',
   'maa.crop.tools.auto-mask-apply': 'Apply auto mask',
   'maa.crop.tools.auto-mask-stats': '{0} background pixels · {1}%',
+  'maa.crop.tools.auto-mask-scope':
+    'Samples the current ROI borders and previews/applies inside the ROI (whole image when no ROI)',
   'maa.crop.tools.auto-mask-empty':
     'No recognizable background; try a larger tolerance or another method',
   'maa.crop.tools.auto-mask-failed': 'Auto green mask failed, see the extension log',

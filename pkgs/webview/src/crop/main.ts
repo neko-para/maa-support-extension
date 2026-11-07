@@ -9,7 +9,7 @@ import { ipc } from './ipc'
 import { hostState } from './state'
 import * as imageSt from './states/image'
 import * as recoSt from './states/reco'
-import { showTab } from './states/visible'
+import { revealSection, testTarget } from './states/visible'
 
 globalThis.Buffer = Buffer
 
@@ -34,7 +34,9 @@ ipc.recv.value = data => {
       break
     case 'setRecoDetail': {
       const detail = JSON.stringify(data.detail)
-      showTab.value = 'tool'
+      // 外部送来的是节点识别详情，展示在识别测试的「Pipeline 节点」目标下
+      testTarget.value = 'node'
+      revealSection('test')
       // 图像解码是异步的：等它载入后再挂详情，否则会被切图逻辑当成旧图的结果清掉
       void externalImage.then(() => {
         recoSt.setExternal(detail, imageSt.data.value)

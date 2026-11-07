@@ -7,37 +7,20 @@ import { computed, ref, watch } from 'vue'
 import { useDrawStep } from '../states/canvas'
 import * as settingsSt from '../states/settings'
 import { Box, Pos, Size } from '../utils/2d'
+import { entryValue } from '../utils/recoDetail'
 
-const props = defineProps<{
-  detail: maa.RecoDetailWithoutDraws
-}>()
+const props = withDefaults(
+  defineProps<{
+    detail: maa.RecoDetailWithoutDraws
+    /** 是否把勾选的条目画到画布上 */
+    draw?: boolean
+  }>(),
+  { draw: true }
+)
 
 type RichRecoDetailEntry = {
   name: string
   entry: maa.RecoDetailEntry
-}
-
-// 识别结果字段按算法不同：TemplateMatch 有 score，FeatureMatch / ColorMatch 有 count，
-// OCR 有 text，NeuralNetworkClassify / NeuralNetworkDetect 有 cls_index / label；
-// Custom 的 detail 不在此展示，看下方 JSON
-function entryValue(entry: maa.RecoDetailEntry): string | undefined {
-  if (entry.score !== undefined) {
-    return entry.score.toFixed(4)
-  }
-  if (entry.count !== undefined) {
-    return `count=${entry.count}`
-  }
-  const cls: string[] = []
-  if (entry.cls_index !== undefined) {
-    cls.push(`cls_index=${entry.cls_index}`)
-  }
-  if (entry.label !== undefined) {
-    cls.push(`label=${entry.label}`)
-  }
-  if (cls.length > 0) {
-    return cls.join(' ')
-  }
-  return undefined
 }
 
 function entryLabel(entry: maa.RecoDetailEntry): string {
@@ -124,6 +107,9 @@ watch(
 )
 
 useDrawStep((ctx, vp) => {
+  if (!props.draw) {
+    return
+  }
   ctx.fillStyle = settingsSt.recoStroke.eff
   ctx.strokeStyle = settingsSt.recoStroke.eff
   ctx.font = settingsSt.recoFont.eff

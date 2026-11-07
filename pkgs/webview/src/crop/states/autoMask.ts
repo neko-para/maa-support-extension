@@ -52,15 +52,6 @@ function readRegion(img: HTMLImageElement, rect: RectTuple) {
   return { imageData: ctx.getImageData(0, 0, rect[2], rect[3]) }
 }
 
-function readImage(img: HTMLImageElement) {
-  const canvas = document.createElement('canvas')
-  canvas.width = img.width
-  canvas.height = img.height
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0)
-  return ctx
-}
-
 function buildMask(img: HTMLImageElement, rect: RectTuple): MaskResult {
   const { imageData } = readRegion(img, rect)
   return {
@@ -132,29 +123,35 @@ export function ensureMask(): MaskResult | null {
   return maskResult
 }
 
-/** 把背景 mask 烘焙成纯绿，返回图像 dataURL（只改工作区域内的像素） */
-export function apply(): string | null {
-  const img = imageSt.element.value
-  const mask = ensureMask()
-  if (!img || !mask || backgroundPixels.value === 0) {
-    return null
+/**
+ * 把背景 mask 涂成纯绿写进整图像素（只改工作区域内的像素），返回是否改动了像素。
+ * 应用前按当前 ROI 重建 mask，保证与画布上的预览一致。
+ */
+export function paintInto(image: ImageData): boolean {
+  if (!enabled.value) {
+    return false
   }
-
-  const ctx = readImage(img)
+  const mask = ensureMask()
+  if (!mask || mask.result.backgroundPixels === 0) {
+    return false
+  }
   const { rect, result } = mask
-  const region = ctx.getImageData(rect[0], rect[1], rect[2], rect[3])
-  const data = region.data
-  for (let i = 0; i < result.mask.length; i++) {
-    if (result.mask[i] === 1) {
-      const idx = i * 4
+  const data = image.data
+  let painted = false
+  for (let y = 0; y < rect[3]; y++) {
+    for (let x = 0; x < rect[2]; x++) {
+      if (result.mask[y * rect[2] + x] !== 1) {
+        continue
+      }
+      const idx = ((rect[1] + y) * image.width + rect[0] + x) * 4
       data[idx] = 0
       data[idx + 1] = 255
       data[idx + 2] = 0
       data[idx + 3] = 255
+      painted = true
     }
   }
-  ctx.putImageData(region, rect[0], rect[1])
-  return ctx.canvas.toDataURL('image/png')
+  return painted
 }
 
 export function setEnabled(value: boolean) {

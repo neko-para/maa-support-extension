@@ -16,10 +16,14 @@ export type CropSettings = {
   helperAxesThreshold?: number
   pickColorThreshold?: number
   templateMatchThreshold?: number
-  ocrStroke?: string
-  ocrFont?: string
   recoStroke?: string
   recoFont?: string
+  /** 右栏显示的面板，未设置时为工具面板 */
+  sidePanel?: 'tool' | 'settings' | 'hidden'
+  /** 工具面板中展开的区块 */
+  toolSections?: string[]
+  /** 识别测试上次选中的目标 */
+  testTarget?: 'ocr' | 'template' | 'color' | 'node'
 }
 
 export type CropHostState = HostStateBase & CropSettings

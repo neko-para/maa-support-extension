@@ -17,14 +17,63 @@ import * as colorPreviewSt from './colorPreview'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
 import * as imageSt from './image'
+import * as maskApplySt from './maskApply'
 import * as pickSt from './pick'
-import * as matchSt from './quickMatch'
 import * as settingsSt from './settings'
 import * as subjectMaskSt from './subjectMask'
 import * as subjectSelectSt from './subjectSelect'
 
 export const size = ref<Size>(Size.from(0, 0))
 let dashOffset = 0
+
+/** 把整张图像居中完整放进画布；小图保持原始尺寸不放大 */
+export function fitViewport() {
+  const img = imageSt.size.value
+  const view = size.value
+  const vp = controlSt.viewport.value
+  if (!img.w || !img.h || !view.w || !view.h) {
+    vp.reset()
+    return
+  }
+  const scale = Math.max(img.w / view.w, img.h / view.h, 1)
+  vp.scale = scale
+  vp.offset = Pos.from(
+    Math.round((view.w - img.w / scale) / 2),
+    Math.round((view.h - img.h / scale) / 2)
+  )
+}
+
+/** 原始像素大小（1:1），左上角对齐 */
+export function actualSizeViewport() {
+  controlSt.viewport.value.reset()
+}
+
+// 图像尺寸变化（首次载入、换了设备或缩放）时自动适应画布；
+// 同尺寸的新截图保持当前视图，反复截图对比时不会跳动。
+// 外部送图可能早于画布布局完成，此时等画布有了尺寸再适应。
+let fitPending = false
+watch(
+  () => `${imageSt.size.value.w}x${imageSt.size.value.h}`,
+  () => {
+    if (imageSt.size.value.w <= 0) {
+      return
+    }
+    if (size.value.w > 0 && size.value.h > 0) {
+      fitViewport()
+    } else {
+      fitPending = true
+    }
+  }
+)
+watch(
+  () => size.value.w > 0 && size.value.h > 0,
+  ready => {
+    if (ready && fitPending) {
+      fitPending = false
+      fitViewport()
+    }
+  }
+)
 
 export type DrawStep = (ctx: CanvasRenderingContext2D, vp: Viewport) => void
 
@@ -82,7 +131,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     const regionOverlay = subjectSelectSt.regionCanvas.value
-    if (regionOverlay) {
+    if (regionOverlay && maskApplySt.lassoShown.value) {
       ctx.save()
       ctx.drawImage(
         regionOverlay,
@@ -114,7 +163,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     const subjectPreview = subjectMaskSt.previewCanvas.value
-    if (subjectMaskSt.enabled.value && subjectPreview) {
+    if (subjectMaskSt.enabled.value && subjectPreview && maskApplySt.lassoShown.value) {
       const [offsetX, offsetY] = subjectMaskSt.previewOffset.value
       ctx.save()
       ctx.drawImage(
@@ -146,72 +195,6 @@ export function draw(ctx: CanvasRenderingContext2D) {
         ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
       )
       ctx.restore()
-    }
-
-    for (const [st, stroke, font] of [
-      [matchSt, settingsSt.ocrStroke.eff, settingsSt.ocrFont.eff]
-    ] as const) {
-      if (st.draw.value && st.resultObject.value) {
-        ctx.save()
-
-        const info = st.resultObject.value
-
-        ctx.fillStyle = stroke
-        ctx.strokeStyle = stroke
-
-        if (info.detail) {
-          ctx.font = font
-
-          const detailEntries: {
-            name: string
-            entry: maa.RecoDetailWithoutDraws['detail']
-          }[] = [
-            {
-              name: info.name,
-              entry: info.detail
-            }
-          ]
-          while (detailEntries.length > 0) {
-            const fullEntry = detailEntries.shift()!
-            if (!fullEntry.entry) {
-              continue
-            }
-            if (Array.isArray(fullEntry.entry)) {
-              detailEntries.push(
-                ...fullEntry.entry.map(x => ({
-                  name: x.name,
-                  entry: x.detail
-                }))
-              )
-              continue
-            }
-
-            let entries = fullEntry.entry[st.drawType.value] ?? []
-            if (!Array.isArray(entries)) {
-              entries = [entries]
-            }
-            for (const entry of entries) {
-              const entry_box = entry.box
-              const box = controlSt.viewport.value.toView(
-                Box.from(
-                  Pos.from(entry_box[0], entry_box[1]),
-                  Size.from(entry_box[2], entry_box[3])
-                )
-              )
-
-              ctx.rect(...box.flat())
-              ctx.stroke()
-
-              if (!fullEntry.name.startsWith('@mse/')) {
-                ctx.fillText(fullEntry.name, ...box.rt.add(Size.from(5, 0)).flat())
-              }
-              ctx.fillText(entry.text ?? '', ...box.rb.add(Size.from(5, 0)).flat())
-            }
-          }
-        }
-
-        ctx.restore()
-      }
     }
 
     for (const step of drawSteps) {

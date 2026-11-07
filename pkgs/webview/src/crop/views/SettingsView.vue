@@ -18,7 +18,7 @@ async function pickSaveDir() {
 </script>
 
 <template>
-  <n-flex vertical>
+  <n-flex vertical style="padding: 8px">
     <n-card :title="t('maa.crop.settings.group.save')" size="small">
       <n-flex vertical>
         <settings-switch
@@ -135,15 +135,6 @@ async function pickSaveDir() {
 
     <n-card :title="t('maa.crop.settings.group.display')" size="small">
       <n-flex vertical>
-        <settings-input
-          :inst="settingsSt.ocrStroke"
-          :title="t('maa.crop.settings.ocr-result-color')"
-          isColor
-        ></settings-input>
-        <settings-input
-          :inst="settingsSt.ocrFont"
-          :title="t('maa.crop.settings.ocr-result-font')"
-        ></settings-input>
         <settings-input
           :inst="settingsSt.recoStroke"
           :title="t('maa.crop.settings.reco-result-color')"

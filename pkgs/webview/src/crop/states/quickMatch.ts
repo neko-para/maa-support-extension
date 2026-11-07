@@ -16,14 +16,12 @@ export const loading = ref(false)
 export const result = ref<string | null>(null)
 export const resultKind = ref<MatchKind | null>(null)
 export const error = ref<string | null>(null)
-export const draw = ref(false)
-export const drawType = ref<'all' | 'best' | 'filtered'>('all')
+/** 最近一次发起的识别类型；失败信息只在对应的识别目标下展示 */
+export const activeKind = ref<MatchKind | null>(null)
 
 export const onlyRec = ref(false)
 export const greenMask = ref(false)
 export const method = ref<10001 | 3 | 5>(5)
-/** 用户最后选择的识别类型：参数区按它常驻展示，不必等第一次运行结果 */
-export const selectedKind = ref<MatchKind>('template')
 
 export const colorCount = ref<number | null>(1)
 export const colorConnected = ref(false)
@@ -93,19 +91,17 @@ export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
   }
 }
 
-export function runOcr() {
-  selectedKind.value = 'ocr'
-  return perform('requestOCR')
-}
-
-export function runTemplateMatch() {
-  selectedKind.value = 'template'
-  return perform('requestTemplateMatch')
-}
-
-export function runColorMatch() {
-  selectedKind.value = 'color'
-  return performColorMatch()
+export function run(kind: MatchKind) {
+  activeKind.value = kind
+  error.value = null
+  switch (kind) {
+    case 'ocr':
+      return perform('requestOCR')
+    case 'template':
+      return perform('requestTemplateMatch')
+    case 'color':
+      return performColorMatch()
+  }
 }
 
 export async function performColorMatch() {

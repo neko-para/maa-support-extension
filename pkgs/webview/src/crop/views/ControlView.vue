@@ -1,23 +1,106 @@
 <script setup lang="ts">
-import { NAlert, NButton, NFlex } from 'naive-ui'
+import { default as ContentPasteOutlined } from '@vicons/material/es/ContentPasteOutlined'
+import { default as FileUploadOutlined } from '@vicons/material/es/FileUploadOutlined'
+import { default as HelpOutlineOutlined } from '@vicons/material/es/HelpOutlineOutlined'
+import { default as MoreHorizOutlined } from '@vicons/material/es/MoreHorizOutlined'
+import { default as PhotoCameraOutlined } from '@vicons/material/es/PhotoCameraOutlined'
+import { default as SaveOutlined } from '@vicons/material/es/SaveOutlined'
+import {
+  type DropdownOption,
+  NButton,
+  NButtonGroup,
+  NDropdown,
+  NFlex,
+  NIcon,
+  NPopover
+} from 'naive-ui'
+import { computed } from 'vue'
 
 import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
+import CopyChip from '../components/CopyChip.vue'
+import * as canvasSt from '../states/canvas'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
-import { showTab, toggleShow } from '../states/visible'
+import { sidePanel, toggleSidePanel } from '../states/visible'
+
+const hasImage = computed(() => !!imageSt.data.value)
+const hasRoi = computed(() => {
+  const size = controlSt.cropBox.value.size
+  return Math.abs(size.w) > 0 && Math.abs(size.h) > 0
+})
+
+// 低频动作收进「更多」：新手不被一排同权重按钮淹没，熟练用户两步也能到达
+const moreOptions = computed<DropdownOption[]>(() => [
+  { key: 'copy-field', label: t('maa.crop.more.copy-field') },
+  {
+    key: 'copy-roi-ex',
+    label: t('maa.crop.more.copy-roi-ex', controlSt.roiExpandDisp())
+  },
+  { type: 'divider', key: 'd1' },
+  { key: 'ceil', label: t('maa.crop.more.ceil') },
+  { key: 'bound', label: t('maa.crop.more.bound'), disabled: !hasImage.value },
+  { type: 'divider', key: 'd2' },
+  {
+    key: 'resize',
+    label: t('maa.crop.more.resize'),
+    disabled: !hasImage.value || imageSt.resizing.value
+  },
+  { key: 'fit-viewport', label: t('maa.crop.more.fit-viewport') },
+  { key: 'actual-size', label: t('maa.crop.more.actual-size') }
+])
+
+function onMore(key: string) {
+  switch (key) {
+    case 'copy-field':
+      controlSt.copyRoiField()
+      break
+    case 'copy-roi-ex':
+      controlSt.copyRoiExpand()
+      break
+    case 'ceil':
+      controlSt.cropCeil()
+      break
+    case 'bound':
+      controlSt.cropBound()
+      break
+    case 'resize':
+      void imageSt.resize()
+      break
+    case 'fit-viewport':
+      canvasSt.fitViewport()
+      break
+    case 'actual-size':
+      canvasSt.actualSizeViewport()
+      break
+  }
+}
+
+const shortcuts = computed(() => [
+  ['Ctrl + ' + t('maa.crop.help.drag'), t('maa.crop.help.new-roi')],
+  [t('maa.crop.help.drag-roi'), t('maa.crop.help.move-roi')],
+  [t('maa.crop.help.wheel'), t('maa.crop.help.zoom')],
+  [t('maa.crop.help.middle-drag'), t('maa.crop.help.pan')],
+  ['Esc', t('maa.crop.help.esc')],
+  ['Ctrl + Enter', t('maa.crop.help.run-test')]
+])
 </script>
 
 <template>
-  <n-flex vertical style="max-width: calc(100vw - 150px)">
-    <n-flex align="center">
+  <n-flex align="center" :size="[8, 6]" class="toolbar">
+    <!-- 图像来源与保存 -->
+    <n-flex align="center" :size="6" :wrap="false">
       <Tooltip trigger="hover">
         <template #trigger>
           <n-button
+            :type="hasImage ? 'default' : 'primary'"
             :loading="imageSt.screencapLoading.value"
             @click="imageSt.screencap()"
             size="small"
           >
+            <template #icon>
+              <n-icon><photo-camera-outlined></photo-camera-outlined></n-icon>
+            </template>
             {{ t('maa.crop.screencap') }}
           </n-button>
         </template>
@@ -26,6 +109,9 @@ import { showTab, toggleShow } from '../states/visible'
       <Tooltip trigger="hover">
         <template #trigger>
           <n-button :loading="imageSt.uploadLoading.value" @click="imageSt.upload()" size="small">
+            <template #icon>
+              <n-icon><file-upload-outlined></file-upload-outlined></n-icon>
+            </template>
             {{ t('maa.crop.upload') }}
           </n-button>
         </template>
@@ -33,179 +119,159 @@ import { showTab, toggleShow } from '../states/visible'
       </Tooltip>
       <Tooltip trigger="hover">
         <template #trigger>
-          <n-button
-            :loading="imageSt.downloadLoading.value"
-            :disabled="!imageSt.data.value"
-            @click="imageSt.download()"
-            size="small"
-          >
-            {{ t('maa.crop.download') }}
-          </n-button>
+          <span style="display: inline-flex">
+            <n-button
+              :loading="imageSt.downloadLoading.value"
+              :disabled="!hasImage"
+              @click="imageSt.download()"
+              size="small"
+            >
+              <template #icon>
+                <n-icon><save-outlined></save-outlined></n-icon>
+              </template>
+              {{ t('maa.crop.download') }}
+            </n-button>
+          </span>
         </template>
         {{ t('maa.crop.tooltip.download') }}
       </Tooltip>
-      <Tooltip trigger="hover">
-        <template #trigger>
-          <n-button @click="controlSt.viewport.value.reset()" size="small">
-            {{ t('maa.crop.reset-viewport') }}
-          </n-button>
-        </template>
-        {{ t('maa.crop.tooltip.reset-viewport') }}
-      </Tooltip>
-      <Tooltip trigger="hover">
-        <template #trigger>
-          <n-button @click="controlSt.cropCeil()" size="small"> {{ t('maa.crop.ceil') }} </n-button>
-        </template>
-        {{ t('maa.crop.tooltip.ceil') }}
-      </Tooltip>
-      <Tooltip trigger="hover">
-        <template #trigger>
-          <n-button @click="controlSt.cropBound()" :disabled="!imageSt.data.value" size="small">
-            {{ t('maa.crop.bound') }}
-          </n-button>
-        </template>
-        {{ t('maa.crop.tooltip.bound') }}
-      </Tooltip>
-      <Tooltip trigger="hover">
-        <template #trigger>
-          <n-button
-            :loading="imageSt.resizing.value"
-            :disabled="!imageSt.data.value"
-            @click="imageSt.resize()"
-            size="small"
-          >
-            {{ t('maa.crop.resize') }}
-          </n-button>
-        </template>
-        {{ t('maa.crop.tooltip.resize') }}
-      </Tooltip>
-      <Tooltip trigger="hover">
-        <template #trigger>
-          <n-button
-            :type="showTab === 'settings' ? 'primary' : 'default'"
-            @click="toggleShow('settings')"
-            size="small"
-          >
-            {{ t('maa.crop.settings') }}
-          </n-button>
-        </template>
-        {{ t('maa.crop.tooltip.settings') }}
-      </Tooltip>
-      <Tooltip trigger="hover">
-        <template #trigger>
-          <n-button
-            :type="showTab === 'tool' ? 'primary' : 'default'"
-            @click="toggleShow('tool')"
-            size="small"
-          >
-            {{ t('maa.crop.tools') }}
-          </n-button>
-        </template>
-        {{ t('maa.crop.tooltip.tools') }}
-      </Tooltip>
-    </n-flex>
-    <n-flex align="center">
-      <n-flex align="center">
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <span>ROI</span>
-          </template>
-          {{ t('maa.crop.tooltip.roi') }}
-        </Tooltip>
-        {{ controlSt.roiDisp() }}
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <n-button @click="controlSt.copyRoi()" size="small">
-              {{ t('maa.crop.copy') }}
-            </n-button>
-          </template>
-          {{ t('maa.crop.tooltip.copy-roi') }}
-        </Tooltip>
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <n-button @click="controlSt.pasteRoi()" size="small">
-              {{ t('maa.crop.paste') }}
-            </n-button>
-          </template>
-          {{ t('maa.crop.tooltip.paste-roi') }}
-        </Tooltip>
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <n-button @click="controlSt.copyRoiField()" size="small">
-              {{ t('maa.crop.copy-field') }}
-            </n-button>
-          </template>
-          {{ t('maa.crop.tooltip.copy-roi-field') }}
-        </Tooltip>
-      </n-flex>
-      <n-flex align="center">
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <span>ROI EX</span>
-          </template>
-          {{ t('maa.crop.tooltip.roi-ex') }}
-        </Tooltip>
-        {{ controlSt.roiExpandDisp() }}
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <n-button @click="controlSt.copyRoiExpand()" size="small">
-              {{ t('maa.crop.copy') }}
-            </n-button>
-          </template>
-          {{ t('maa.crop.tooltip.copy-roi-ex') }}
-        </Tooltip>
-      </n-flex>
     </n-flex>
 
-    <n-alert
-      v-if="imageSt.screencapError.value"
-      type="error"
-      closable
-      @close="imageSt.screencapError.value = null"
-    >
-      {{ imageSt.screencapError.value }}
-    </n-alert>
-    <n-alert
-      v-if="imageSt.uploadError.value"
-      type="error"
-      closable
-      @close="imageSt.uploadError.value = null"
-    >
-      {{ imageSt.uploadError.value }}
-    </n-alert>
-    <n-alert
-      v-if="imageSt.saveError.value"
-      type="error"
-      closable
-      @close="imageSt.saveError.value = null"
-    >
-      {{ imageSt.saveError.value }}
-    </n-alert>
-    <n-alert v-if="imageSt.saveInfo.value" type="success" closable @close="imageSt.clearSaveInfo()">
-      <n-flex align="center">
-        <span>{{ imageSt.saveInfo.value }}</span>
-        <n-button size="tiny" @click="imageSt.revealSaved()">
-          {{ t('maa.crop.save.open-folder') }}
-        </n-button>
+    <div class="toolbar-sep"></div>
+
+    <!-- ROI：点数值即复制 -->
+    <n-flex align="center" :size="4" :wrap="false">
+      <copy-chip
+        label="ROI"
+        :value="hasRoi ? controlSt.roiDisp() : t('maa.crop.roi-empty')"
+        :text="controlSt.roiText()"
+        :disabled="!hasRoi"
+        :tooltip="hasRoi ? t('maa.crop.tooltip.roi') : t('maa.crop.tooltip.roi-empty')"
+      ></copy-chip>
+      <Tooltip trigger="hover">
+        <template #trigger>
+          <n-button
+            size="small"
+            quaternary
+            :aria-label="t('maa.crop.paste')"
+            @click="controlSt.pasteRoi()"
+          >
+            <template #icon>
+              <n-icon><content-paste-outlined></content-paste-outlined></n-icon>
+            </template>
+          </n-button>
+        </template>
+        {{ t('maa.crop.tooltip.paste-roi') }}
+      </Tooltip>
+      <n-dropdown trigger="click" :options="moreOptions" size="small" @select="onMore">
         <n-button
-          v-if="imageSt.savedRelativePath.value"
-          size="tiny"
-          @click="imageSt.copyTemplateSnippet()"
+          size="small"
+          quaternary
+          :aria-label="t('maa.crop.more')"
+          :loading="imageSt.resizing.value"
         >
-          {{ t('maa.crop.save.copy-template') }}
+          <template #icon>
+            <n-icon><more-horiz-outlined></more-horiz-outlined></n-icon>
+          </template>
         </n-button>
-      </n-flex>
-    </n-alert>
-    <n-alert v-if="imageSt.emptyRoiWarning.value" type="warning">
-      <n-flex align="center">
-        <span>{{ t('maa.crop.save.empty-roi') }}</span>
-        <n-button size="tiny" @click="imageSt.download(true)">
-          {{ t('maa.crop.save.save-whole') }}
-        </n-button>
-        <n-button size="tiny" @click="imageSt.cancelEmptyRoiWarning()">
-          {{ t('maa.crop.save.cancel') }}
-        </n-button>
-      </n-flex>
-    </n-alert>
+      </n-dropdown>
+    </n-flex>
+
+    <div style="flex: 1"></div>
+
+    <!-- 右栏切换与帮助 -->
+    <n-flex align="center" :size="6" :wrap="false">
+      <n-button-group size="small">
+        <Tooltip trigger="hover">
+          <template #trigger>
+            <n-button
+              :type="sidePanel === 'tool' ? 'primary' : 'default'"
+              :secondary="sidePanel === 'tool'"
+              @click="toggleSidePanel('tool')"
+            >
+              {{ t('maa.crop.tools') }}
+            </n-button>
+          </template>
+          {{ t('maa.crop.tooltip.tools') }}
+        </Tooltip>
+        <Tooltip trigger="hover">
+          <template #trigger>
+            <n-button
+              :type="sidePanel === 'settings' ? 'primary' : 'default'"
+              :secondary="sidePanel === 'settings'"
+              @click="toggleSidePanel('settings')"
+            >
+              {{ t('maa.crop.settings') }}
+            </n-button>
+          </template>
+          {{ t('maa.crop.tooltip.settings') }}
+        </Tooltip>
+      </n-button-group>
+      <n-popover trigger="click" placement="bottom-end">
+        <template #trigger>
+          <n-button size="small" quaternary :aria-label="t('maa.crop.help.title')">
+            <template #icon>
+              <n-icon><help-outline-outlined></help-outline-outlined></n-icon>
+            </template>
+          </n-button>
+        </template>
+        <div class="help">
+          <div class="help-title">{{ t('maa.crop.help.title') }}</div>
+          <div class="help-grid">
+            <template v-for="[key, desc] in shortcuts" :key="key">
+              <kbd class="kbd">{{ key }}</kbd>
+              <span>{{ desc }}</span>
+            </template>
+          </div>
+          <div class="help-flow">{{ t('maa.crop.help.flow') }}</div>
+        </div>
+      </n-popover>
+    </n-flex>
   </n-flex>
 </template>
+
+<style scoped>
+.toolbar {
+  width: 100%;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.4));
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.help-title {
+  font-weight: 600;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.help-flow {
+  white-space: pre-line;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--vscode-descriptionForeground, gray);
+}
+
+.kbd {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  border: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.4));
+}
+</style>

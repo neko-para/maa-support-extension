@@ -74,6 +74,9 @@ export const pending = computed(
   () => greenMaskSt.hasContent.value || autoPending.value || lassoPending.value
 )
 
+/** apply() 联动打开 green_mask 前的值，undoApply 时回退 */
+let greenMaskBeforeApply: boolean | null = null
+
 export async function apply() {
   const img = imageSt.element.value
   if (!img || !pending.value) {
@@ -107,7 +110,9 @@ export async function apply() {
   greenMaskSt.markApplied(previous)
   // 烘焙后的新图四边已是绿色，继续预览只会把同一片绿色再标一遍
   autoMaskSt.setEnabled(false)
-  // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂
+  // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂；
+  // 记住联动前的值，撤销应用时一并回退
+  greenMaskBeforeApply = matchSt.greenMask.value
   matchSt.greenMask.value = true
   return true
 }
@@ -116,5 +121,10 @@ export async function undoApply() {
   const previous = greenMaskSt.appliedFrom.value
   if (previous && (await imageSt.restoreWithoutHistory(previous))) {
     greenMaskSt.markRestored()
+    // apply() 联动打开的 green_mask 一起回退，恢复用户在此之前的选择
+    if (greenMaskBeforeApply !== null) {
+      matchSt.greenMask.value = greenMaskBeforeApply
+      greenMaskBeforeApply = null
+    }
   }
 }

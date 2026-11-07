@@ -51,7 +51,7 @@ Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 - **OCR**: 对图像执行文字识别
 - **模板匹配**: 使用自定义模板图像进行匹配
 - **颜色匹配**: 对图像执行一次 `ColorMatch`，参数（method/lower/upper/count/connected/roi）经归一化后作为 pipeline_override 传入，非法参数在进入原生层前返回 `internal` 失败；与模板匹配共用 fake resource
-- **识别测试**: 加载资源包，运行指定任务的识别 pipeline。节点包含 `Custom` 识别时，按 interface 声明的 agent 上下文按需启动 agent 并绑定到同一 Resource，用 `custom_recognition_list` 校验注册覆盖；资源与 agent 会话会缓存复用（空闲 5 分钟、宿主请求释放或启动正式实例时销毁；宿主在 interface/pipeline/资源变更后会请求释放，避免用旧定义做识别）。返回 `ToolResult`（`detail` + 结构化 `failure`），未注册的 Custom 识别不会被静默当作「未命中」
+- **识别测试**: 加载资源包，运行指定任务的识别 pipeline。节点包含 `Custom` 识别时，按 interface 声明的 agent 上下文按需启动 agent 并绑定到同一 Resource，用 `custom_recognition_list` 校验注册覆盖；资源与 agent 会话会缓存复用（空闲 5 分钟、宿主请求释放或启动正式实例时销毁；宿主在 interface/pipeline/资源变更后会请求释放，避免用旧定义做识别）。返回 `ToolResult`（`detail` + 结构化 `failure`），未注册的 Custom 识别不会被静默当作「未命中」。会话内 agent 已启动却仍缺识别名时直接返回 `unregistered` 并作废会话，不再重复启动；正式实例持有 interface 写死的同名 `identifier` 时返回 `agent-in-use`，避免两个同名 agent 互相抢占；资源没有节点、任务未进入 custom action 时返回内部失败而不是取消或未命中
 
 ### 5. 设备发现
 
@@ -70,6 +70,7 @@ Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 - 通过回调 Host 启动 agent 子进程或调试会话
 - 管理 agent 生命周期
 - 一次性识别工具复用同一套启动/连接逻辑（`agent.ts`）：注入 `VSCODE_MAAFW_AGENT*` 环境变量、等待连接与宿主终止通知、失败时按约定等 connect settle 后销毁 client；快速识别的 agent 调用设有限超时，配合宿主终止通知判断假死
+- `agent.ts` 记录已连接且未销毁的 agent 及其 interface 声明的 `identifier`（`isAgentIdentifierInUse`），快速识别启动 agent 前据此避开正式实例占用的同名 identifier
 
 ## 连接协议
 

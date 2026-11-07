@@ -38,20 +38,31 @@ src/
 │   ├── ipc.ts              # Typed IPC
 │   ├── states/             # 状态模块
 │   │   ├── canvas.ts       # Canvas 画布状态
-│   │   ├── control.ts      # 控制逻辑
-│   │   ├── greenMask.ts    # 绿色蒙版
-│   │   ├── image.ts        # 图像状态
-│   │   ├── pick.ts         # 选取逻辑
-│   │   ├── reco.ts         # 识别状态
+│   │   ├── control.ts      # 控制逻辑（指针/键盘事件、ROI、请求用 ROI）
+│   │   ├── mode.ts         # 画布单一操作模式（点选/框选/涂绿/圈选互斥）
+│   │   ├── greenMask.ts    # 手绘绿色蒙版与「应用/撤销应用」快照
+│   │   ├── autoMask.ts     # 自动涂绿：ROI 内背景估计 + 预览/应用
+│   │   ├── subjectSelect.ts # 圈选主体：手画区域与区域 mask
+│   │   ├── subjectMask.ts  # 圈选主体：颜色模型生成绿幕
+│   │   ├── colorPreview.ts # 取色推荐范围的命中预览
+│   │   ├── image.ts        # 图像状态与图片历史
+│   │   ├── pick.ts         # 取色与推荐范围
+│   │   ├── reco.ts         # 节点识别测试结果
 │   │   ├── settings.ts     # 可视化设置
 │   │   ├── visible.ts      # 可见性状态
-│   │   └── quickMatch.ts   # 快速匹配
+│   │   └── quickMatch.ts   # 快速匹配（OCR/模板/ColorMatch）
+│   ├── utils/
+│   │   ├── 2d.ts           # Pos/Size/Box/Viewport
+│   │   ├── detect.ts       # 选框角/边命中检测
+│   │   ├── autoMaskCore.ts # 自动涂绿纯函数（背景估计、边缘泛洪、外扩）
+│   │   └── subjectMaskCore.ts # 圈选主体纯函数（K-means 颜色模型、碎片清理、填洞）
 │   ├── views/              # 视图
 │   │   ├── ControlView.vue
 │   │   ├── ToolView.vue
 │   │   └── SettingsView.vue
 │   └── components/         # 组件
 │       ├── ColorBox.vue
+│       ├── HistoryStrip.vue
 │       ├── RoiEdit.vue
 │       ├── SettingsInput.vue
 │       ├── SettingsInputNumber.vue
@@ -87,6 +98,10 @@ src/
 └── components/             # 跨应用共享组件
     ├── AppTooltip.vue
     └── JsonCode.vue        # Prettier 实时格式化 JSON
+
+test/                       # node --test 单测（纯函数，不依赖 DOM）
+├── autoMaskCore.test.ts
+└── subjectMaskCore.test.ts
 ```
 
 ## 构建
@@ -104,6 +119,10 @@ Vite (vite.config.ts)
 Crop Canvas 采用按需渲染：Vue reactive effect 跟踪 `draw()` 读取的图像、视口、选框、设置、主题背景色和识别结果等状态，状态变更后由 `requestAnimationFrame` 合并到下一浏览器帧绘制。画面静止时不重绘；仅获得焦点的轮廓选区虚线动画会连续请求帧。Webview 隐藏时取消待处理帧，恢复可见后主动补绘。
 
 绿色蒙版直接以绿色像素保存在独立 Canvas 中，并通过 `triggerRef()` 通知主 Canvas 失效；主绘制流程直接叠加该 Canvas，避免每帧创建原图尺寸的临时 Canvas。切换图像时会释放旧蒙版及其历史记录。
+
+Crop 的状态模块之间存在循环导入（`image` ↔ `control` 等）。ES 模块按依赖深度优先求值，模块顶层（包括 `watch()` 的 source getter）不能读取尚未求值完的模块，否则会触发 TDZ 报错。需要跨模块联动时，由先求值的一方调用后求值一方导出的函数，例如 `image.ts` 在切换图像时调用 `subjectSelect` / `quickMatch` / `reco` 的 `resetForImageChange`。
+
+快速匹配与节点识别的结果都记录了产生它的图像；切换图像或识别期间换图时会丢弃旧结果，避免把旧图的识别框画到新图上。
 
 `theme.ts` 将 `--vscode-editor-background` 解析为 Canvas 可直接使用的颜色字符串，并通过 `editorBackgroundColor` ref 共享；主题变化时该 ref 更新并触发 Crop Canvas 重绘。用户不能为 Crop Canvas 单独配置背景色。
 

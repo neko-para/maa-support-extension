@@ -49,7 +49,7 @@
 ### 3. 工具类型
 
 - `MarkReturnPromise<T>` — 将函数返回值包装为 `Promise<... | null>`
-- `ToolFailure` / `ToolResult` — 一次性识别工具的结构化失败原因（缺 agent、识别名未注册、agent 启动失败/中途退出、忙碌、内部错误）与返回结果；文案由宿主本地化。内部错误使用 `ToolInternalTag` 固定标签（`no-resource` / `ipc` / `resource-load-failed` / `controller-create-failed` / `tasker-create-failed` / `scan-failed` / `invalid-options` / `custom-recognition-failed` / `internal-error`）而不是裸文本，宿主映射表由 `Record<ToolInternalTag, ...>` 保证新增标签时类型检查失败
+- `ToolFailure` / `ToolResult` — 一次性识别工具的结构化失败原因（缺 agent、识别名未注册、agent 启动失败/中途退出、正式实例占用同名 identifier（`agent-in-use`）、忙碌、内部错误）与返回结果；文案由宿主本地化。内部错误使用 `ToolInternalTag` 固定标签（`no-resource` / `ipc` / `resource-load-failed` / `controller-create-failed` / `tasker-create-failed` / `scan-failed` / `invalid-options` / `custom-recognition-failed` / `internal-error`）而不是裸文本，宿主映射表由 `Record<ToolInternalTag, ...>` 保证新增标签时类型检查失败
 - `ToolAgentSetup` — 一次性识别工具启动 agent 所需的上下文
 - `ColorMatchOptions`（来自 `@nekosu/maa-types`）— 快速匹配 ColorMatch 的参数
 - `MarkApisImpl<T>` — 应用于所有 API 键

@@ -74,10 +74,18 @@ function dilate(mask: Uint8Array, width: number, height: number) {
       continue
     }
     const x = idx % width
-    if (x > 0) next[idx - 1] = 1
-    if (x < width - 1) next[idx + 1] = 1
-    if (idx >= width) next[idx - width] = 1
-    if (idx < total - width) next[idx + width] = 1
+    if (x > 0) {
+      next[idx - 1] = 1
+    }
+    if (x < width - 1) {
+      next[idx + 1] = 1
+    }
+    if (idx >= width) {
+      next[idx - width] = 1
+    }
+    if (idx < total - width) {
+      next[idx + width] = 1
+    }
   }
   return next
 }

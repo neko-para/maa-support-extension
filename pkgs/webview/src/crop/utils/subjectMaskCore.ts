@@ -4,7 +4,7 @@
  * 输出：绿幕 mask（1=背景，需要涂绿；0=主体，保留）。
  *
  * 思路：以圈选区域为硬约束，用「区域内颜色」和「区域外一圈颜色」分别建
- * 前景/背景颜色模型，逐像素按最近颜色模型分类；再做最大连通域与填洞清理。
+ * 前景/背景颜色模型，逐像素按最近颜色模型分类；再去掉碎片连通域并填洞。
  * 不依赖 OpenCV。
  */
 export type SubjectMaskOptions = {
@@ -14,6 +14,11 @@ export type SubjectMaskOptions = {
   clusters?: number
   /** 主体判定偏置，>1 更倾向保留主体（默认 1.1） */
   bias?: number
+  /**
+   * 连通域至少要达到最大连通域的多大比例才保留（默认 0.02）。
+   * 文字、角标等主体由多个分离部件组成，不能只留最大的一块。
+   */
+  minComponentRatio?: number
 }
 
 export type SubjectMaskResult = {
@@ -29,7 +34,7 @@ export type SubjectMaskResult = {
 
 type Color = [number, number, number]
 
-function dilate(mask: Uint8Array, width: number, height: number, radius: number) {
+function dilate(mask: Uint8Array, width: number, radius: number) {
   let current = mask
   for (let round = 0; round < radius; round++) {
     const next = current.slice()
@@ -38,10 +43,18 @@ function dilate(mask: Uint8Array, width: number, height: number, radius: number)
         continue
       }
       const x = idx % width
-      if (x > 0) next[idx - 1] = 1
-      if (x < width - 1) next[idx + 1] = 1
-      if (idx >= width) next[idx - width] = 1
-      if (idx < current.length - width) next[idx + width] = 1
+      if (x > 0) {
+        next[idx - 1] = 1
+      }
+      if (x < width - 1) {
+        next[idx + 1] = 1
+      }
+      if (idx >= width) {
+        next[idx - width] = 1
+      }
+      if (idx < current.length - width) {
+        next[idx + width] = 1
+      }
     }
     current = next
   }
@@ -135,72 +148,66 @@ function nearestDistance(color: Color, means: Color[]) {
   return best
 }
 
-/** 只保留主体 mask 中最大的 8 连通域 */
-function keepLargestComponent(subject: Uint8Array, width: number, height: number) {
-  const visited = new Uint8Array(subject.length)
-  let bestStart = -1
-  let bestSize = 0
+/**
+ * 去掉主体 mask 中的碎片：面积不到最大 8 连通域 `minRatio` 倍的连通域判为背景。
+ * 这类碎片通常是颜色接近主体的噪点；体量相当的分离部件（文字笔画、角标）会被保留。
+ */
+function removeSmallComponents(
+  subject: Uint8Array,
+  width: number,
+  height: number,
+  minRatio: number
+) {
+  const label = new Int32Array(subject.length)
+  const sizes: number[] = [0]
   const queue = new Int32Array(subject.length)
   for (let start = 0; start < subject.length; start++) {
-    if (subject[start] !== 1 || visited[start] === 1) {
+    if (subject[start] !== 1 || label[start] !== 0) {
       continue
     }
+    const id = sizes.length
     let head = 0
     let tail = 0
     queue[tail++] = start
-    visited[start] = 1
-    let size = 0
+    label[start] = id
     while (head < tail) {
       const idx = queue[head++]!
-      size += 1
       const x = idx % width
+      const y = Math.floor(idx / width)
       for (let dy = -1; dy <= 1; dy++) {
-        const y = Math.floor(idx / width) + dy
-        if (y < 0 || y >= height) continue
+        const ny = y + dy
+        if (ny < 0 || ny >= height) {
+          continue
+        }
         for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue
           const nx = x + dx
-          if (nx < 0 || nx >= width) continue
-          const next = y * width + nx
-          if (subject[next] === 1 && visited[next] === 0) {
-            visited[next] = 1
+          if ((dx === 0 && dy === 0) || nx < 0 || nx >= width) {
+            continue
+          }
+          const next = ny * width + nx
+          if (subject[next] === 1 && label[next] === 0) {
+            label[next] = id
             queue[tail++] = next
           }
         }
       }
     }
-    if (size > bestSize) {
-      bestSize = size
-      bestStart = start
-    }
+    sizes.push(tail)
   }
-  if (bestStart < 0) {
+
+  let largest = 0
+  for (const size of sizes) {
+    largest = Math.max(largest, size)
+  }
+  if (largest === 0) {
     return
   }
-  const keep = new Uint8Array(subject.length)
-  let head = 0
-  let tail = 0
-  queue[tail++] = bestStart
-  keep[bestStart] = 1
-  while (head < tail) {
-    const idx = queue[head++]!
-    const x = idx % width
-    for (let dy = -1; dy <= 1; dy++) {
-      const y = Math.floor(idx / width) + dy
-      if (y < 0 || y >= height) continue
-      for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue
-        const nx = x + dx
-        if (nx < 0 || nx >= width) continue
-        const next = y * width + nx
-        if (subject[next] === 1 && keep[next] === 0) {
-          keep[next] = 1
-          queue[tail++] = next
-        }
-      }
+  const minSize = largest * minRatio
+  for (let idx = 0; idx < subject.length; idx++) {
+    if (subject[idx] === 1 && sizes[label[idx]!]! < minSize) {
+      subject[idx] = 0
     }
   }
-  subject.set(keep)
 }
 
 /** 填充主体内部的洞（被主体包围的背景像素视为主体，例如手柄上的彩色按钮） */
@@ -226,10 +233,18 @@ function fillHoles(subject: Uint8Array, width: number, height: number) {
   while (head < tail) {
     const idx = queue[head++]!
     const x = idx % width
-    if (x > 0) push(idx - 1)
-    if (x < width - 1) push(idx + 1)
-    if (idx >= width) push(idx - width)
-    if (idx < subject.length - width) push(idx + width)
+    if (x > 0) {
+      push(idx - 1)
+    }
+    if (x < width - 1) {
+      push(idx + 1)
+    }
+    if (idx >= width) {
+      push(idx - width)
+    }
+    if (idx < subject.length - width) {
+      push(idx + width)
+    }
   }
   for (let idx = 0; idx < subject.length; idx++) {
     if (subject[idx] === 0 && reachable[idx] === 0) {
@@ -249,8 +264,9 @@ export function buildSubjectMask(
   const ring = Math.max(1, Math.min(16, options.ring ?? 4))
   const clusters = Math.max(1, Math.min(8, options.clusters ?? 4))
   const bias = options.bias ?? 1.1
+  const minComponentRatio = Math.max(0, Math.min(1, options.minComponentRatio ?? 0.02))
 
-  const regionDilated = dilate(region, width, height, ring)
+  const regionDilated = dilate(region, width, ring)
   const bgSampleMask = new Uint8Array(total)
   let bgSampleCount = 0
   for (let i = 0; i < total; i++) {
@@ -304,7 +320,7 @@ export function buildSubjectMask(
     }
   }
 
-  keepLargestComponent(subject, width, height)
+  removeSmallComponents(subject, width, height, minComponentRatio)
   fillHoles(subject, width, height)
 
   let subjectPixels = 0

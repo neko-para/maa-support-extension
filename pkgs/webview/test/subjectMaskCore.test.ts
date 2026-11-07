@@ -62,6 +62,47 @@ test('圈选紧贴主体时，仍能从圈外取到背景样本', () => {
   assert.equal(px(result.mask, 35, 27), 0)
 })
 
+function makeTwoPartImage() {
+  const width = 100
+  const height = 60
+  const data = new Uint8ClampedArray(width * height * 4)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4
+      const inMain = x >= 10 && x <= 29 && y >= 20 && y <= 39
+      const inBadge = x >= 50 && x <= 55 && y >= 27 && y <= 32
+      const color = inMain || inBadge ? SUBJECT : BG
+      data[idx] = color[0]
+      data[idx + 1] = color[1]
+      data[idx + 2] = color[2]
+      data[idx + 3] = 255
+    }
+  }
+  const region = new Uint8Array(width * height)
+  for (let y = 15; y <= 45; y++) {
+    for (let x = 5; x <= 60; x++) {
+      region[y * width + x] = 1
+    }
+  }
+  return { data, region, width, height }
+}
+
+test('圈选主体由多个分离部件组成时都保留', () => {
+  const { data, region, width, height } = makeTwoPartImage()
+  const result = buildSubjectMask(data, width, height, region)
+  assert.equal(result.mask[30 * width + 20], 0, '主体大块保留')
+  assert.equal(result.mask[30 * width + 52], 0, '分离的小部件也保留')
+  assert.equal(result.subjectPixels, 400 + 36)
+})
+
+test('远小于主体的碎片仍判为背景', () => {
+  const { data, region, width, height } = makeTwoPartImage()
+  const result = buildSubjectMask(data, width, height, region, { minComponentRatio: 0.2 })
+  assert.equal(result.mask[30 * width + 20], 0)
+  assert.equal(result.mask[30 * width + 52], 1, '36px 不到 400px 的 20%，按碎片处理')
+  assert.equal(result.subjectPixels, 400)
+})
+
 test('圈选覆盖整图时没有背景样本，交给 UI 提示而不是瞎猜', () => {
   const result = buildSubjectMask(
     makeImage(),

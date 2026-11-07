@@ -159,6 +159,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         return t('maa.crop.reco.failure.agent-exited', failure.names.join(', '))
       case 'agent-start-failed':
         return t('maa.crop.reco.failure.agent-start-failed', failure.target)
+      case 'agent-in-use':
+        return t('maa.crop.reco.failure.agent-in-use', failure.identifiers.join(', '))
       case 'busy':
         return t('maa.crop.reco.failure.busy')
       case 'internal': {

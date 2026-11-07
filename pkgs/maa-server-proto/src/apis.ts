@@ -45,6 +45,8 @@ export type ToolFailure =
   | { kind: 'unregistered'; names: string[] }
   | { kind: 'agent-exited'; names: string[] }
   | { kind: 'agent-start-failed'; target: string }
+  /** 运行中的正式实例占用了 interface 写死的 identifier */
+  | { kind: 'agent-in-use'; identifiers: string[] }
   | { kind: 'busy' }
   | { kind: 'internal'; tag: ToolInternalTag; detail?: string }
 

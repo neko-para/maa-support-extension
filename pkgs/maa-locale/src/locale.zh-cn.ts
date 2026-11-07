@@ -150,6 +150,8 @@ export default {
   'maa.crop.reco.failure.unregistered': 'agent 未注册这些 Custom 识别：{0}',
   'maa.crop.reco.failure.agent-exited': 'agent 在识别过程中退出：{0}。详情见 Maa 输出',
   'maa.crop.reco.failure.agent-start-failed': 'agent 启动或连接失败：{0}。详情见 Maa 输出',
+  'maa.crop.reco.failure.agent-in-use':
+    '正在运行的任务占用了 agent：{0}。请先停止任务再运行快速识别',
   'maa.crop.reco.failure.busy': '上一次识别仍在进行，请稍后再试',
   'maa.crop.reco.failure.no-resource': '当前没有可用的 interface 资源，无法运行识别',
   'maa.crop.reco.failure.ipc': '与 Maa 服务通信失败，请查看扩展日志',

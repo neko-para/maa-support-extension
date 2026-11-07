@@ -160,6 +160,8 @@ export default {
   'maa.crop.reco.failure.agent-exited': 'The agent exited during recognition: {0}. See Maa output',
   'maa.crop.reco.failure.agent-start-failed':
     'Failed to start or connect the agent: {0}. See Maa output',
+  'maa.crop.reco.failure.agent-in-use':
+    'A running task is using the agent: {0}. Stop the task before running quick recognition',
   'maa.crop.reco.failure.busy': 'The previous recognition is still running, try again later',
   'maa.crop.reco.failure.no-resource': 'No interface resource is available, cannot run recognition',
   'maa.crop.reco.failure.ipc': 'Failed to communicate with the Maa service, see the extension log',

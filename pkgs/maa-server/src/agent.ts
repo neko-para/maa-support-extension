@@ -10,6 +10,8 @@ import { makePromise } from './utils'
 export type AgentInfo = {
   client: maa.Client
   agent: string
+  /** interface 声明的 identifier；未声明时 Client 自动生成，不会与其他 agent 冲突 */
+  identifier?: string
 }
 
 /** agent 运行时需要的上下文：`root` 与 `resources` 与 setupInstance 时注入的环境变量一致 */
@@ -53,6 +55,21 @@ export function notifyAgentStopped(id: string) {
 /** 宿主是否已经通知过该 agent 结束 */
 export function isAgentStopped(id: string) {
   return stoppedAgents.has(id)
+}
+
+/**
+ * 已连接、尚未销毁的 agent。同名 identifier 重复启动会互相抢占，
+ * 一次性识别工具启动 agent 前需要确认没有正式实例占用同一 identifier。
+ */
+const liveAgents = new Set<AgentInfo>()
+
+export function isAgentIdentifierInUse(identifier: string) {
+  for (const info of liveAgents) {
+    if (info.identifier === identifier) {
+      return true
+    }
+  }
+  return false
 }
 
 /**
@@ -101,6 +118,7 @@ export function stopAgentSilently(id: string) {
 
 /** 销毁 agent：先销毁 native client 句柄，再通知宿主结束子进程（不做 disconnect 握手） */
 export function destroyAgent(agent: AgentInfo) {
+  liveAgents.delete(agent)
   try {
     agent.client.destroy()
   } catch {
@@ -214,8 +232,11 @@ export async function startAgent(
   if (context.timeout >= 0) {
     client.timeout = (context.callTimeout ?? Number.MAX_SAFE_INTEGER).toString()
   }
-  return {
+  const info: AgentInfo = {
     agent,
-    client
+    client,
+    identifier: agentConfig.identifier
   }
+  liveAgents.add(info)
+  return info
 }

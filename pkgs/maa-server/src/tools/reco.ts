@@ -9,6 +9,7 @@ import {
   type AgentInfo,
   destroyAgent,
   destroyResourceAfterAgentCleanup,
+  isAgentIdentifierInUse,
   isAgentStopped,
   startAgent
 } from '../agent'
@@ -50,6 +51,8 @@ let pending:
   | {
       task: string
       image: ArrayBuffer
+      /** custom action 是否执行过；没执行说明任务在进入 action 前就失败了 */
+      reached: boolean
       settle: (detail: string | null) => void
     }
   | undefined
@@ -160,6 +163,7 @@ async function createSession(resources: string[], key: string) {
         logger.warn('quick reco action called without pending request')
         return true
       }
+      current.reached = true
 
       try {
         const detail = await self.context.run_recognition(current.task, current.image)
@@ -225,14 +229,37 @@ async function ensureAgents(
   agent: ToolAgentSetup | undefined,
   requirements: readonly { name: string }[]
 ): Promise<ToolFailure | undefined> {
-  if (missingNames(current, requirements).length === 0) {
+  const missing = missingNames(current, requirements)
+  if (missing.length === 0) {
     return undefined
   }
 
   if (!agent || agent.agents.length === 0) {
     return {
       kind: 'no-agent',
-      names: missingNames(current, requirements)
+      names: missing
+    }
+  }
+
+  // 会话里的 agent 要么全部启动要么一个没有：已启动却仍缺识别名，说明 agent 确实没注册。
+  // 再启动只会拉起同名的第二个 agent；作废会话，让重新构建的 agent 在下次识别时生效
+  if (current.agents.length > 0) {
+    disposeQuickRecoSession()
+    return {
+      kind: 'unregistered',
+      names: missing
+    }
+  }
+
+  const inUse = agent.agents
+    .map(config => config.identifier)
+    .filter(
+      (identifier): identifier is string => !!identifier && isAgentIdentifierInUse(identifier)
+    )
+  if (inUse.length > 0) {
+    return {
+      kind: 'agent-in-use',
+      identifiers: [...new Set(inUse)]
     }
   }
 
@@ -273,11 +300,12 @@ async function ensureAgents(
   return undefined
 }
 
-function pickNode(current: QuickRecoSession): Promise<string | null> {
+/** 资源里没有节点时返回 undefined，与用户取消选择（null）区分开 */
+function pickNode(current: QuickRecoSession): Promise<string | null> | undefined {
   const tasks = current.resource.node_list
-  if (!tasks) {
+  if (!tasks || tasks.length === 0) {
     logger.error('quick reco res no task')
-    return Promise.resolve(null)
+    return undefined
   }
 
   tasks.sort()
@@ -301,7 +329,11 @@ async function performRecoInner(
     return internalFailure('resource-load-failed', 'resource not loaded')
   }
 
-  const task = await pickNode(current)
+  const picking = pickNode(current)
+  if (!picking) {
+    return internalFailure('resource-load-failed', 'resource has no node')
+  }
+  const task = await picking
   if (!task) {
     return null
   }
@@ -345,12 +377,14 @@ async function performRecoInner(
     pending = {
       task,
       image,
+      reached: false,
       settle: detail => {
         pending = undefined
         resolve(detail)
       }
     }
   })
+  const request = pending!
 
   try {
     await tasker
@@ -371,6 +405,12 @@ async function performRecoInner(
   }
 
   const detail = await detailPromise
+
+  if (!request.reached) {
+    // 任务没进入 custom action 就结束了：这是识别没有跑起来，不是「未命中」
+    logger.error('quick reco task finished without reaching the action')
+    return internalFailure('internal-error', 'recognition task did not run')
+  }
 
   if (detail === null && requirements.length > 0) {
     const names = requirements.map(item => item.name)

@@ -22,6 +22,7 @@ import {
   launchService,
   nativeService,
   rootService,
+  serverService,
   stateService
 } from '../registry'
 import type { IpcType } from '../server'
@@ -61,6 +62,32 @@ export async function openCropPanel(ipc: IpcType, payload?: OpenCropPayload) {
 
 /** 打开中的裁剪面板数量：最后一个关闭时释放快速识别缓存的 agent 会话 */
 let openCropPanels = 0
+let releaseTimer: NodeJS.Timeout | undefined
+
+/**
+ * 释放 maa-server 里快速识别缓存的会话。
+ * 只在已有连接时发送：没有连接就没有会话，也不应为此拉起 server。连接在发送前断开时
+ * sendRequest 会同步抛出，需要与异步拒绝一起收口。
+ */
+function releaseRecoSession() {
+  if (!serverService.rpc.conn) {
+    return
+  }
+  Promise.resolve()
+    .then(() => serverService.ipc?.releaseRecoSession())
+    .catch(err => {
+      logger.warn(`release quick reco session failed: ${err}`)
+    })
+}
+
+/** 编辑 pipeline 时变更事件密集到达，合并成一次释放 */
+function scheduleReleaseRecoSession() {
+  clearTimeout(releaseTimer)
+  releaseTimer = setTimeout(() => {
+    releaseTimer = undefined
+    releaseRecoSession()
+  }, 500)
+}
 
 export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWebToHost> {
   ipc: IpcType
@@ -91,23 +118,18 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       }
     })
 
-    const releaseRecoSession = () => {
-      this.ipc.releaseRecoSession().catch(err => {
-        logger.warn(`release quick reco session failed: ${err}`)
-      })
-    }
     // 快速识别会缓存资源与 agent；pipeline/interface/资源变化后缓存必须失效，
     // 否则用户改完节点再点识别仍用旧定义，Custom 需求也可能漏判
     this.sessionReleaseDisposables = [
-      interfaceService.onInterfaceChanged(releaseRecoSession),
-      interfaceService.onInterfaceImportChanged(releaseRecoSession),
-      interfaceService.onPipelineChanged(releaseRecoSession),
-      interfaceService.onResourceChanged(releaseRecoSession)
+      interfaceService.onInterfaceChanged(scheduleReleaseRecoSession),
+      interfaceService.onInterfaceImportChanged(scheduleReleaseRecoSession),
+      interfaceService.onPipelineChanged(scheduleReleaseRecoSession),
+      interfaceService.onResourceChanged(scheduleReleaseRecoSession)
     ]
   }
 
   dispose() {
-    // ServerService.kill() 会主动 dispose 面板，panel 自身的 onDidDispose 随后还会再调一次
+    // 面板计数只能减一次，重复调用时直接返回
     if (this.disposed) {
       return
     }
@@ -119,11 +141,19 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
     openCropPanels = Math.max(openCropPanels - 1, 0)
     if (openCropPanels === 0) {
       // 面板全部关闭后释放快速识别会话，避免 agent 子进程一直挂着
-      this.ipc.releaseRecoSession().catch(err => {
-        logger.warn(`release quick reco session failed: ${err}`)
-      })
+      clearTimeout(releaseTimer)
+      releaseTimer = undefined
+      releaseRecoSession()
     }
     console.log('crop panel dispose')
+  }
+
+  /**
+   * 面板比 maa-server 连接活得久（重启 server 不会关闭裁剪面板），构造时拿到的 ipc 可能已失效；
+   * 每次请求都取当前连接，必要时重新拉起 server。
+   */
+  private async currentIpc(): Promise<IpcType> {
+    return (await serverService.ensureServer()) ?? this.ipc
   }
 
   /**
@@ -227,7 +257,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
             })
             break
           }
-          const image = await this.ipc.getScreencap()
+          const image = await (await this.currentIpc()).getScreencap()
           if (!image) {
             this.response(data.seq, {
               image: null,
@@ -367,16 +397,16 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         break
       }
       case 'resize': {
-        const result = await this.ipc.resize(
-          data.image.replace('data:image/png;base64,', ''),
-          data.width,
-          data.height
-        )
-        if (result) {
-          this.response(data.seq, 'data:image/png;base64,' + result)
-        } else {
-          this.response(data.seq, null)
+        let result: string | null = null
+        try {
+          result = await (
+            await this.currentIpc()
+          ).resize(data.image.replace('data:image/png;base64,', ''), data.width, data.height)
+        } catch (err) {
+          logger.error(`resize failed, error ${err}`)
         }
+        // 必须回包：webview 的 call 没有超时，不回应会让「缩放」按钮一直转圈
+        this.response(data.seq, result ? 'data:image/png;base64,' + result : null)
         break
       }
       case 'requestOCR': {
@@ -391,7 +421,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         let result = null
         let failed = false
         try {
-          result = await this.ipc.performOcr(
+          result = await (
+            await this.currentIpc()
+          ).performOcr(
             isMaaAssistantArknights,
             data.image.replace('data:image/png;base64,', ''),
             {
@@ -437,11 +469,24 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           uploadDir: path.dirname(targetPath[0].fsPath)
         })
 
+        let target: Buffer
+        try {
+          target = await fs.readFile(targetPath[0].fsPath)
+        } catch (err) {
+          logger.error(`read template failed, error ${err}`)
+          this.response(data.seq, {
+            detail: null,
+            failure: { message: t('maa.crop.upload.failure.read') }
+          })
+          break
+        }
+
         let result = null
         let failed = false
         try {
-          const target = await fs.readFile(targetPath[0].fsPath)
-          result = await this.ipc.performTemplateMatch(
+          result = await (
+            await this.currentIpc()
+          ).performTemplateMatch(
             data.image.replace('data:image/png;base64,', ''),
             target.toString('base64'),
             {
@@ -482,7 +527,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         let result: ToolResult | null = null
         let failed = false
         try {
-          result = await this.ipc.performReco(
+          result = await (
+            await this.currentIpc()
+          ).performReco(
             data.image.replace('data:image/png;base64,', ''),
             resources.map(u => u.fsPath),
             (await this.buildAgentSetup()) ?? undefined
@@ -507,10 +554,9 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       case 'requestColorMatch': {
         let result: ToolResult | null = null
         try {
-          result = await this.ipc.performColorMatch(
-            data.image.replace('data:image/png;base64,', ''),
-            data.options
-          )
+          result = await (
+            await this.currentIpc()
+          ).performColorMatch(data.image.replace('data:image/png;base64,', ''), data.options)
         } catch (err) {
           logger.error(`color match failed, error ${err}`)
         }
@@ -526,8 +572,12 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
       }
       case 'requestReveal': {
         const target = vscode.Uri.file(data.path)
+        // revealInExplorer 只能定位工作区内的文件；自定义保存目录/另存为可能在工作区外，改用系统文件管理器
+        const command = vscode.workspace.getWorkspaceFolder(target)
+          ? 'revealInExplorer'
+          : 'revealFileInOS'
         try {
-          await vscode.commands.executeCommand('revealInExplorer', target)
+          await vscode.commands.executeCommand(command, target)
         } catch (err) {
           logger.warn(`reveal ${data.path} failed: ${err}`)
         }

@@ -109,14 +109,14 @@ export type CropWebToHost =
       height: number
     }
   | {
-      // return CropToolResult | null，null 表示用户取消
+      // return CropToolResult
       command: 'requestOCR'
       image: string
       roi: maa.Rect
       only_rec: boolean
     }
   | {
-      // return CropToolResult | null，null 表示用户取消
+      // return CropToolResult | null，null 表示用户取消选择模板文件
       command: 'requestTemplateMatch'
       image: string
       roi: maa.Rect

@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { NAlert, NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NDivider,
+  NFlex,
+  NInputNumber,
+  NSelect,
+  NSwitch,
+  NText
+} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import Tooltip from '../../components/AppTooltip.vue'
@@ -42,7 +52,6 @@ const templateMatchMethods = [
   { value: 5 as const, label: 'CCOEFF_NORMED' }
 ]
 
-// ColorMatch 的结果范围来自取色采样，这里把来源展示给用户
 const autoMaskMethods = computed(() => [
   { label: t('maa.crop.tools.auto-mask-border-grow'), value: 'border-grow' },
   { label: t('maa.crop.tools.auto-mask-threshold'), value: 'threshold' }
@@ -70,6 +79,7 @@ const autoMaskErrorText = computed(() => {
     : t('maa.crop.tools.auto-mask-failed')
 })
 
+// ColorMatch 的范围来自取色采样，参数区把来源展示给用户
 const colorSourceText = computed(() => {
   const threshold = hostState.value.pickColorThreshold ?? 10
   if (!pickSt.recommendedRanges(threshold)) {
@@ -118,15 +128,18 @@ function startGreenMask() {
 
 async function applyGreenMask() {
   const newData = greenMaskSt.applyMask()
-  if (newData) {
-    const previous = imageSt.data.value
-    await imageSt.set(newData)
-    // set 会重置 mask 状态，快照必须在上图之后记录
-    greenMaskSt.markApplied(previous)
-    greenMaskSt.drawing.value = false
-    // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂
-    matchSt.greenMask.value = true
+  if (!newData) {
+    return
   }
+  const previous = imageSt.data.value
+  if (!(await imageSt.set(newData))) {
+    return
+  }
+  // set 会重置 mask 状态，快照必须在上图之后记录
+  greenMaskSt.markApplied(previous)
+  greenMaskSt.drawing.value = false
+  // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂
+  matchSt.greenMask.value = true
 }
 
 function copyColorSnippet() {
@@ -153,7 +166,9 @@ async function applyAutoMask() {
     return
   }
   const previous = imageSt.data.value
-  await imageSt.set(newData)
+  if (!(await imageSt.set(newData))) {
+    return
+  }
   greenMaskSt.markApplied(previous)
   matchSt.greenMask.value = true
   autoMaskSt.setEnabled(false)
@@ -178,7 +193,9 @@ async function applySubjectMask() {
     return
   }
   const previous = imageSt.data.value
-  await imageSt.set(newData)
+  if (!(await imageSt.set(newData))) {
+    return
+  }
   greenMaskSt.markApplied(previous)
   matchSt.greenMask.value = true
   subjectMaskSt.disable()
@@ -187,8 +204,7 @@ async function applySubjectMask() {
 
 async function undoApplyGreenMask() {
   const previous = greenMaskSt.appliedFrom.value
-  if (previous) {
-    await imageSt.restoreWithoutHistory(previous)
+  if (previous && (await imageSt.restoreWithoutHistory(previous))) {
     greenMaskSt.markRestored()
   }
 }
@@ -683,7 +699,7 @@ async function undoApplyGreenMask() {
         {{ matchSt.error.value }}
       </n-alert>
 
-      <!-- 参数常驻：跑之前就能改，不再只在结果分支里出现（P0-C） -->
+      <!-- 参数区常驻，运行前就能调整 -->
       <n-flex align="center" wrap style="margin-bottom: 8px">
         <template v-if="matchSt.selectedKind.value === 'ocr'">
           <n-switch v-model:value="matchSt.onlyRec.value" />

@@ -8,20 +8,24 @@ import { Size } from '../utils/2d'
 import * as controlSt from './control'
 import * as greenMaskSt from './greenMask'
 import * as pickSt from './pick'
+import * as matchSt from './quickMatch'
+import * as recoSt from './reco'
 import * as subjectSelectSt from './subjectSelect'
 
 /** 按动作拆分 loading，避免点截图时上传/下载一起转圈 */
 export const screencapLoading = ref(false)
 export const uploadLoading = ref(false)
 export const downloadLoading = ref(false)
-/** 各动作最近一次失败/成功信息（A2：失败不再静默、不再和「未命中」混淆） */
+/** 各动作最近一次的失败/成功信息；失败需要明确展示，不能与「未命中」混淆 */
 export const screencapError = ref<string | null>(null)
 export const uploadError = ref<string | null>(null)
 export const saveError = ref<string | null>(null)
 export const saveInfo = ref<string | null>(null)
 export const savedPath = ref<string | null>(null)
 export const savedRelativePath = ref<string | null>(null)
-/** 空 ROI 时先提示，确认为保存整图后才真正落盘（P0-F） */
+/** 保存的模板里是否有纯绿像素，决定复制的片段是否带 green_mask */
+export const savedHasGreen = ref(false)
+/** 空 ROI 时先提示，确认为保存整图后才真正落盘 */
 export const emptyRoiWarning = ref(false)
 
 export const data = ref<string | null>(null)
@@ -69,6 +73,8 @@ function commitImage(url: string, img: HTMLImageElement) {
   greenMaskSt.reset()
   pickSt.clearSamplePoints()
   subjectSelectSt.resetForImageChange()
+  matchSt.resetForImageChange(url)
+  recoSt.resetForImageChange(url)
   controlSt.cropBound()
 }
 
@@ -89,28 +95,30 @@ function pushHistory(url: string, img: HTMLImageElement) {
   historyCursor.value = history.value.length - 1
 }
 
-async function applyImage(url: string): Promise<boolean> {
+/** 载入新图并写入历史；解码失败时保留当前图像并返回 false，由调用方提示 */
+export async function set(url: string) {
+  let img: HTMLImageElement
+  try {
+    img = await loadImage(url)
+  } catch {
+    return false
+  }
+  commitImage(url, img)
+  pushHistory(url, img)
+  return true
+}
+
+/** 恢复一张已载入过的图像但不写入历史（用于撤销「应用涂绿」）；失败时保留当前图像 */
+export async function restoreWithoutHistory(url: string) {
   try {
     const img = await loadImage(url)
     commitImage(url, img)
+    // 恢复的图若仍在历史里，缩略图条高亮它；已被挤出历史时不高亮任何一项
+    historyCursor.value = history.value.findIndex(e => e.image === url)
     return true
-  } catch (_err) {
-    data.value = null
-    element.value = null
+  } catch {
     return false
   }
-}
-
-export async function set(url: string) {
-  if (await applyImage(url)) {
-    pushHistory(url, element.value!)
-  }
-}
-
-/** 恢复一张已载入过的图像但不写入历史（用于撤销「应用涂绿」） */
-export async function restoreWithoutHistory(url: string) {
-  const img = await loadImage(url)
-  commitImage(url, img)
 }
 
 export async function switchTo(index: number) {
@@ -135,7 +143,9 @@ export async function screencap() {
       command: 'requestScreencap'
     })) as CropImageResult | null
     if (resp?.image) {
-      await set(resp.image)
+      if (!(await set(resp.image))) {
+        screencapError.value = t('maa.crop.failure.decode')
+      }
     } else {
       screencapError.value = resp?.failure?.message ?? t('maa.crop.failure.unknown')
     }
@@ -158,7 +168,9 @@ export async function upload() {
       return
     }
     if (resp.image) {
-      await set(resp.image)
+      if (!(await set(resp.image))) {
+        uploadError.value = t('maa.crop.failure.decode')
+      }
     } else {
       uploadError.value = resp.failure?.message ?? t('maa.crop.failure.unknown')
     }
@@ -167,6 +179,26 @@ export async function upload() {
   } finally {
     uploadLoading.value = false
   }
+}
+
+/** 区域内是否有纯绿 (0, 255, 0) 像素：MaaFramework 的 green_mask 只屏蔽这一种颜色 */
+function containsPureGreen(rect: maa.Rect) {
+  const img = element.value
+  if (!img || rect[2] <= 0 || rect[3] <= 0) {
+    return false
+  }
+  const canvas = document.createElement('canvas')
+  canvas.width = rect[2]
+  canvas.height = rect[3]
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3], 0, 0, rect[2], rect[3])
+  const pixels = ctx.getImageData(0, 0, rect[2], rect[3]).data
+  for (let i = 0; i < pixels.length; i += 4) {
+    if (pixels[i] === 0 && pixels[i + 1] === 255 && pixels[i + 2] === 0) {
+      return true
+    }
+  }
+  return false
 }
 
 export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
@@ -200,12 +232,13 @@ export async function download(force = false) {
       return
     }
 
+    const hasGreen = containsPureGreen(crop)
     const resp = (await ipc.call({
       command: 'requestSave',
       image: data,
       crop,
-      roi: controlSt.cropBox.value.flat(),
-      expandRoi: controlSt.cropBoxExpand.value.flat()
+      roi: controlSt.requestRoi(),
+      expandRoi: controlSt.requestRoiExpand()
     })) as CropSaveResult | null
 
     if (resp === null) {
@@ -217,6 +250,7 @@ export async function download(force = false) {
     } else if (resp.path) {
       savedPath.value = resp.path
       savedRelativePath.value = resp.relativePath ?? null
+      savedHasGreen.value = hasGreen
       saveInfo.value = t('maa.crop.save.saved', resp.path)
     }
   } catch {
@@ -230,16 +264,17 @@ export function clearSaveInfo() {
   saveInfo.value = null
   savedPath.value = null
   savedRelativePath.value = null
+  savedHasGreen.value = false
 }
 
 /** 保存成功后可一键复制 `template` 片段；仅在模板确实带绿幕时附加 green_mask */
-export function copyTemplateSnippet(includeGreenMask = false) {
+export function copyTemplateSnippet() {
   const relative = savedRelativePath.value
   if (!relative) {
     return
   }
   const lines = [`"template": ${JSON.stringify(relative)},`]
-  if (includeGreenMask) {
+  if (savedHasGreen.value) {
     lines.push('"green_mask": true')
   }
   ipc.send({ command: 'writeClipboard', text: lines.join('\n') })
@@ -272,15 +307,17 @@ export async function resize() {
     height = 0
   }
 
-  const newImage = (await ipc.call({
-    command: 'resize',
-    image: data.value,
-    width,
-    height
-  })) as string | null
-  if (newImage) {
-    set(newImage)
+  try {
+    const newImage = (await ipc.call({
+      command: 'resize',
+      image: data.value,
+      width,
+      height
+    })) as string | null
+    if (newImage) {
+      await set(newImage)
+    }
+  } finally {
+    resizing.value = false
   }
-
-  resizing.value = false
 }

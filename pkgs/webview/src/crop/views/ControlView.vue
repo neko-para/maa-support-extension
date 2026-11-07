@@ -5,7 +5,6 @@ import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
-import * as matchSt from '../states/quickMatch'
 import { showTab, toggleShow } from '../states/visible'
 </script>
 
@@ -191,7 +190,7 @@ import { showTab, toggleShow } from '../states/visible'
         <n-button
           v-if="imageSt.savedRelativePath.value"
           size="tiny"
-          @click="imageSt.copyTemplateSnippet(matchSt.greenMask.value)"
+          @click="imageSt.copyTemplateSnippet()"
         >
           {{ t('maa.crop.save.copy-template') }}
         </n-button>
@@ -204,7 +203,7 @@ import { showTab, toggleShow } from '../states/visible'
           {{ t('maa.crop.save.save-whole') }}
         </n-button>
         <n-button size="tiny" @click="imageSt.cancelEmptyRoiWarning()">
-          {{ t('maa.control.stop') }}
+          {{ t('maa.crop.save.cancel') }}
         </n-button>
       </n-flex>
     </n-alert>

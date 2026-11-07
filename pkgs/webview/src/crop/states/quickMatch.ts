@@ -38,24 +38,39 @@ export const resultObject = computed(() => {
   return rawData
 })
 
-function applyResult(resp: CropToolResult | null) {
+/** 结果所属的图像；切图时丢弃，避免把旧图的识别框画到新图上 */
+let resultImage: string | null = null
+
+function applyResult(kind: MatchKind, image: string, resp: CropToolResult | null) {
+  resultKind.value = kind
   result.value = resp?.detail ?? null
   error.value = resp?.failure?.message ?? null
+  resultImage = image
+}
+
+/** 图像切换时由 image.ts 调用：丢掉不属于新图的结果 */
+export function resetForImageChange(image: string) {
+  if (resultImage === null || resultImage === image) {
+    return
+  }
+  result.value = null
+  resultKind.value = null
+  error.value = null
+  resultImage = null
 }
 
 export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
-  if (!imageSt.data.value) {
+  const image = imageSt.data.value
+  if (!image) {
     return
   }
 
   loading.value = true
-  error.value = null
-  resultKind.value = type === 'requestOCR' ? 'ocr' : 'template'
 
   try {
     const resp = (await ipc.call({
       command: type,
-      image: imageSt.data.value,
+      image,
       roi: controlSt.requestRoi(),
       only_rec: onlyRec.value,
       method: method.value,
@@ -64,10 +79,13 @@ export async function perform(type: 'requestOCR' | 'requestTemplateMatch') {
     })) as CropToolResult | null
 
     if (resp === null) {
-      // 用户取消选择模板文件，保留上一次结果
+      // 用户取消选择模板文件，保留上一次的结果与提示
       return
     }
-    applyResult(resp)
+    if (imageSt.data.value !== image) {
+      return
+    }
+    applyResult(type === 'requestOCR' ? 'ocr' : 'template', image, resp)
   } catch {
     error.value = t('maa.crop.failure.unknown')
   } finally {
@@ -91,7 +109,8 @@ export function runColorMatch() {
 }
 
 export async function performColorMatch() {
-  if (!imageSt.data.value) {
+  const image = imageSt.data.value
+  if (!image) {
     return
   }
 
@@ -103,13 +122,11 @@ export async function performColorMatch() {
   }
 
   loading.value = true
-  error.value = null
-  resultKind.value = 'color'
 
   try {
     const resp = (await ipc.call({
       command: 'requestColorMatch',
-      image: imageSt.data.value,
+      image,
       options: {
         roi: controlSt.requestRoi(),
         method: pickSt.colorMethod.value,
@@ -119,7 +136,10 @@ export async function performColorMatch() {
         connected: colorConnected.value
       }
     })) as CropToolResult | null
-    applyResult(resp)
+    if (imageSt.data.value !== image) {
+      return
+    }
+    applyResult('color', image, resp)
   } catch {
     error.value = t('maa.crop.failure.unknown')
   } finally {

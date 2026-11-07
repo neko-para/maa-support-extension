@@ -104,14 +104,9 @@ export function setEnabled(value: boolean) {
   }
 }
 
-watch(
-  [
-    () => pickSt.colorMethod.value,
-    () => pickSt.recommendMethod.value,
-    () => pickSt.samplePoints.value,
-    () => hostState.value.pickColorThreshold
-  ],
-  () => scheduleRefresh()
+// 取色点是就地 push 的，只监听数组引用会漏掉新增采样；推荐范围会跟随采样、颜色方法与推荐方法重算
+watch([() => pickSt.recommendedColors.value, () => hostState.value.pickColorThreshold], () =>
+  scheduleRefresh()
 )
 
 watch(

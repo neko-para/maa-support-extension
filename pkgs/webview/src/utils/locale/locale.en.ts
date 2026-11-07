@@ -126,7 +126,9 @@ export default {
   'maa.crop.save.copy-template': 'Copy template snippet',
   'maa.crop.save.empty-roi': 'No ROI selected; the whole image will be saved',
   'maa.crop.save.save-whole': 'Save whole image',
+  'maa.crop.save.cancel': 'Cancel',
   'maa.crop.failure.unknown': 'Operation failed, see the extension log',
+  'maa.crop.failure.decode': 'Cannot decode the image; the file may be corrupted or not a PNG',
   'maa.crop.reco.agent-hint':
     'Custom nodes start the interface agent on first run, which may take a while',
   'maa.crop.tools.draw': 'Draw',

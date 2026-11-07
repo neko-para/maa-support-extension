@@ -3,7 +3,7 @@ import { computed, ref, shallowRef, triggerRef, watch } from 'vue'
 import * as imageSt from './image'
 import { exitMode, mode, setMode } from './mode'
 
-/** 涂绿模式是画布单一模式的一种，不再单独维护布尔 */
+/** 涂绿模式是画布单一模式的一种，由 mode 派生 */
 export const drawing = computed({
   get: () => mode.value === 'mask',
   set: active => {
@@ -35,6 +35,10 @@ const maskCtx = shallowRef<CanvasRenderingContext2D | null>(null)
 const history: ImageData[] = []
 const maxHistory = 50
 
+/**
+ * 为当前图像准备空白的手绘蓙版。不动 appliedFrom：应用后再进入涂绿修补时，
+ * 「撤销应用」仍要能回到应用前的图像。
+ */
 export function init(width: number, height: number) {
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -45,7 +49,6 @@ export function init(width: number, height: number) {
   maskCtx.value = ctx
   history.length = 0
   hasContent.value = false
-  appliedFrom.value = null
 }
 
 export function clear() {

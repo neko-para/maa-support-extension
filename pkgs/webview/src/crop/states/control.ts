@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { ipc } from '../ipc'
 import { Box, DragHandler, Pos, Size, Viewport } from '../utils/2d'
@@ -43,6 +43,11 @@ export const cropBoxInView = computed({
     cropBox.value = viewport.value.fromView(b)
   }
 })
+// 「未选择 ROI」的保存提示只对当时的框有效；框一变就收起，避免「保存整张图」实际只存了新框
+watch(cropBox, () => {
+  imageSt.cancelEmptyRoiWarning()
+})
+
 const cropBoxDrag = ref<DragHandler>(new DragHandler())
 const cropBoxMoveDrag = ref<DragHandler>(new DragHandler())
 
@@ -52,12 +57,28 @@ const cornerDragInitialBox = ref<Box>(new Box())
 
 const selectDrag = ref<DragHandler>(new DragHandler())
 
+/**
+ * 输入控件与弹层自己处理 Esc（关闭下拉、取消输入），且不阻止冒泡。
+ * 清空 ROI 无法撤销，焦点在这些控件里时不能触发，否则关个下拉就把 ROI 清掉了。
+ */
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) {
+    return false
+  }
+  if (target instanceof HTMLElement && target.isContentEditable) {
+    return true
+  }
+  return !!target.closest(
+    'input, textarea, select, [role="listbox"], [role="combobox"], .n-base-selection, .n-base-select-menu, .n-popover'
+  )
+}
+
 export function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     if (mode.value !== 'pointer') {
       // 当前只有一个模式在生效，一次 Esc 只退一层
       exitMode()
-    } else {
+    } else if (!isEditableTarget(event.target)) {
       cropBox.value = new Box()
     }
   }
@@ -329,11 +350,16 @@ export function cropBound() {
 }
 
 /**
- * 请求用的 ROI：只做取整与图像内裁剪，不修改用户的 cropBox。
- * 识别/下载不再隐式改动用户框（P0-E）。
+ * 请求用的 ROI：只做取整与图像内裁剪，不修改用户的 cropBox，
+ * 识别、保存等操作只读取用户的框。
  */
 export function requestRoi(): maa.Rect {
   return cropBox.value.intersect(Box.from(new Pos(), imageSt.size.value)).ceiled().flat()
+}
+
+/** 与 requestRoi 对应的 ROI EX（各边外扩 50 像素后裁到图像内） */
+export function requestRoiExpand(): maa.Rect {
+  return cropBoxExpand.value.ceiled().flat()
 }
 
 export function extractRect(text: string): [number, number, number, number] | null {

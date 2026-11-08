@@ -157,17 +157,26 @@ function toggleRail(target: PanelTarget) {
   sidePanel.value = sidePanel.value === target ? 'hidden' : target
 }
 
-/** 拖拽分隔条：直接改像素宽度，clamp 到 300–560 */
-let dragStartX = 0
-let dragStartW = 0
-function startPanelDrag(event: PointerEvent) {
-  dragStartX = event.clientX
-  dragStartW = panelWidth.value
+/**
+ * 增量式拖动：累积每帧位移而不是 start+绝对差。
+ * webview 里 PointerEvent 坐标偶尔会单帧跳变，绝对差会让窗体瞬移再弹回（剧烈反向抖动）；
+ * 单帧位移超过 300px 判定为跳变直接丢帧。
+ */
+const MAX_FRAME_DELTA = 300
+function trackDrag(event: PointerEvent, onDelta: (dx: number, dy: number) => void) {
+  let lastX = event.clientX
+  let lastY = event.clientY
   const el = event.currentTarget as HTMLElement
   el.setPointerCapture(event.pointerId)
   const move = (e: PointerEvent) => {
-    const w = dragStartW + (dragStartX - e.clientX)
-    panelWidth.value = Math.min(PANEL_WIDTH_MAX, Math.max(PANEL_WIDTH_MIN, Math.round(w)))
+    const dx = e.clientX - lastX
+    const dy = e.clientY - lastY
+    lastX = e.clientX
+    lastY = e.clientY
+    if (Math.abs(dx) > MAX_FRAME_DELTA || Math.abs(dy) > MAX_FRAME_DELTA) {
+      return
+    }
+    onDelta(dx, dy)
   }
   const up = () => {
     el.removeEventListener('pointermove', move)
@@ -177,6 +186,17 @@ function startPanelDrag(event: PointerEvent) {
   el.addEventListener('pointermove', move)
   el.addEventListener('pointerup', up)
   el.addEventListener('pointercancel', up)
+}
+
+/** 拖拽分隔条：直接改像素宽度，clamp 到 300–560 */
+function startPanelDrag(event: PointerEvent) {
+  trackDrag(event, dx => {
+    // 分隔条在面板左侧：向左拖变宽
+    panelWidth.value = Math.min(
+      PANEL_WIDTH_MAX,
+      Math.max(PANEL_WIDTH_MIN, Math.round(panelWidth.value - dx))
+    )
+  })
 }
 
 // ---------- 悬浮窗：拖动标题栏移动，右下角拖尺寸；h 未拖过则自适应内容 ----------
@@ -207,51 +227,26 @@ function clampFloatRect(r: { x: number; y: number; w: number; h?: number }) {
 }
 
 function startFloatDrag(event: PointerEvent) {
-  const start = { ...floatRect.value }
-  const sx = event.clientX
-  const sy = event.clientY
-  const el = event.currentTarget as HTMLElement
-  el.setPointerCapture(event.pointerId)
-  const move = (e: PointerEvent) => {
-    const r = { ...start, x: start.x + e.clientX - sx, y: start.y + e.clientY - sy }
+  trackDrag(event, (dx, dy) => {
+    const r = { ...floatRect.value, x: floatRect.value.x + dx, y: floatRect.value.y + dy }
     clampFloatRect(r)
     floatRect.value = r
-  }
-  const up = () => {
-    el.removeEventListener('pointermove', move)
-    el.removeEventListener('pointerup', up)
-    el.removeEventListener('pointercancel', up)
-  }
-  el.addEventListener('pointermove', move)
-  el.addEventListener('pointerup', up)
-  el.addEventListener('pointercancel', up)
+  })
 }
 
 function startFloatResize(event: PointerEvent) {
   event.stopPropagation()
-  const start = { ...floatRect.value }
-  const sx = event.clientX
-  const sy = event.clientY
-  const el = event.currentTarget as HTMLElement
-  el.setPointerCapture(event.pointerId)
-  const move = (e: PointerEvent) => {
+  // 首次拖角柄时把自适应高度落实成像素值，之后跟随增量
+  const startH = floatRect.value.h ?? document.getElementById('crop-float')?.offsetHeight ?? 300
+  trackDrag(event, (dx, dy) => {
     const r = {
-      ...start,
-      w: start.w + e.clientX - sx,
-      // 用户拖过角柄就记住高度；想回自适应双击角柄
-      h: (start.h ?? document.getElementById('crop-float')?.offsetHeight ?? 300) + e.clientY - sy
+      ...floatRect.value,
+      w: floatRect.value.w + dx,
+      h: (floatRect.value.h ?? startH) + dy
     }
     clampFloatRect(r)
     floatRect.value = r
-  }
-  const up = () => {
-    el.removeEventListener('pointermove', move)
-    el.removeEventListener('pointerup', up)
-    el.removeEventListener('pointercancel', up)
-  }
-  el.addEventListener('pointermove', move)
-  el.addEventListener('pointerup', up)
-  el.addEventListener('pointercancel', up)
+  })
 }
 
 function resetFloatHeight() {

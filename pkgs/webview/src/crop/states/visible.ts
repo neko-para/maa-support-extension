@@ -9,6 +9,13 @@ import { hostState } from '../state'
  * 面板布局偏好：本地 ref 立即生效，同时写回 host 的 CropSettings，
  * 下次打开面板时恢复，熟练用户折叠掉的区块不会每次重新展开。
  */
+/**
+ * 拖动会话深度：>0 时不接受 host 回放。
+ * 拖动每帧都发 updateSettings，host 广播回来的 updateState 带着旧值，
+ * 会把本地值打回去（浮窗反向抖动 / 拖不动的根因）。
+ */
+export const dragDepth = ref(0)
+
 /** 合法的右栏面板值；host 里存的旧值（'tool' 等）落回默认而不是反复写回 host */
 const VALID_PANELS = ['test', 'color', 'mask', 'calc', 'export', 'settings', 'hidden'] as const
 
@@ -26,6 +33,10 @@ function usePersisted<
   watch(
     () => hostState.value[key],
     value => {
+      // 拖动中本地值优先：host 广播滞后一拍，回放会抵消正在进行的拖动
+      if (dragDepth.value > 0) {
+        return
+      }
       if (value !== undefined) {
         if (key === 'sidePanel' && !(VALID_PANELS as readonly string[]).includes(value as string)) {
           // 旧值落回默认（偏好可丢）；不回写 host，避免死循环

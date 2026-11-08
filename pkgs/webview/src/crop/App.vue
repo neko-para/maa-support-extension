@@ -31,6 +31,7 @@ import * as modeSt from './states/mode'
 import {
   PANEL_WIDTH_MAX,
   PANEL_WIDTH_MIN,
+  dragDepth,
   floatRect,
   panelFloat,
   panelWidth,
@@ -159,8 +160,10 @@ function toggleRail(target: PanelTarget) {
 
 /**
  * 增量式拖动：累积每帧位移而不是 start+绝对差。
- * webview 里 PointerEvent 坐标偶尔会单帧跳变，绝对差会让窗体瞬移再弹回（剧烈反向抖动）；
+ * webview 里 PointerEvent 坐标偶尔会单帧跳变，绝对差会让窗体瞬移再弹回；
  * 单帧位移超过 300px 判定为跳变直接丢帧。
+ * 拖动全程挂 dragDepth：此时写回 host 的 updateSettings 会带着旧值广播回来，
+ * 不挡会把本地值反复重置（这才是反向抖动/拖不动的根因）。
  */
 const MAX_FRAME_DELTA = 300
 function trackDrag(event: PointerEvent, onDelta: (dx: number, dy: number) => void) {
@@ -168,6 +171,7 @@ function trackDrag(event: PointerEvent, onDelta: (dx: number, dy: number) => voi
   let lastY = event.clientY
   const el = event.currentTarget as HTMLElement
   el.setPointerCapture(event.pointerId)
+  dragDepth.value += 1
   const move = (e: PointerEvent) => {
     const dx = e.clientX - lastX
     const dy = e.clientY - lastY
@@ -179,6 +183,7 @@ function trackDrag(event: PointerEvent, onDelta: (dx: number, dy: number) => voi
     onDelta(dx, dy)
   }
   const up = () => {
+    dragDepth.value -= 1
     el.removeEventListener('pointermove', move)
     el.removeEventListener('pointerup', up)
     el.removeEventListener('pointercancel', up)

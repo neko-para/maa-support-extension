@@ -44,13 +44,11 @@ watch(
   }
 )
 
-// 切换生成方式时退出上一种方式的画布模式；已画的笔画和圈选区域保留
+// 切换生成方式时退出圈选模式；已画的笔画和圈选区域保留。
+// 涂抹模式不退出：手动补笔在三种方式下都可用，与其他方式的预览一起应用
 watch(
   () => greenMaskSt.method.value,
   method => {
-    if (method !== 'manual') {
-      greenMaskSt.drawing.value = false
-    }
     if (method !== 'lasso' && subjectSelectSt.active.value) {
       subjectSelectSt.cancel()
     }

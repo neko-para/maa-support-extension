@@ -26,11 +26,11 @@ export const brushSize = ref(6)
 export const isEraser = ref(false)
 
 /**
- * 生成绿幕的方式：手动涂抹 / 自动去背景 / 圈选主体。
- * 三种方式共用一个「应用到图像」：画布上看到的绿色会一起烘焙进图像。
+ * 生成绿幕的方式：自动去背景 / 圈选主体。
+ * 手动补笔不属于生成方式——它在两种方式下都可用，画布上看到的绿色一起应用。
  */
-export type MaskMethod = 'manual' | 'auto' | 'lasso'
-export const method = ref<MaskMethod>('manual')
+export type MaskMethod = 'auto' | 'lasso'
+export const method = ref<MaskMethod>('auto')
 
 /** 是否至少画过一笔（用于模板匹配参数区提示与 green_mask 联动） */
 export const hasContent = ref(false)

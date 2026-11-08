@@ -41,7 +41,6 @@ watch(flashSection, section => {
 })
 
 const maskMethods = computed(() => [
-  { value: 'manual' as const, label: t('maa.crop.mask.method-manual') },
   { value: 'auto' as const, label: t('maa.crop.mask.method-auto') },
   { value: 'lasso' as const, label: t('maa.crop.mask.method-lasso') }
 ])
@@ -118,56 +117,7 @@ const subjectMaskErrorText = computed(() => {
       ></n-radio-button>
     </n-radio-group>
 
-    <template v-if="greenMaskSt.method.value === 'manual'">
-      <n-text depth="3" class="hint">{{ t('maa.crop.mask.hint-manual') }}</n-text>
-      <n-flex align="center" :size="8">
-        <n-button
-          size="small"
-          :type="greenMaskSt.drawing.value ? 'primary' : 'default'"
-          :disabled="!hasImage"
-          @click="toggleManualMask()"
-        >
-          {{
-            greenMaskSt.drawing.value
-              ? t('maa.crop.mask.stop-paint')
-              : t('maa.crop.mask.start-paint')
-          }}
-        </n-button>
-        <n-button
-          size="small"
-          quaternary
-          :disabled="greenMaskSt.undoSteps.value === 0"
-          @click="greenMaskSt.undo()"
-        >
-          {{ t('maa.crop.tools.undo') }}
-        </n-button>
-        <n-button
-          size="small"
-          quaternary
-          :disabled="!greenMaskSt.hasContent.value"
-          @click="greenMaskSt.clear()"
-        >
-          {{ t('maa.crop.tools.clear') }}
-        </n-button>
-      </n-flex>
-      <div class="param-grid">
-        <param-row :label="t('maa.crop.tools.brush-size')">
-          <n-input-number
-            v-model:value="greenMaskSt.brushSize.value"
-            :min="1"
-            :max="100"
-            :step="1"
-            size="small"
-            style="width: 110px"
-          />
-        </param-row>
-        <param-row :label="t('maa.crop.tools.eraser')">
-          <n-switch v-model:value="greenMaskSt.isEraser.value" size="small" />
-        </param-row>
-      </div>
-    </template>
-
-    <template v-else-if="greenMaskSt.method.value === 'auto'">
+    <template v-if="greenMaskSt.method.value === 'auto'">
       <n-text depth="3" class="hint">{{ t('maa.crop.tools.auto-mask-scope') }}</n-text>
       <div class="param-grid">
         <param-row :label="t('maa.crop.mask.auto-method')">
@@ -280,6 +230,55 @@ const subjectMaskErrorText = computed(() => {
         <span class="hint" style="opacity: 0.7">{{ subjectMaskSt.debugInfo.value }}</span>
       </n-text>
     </template>
+
+    <!-- 手动补笔：三种方式共用，与当前预览一起「应用到图像」 -->
+    <div class="manual-block">
+      <n-flex align="center" :size="8">
+        <n-button
+          size="small"
+          :type="greenMaskSt.drawing.value ? 'primary' : 'default'"
+          :disabled="!hasImage"
+          @click="toggleManualMask()"
+        >
+          {{
+            greenMaskSt.drawing.value
+              ? t('maa.crop.mask.stop-paint')
+              : t('maa.crop.mask.start-paint')
+          }}
+        </n-button>
+        <n-button
+          size="small"
+          quaternary
+          :disabled="greenMaskSt.undoSteps.value === 0"
+          @click="greenMaskSt.undo()"
+        >
+          {{ t('maa.crop.tools.undo') }}
+        </n-button>
+        <n-button
+          size="small"
+          quaternary
+          :disabled="!greenMaskSt.hasContent.value"
+          @click="greenMaskSt.clear()"
+        >
+          {{ t('maa.crop.tools.clear') }}
+        </n-button>
+      </n-flex>
+      <div class="param-grid">
+        <param-row :label="t('maa.crop.tools.brush-size')">
+          <n-input-number
+            v-model:value="greenMaskSt.brushSize.value"
+            :min="1"
+            :max="100"
+            :step="1"
+            size="small"
+            style="width: 110px"
+          />
+        </param-row>
+        <param-row :label="t('maa.crop.tools.eraser')">
+          <n-switch v-model:value="greenMaskSt.isEraser.value" size="small" />
+        </param-row>
+      </div>
+    </div>
 
     <div class="section-footer">
       <Tooltip trigger="hover">

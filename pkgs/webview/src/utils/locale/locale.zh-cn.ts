@@ -143,6 +143,7 @@ export default {
   'maa.crop.help.pan': '平移画布',
   'maa.crop.help.esc': '退出当前模式；没有模式时清空 ROI（可撤销）',
   'maa.crop.help.run-test': '运行识别测试',
+  'maa.crop.help.nudge': '微调 ROI 位置（Shift 加速）',
   'maa.crop.help.flow':
     '做模板：截图 → 框 ROI →（可选）涂绿 → 保存 → 复制 template 片段\n调颜色：取色 → 预览命中 → 用此范围测试 → 复制 ColorMatch 片段',
   'maa.crop.test.title': '识别测试',
@@ -229,13 +230,10 @@ export default {
   'maa.crop.pick.tolerance': '外扩容差',
   'maa.crop.pick.test': '用此范围测试',
   'maa.crop.tools.green-mask': '涂绿',
-  'maa.crop.mask.method-manual': '手动涂抹',
   'maa.crop.mask.method-auto': '自动去背景',
   'maa.crop.mask.method-lasso': '圈选主体',
-  'maa.crop.mask.hint-manual':
-    '在画布上涂掉要忽略的区域；应用后这些像素变成纯绿，配合 green_mask 不参与匹配',
-  'maa.crop.mask.start-paint': '开始涂抹',
-  'maa.crop.mask.stop-paint': '结束涂抹',
+  'maa.crop.mask.start-paint': '补笔',
+  'maa.crop.mask.stop-paint': '结束补笔',
   'maa.crop.mask.auto-method': '方式',
   'maa.crop.mask.preview': '预览',
   'maa.crop.mask.apply': '应用到图像',

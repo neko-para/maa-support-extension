@@ -151,6 +151,7 @@ export default {
   'maa.crop.help.pan': 'Pan',
   'maa.crop.help.esc': 'Exit the current mode; clears the ROI when no mode is active (undoable)',
   'maa.crop.help.run-test': 'Run recognition test',
+  'maa.crop.help.nudge': 'Nudge ROI (Shift = ×10)',
   'maa.crop.help.flow':
     'Template: screencap → box ROI → (optional) green mask → Save → copy template snippet\nColor: pick colors → preview hits → test with this range → copy ColorMatch snippet',
   'maa.crop.test.title': 'Recognition Test',
@@ -241,13 +242,10 @@ export default {
   'maa.crop.pick.tolerance': 'Expand by',
   'maa.crop.pick.test': 'Test this range',
   'maa.crop.tools.green-mask': 'Green Mask',
-  'maa.crop.mask.method-manual': 'Paint',
   'maa.crop.mask.method-auto': 'Auto',
   'maa.crop.mask.method-lasso': 'Lasso',
-  'maa.crop.mask.hint-manual':
-    'Paint over areas to ignore; once applied they become pure green and are skipped by green_mask',
-  'maa.crop.mask.start-paint': 'Start painting',
-  'maa.crop.mask.stop-paint': 'Stop painting',
+  'maa.crop.mask.start-paint': 'Touch up',
+  'maa.crop.mask.stop-paint': 'Done',
   'maa.crop.mask.auto-method': 'Method',
   'maa.crop.mask.preview': 'Preview',
   'maa.crop.mask.apply': 'Apply to image',

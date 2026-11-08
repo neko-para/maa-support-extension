@@ -171,6 +171,25 @@ export function onKeyDown(event: KeyboardEvent) {
       spacePan.value = true
       event.preventDefault()
       return
+    case 'ArrowUp':
+    case 'ArrowDown':
+    case 'ArrowLeft':
+    case 'ArrowRight': {
+      // 指针模式方向键微调 ROI：1px/步，Shift 一次 10px
+      if (mode.value !== 'pointer' || !imageSt.element.value) {
+        return
+      }
+      const step = event.shiftKey ? 10 : 1
+      const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0
+      const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0
+      const box = cropBox.value
+      cropBox.value = Box.from(
+        Pos.from(box.origin.x + dx, box.origin.y + dy),
+        Size.from(box.size.w, box.size.h)
+      )
+      event.preventDefault()
+      return
+    }
   }
 }
 

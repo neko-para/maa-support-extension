@@ -97,6 +97,7 @@ const shortcuts = computed(() => [
   ['[ / ]', t('maa.crop.help.brush-size')],
   ['Esc', t('maa.crop.help.esc')],
   ['Ctrl + Enter', t('maa.crop.help.run-test')],
+  ['←↑↓→', t('maa.crop.help.nudge')],
   ['?', t('maa.crop.help.title')]
 ])
 </script>

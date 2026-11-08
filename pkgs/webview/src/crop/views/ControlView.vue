@@ -22,7 +22,7 @@ import CopyChip from '../components/CopyChip.vue'
 import * as canvasSt from '../states/canvas'
 import * as controlSt from '../states/control'
 import * as imageSt from '../states/image'
-import { sidePanel, toggleSidePanel } from '../states/visible'
+import { revealExport } from '../states/visible'
 
 const hasImage = computed(() => !!imageSt.data.value)
 const hasRoi = computed(() => {
@@ -37,9 +37,6 @@ const moreOptions = computed<DropdownOption[]>(() => [
     key: 'copy-roi-ex',
     label: t('maa.crop.more.copy-roi-ex', controlSt.roiExpandDisp())
   },
-  { type: 'divider', key: 'd1' },
-  { key: 'ceil', label: t('maa.crop.more.ceil') },
-  { key: 'bound', label: t('maa.crop.more.bound'), disabled: !hasImage.value },
   { type: 'divider', key: 'd2' },
   {
     key: 'resize',
@@ -57,12 +54,6 @@ function onMore(key: string) {
       break
     case 'copy-roi-ex':
       controlSt.copyRoiExpand()
-      break
-    case 'ceil':
-      controlSt.cropCeil()
-      break
-    case 'bound':
-      controlSt.cropBound()
       break
     case 'resize':
       void imageSt.resize()
@@ -120,12 +111,7 @@ const shortcuts = computed(() => [
       <Tooltip trigger="hover">
         <template #trigger>
           <span style="display: inline-flex">
-            <n-button
-              :loading="imageSt.downloadLoading.value"
-              :disabled="!hasImage"
-              @click="imageSt.download()"
-              size="small"
-            >
+            <n-button :disabled="!hasImage" @click="revealExport()" size="small">
               <template #icon>
                 <n-icon><save-outlined></save-outlined></n-icon>
               </template>
@@ -179,34 +165,8 @@ const shortcuts = computed(() => [
 
     <div style="flex: 1"></div>
 
-    <!-- 右栏切换与帮助 -->
+    <!-- 右栏切换移进右栏壳（标签页 + 折叠竖条）；这里只留帮助 -->
     <n-flex align="center" :size="6" :wrap="false">
-      <n-button-group size="small">
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <n-button
-              :type="sidePanel === 'tool' ? 'primary' : 'default'"
-              :secondary="sidePanel === 'tool'"
-              @click="toggleSidePanel('tool')"
-            >
-              {{ t('maa.crop.tools') }}
-            </n-button>
-          </template>
-          {{ t('maa.crop.tooltip.tools') }}
-        </Tooltip>
-        <Tooltip trigger="hover">
-          <template #trigger>
-            <n-button
-              :type="sidePanel === 'settings' ? 'primary' : 'default'"
-              :secondary="sidePanel === 'settings'"
-              @click="toggleSidePanel('settings')"
-            >
-              {{ t('maa.crop.settings') }}
-            </n-button>
-          </template>
-          {{ t('maa.crop.tooltip.settings') }}
-        </Tooltip>
-      </n-button-group>
       <n-popover trigger="click" placement="bottom-end">
         <template #trigger>
           <n-button size="small" quaternary :aria-label="t('maa.crop.help.title')">

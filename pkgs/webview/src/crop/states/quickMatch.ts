@@ -111,13 +111,14 @@ export async function performColorMatch() {
   }
 
   const threshold = hostState.value.pickColorThreshold ?? 10
-  const ranges = pickSt.recommendedRanges(threshold)
+  const ranges = pickSt.effRanges(threshold)
   if (!ranges) {
     error.value = t('maa.crop.tools.color-source-empty')
     return
   }
 
   loading.value = true
+  const startedAt = performance.now()
 
   try {
     const resp = (await ipc.call({

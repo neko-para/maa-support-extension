@@ -4,7 +4,9 @@ import type { CropToolResult } from '@nekosu/maa-types'
 
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
+import * as controlSt from './control'
 import * as imageSt from './image'
+import { nodeRoiSource } from './visible'
 
 export const loading = ref(false)
 export const result = ref<string | null>(null)
@@ -34,9 +36,12 @@ export async function perform() {
   loading.value = true
 
   try {
+    // 选画布选区时才把 ROI 发给 host，缺省走节点自己的 ROI（语义写在 UI 上）
+    const canvasRoi = nodeRoiSource.value === 'canvas' ? controlSt.requestRoi() : undefined
     const resp = (await ipc.call({
       command: 'requestReco',
-      image
+      image,
+      roi: canvasRoi
     })) as CropToolResult | null
 
     if (resp === null) {

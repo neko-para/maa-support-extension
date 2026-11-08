@@ -2,26 +2,22 @@
 import { default as CheckOutlined } from '@vicons/material/es/CheckOutlined'
 import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
 import { NIcon, NTree, type TreeOption } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 
-import { useDrawStep } from '../states/canvas'
-import * as settingsSt from '../states/settings'
-import { Box, Pos, Size } from '../utils/2d'
+import * as drawResultSt from '../states/drawResult'
+import { type DrawLeaf } from '../states/drawResult'
 import { entryValue } from '../utils/recoDetail'
 
 const props = withDefaults(
   defineProps<{
     detail: maa.RecoDetailWithoutDraws
-    /** 是否把勾选的条目画到画布上 */
+    /** 是否把勾选的条目画到画布上（画布绘制由 states/drawResult 常驻步骤执行） */
     draw?: boolean
   }>(),
   { draw: true }
 )
 
-type RichRecoDetailEntry = {
-  name: string
-  entry: maa.RecoDetailEntry
-}
+type RichRecoDetailEntry = DrawLeaf
 
 function entryLabel(entry: maa.RecoDetailEntry): string {
   const value = entryValue(entry)
@@ -97,50 +93,26 @@ const treeData = computed(() => {
   }
 })
 
-const checked = ref<string[]>([])
+const checked = drawResultSt.checked
 
+// 勾选集合和候选集合都写进 drawResult：画布绘制归 drawResult 常驻步骤，
+// 组件卸载（收起区块/切面板）只影响树视图，不影响画布上的结果框。
 watch(
   () => treeData.value.leaves,
-  () => {
-    checked.value = Object.keys(treeData.value.leaves).filter(k => k.endsWith('best!'))
-  }
+  next => {
+    drawResultSt.leaves.value = next
+    checked.value = Object.keys(next).filter(k => k.endsWith('best!'))
+  },
+  { immediate: true }
 )
 
-useDrawStep((ctx, vp) => {
-  if (!props.draw) {
-    return
-  }
-  ctx.fillStyle = settingsSt.recoStroke.eff
-  ctx.strokeStyle = settingsSt.recoStroke.eff
-  ctx.font = settingsSt.recoFont.eff
-
-  for (const key of checked.value) {
-    const info = treeData.value.leaves[key]
-    if (!info) {
-      continue
-    }
-    const { name, entry } = info
-
-    const box = vp.toView(
-      Box.from(Pos.from(entry.box[0], entry.box[1]), Size.from(entry.box[2], entry.box[3]))
-    )
-    ctx.rect(...box.flat())
-    ctx.stroke()
-
-    if (!name.startsWith('@mse/')) {
-      ctx.fillText(name.slice(0, -1), ...box.rt.add(Size.from(5, 0)).flat())
-    }
-    const value = entryValue(entry)
-    if (value) {
-      const width = ctx.measureText(value).width
-      ctx.fillText(value, ...box.lt.sub(Size.from(width, 0)).flat())
-    }
-
-    if (entry.text) {
-      ctx.fillText(entry.text, ...box.rb.add(Size.from(5, 0)).flat())
-    }
-  }
-})
+watch(
+  () => props.draw,
+  draw => {
+    drawResultSt.visible.value = draw
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

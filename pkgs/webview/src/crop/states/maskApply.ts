@@ -6,7 +6,7 @@ import * as imageSt from './image'
 import * as matchSt from './quickMatch'
 import * as subjectMaskSt from './subjectMask'
 import * as subjectSelectSt from './subjectSelect'
-import { sidePanel, toolSections } from './visible'
+import { sidePanel } from './visible'
 
 /**
  * 绿幕的统一预览与应用：手动涂抹、自动去背景、圈选主体只是生成绿幕的不同方式，
@@ -15,10 +15,8 @@ import { sidePanel, toolSections } from './visible'
  * 本模块只被组件和 canvas 引用，不参与状态模块之间的循环导入。
  */
 
-/** 绿幕区块在右栏可见时才叠加自动/圈选预览，避免画布上出现找不到来源的绿色 */
-const sectionVisible = computed(
-  () => sidePanel.value === 'tool' && toolSections.value.includes('mask')
-)
+/** 涂绿面板在右栏可见时才叠加自动/圈选预览，避免画布上出现找不到来源的绿色 */
+const sectionVisible = computed(() => sidePanel.value === 'mask')
 
 /** 圈选的区域与绿幕预览是否画在画布上 */
 export const lassoShown = computed(

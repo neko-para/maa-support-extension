@@ -1,22 +1,38 @@
 <script setup lang="ts">
+import { default as BrushOutlined } from '@vicons/material/es/BrushOutlined'
+import { default as ColorizeOutlined } from '@vicons/material/es/ColorizeOutlined'
 import { default as FileUploadOutlined } from '@vicons/material/es/FileUploadOutlined'
+import { default as HandymanOutlined } from '@vicons/material/es/HandymanOutlined'
+import { default as ImageSearchOutlined } from '@vicons/material/es/ImageSearchOutlined'
+import { default as KeyboardArrowLeftOutlined } from '@vicons/material/es/KeyboardArrowLeftOutlined'
+import { default as KeyboardArrowRightOutlined } from '@vicons/material/es/KeyboardArrowRightOutlined'
 import { default as PhotoCameraOutlined } from '@vicons/material/es/PhotoCameraOutlined'
+import { default as SaveOutlined } from '@vicons/material/es/SaveOutlined'
+import { default as SettingsOutlined } from '@vicons/material/es/SettingsOutlined'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 import { NAlert, NButton, NConfigProvider, NFlex, NIcon, NScrollbar } from 'naive-ui'
 import { computed, onUnmounted, ref } from 'vue'
 
+import Tooltip from '../components/AppTooltip.vue'
 import { t } from '../utils/locale'
 import { useTheme } from '../utils/theme'
 import HistoryStrip from './components/HistoryStrip.vue'
+import ModeBar from './components/ModeBar.vue'
+import ToolRail from './components/ToolRail.vue'
 import * as canvasSt from './states/canvas'
 import * as controlSt from './states/control'
+import * as drawResultSt from './states/drawResult'
 import * as imageSt from './states/image'
 import * as modeSt from './states/mode'
-import { sidePanel } from './states/visible'
+import { PANEL_WIDTH_MAX, PANEL_WIDTH_MIN, panelWidth, sidePanel } from './states/visible'
+import CalcPanel from './views/CalcPanel.vue'
+import ColorPanel from './views/ColorPanel.vue'
 import ControlView from './views/ControlView.vue'
+import ExportPanel from './views/ExportPanel.vue'
+import MaskPanel from './views/MaskPanel.vue'
 import SettingsView from './views/SettingsView.vue'
-import ToolView from './views/ToolView.vue'
+import TestPanel from './views/TestPanel.vue'
 
 const { loaded, theme, themeOverride } = useTheme('panel')
 
@@ -26,28 +42,35 @@ const canvasSizeEl = ref<HTMLDivElement | null>(null)
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
 canvasSt.setup(canvasSizeEl, canvasEl)
+// 结果框绘制常驻：收起识别测试区块或切面板不丢画布上的结果
+canvasSt.addDrawStep(drawResultSt.drawStep)
 
 window.addEventListener('keydown', controlSt.onKeyDown)
+window.addEventListener('keyup', controlSt.onKeyUp)
 onUnmounted(() => {
   window.removeEventListener('keydown', controlSt.onKeyDown)
+  window.removeEventListener('keyup', controlSt.onKeyUp)
 })
 
-const activeMode = computed(() => {
-  switch (modeSt.mode.value) {
-    case 'mask':
-      return t('maa.crop.overlay.mode-masking')
-    case 'lasso':
-      return t('maa.crop.overlay.mode-lasso')
-    case 'pick-rect':
-      return t('maa.crop.overlay.mode-selecting')
-    case 'pick-point':
-      return t('maa.crop.overlay.mode-picking')
-    default:
-      return null
-  }
-})
+// 有激活模式时隐藏缩略图条（模式名称与操作交给底部模式条）；roi 仍是 ROI 语境，不隐藏
+const activeMode = computed(() => modeSt.mode.value !== 'pointer' && modeSt.mode.value !== 'roi')
 
 const hasImage = computed(() => !!imageSt.data.value)
+
+/** 拖入图片：空态和已有图都能替换，失败提示走 screencapError 通道 */
+function onDrop(event: DragEvent) {
+  const file = event.dataTransfer?.files?.[0]
+  if (!file || !file.type.startsWith('image/')) {
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = async () => {
+    if (typeof reader.result === 'string' && !(await imageSt.set(reader.result))) {
+      imageSt.screencapError.value = t('maa.crop.failure.decode')
+    }
+  }
+  reader.readAsDataURL(file)
+}
 
 /** 状态栏：精确调 ROI 时需要的量化信息常驻可见 */
 const pointerInside = ref(false)
@@ -96,6 +119,45 @@ const notices = computed(() => {
   }
   return list
 })
+
+// ---------- 右栏：拖拽宽度 + 折叠竖条 ----------
+
+function collapsePanel() {
+  sidePanel.value = 'hidden'
+}
+
+type PanelTarget = 'test' | 'color' | 'mask' | 'calc' | 'export' | 'settings'
+
+function openPanel(target: PanelTarget) {
+  sidePanel.value = target
+}
+
+function toggleRail(target: PanelTarget) {
+  // 竖条里同一个图标再点一次 = 收起；不同图标 = 切换面板
+  sidePanel.value = sidePanel.value === target ? 'hidden' : target
+}
+
+/** 拖拽分隔条：直接改像素宽度，clamp 到 300–560 */
+let dragStartX = 0
+let dragStartW = 0
+function startPanelDrag(event: PointerEvent) {
+  dragStartX = event.clientX
+  dragStartW = panelWidth.value
+  const el = event.currentTarget as HTMLElement
+  el.setPointerCapture(event.pointerId)
+  const move = (e: PointerEvent) => {
+    const w = dragStartW + (dragStartX - e.clientX)
+    panelWidth.value = Math.min(PANEL_WIDTH_MAX, Math.max(PANEL_WIDTH_MIN, Math.round(w)))
+  }
+  const up = () => {
+    el.removeEventListener('pointermove', move)
+    el.removeEventListener('pointerup', up)
+    el.removeEventListener('pointercancel', up)
+  }
+  el.addEventListener('pointermove', move)
+  el.addEventListener('pointerup', up)
+  el.addEventListener('pointercancel', up)
+}
 </script>
 
 <template>
@@ -106,10 +168,7 @@ const notices = computed(() => {
           <control-view></control-view>
         </div>
 
-        <div
-          v-if="notices.length || imageSt.saveInfo.value || imageSt.emptyRoiWarning.value"
-          class="crop-notices"
-        >
+        <div v-if="notices.length" class="crop-notices">
           <n-alert
             v-for="notice in notices"
             :key="notice.key"
@@ -120,45 +179,19 @@ const notices = computed(() => {
           >
             {{ notice.text }}
           </n-alert>
-          <n-alert
-            v-if="imageSt.saveInfo.value"
-            type="success"
-            closable
-            :show-icon="false"
-            @close="imageSt.clearSaveInfo()"
-          >
-            <n-flex align="center" :size="8">
-              <span>{{ imageSt.saveInfo.value }}</span>
-              <n-button
-                v-if="imageSt.savedRelativePath.value"
-                size="tiny"
-                type="primary"
-                secondary
-                @click="imageSt.copyTemplateSnippet()"
-              >
-                {{ t('maa.crop.save.copy-template') }}
-              </n-button>
-              <n-button size="tiny" @click="imageSt.revealSaved()">
-                {{ t('maa.crop.save.open-folder') }}
-              </n-button>
-            </n-flex>
-          </n-alert>
-          <n-alert v-if="imageSt.emptyRoiWarning.value" type="warning" :show-icon="false">
-            <n-flex align="center" :size="8">
-              <span>{{ t('maa.crop.save.empty-roi') }}</span>
-              <n-button size="tiny" @click="imageSt.download(true)">
-                {{ t('maa.crop.save.save-whole') }}
-              </n-button>
-              <n-button size="tiny" quaternary @click="imageSt.cancelEmptyRoiWarning()">
-                {{ t('maa.crop.save.cancel') }}
-              </n-button>
-            </n-flex>
-          </n-alert>
         </div>
 
         <div class="crop-body">
+          <!-- 左侧工具轨：模式单选 + 帮助（?） -->
+          <tool-rail></tool-rail>
+
           <div class="crop-stage">
-            <div ref="canvasSizeEl" class="crop-canvas-box">
+            <div
+              ref="canvasSizeEl"
+              class="crop-canvas-box"
+              @dragover.prevent
+              @drop.prevent="onDrop"
+            >
               <canvas
                 ref="canvasEl"
                 class="crop-canvas"
@@ -192,23 +225,19 @@ const notices = computed(() => {
                     {{ t('maa.crop.overlay.empty-upload') }}
                   </n-button>
                 </n-flex>
-                <div class="crop-empty-steps">{{ t('maa.crop.overlay.empty-steps') }}</div>
-              </div>
-
-              <div v-if="activeMode" class="crop-mode-banner">
-                <span>{{ activeMode }}</span>
-                <n-button size="tiny" secondary @click="modeSt.exitMode()">
-                  {{ t('maa.crop.overlay.mode-exit') }}
-                </n-button>
+                <div class="crop-empty-steps">
+                  <div>{{ t('maa.crop.overlay.empty-steps') }}</div>
+                  <div>{{ t('maa.crop.overlay.empty-drop') }}</div>
+                </div>
               </div>
 
               <history-strip v-show="!activeMode"></history-strip>
             </div>
 
+            <!-- 模式条：随模式切换，pointer 下给 ROI 四数字编辑，其他模式给上下文操作 -->
+            <mode-bar></mode-bar>
+
             <div class="crop-status">
-              <span v-if="!hasImage"></span>
-              <span v-else-if="activeMode" class="crop-status-hint">{{ activeMode }}</span>
-              <span v-else class="crop-status-hint">{{ t('maa.crop.overlay.hint') }}</span>
               <div style="flex: 1"></div>
               <template v-if="hasImage">
                 <span v-if="cursorText" class="crop-status-item">
@@ -228,11 +257,133 @@ const notices = computed(() => {
             </div>
           </div>
 
-          <div v-if="sidePanel !== 'hidden'" class="crop-side">
-            <n-scrollbar>
+          <!-- 拖拽分隔条：300–560px；双击回默认宽 -->
+          <div
+            v-if="sidePanel !== 'hidden'"
+            class="crop-side-resizer"
+            title=""
+            @pointerdown="startPanelDrag"
+            @dblclick="panelWidth = 360"
+          ></div>
+
+          <div
+            v-if="sidePanel !== 'hidden'"
+            class="crop-side"
+            :style="{ width: `${panelWidth}px` }"
+          >
+            <div class="crop-side-tabs">
+              <button
+                class="crop-side-tab"
+                :class="{ 'is-active': sidePanel === 'test' }"
+                @click="openPanel('test')"
+              >
+                {{ t('maa.crop.test.title') }}
+              </button>
+              <button
+                class="crop-side-tab"
+                :class="{ 'is-active': sidePanel === 'color' }"
+                @click="openPanel('color')"
+              >
+                {{ t('maa.crop.color') }}
+              </button>
+              <button
+                class="crop-side-tab"
+                :class="{ 'is-active': sidePanel === 'mask' }"
+                @click="openPanel('mask')"
+              >
+                {{ t('maa.crop.tools.green-mask') }}
+              </button>
+              <button
+                class="crop-side-tab"
+                :class="{ 'is-active': sidePanel === 'calc' }"
+                @click="openPanel('calc')"
+              >
+                {{ t('maa.crop.tools.roi-offset') }}
+              </button>
+              <button
+                class="crop-side-tab"
+                :class="{ 'is-active': sidePanel === 'export' }"
+                @click="openPanel('export')"
+              >
+                {{ t('maa.crop.export') }}
+              </button>
+              <button
+                class="crop-side-tab"
+                :class="{ 'is-active': sidePanel === 'settings' }"
+                @click="openPanel('settings')"
+              >
+                {{ t('maa.crop.settings') }}
+              </button>
+              <div style="flex: 1"></div>
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <button class="crop-side-tab crop-side-collapse" @click="collapsePanel()">
+                    <n-icon><keyboard-arrow-right-outlined></keyboard-arrow-right-outlined></n-icon>
+                  </button>
+                </template>
+                {{ t('maa.crop.side.collapse') }}
+              </Tooltip>
+            </div>
+            <n-scrollbar class="crop-side-scroll">
+              <test-panel v-show="sidePanel === 'test'"></test-panel>
+              <color-panel v-show="sidePanel === 'color'"></color-panel>
+              <mask-panel v-show="sidePanel === 'mask'"></mask-panel>
+              <calc-panel v-show="sidePanel === 'calc'"></calc-panel>
+              <export-panel v-show="sidePanel === 'export'"></export-panel>
               <settings-view v-show="sidePanel === 'settings'"></settings-view>
-              <tool-view v-show="sidePanel === 'tool'"></tool-view>
             </n-scrollbar>
+          </div>
+
+          <!-- 折叠竖条：图标即面板入口，再点当前图标收起 -->
+          <div v-else class="crop-side-rail">
+            <Tooltip trigger="hover" placement="left">
+              <template #trigger>
+                <button class="crop-side-rail-btn" @click="toggleRail('test')">
+                  <n-icon><image-search-outlined></image-search-outlined></n-icon>
+                </button>
+              </template>
+              {{ t('maa.crop.test.title') }}
+            </Tooltip>
+            <Tooltip trigger="hover" placement="left">
+              <template #trigger>
+                <button class="crop-side-rail-btn" @click="toggleRail('color')">
+                  <n-icon><colorize-outlined></colorize-outlined></n-icon>
+                </button>
+              </template>
+              {{ t('maa.crop.color') }}
+            </Tooltip>
+            <Tooltip trigger="hover" placement="left">
+              <template #trigger>
+                <button class="crop-side-rail-btn" @click="toggleRail('mask')">
+                  <n-icon><brush-outlined></brush-outlined></n-icon>
+                </button>
+              </template>
+              {{ t('maa.crop.tools.green-mask') }}
+            </Tooltip>
+            <Tooltip trigger="hover" placement="left">
+              <template #trigger>
+                <button class="crop-side-rail-btn" @click="toggleRail('calc')">
+                  <n-icon><handyman-outlined></handyman-outlined></n-icon>
+                </button>
+              </template>
+              {{ t('maa.crop.tools.roi-offset') }}
+            </Tooltip>
+            <Tooltip trigger="hover" placement="left">
+              <template #trigger>
+                <button class="crop-side-rail-btn" @click="toggleRail('export')">
+                  <n-icon><save-outlined></save-outlined></n-icon>
+                </button>
+              </template>
+              {{ t('maa.crop.export') }}
+            </Tooltip>
+            <Tooltip trigger="hover" placement="left">
+              <template #trigger>
+                <button class="crop-side-rail-btn" @click="toggleRail('settings')">
+                  <n-icon><settings-outlined></settings-outlined></n-icon>
+                </button>
+              </template>
+              {{ t('maa.crop.settings') }}
+            </Tooltip>
           </div>
         </div>
       </div>
@@ -285,12 +436,100 @@ const notices = computed(() => {
   top: 0;
 }
 
+.crop-side-resizer {
+  flex: 0 0 6px;
+  margin: 0 -3px;
+  cursor: col-resize;
+  border-radius: 3px;
+}
+
+.crop-side-resizer:hover {
+  background: var(--vscode-focusBorder, #007fd4);
+  opacity: 0.4;
+}
+
 .crop-side {
   display: flex;
   flex-direction: column;
-  width: clamp(340px, 34vw, 480px);
+  flex: 0 0 auto;
+  /* 拖拽给出的值已经夹在 300–560，这里再给窄屏一道保险 */
+  max-width: 70vw;
   min-height: 0;
   border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent));
+}
+
+.crop-side-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 0 4px;
+  border-bottom: 1px solid
+    var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent));
+}
+
+.crop-side-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--vscode-foreground, inherit);
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.crop-side-tab:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.18));
+}
+
+.crop-side-tab.is-active {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  border-bottom-color: var(--vscode-textLink-foreground, #3794ff);
+  font-weight: 600;
+}
+
+.crop-side-collapse {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.crop-side-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.crop-side-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 32px;
+  min-height: 0;
+  padding-top: 4px;
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent));
+}
+
+.crop-side-rail-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--vscode-foreground, inherit);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.crop-side-rail-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.18));
 }
 
 .crop-empty {
@@ -316,24 +555,6 @@ const notices = computed(() => {
   color: var(--vscode-descriptionForeground, gray);
 }
 
-.crop-mode-banner {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 4px 6px 4px 12px;
-  border-radius: 4px;
-  font-size: 13px;
-  white-space: nowrap;
-  color: var(--vscode-editorWidget-foreground, inherit);
-  background: var(--vscode-editorWidget-background, rgba(0, 0, 0, 0.6));
-  border: 1px solid var(--vscode-focusBorder, #007fd4);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-}
-
 .crop-status {
   display: flex;
   align-items: center;
@@ -345,11 +566,6 @@ const notices = computed(() => {
   border-top: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent));
   white-space: nowrap;
   overflow: hidden;
-}
-
-.crop-status-hint {
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .crop-status-item code {

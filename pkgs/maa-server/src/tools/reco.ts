@@ -51,6 +51,8 @@ let pending:
   | {
       task: string
       image: ArrayBuffer
+      /** 画布选区试跑时覆盖节点 roi 字段；undefined 按节点自己的 ROI */
+      roi?: maa.Rect
       /** custom action 是否执行过；没执行说明任务在进入 action 前就失败了 */
       reached: boolean
       settle: (detail: string | null) => void
@@ -166,7 +168,12 @@ async function createSession(resources: string[], key: string) {
       current.reached = true
 
       try {
-        const detail = await self.context.run_recognition(current.task, current.image)
+        // roi 非空时按画布选区覆盖节点 ROI，只动 roi 一个字段，其余仍用节点参数
+        const detail = await self.context.run_recognition(
+          current.task,
+          current.image,
+          current.roi ? { [current.task]: { roi: current.roi } } : undefined
+        )
         if (!detail) {
           logger.info('quick reco recognition returned no detail')
           current.settle(null)
@@ -322,7 +329,8 @@ function pickNode(current: QuickRecoSession): Promise<string | null> | undefined
 async function performRecoInner(
   imageBase64: string,
   resources: string[],
-  agent: ToolAgentSetup | undefined
+  agent: ToolAgentSetup | undefined,
+  roi?: maa.Rect
 ): Promise<ToolResult | null> {
   const current = await ensureSession(resources, agent)
   if (!current) {
@@ -377,6 +385,7 @@ async function performRecoInner(
     pending = {
       task,
       image,
+      roi,
       reached: false,
       settle: detail => {
         pending = undefined
@@ -442,7 +451,8 @@ async function performRecoInner(
 export async function performReco(
   imageBase64: string,
   resources: string[],
-  agent?: ToolAgentSetup
+  agent?: ToolAgentSetup,
+  roi?: maa.Rect
 ): Promise<ToolResult | null> {
   if (busy) {
     return {
@@ -455,7 +465,7 @@ export async function performReco(
 
   busy = true
   try {
-    return await performRecoInner(imageBase64, resources, agent)
+    return await performRecoInner(imageBase64, resources, agent, roi)
   } catch (err) {
     logger.error(`quick reco failed: ${err}`)
     return internalFailure('internal-error', `${err}`)

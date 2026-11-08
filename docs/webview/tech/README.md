@@ -49,24 +49,33 @@ src/
 │   │   ├── image.ts        # 图像状态与图片历史
 │   │   ├── pick.ts         # 取色与推荐范围
 │   │   ├── reco.ts         # 节点识别测试结果
+│   │   ├── drawResult.ts   # 画布识别框的候选/勾选/「显示结果」开关（脱离 RecoDetail 组件生命周期）
 │   │   ├── settings.ts     # 可视化设置
-│   │   ├── visible.ts      # 面板布局偏好（右栏面板 / 展开区块 / 识别目标，写回 CropSettings）
+│   │   ├── visible.ts      # 面板布局偏好（右栏面板 / 展开区块 / 识别目标 / 节点 ROI 来源，写回 CropSettings）
 │   │   └── quickMatch.ts   # 一次性识别（OCR/模板/ColorMatch）
 │   ├── utils/
 │   │   ├── 2d.ts           # Pos/Size/Box/Viewport
 │   │   ├── copy.ts         # 写剪贴板 + 短暂的「已复制」状态
+│   │   ├── pipelineSnippet.ts # ColorMatch/template 片段的 v1/v2 两种输出
 │   │   ├── recoDetail.ts   # 识别详情字段取值与一行摘要
 │   │   ├── detect.ts       # 选框角/边命中检测
 │   │   ├── autoMaskCore.ts # 自动涂绿纯函数（背景估计、边缘泛洪、外扩）
 │   │   └── subjectMaskCore.ts # 圈选主体纯函数（K-means 颜色模型、碎片清理、填洞）
 │   ├── views/              # 视图
 │   │   ├── ControlView.vue
-│   │   ├── ToolView.vue
-│   │   └── SettingsView.vue
+│   │   ├── TestPanel.vue    # 识别测试面板：四目标 + 参数 + 结果 + 最近运行
+│   │   ├── ColorPanel.vue   # 颜色面板：取色工作区（采样 / 区间 / 预览 / 片段）
+│   │   ├── MaskPanel.vue    # 涂绿面板：三种方式 + 统一「应用到图像」
+│   │   ├── CalcPanel.vue    # ROI 计算小工具：加减与 rect_move
+│   │   ├── ExportPanel.vue  # 导出面板：预览/命名/位置/选项 + 保存结果
+│   │   └── SettingsView.vue # 设置面板：画布外观 + 交互 + 高级折叠区
 │   └── components/         # 组件
 │       ├── ColorBox.vue
 │       ├── CopyChip.vue    # 「标签 + 等宽值」的可复制小块
+│       ├── ModeBar.vue     # 画布下方模式条：pointer 下 ROI 四数字编辑，其他模式上下文操作
+│       ├── ToolRail.vue    # 画布左侧工具轨：模式单选 + ? 帮助浮层
 │       ├── ParamRow.vue    # 参数行（中文名 + pipeline 字段名 + 控件）
+│       ├── SnippetVersion.vue # 「复制 pipeline 片段」的 v1/v2 版本下拉（写入 CropSettings.pipelineVersion）
 │       ├── HistoryStrip.vue
 │       ├── RoiEdit.vue
 │       ├── SettingsInput.vue
@@ -129,7 +138,7 @@ Crop 的状态模块之间存在循环导入（`image` ↔ `control` 等）。ES
 
 `maskApply.ts` 汇总三种绿幕来源：各来源模块只提供 `paintInto(ImageData)`（把自己的绿色写进整图像素），应用时由 `maskApply` 叠加后一次 `imageSt.set`，并记录「撤销应用」快照。它依赖 `visible.ts` 判断绿幕区块是否可见，只被 `canvas.ts` 和组件引用，因此不在状态模块的循环导入链里，模块顶层的 `watch` 可以安全读取其他状态模块。
 
-快速匹配与节点识别的结果都记录了产生它的图像；切换图像或识别期间换图时会丢弃旧结果，避免把旧图的识别框画到新图上。识别框全部由 `RecoDetail.vue` 的 draw step 绘制（受「在画布上标出」开关控制），`canvas.ts` 不再单独绘制快速匹配结果。
+快速匹配与节点识别的结果都记录了产生它的图像；切换图像或识别期间换图时会丢弃旧结果，避免把旧图的识别框画到新图上。识别框由 `states/drawResult.ts` 驱动的常驻 draw step 绘制：`RecoDetail.vue` 只把候选/勾选集写进 `drawResult`，「在画布上标出」开关只控制该步骤的可见性；收起识别测试区块或切换到设置页不再让画布上的结果框消失。节点试跑支持选择 ROI 来源（节点自身 ROI 或画布选区），选画布选区时把当前 ROI 作为 pipeline_override 传给 `run_recognition`（`nodeRoiSource` 偏好写回 `CropSettings`）。
 
 画布在图像尺寸变化时调用 `fitViewport()` 适应窗口；若图像先于画布布局到达（画布尺寸仍为 0），会等 ResizeObserver 给出尺寸后再适应。
 

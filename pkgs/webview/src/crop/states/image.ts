@@ -5,12 +5,15 @@ import type { CropImageResult, CropSaveResult } from '@nekosu/maa-types'
 import { t } from '../../utils/locale'
 import { ipc } from '../ipc'
 import { Size } from '../utils/2d'
+import { templateSnippet } from '../utils/pipelineSnippet'
 import * as controlSt from './control'
+import * as drawResultSt from './drawResult'
 import * as greenMaskSt from './greenMask'
 import * as pickSt from './pick'
 import * as matchSt from './quickMatch'
 import * as recoSt from './reco'
 import * as subjectSelectSt from './subjectSelect'
+import { pipelineVersion } from './visible'
 
 /** 按动作拆分 loading，避免点截图时上传/下载一起转圈 */
 export const screencapLoading = ref(false)
@@ -75,6 +78,7 @@ function commitImage(url: string, img: HTMLImageElement) {
   subjectSelectSt.resetForImageChange()
   matchSt.resetForImageChange(url)
   recoSt.resetForImageChange(url)
+  drawResultSt.reset()
   controlSt.cropBound()
 }
 
@@ -214,7 +218,26 @@ export async function cropImage(): Promise<[string | null, maa.Rect | null]> {
   return [data.value, cropPos]
 }
 
-export async function download(force = false) {
+/** 导出面板预览：按当前 ROI 裁出一张 dataURL（空 ROI = 整图），随画布实时刷新 */
+export function croppedPreview(): { url: string; w: number; h: number; whole: boolean } | null {
+  const img = element.value
+  if (!img) {
+    return null
+  }
+  const roi = controlSt.requestRoi()
+  const whole = roi[2] <= 0 || roi[3] <= 0
+  const [x, y, w, h] = whole ? [0, 0, img.width, img.height] : roi
+  const canvas = document.createElement('canvas')
+  const scale = Math.min(1, 160 / Math.max(w, h))
+  canvas.width = Math.max(1, Math.round(w * scale))
+  canvas.height = Math.max(1, Math.round(h * scale))
+  const ctx = canvas.getContext('2d')!
+  ctx.imageSmoothingEnabled = false
+  ctx.drawImage(img, x, y, w, h, 0, 0, canvas.width, canvas.height)
+  return { url: canvas.toDataURL('image/png'), w, h, whole }
+}
+
+export async function download(force = false, filename?: string) {
   if (!force) {
     const roi = controlSt.requestRoi()
     if (roi[2] === 0 || roi[3] === 0) {
@@ -238,7 +261,8 @@ export async function download(force = false) {
       image: data,
       crop,
       roi: controlSt.requestRoi(),
-      expandRoi: controlSt.requestRoiExpand()
+      expandRoi: controlSt.requestRoiExpand(),
+      filename
     })) as CropSaveResult | null
 
     if (resp === null) {
@@ -273,11 +297,10 @@ export function copyTemplateSnippet() {
   if (!relative) {
     return
   }
-  const lines = [`"template": ${JSON.stringify(relative)},`]
-  if (savedHasGreen.value) {
-    lines.push('"green_mask": true')
-  }
-  ipc.send({ command: 'writeClipboard', text: lines.join('\n') })
+  ipc.send({
+    command: 'writeClipboard',
+    text: templateSnippet(pipelineVersion.value, relative, savedHasGreen.value)
+  })
 }
 
 export function cancelEmptyRoiWarning() {

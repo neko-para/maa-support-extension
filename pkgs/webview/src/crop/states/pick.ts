@@ -40,6 +40,8 @@ export type SamplePoint = {
   id: number
   pos: [x: number, y: number]
   color: [r: number, g: number, b: number]
+  /** 来源：点选 = 单像素，框选 = 区域统计采样 */
+  src: 'point' | 'region'
 }
 
 let nextId = 0
@@ -127,9 +129,21 @@ export function formatColorText(clr: [number, number, number], method: ColorMeth
   return convertColor(clr, method).join(', ')
 }
 
-function channelMax(channelIndex: number, method: ColorMethod): number {
+export function channelMax(channelIndex: number, method: ColorMethod): number {
   if (method === 40 && channelIndex === 0) return 180
   return 255
+}
+
+/** 每个方法对应的通道名（区间输入行标签） */
+export function channelLabels(method: ColorMethod): string[] {
+  switch (method) {
+    case 4:
+      return ['R', 'G', 'B']
+    case 40:
+      return ['H', 'S', 'V']
+    case 6:
+      return ['Gray']
+  }
 }
 
 export const hsvColor = computed<[h: number, s: number, v: number] | null>(() => {
@@ -169,7 +183,8 @@ export function addSelectSamplePoints(imageData: ImageData, box: Box) {
     samplePoints.value.push({
       id: nextId++,
       pos: point.pos,
-      color: point.color
+      color: point.color,
+      src: 'region'
     })
   }
 
@@ -182,17 +197,14 @@ export function addSamplePoint(pos: [x: number, y: number]) {
     samplePoints.value.push({
       id: nextId++,
       pos: [...pos],
-      color: [...color.value]
+      color: [...color.value],
+      src: 'point'
     })
   }
 }
 
 export function removeSamplePoint(id: number) {
   samplePoints.value = samplePoints.value.filter(p => p.id !== id)
-}
-
-export function clearSamplePoints() {
-  samplePoints.value = []
 }
 
 export function cssText() {
@@ -334,6 +346,54 @@ export const recommendedColors = computed(() => {
 export type NumericRanges = { lower: number[][]; upper: number[][] }
 
 /**
+ * 手动覆盖的基准区间（展开前的单区间，与 recommendedColors 同形）。
+ * null = 用推荐值；改过任一通道即与推荐值脱钩，「恢复推荐」可清掉。
+ */
+export const customRange = ref<{ lower: number[]; upper: number[] } | null>(null)
+
+/** 实际生效的基准区间：手动覆盖优先，否则用推荐 */
+export const effRaw = computed<{ lower: number[]; upper: number[] } | null>(() => {
+  if (customRange.value) {
+    return customRange.value
+  }
+  const rec = recommendedColors.value
+  if (!rec) {
+    return null
+  }
+  return { lower: rec.lower, upper: rec.upper }
+})
+
+/** 用户改区间只改 effRaw 的某一端 */
+export function setCustomChannel(idx: number, side: 'lower' | 'upper', value: number) {
+  const cur = effRaw.value
+  if (!cur) {
+    return
+  }
+  const lower = [...cur.lower]
+  const upper = [...cur.upper]
+  ;(side === 'lower' ? lower : upper)[idx] = value
+  customRange.value = { lower, upper }
+}
+
+export function resetCustomRange() {
+  customRange.value = null
+}
+
+export function clearSamplePoints() {
+  samplePoints.value = []
+  customRange.value = null
+}
+
+/** 生效区间（手动覆盖或推荐）按阈值扩展后的数值形式，供 ColorMatch / 预览 / 片段共用 */
+export function effRanges(threshold = 0): NumericRanges | null {
+  const raw = effRaw.value
+  if (!raw) {
+    return null
+  }
+  return expandRanges(colorMethod.value, raw.lower, raw.upper, threshold)
+}
+
+/**
  * 把推荐范围按阈值扩展为可直接喂给 Pipeline 的数值区间。
  * HSV 色相环形（跨 0）或扩展后覆盖全色相时会输出多个 / 全区间，其余方法均为单区间。
  */
@@ -393,7 +453,7 @@ function expandRanges(
   }
 }
 
-/** 采样推荐范围按阈值扩展后的数值形式，供快速匹配 ColorMatch 直接使用 */
+/** 采样推荐范围按阈值扩展后的数值形式；预览/跑测/复制都走 effRanges（含手动覆盖），这里保留给外部调用 */
 export function recommendedRanges(threshold = 0): NumericRanges | null {
   if (!recommendedColors.value) {
     return null
@@ -428,23 +488,15 @@ function formatRangeText(
 }
 
 export function recommendedLowerText(threshold?: number) {
-  if (!recommendedColors.value) return undefined
-  return formatRangeText(
-    colorMethod.value,
-    recommendedColors.value.lower,
-    recommendedColors.value.upper,
-    threshold
-  ).lower
+  const raw = effRaw.value
+  if (!raw) return undefined
+  return formatRangeText(colorMethod.value, raw.lower, raw.upper, threshold).lower
 }
 
 export function recommendedUpperText(threshold?: number) {
-  if (!recommendedColors.value) return undefined
-  return formatRangeText(
-    colorMethod.value,
-    recommendedColors.value.lower,
-    recommendedColors.value.upper,
-    threshold
-  ).upper
+  const raw = effRaw.value
+  if (!raw) return undefined
+  return formatRangeText(colorMethod.value, raw.lower, raw.upper, threshold).upper
 }
 
 export function copyRecommendedLower(threshold?: number) {

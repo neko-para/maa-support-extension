@@ -18,12 +18,16 @@ export type CropSettings = {
   templateMatchThreshold?: number
   recoStroke?: string
   recoFont?: string
-  /** 右栏显示的面板，未设置时为工具面板 */
-  sidePanel?: 'tool' | 'settings' | 'hidden'
-  /** 工具面板中展开的区块 */
-  toolSections?: string[]
+  /** 右栏显示的面板，未设置时为识别测试面板 */
+  sidePanel?: 'test' | 'color' | 'mask' | 'calc' | 'export' | 'settings' | 'hidden'
   /** 识别测试上次选中的目标 */
   testTarget?: 'ocr' | 'template' | 'color' | 'node'
+  /** 节点试跑的 ROI 来源；未设置时用节点自己的 ROI */
+  nodeRoiSource?: 'node' | 'canvas'
+  /** 复制 pipeline 片段使用的协议版本（v1 平铺 / v2 纵深） */
+  pipelineVersion?: 'v1' | 'v2'
+  /** 右栏宽度（px），拖拽调整 */
+  panelWidth?: number
 }
 
 export type CropHostState = HostStateBase & CropSettings
@@ -104,6 +108,8 @@ export type CropWebToHost =
       crop: maa.Rect
       roi: maa.Rect
       expandRoi: maa.Rect
+      /** 导出面板填写的文件名（不含扩展名）；缺省时宿主弹出输入框 */
+      filename?: string
     }
   | {
       // return string | null
@@ -132,6 +138,8 @@ export type CropWebToHost =
       // return CropToolResult | null，null 表示用户取消选择节点
       command: 'requestReco'
       image: string
+      /** 提供时覆盖节点的 roi 字段；缺省时按节点自己的 ROI 识别 */
+      roi?: maa.Rect
     }
   | {
       // return CropToolResult

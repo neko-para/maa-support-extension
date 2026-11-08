@@ -34,9 +34,9 @@
 
 Control 协议通过 `ControlHostState.saveDraw` 同步识别绘图落盘状态、`ControlHostState.saveOnError` 同步失败现场截图落盘状态，并分别使用 `switch-save-draw`、`switch-save-on-error` Toolkit target 请求切换；`shortcutTarget` 标识当前窗口是否持有全局快捷键目标租约，`activate-shortcuts` 用于取得该租约。
 
-Crop 协议的 `CropSettings` 仅同步用户可配置的裁剪交互和可视化参数（含自定义下载保存目录 `saveDir`，配合 `requestPickFolder` 命令选取），以及面板布局偏好 `sidePanel`（右栏显示工具 / 设置 / 隐藏）、`toolSections`（工具面板展开的区块）、`testTarget`（识别测试上次选中的目标）；结果框线只用 `recoStroke` / `recoFont`。Canvas 背景色不属于协议设置，由 Webview 直接跟随 VS Code 编辑器主题。
+Crop 协议的 `CropSettings` 仅同步用户可配置的裁剪交互和可视化参数（含自定义下载保存目录 `saveDir`，配合 `requestPickFolder` 命令选取），以及面板布局偏好 `sidePanel`（右栏显示识别测试 / 颜色 / 涂绿 / ROI 计算 / 导出 / 设置 / 隐藏，无法识别的旧值落回默认）、`testTarget`（识别测试上次选中的目标）、`nodeRoiSource`（节点试跑使用节点自身 ROI 或画布选区）、`pipelineVersion`（复制 pipeline 片段用 v1 平铺还是 v2 纵深）；结果框线只用 `recoStroke` / `recoFont`。Canvas 背景色不属于协议设置，由 Webview 直接跟随 VS Code 编辑器主题。
 
-Crop 协议的一次性识别结果统一为 `CropToolResult = { detail, failure? }`：`detail` 是 `maa.RecoDetailWithoutDraws` 的 JSON，`failure.message` 是宿主已本地化的文案（Webview 不再需要维护 agent 相关文案）。`requestReco` 返回 `CropToolResult | null`（`null` 表示用户取消了节点选择）；`requestColorMatch` 携带 `ColorMatchOptions`（roi/method/lower/upper/count/connected，`lower`/`upper` 为多区间数组）。快速识别的 agent 会话由宿主在面板全部关闭或 interface/pipeline/资源变更时主动释放（不经过 webview 协议）。截图/上传返回 `CropImageResult`、保存返回 `CropSaveResult`（含相对资源 image 目录的 `relativePath`，用户取消时为 `null`）：失败原因由宿主本地化，Webview 用 `null` 表示用户取消、用 `failure` 表示失败；`requestReveal` 用于显式打开保存目录，避免保存后自动抢焦点。
+Crop 协议的一次性识别结果统一为 `CropToolResult = { detail, failure? }`：`detail` 是 `maa.RecoDetailWithoutDraws` 的 JSON，`failure.message` 是宿主已本地化的文案（Webview 不再需要维护 agent 相关文案）。`requestReco` 返回 `CropToolResult | null`（`null` 表示用户取消了节点选择），可选 `roi` 字段把画布选区作为节点 `roi` 的 pipeline_override 传入；`requestColorMatch` 携带 `ColorMatchOptions`（roi/method/lower/upper/count/connected，`lower`/`upper` 为多区间数组）。快速识别的 agent 会话由宿主在面板全部关闭或 interface/pipeline/资源变更时主动释放（不经过 webview 协议）。截图/上传返回 `CropImageResult`、保存返回 `CropSaveResult`（含相对资源 image 目录的 `relativePath`，用户取消时为 `null`）：失败原因由宿主本地化，Webview 用 `null` 表示用户取消、用 `failure` 表示失败；`requestReveal` 用于显式打开保存目录，避免保存后自动抢焦点。
 
 ### 2. 通用协议基类型
 

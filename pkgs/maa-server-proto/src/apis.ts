@@ -88,8 +88,14 @@ export type HostToSubApis = {
   /**
    * 对给定图像运行一次节点识别。`agent` 非空时，会按需启动 interface agent
    * 以支持节点里的 Custom 识别；会话在空闲后释放。
+   * `roi` 非空时作为 pipeline_override 覆盖节点的 roi 字段（画布选区试跑）。
    */
-  performReco: (image: string, resources: string[], agent?: ToolAgentSetup) => ToolResult
+  performReco: (
+    image: string,
+    resources: string[],
+    agent?: ToolAgentSetup,
+    roi?: maa.Rect
+  ) => ToolResult
   /** 对给定图像运行一次 ColorMatch 识别 */
   performColorMatch: (image: string, options: ColorMatchOptions) => ToolResult
   /** 释放 performReco 缓存的 agent 会话 */

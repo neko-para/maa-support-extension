@@ -51,7 +51,7 @@ export function refresh() {
     return
   }
   const img = imageSt.element.value
-  const ranges = pickSt.recommendedRanges(hostState.value.pickColorThreshold ?? 10)
+  const ranges = pickSt.effRanges(hostState.value.pickColorThreshold ?? 10)
   if (!img || !ranges) {
     clear()
     return
@@ -76,7 +76,12 @@ export function refresh() {
       data[idx + 3] = 128
       count += 1
     } else {
-      data[idx + 3] = 0
+      // 非命中像素也画一层：低透明度的原图灰度，让命中区更突出
+      const gray = Math.round(0.299 * data[idx]! + 0.587 * data[idx + 1]! + 0.114 * data[idx + 2]!)
+      data[idx] = gray
+      data[idx + 1] = gray
+      data[idx + 2] = gray
+      data[idx + 3] = 60
     }
   }
   ctx.putImageData(imageData, 0, 0)
@@ -104,8 +109,8 @@ export function setEnabled(value: boolean) {
   }
 }
 
-// 取色点是就地 push 的，只监听数组引用会漏掉新增采样；推荐范围会跟随采样、颜色方法与推荐方法重算
-watch([() => pickSt.recommendedColors.value, () => hostState.value.pickColorThreshold], () =>
+// 取色点是就地 push 的，只监听数组引用会漏掉新增采样；手动覆盖、推荐范围、阈值变化都要重算
+watch([() => pickSt.effRaw.value, () => hostState.value.pickColorThreshold], () =>
   scheduleRefresh()
 )
 

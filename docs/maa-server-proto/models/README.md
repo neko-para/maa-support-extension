@@ -35,7 +35,7 @@
 - `fetchConstants()`、`updateController()`、`setupInstance()`
 - `getScreencap(instance?)`、`resize()`
 - `performOcr()`、`performTemplateMatch()`、`performColorMatch()`
-- `performReco(image, resources, agent?)`：`agent` 为 `ToolAgentSetup`（项目根目录、相对资源目录、interface agent 声明、连接超时），非空时按需启动 Custom 识别所需的 agent；返回 `ToolResult`（`detail` + 结构化 `failure`），用户取消节点选择时返回 `null`
+- `performReco(image, resources, agent?, roi?)`：`agent` 为 `ToolAgentSetup`（项目根目录、相对资源目录、interface agent 声明、连接超时），非空时按需启动 Custom 识别所需的 agent；可选 `roi` 作为 pipeline_override 覆盖节点的 `roi` 字段（画布选区试跑）；返回 `ToolResult`（`detail` + 结构化 `failure`），用户取消节点选择时返回 `null`
 - `releaseRecoSession()`：释放 `performReco` 缓存的 agent 资源会话（识别进行中会推迟到本次识别结束后释放）
 - `refreshAdb(adbPath?)`、`refreshDesktop()`、`refreshGamescope()`、`refreshWlrCompositor()`
 - `postTask()`、`postStop()`、`getKnownTasks()`、`destroyInstance()`

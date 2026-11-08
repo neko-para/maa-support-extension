@@ -345,10 +345,14 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           const targetDir = saveDir
             ? vscode.Uri.file(saveDir)
             : vscode.Uri.joinPath(resource, imageSuffix)
-          const name = await vscode.window.showInputBox({
-            title: t('maa.pi.title.input-image'),
-            ignoreFocusOut: true
-          })
+          // 导出面板已命名时直接用（过滤文件名非法字符）；否则沿用输入框
+          const asked =
+            data.filename?.trim().replace(/[\\/:*?"<>|]/g, '') ||
+            (await vscode.window.showInputBox({
+              title: t('maa.pi.title.input-image'),
+              ignoreFocusOut: true
+            }))
+          const name = asked?.trim()
           if (!name) {
             this.response(data.seq, null)
             break
@@ -532,7 +536,8 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           ).performReco(
             data.image.replace('data:image/png;base64,', ''),
             resources.map(u => u.fsPath),
-            (await this.buildAgentSetup()) ?? undefined
+            (await this.buildAgentSetup()) ?? undefined,
+            data.roi
           )
         } catch (err) {
           failed = true

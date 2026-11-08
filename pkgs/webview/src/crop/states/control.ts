@@ -12,12 +12,16 @@ import {
 } from '../utils/detect'
 import * as greenMaskSt from './greenMask'
 import * as imageSt from './image'
-import { exitMode, mode } from './mode'
+import { exitMode, mode, setMode } from './mode'
 import * as pickSt from './pick'
 import * as settingsSt from './settings'
 import * as subjectSelectSt from './subjectSelect'
+import { helpShown } from './visible'
 
 export const cursor = ref<string>('default')
+
+/** 按住空格时左键拖拽=平移（松开恢复） */
+export const spacePan = ref(false)
 export const current = ref<Pos>(new Pos())
 export const currentInView = computed(() => {
   return viewport.value.fromView(current.value).round()
@@ -44,9 +48,36 @@ export const cropBoxInView = computed({
   }
 })
 // 「未选择 ROI」的保存提示只对当时的框有效；框一变就收起，避免「保存整张图」实际只存了新框
-watch(cropBox, () => {
+// 撤销只对「清空那一下」有效：用户一旦框出新 ROI，旧快照就让位给最新状态
+watch(cropBox, box => {
   imageSt.cancelEmptyRoiWarning()
+  if (roiUndo.value && Math.abs(box.size.w) > 0 && Math.abs(box.size.h) > 0) {
+    roiUndo.value = null
+  }
 })
+
+/** 最近一次被清空的 ROI（Esc/清空按钮），用于单槽位撤销 */
+export const roiUndo = ref<Box | null>(null)
+
+/** 清空 ROI：非空时先存快照，模式条给出「撤销」；空框时不动既有快照 */
+export function clearRoi() {
+  const box = cropBox.value.copy()
+  if (Math.abs(box.size.w) <= 0 || Math.abs(box.size.h) <= 0) {
+    return
+  }
+  // watch 只在框非空时丢弃快照，所以清空后设置是安全的
+  roiUndo.value = box
+  cropBox.value = new Box()
+}
+
+export function undoClearRoi() {
+  const snapshot = roiUndo.value
+  // 先清快照再回填，watch 里才不会把刚恢复的 ROI 当成「新框选」清掉
+  roiUndo.value = null
+  if (snapshot) {
+    cropBox.value = snapshot
+  }
+}
 
 const cropBoxDrag = ref<DragHandler>(new DragHandler())
 const cropBoxMoveDrag = ref<DragHandler>(new DragHandler())
@@ -79,14 +110,74 @@ export function onKeyDown(event: KeyboardEvent) {
       // 当前只有一个模式在生效，一次 Esc 只退一层
       exitMode()
     } else if (!isEditableTarget(event.target)) {
-      cropBox.value = new Box()
+      clearRoi()
     }
+    return
   }
-  // event.metaKey
+
+  // 输入框/下拉里不打断打字；Ctrl/Meta 组合键归各自功能，这里只管裸键
+  if (event.ctrlKey || event.metaKey || event.altKey || isEditableTarget(event.target)) {
+    return
+  }
+
+  switch (event.key) {
+    case '?':
+      helpShown.value = !helpShown.value
+      return
+    case 'v':
+    case 'V':
+      exitMode()
+      return
+    case 'p':
+    case 'P':
+      pickSt.start()
+      return
+    case 'r':
+    case 'R':
+      if (imageSt.element.value) {
+        setMode('roi')
+      }
+      return
+    case 's':
+    case 'S':
+      if (imageSt.element.value) {
+        pickSt.startSelect()
+      }
+      return
+    case 'm':
+    case 'M':
+      if (imageSt.element.value) {
+        greenMaskSt.start()
+      }
+      return
+    case 'e':
+    case 'E':
+      if (mode.value === 'mask') {
+        greenMaskSt.isEraser.value = !greenMaskSt.isEraser.value
+      }
+      return
+    case '[':
+      if (mode.value === 'mask') {
+        greenMaskSt.brushSize.value = Math.max(1, greenMaskSt.brushSize.value - 2)
+      }
+      return
+    case ']':
+      if (mode.value === 'mask') {
+        greenMaskSt.brushSize.value = Math.min(50, greenMaskSt.brushSize.value + 2)
+      }
+      return
+    case ' ':
+      // 按住空格临时平移：仅记录标志，pointerdown 里按按钮处理
+      spacePan.value = true
+      event.preventDefault()
+      return
+  }
 }
 
-export function onKeyUp(_event: KeyboardEvent) {
-  // event.metaKey
+export function onKeyUp(event: KeyboardEvent) {
+  if (event.key === ' ') {
+    spacePan.value = false
+  }
 }
 
 export function onWheel(event: WheelEvent) {
@@ -154,37 +245,47 @@ export function onPointerDown(event: PointerEvent) {
     return
   }
 
-  if (event.ctrlKey) {
-    cropBoxDrag.value.down(mp, mp, event, viewport.value)
-    cursor.value = 'crosshair'
-  } else {
-    const corner = detectCorner(cropBoxInView.value, mp)
-    if (corner) {
-      cornerDragTarget.value = corner
-      cornerDragInitialBox.value = cropBox.value.copy()
-      cornerDrag.value.down(mp, cropBoxInView.value[corner], event, viewport.value)
-      return
-    }
-
-    const edge = detectEdge(cropBoxInView.value, mp)
-    if (edge) {
-      const fakePos = new Pos()
-      fakePos[edgeSide[edge]] = cropBoxInView.value[edge]
-      cornerDragTarget.value = edge
-      cornerDragInitialBox.value = cropBox.value.copy()
-      cornerDrag.value.down(mp, fakePos, event, viewport.value)
-      return
-    }
-
-    if (cropBoxInView.value.contains(mp)) {
-      cropBoxMoveDrag.value.down(mp, cropBoxInView.value.origin, event, viewport.value)
-      cursor.value = 'grab'
-      return
-    }
-
+  if (event.ctrlKey || spacePan.value) {
+    // Ctrl + 拖拽或按住空格 + 拖拽 = 平移：高频操作（框选）不需要修饰键，避免误触取景移动
     viewportDrag.value.down(mp, viewport.value.offset, event)
     cursor.value = 'grab'
+    return
   }
+
+  if (mode.value === 'roi') {
+    // 「框选 ROI」模式：任何拖拽都创建新选区，不区分图像内外
+    cropBoxDrag.value.down(mp, mp, event, viewport.value)
+    cursor.value = 'crosshair'
+    return
+  }
+
+  const corner = detectCorner(cropBoxInView.value, mp)
+  if (corner) {
+    cornerDragTarget.value = corner
+    cornerDragInitialBox.value = cropBox.value.copy()
+    cornerDrag.value.down(mp, cropBoxInView.value[corner], event, viewport.value)
+    return
+  }
+
+  const edge = detectEdge(cropBoxInView.value, mp)
+  if (edge) {
+    const fakePos = new Pos()
+    fakePos[edgeSide[edge]] = cropBoxInView.value[edge]
+    cornerDragTarget.value = edge
+    cornerDragInitialBox.value = cropBox.value.copy()
+    cornerDrag.value.down(mp, fakePos, event, viewport.value)
+    return
+  }
+
+  if (cropBoxInView.value.contains(mp)) {
+    cropBoxMoveDrag.value.down(mp, cropBoxInView.value.origin, event, viewport.value)
+    cursor.value = 'grab'
+    return
+  }
+
+  // pointer 模式：空白处拖拽 = 平移视野（新建 ROI 用 R 框选模式）
+  viewportDrag.value.down(mp, viewport.value.offset, event)
+  cursor.value = 'grab'
 }
 
 export function onPointerMove(event: PointerEvent) {
@@ -271,7 +372,7 @@ export function onPointerMove(event: PointerEvent) {
         }
       }
     }
-    if (pickSt.picking.value || pickSt.selecting.value) {
+    if (pickSt.picking.value || pickSt.selecting.value || mode.value === 'roi') {
       cursor.value = 'crosshair'
     } else {
       const corner = detectCorner(cropBoxInView.value, mp)

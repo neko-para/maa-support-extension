@@ -276,6 +276,11 @@ export default {
   'maa.crop.tools.subject-mask-bad-selection':
     'Cannot tell subject from background; draw a larger loop with some background, or paint manually',
   'maa.crop.tools.subject-mask-failed': 'Failed to build the mask; retry or paint manually',
+  'maa.crop.tools.subject-exclude': 'Exclude area',
+  'maa.crop.tools.subject-exclude-clear': 'Clear exclusions',
+  'maa.crop.tools.subject-bias': 'Subject bias',
+  'maa.crop.tools.subject-bias-tip':
+    'Higher keeps more of the subject (less green); lower paints more aggressively (may eat the subject)',
   'maa.crop.tools.brush-size': 'Brush size',
   'maa.crop.tools.eraser': 'Eraser',
   'maa.crop.tools.undo': 'Undo',

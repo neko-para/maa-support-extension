@@ -32,10 +32,10 @@ watch(
   { immediate: true }
 )
 
-// 圈完就生成绿幕预览，不再需要单独点「生成预览」
+// 圈完就生成绿幕预览；排除圈追加时也触发重算
 watch(
-  () => subjectSelectSt.regionMask.value,
-  region => {
+  () => [subjectSelectSt.regionMask.value, subjectSelectSt.excludeVersion.value] as const,
+  ([region]) => {
     if (!region) {
       subjectMaskSt.disable()
     } else if (lassoShown.value) {

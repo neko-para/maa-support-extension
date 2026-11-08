@@ -6,6 +6,7 @@ import {
   NRadioButton,
   NRadioGroup,
   NSelect,
+  NSlider,
   NSwitch,
   NText
 } from 'naive-ui'
@@ -68,6 +69,19 @@ function toggleLasso() {
 function clearLasso() {
   subjectSelectSt.clear()
   subjectMaskSt.disable()
+}
+
+/** 画排除圈：已有圈选上补充「这不算主体」的小圈 */
+function startRefine() {
+  if (subjectSelectSt.active.value) {
+    subjectSelectSt.cancel()
+    return
+  }
+  subjectSelectSt.startRefine()
+}
+
+function clearExclude() {
+  subjectSelectSt.clearExclude()
 }
 
 const autoMaskErrorText = computed(() => {
@@ -166,22 +180,10 @@ const subjectMaskErrorText = computed(() => {
           />
         </param-row>
         <param-row :label="t('maa.crop.tools.auto-mask-tolerance')">
-          <n-input-number
-            v-model:value="autoMaskSt.tolerance.value"
-            :min="0"
-            :max="255"
-            size="small"
-            style="width: 110px"
-          />
+          <n-slider v-model:value="autoMaskSt.tolerance.value" :min="0" :max="120" :step="1" />
         </param-row>
         <param-row :label="t('maa.crop.tools.auto-mask-expand')">
-          <n-input-number
-            v-model:value="autoMaskSt.expand.value"
-            :min="0"
-            :max="8"
-            size="small"
-            style="width: 110px"
-          />
+          <n-slider v-model:value="autoMaskSt.expand.value" :min="0" :max="8" :step="1" />
         </param-row>
         <param-row :label="t('maa.crop.mask.preview')">
           <n-switch
@@ -232,6 +234,38 @@ const subjectMaskErrorText = computed(() => {
           {{ t('maa.crop.tools.subject-select-clear') }}
         </n-button>
       </n-flex>
+      <n-flex v-if="subjectSelectSt.hasRegion.value" align="center" :size="8">
+        <n-button
+          size="small"
+          secondary
+          :type="subjectSelectSt.active.value ? 'warning' : 'default'"
+          @click="startRefine()"
+        >
+          {{ t('maa.crop.tools.subject-exclude') }}
+        </n-button>
+        <n-button
+          v-if="subjectSelectSt.hasExclude.value"
+          size="small"
+          quaternary
+          @click="clearExclude()"
+        >
+          {{ t('maa.crop.tools.subject-exclude-clear') }}
+        </n-button>
+      </n-flex>
+      <param-row
+        v-if="subjectMaskSt.enabled.value"
+        :label="t('maa.crop.tools.subject-bias')"
+        :help="t('maa.crop.tools.subject-bias-tip')"
+      >
+        <n-slider
+          v-model:value="subjectMaskSt.bias.value"
+          :min="0.5"
+          :max="3"
+          :step="0.1"
+          class="bias-slider"
+          :format-tooltip="v => `${Number(v).toFixed(1)}×`"
+        />
+      </param-row>
       <n-text v-if="subjectMaskErrorText" type="error" class="hint">
         {{ subjectMaskErrorText }}
       </n-text>
@@ -243,6 +277,7 @@ const subjectMaskErrorText = computed(() => {
             (100 - subjectMaskSt.subjectRatio.value).toFixed(2)
           )
         }}
+        <span class="hint" style="opacity: 0.7">{{ subjectMaskSt.debugInfo.value }}</span>
       </n-text>
     </template>
 

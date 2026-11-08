@@ -143,6 +143,20 @@ export function draw(ctx: CanvasRenderingContext2D) {
       ctx.restore()
     }
 
+    // 排除区红色叠加画在蓝圈选之上
+    const excludeOverlay = subjectSelectSt.excludeCanvas.value
+    if (excludeOverlay && maskApplySt.lassoShown.value) {
+      ctx.save()
+      ctx.drawImage(
+        excludeOverlay,
+        0,
+        0,
+        ...imageSt.size.value.flat(),
+        ...controlSt.viewport.value.toView(Box.from(new Pos(), imageSt.size.value)).flat()
+      )
+      ctx.restore()
+    }
+
     const autoPreview = autoMaskSt.previewCanvas.value
     if (autoMaskSt.enabled.value && autoPreview) {
       const [offsetX, offsetY] = autoMaskSt.previewOffset.value

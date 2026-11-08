@@ -261,6 +261,11 @@ export default {
   'maa.crop.tools.subject-mask-bad-selection':
     '圈选区域无法区分主体和背景，圈大一点留出背景边，或改用手动涂抹',
   'maa.crop.tools.subject-mask-failed': '生成绿幕失败，请重试或改用手动涂抹',
+  'maa.crop.tools.subject-exclude': '画排除圈',
+  'maa.crop.tools.subject-exclude-clear': '清除排除',
+  'maa.crop.tools.subject-bias': '主体偏置',
+  'maa.crop.tools.subject-bias-tip':
+    '往大拉更倾向保留主体（绿变少），往小拉更倾向涂绿（主体容易被吃掉）',
   'maa.crop.tools.brush-size': '画笔大小',
   'maa.crop.tools.eraser': '橡皮擦',
   'maa.crop.tools.undo': '撤销',

@@ -19,3 +19,6 @@ QUESTION.md
 
 # extension 写入的运行时配置（任何 interface.json 目录都会生成）
 **/config/maa_pi_config.json
+
+# 测试运行残留日志（node --test 生成的 maafw.log 等）
+**/test/**/debug/

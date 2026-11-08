@@ -58,6 +58,19 @@
 - [x] **TODO-28** — **`buildTree` 丢失位置信息**: 从 jsonc-parser AST 重建纯 JS 对象时丢失了位置/偏移信息。已确认是有意设计——`buildTree` 用于求值/合并/存储上下文，生成轻量 plain object；诊断走原始 AST Node（保留位置）。两者分工明确。
 - [ ] **TODO-37** — **Portal 截图源未实现**: 协议 3.3 的 `pipewire_source` 允许 `Portal`（显示器捕获），且 2.4 明确“MaaFramework 不负责 Screencast Portal 的处理，Client 需要自行实现”。本项目有意不实现该分支：`buildControllerRuntime` 在构建 runtime 阶段即返回错误（文案 key `maa.pi.error.linux-portal-unsupported`），maa-server 侧另有兜底拒绝。当前 workaround 是改用 `Gamescope` 或换用支持 Portal 的 Client。MaaFramework 侧的接入点是 `maa.LinuxController.create_portal_helper()`：`open_stream()` 授权后取 `pipewire_fd` / `pipewire_node_id` 注入 `pw_socket_fd` / `pw_node_id`，`persist` / `restore_token` 可用于免重复授权。
 
+## Crop Tool（@mse/webview/src/crop + host）
+
+2026-11-08 面板重构（六标签 + 悬浮窗）完成后从计划文档收敛的剩余项。原始计划文档 `docs/plans/20261104-*` 已随重构完成删除，此处为摘编。
+
+- [ ] **TODO-42** — **Crop D 阶段：节点参数编辑与 MPE 联动**: `OpenCropPayload` 扩展 `{node, file, roi, recognition}` + pipeline CodeLens「试跑识别」打开即预填；结果 → 节点定义跳转（`revealNode {file, offset}`，复用 `showReferences` 模式）；与 MaaPipelineEditor 协商 `mpe:patchNodeField` 细粒度回写（当前只能整份 `mpe:loadPipeline` 重载），先做「diff 预览 + 确认」不自动保存。阻塞点：MPE 协议协商为外部依赖。
+- [ ] **TODO-43** — **Crop 识别参数预设**: 最近运行回填已实现（`runHistory`），但「命名参数预设」（存多组常用阈值/method 一键切换）未做。原计划 B4 后半。
+- [ ] **TODO-44** — **Crop ROI A/B 槽位可视化**: 现 CalcPanel 是纯数字加减；调研建议升级为画布可抓取的 A/B 双槽位 + Δ 实时计算 + `target`/`target_offset` 片段复制 + 扩展量可调（MFAToolsPlus `LiveViewRoiSelectionType` 三槽模式）。原 research B3。
+- [ ] **TODO-45** — **Crop 多区间颜色编辑**: 现取色只产出单一 lower/upper；HSV 跨 0 应能拆成两行区间可增删（MFAToolsPlus `RgbUpperRows` 模式）。原 research B2 后半。
+- [x] **TODO-46** — **Crop 识别结果浏览器**: server 侧把 `draws` 剥掉了；按需拉取 draw 图 + detail 列表做弹窗浏览（需 `debug_mode` 开启）。价值中等，放结果区「原始 JSON」旁。原 research B4。**结论：弃**——`requestRecognition` 只跑识别不出动作，draw 就是候选框/分数，与 detail 列表信息重复。
+- [ ] **TODO-47** — **Crop 实时取景模式**: `requestScreencap` + 帧调度（busy/skipped/superseded、页面隐藏暂停、连续失败断开），默认关闭；推荐「按需快照 + 冻结帧」而非 30fps base64 帧流。原 research 批次 2-5。
+- [x] **TODO-48** — **Crop `appliedFrom` 单槽位快照**: 已改为 `appliedStack`（上限 5 条），每条带 `greenMaskBefore` 联动值，连续应用可逐层撤销；MaskPanel 显示层数。剩余：「附带绿幕导出」选项需要 host/IPC 图像合成，暂缓。
+- [x] **TODO-49** — **Crop a11y 与输入补齐**: 工具轨/模式条 `role=toolbar` + `aria-*`、测试结果 `aria-live`、上传过滤放开到 png/jpg/jpeg/webp/bmp/gif、Ctrl+V 粘贴图片、方向键微调 ROI（`window` 级 keydown 已带 editable 保护，1px/步 Shift×10，无需画布 focusable）。
+
 ## @nekosu/maa-tasker
 
 - [x] **TODO-29** — **`applyParentToTask` 字符串拼接**: parent 前缀通过原始字符串拼接。已确认是模拟 MAA 内核行为——代码注释 "这就是 MAA" 即说明这是有意还原 MAA 的解析逻辑。

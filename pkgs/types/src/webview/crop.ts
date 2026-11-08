@@ -28,6 +28,10 @@ export type CropSettings = {
   pipelineVersion?: 'v1' | 'v2'
   /** 右栏宽度（px），拖拽调整 */
   panelWidth?: number
+  /** 右栏是否以悬浮窗显示（PS 面板式） */
+  panelFloat?: boolean
+  /** 悬浮窗位置与尺寸；h 省略时按内容自适应 */
+  floatRect?: { x: number; y: number; w: number; h?: number }
 }
 
 export type CropHostState = HostStateBase & CropSettings

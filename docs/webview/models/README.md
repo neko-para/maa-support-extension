@@ -42,6 +42,7 @@
 - **设置面板**: 只留外观与低频项——画布外观（ROI 框样式）、交互（滚轮方向）、高级折叠区（指针轴/辅助线/识别结果显示样式）；`saveAddRoiInfo` 与 `saveDir` 已就近移到导出面板，`pickColorThreshold`/`templateMatchThreshold` 在各自参数区
 - **截图**: 通过 MaaFramework 获取屏幕截图
 - **右栏**: 六个标签页——识别测试 / 颜色 / 涂绿 / ROI 计算 / 导出 / 设置，默认显示识别测试；涂绿与颜色是独立工作区，ROI 计算是独立小工具页（两个 ROI 相加 / 相减 / `rect_move`）；右栏显示哪个面板与识别测试上次选中的目标写入 `CropSettings`（`sidePanel` / `testTarget`），重开面板后恢复；无法识别的旧 `sidePanel` 值直接落回默认
+- **悬浮面板**: 右栏头部「悬浮显示」把面板变成画布上的浮动窗（PS 式）：拖标题栏移动、右下角拖尺寸（双击角柄回自适应高度），位置/尺寸写入 `floatRect` 持久化；「停靠到侧栏」回到 dock 形式，当前标签页保留；悬浮时标签是图标条而不是文字页签
 - **识别测试**: 一个区块统一四种目标——模板匹配、OCR、颜色匹配、节点（pipeline 节点试跑）；每个目标都有一句话说明它在哪个范围内运行（画布 ROI 或整图）；节点目标有「ROI 来源」单选——默认使用节点自身 ROI，可切换为把画布选区作为 pipeline_override 覆盖节点 `roi`（其他参数仍用节点配置），选择写入 `CropSettings`（`nodeRoiSource`）重开面板恢复；参数行以「中文名 + pipeline 字段名」展示（阈值 `threshold`、算法 `method`、忽略绿色 `green_mask`、仅识别 `only_rec`、最少像素 `count`、需连通 `connected`），运行前常驻可调；主按钮文案随目标变化（「选择模板并匹配」「选择节点并识别」），`Ctrl + Enter` 运行；运行条件不满足时按钮禁用并在提示中说明原因（无图、颜色匹配缺少颜色范围、MAA 模式下的节点试跑）
 - **识别结果**: 先给一行结论（命中 / 未命中、算法、最优得分或 count/text，未命中时给出得分最高的候选，命中框可一键复制），再给识别详情树；树节点按算法展示对应字段（TemplateMatch 的 `score`、FeatureMatch / ColorMatch 的 `count`、OCR 的 `text`、`NeuralNetworkClassify` / `NeuralNetworkDetect` 的 `cls_index` / `label`），某算法没有的字段不显示占位值，Custom 的 `detail` 只在「原始 JSON」中查看（默认收起）；「在画布上标出」开关控制勾选条目的框线绘制，该绘制由 `states/drawResult.ts` 常驻 step 执行，收起识别测试区块或切换右栏面板不再让画布上的结果框消失；每个目标只显示自己最近一次的结果与失败信息，失败与未命中不再显示为空白
 - **颜色匹配**: 对当前 ROI 运行 `ColorMatch`，范围直接取自取色区块的生效区间（推荐或手动覆盖，按外扩容差 `pickColorThreshold` 扩展，HSV 跨色相边界时拆成多区间）；方法跟随取色的 RGB/HSV/灰度选择；未采样时提供「去取色」入口

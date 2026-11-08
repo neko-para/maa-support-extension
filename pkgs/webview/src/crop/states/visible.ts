@@ -13,7 +13,14 @@ import { hostState } from '../state'
 const VALID_PANELS = ['test', 'color', 'mask', 'calc', 'export', 'settings', 'hidden'] as const
 
 function usePersisted<
-  K extends 'sidePanel' | 'testTarget' | 'nodeRoiSource' | 'pipelineVersion' | 'panelWidth'
+  K extends
+    | 'sidePanel'
+    | 'testTarget'
+    | 'nodeRoiSource'
+    | 'pipelineVersion'
+    | 'panelWidth'
+    | 'panelFloat'
+    | 'floatRect'
 >(key: K, def: NonNullable<CropSettings[K]>): Ref<NonNullable<CropSettings[K]>> {
   const local = ref(def) as Ref<NonNullable<CropSettings[K]>>
   watch(
@@ -67,6 +74,15 @@ export const pipelineVersion = usePersisted('pipelineVersion', 'v2')
 export const PANEL_WIDTH_MIN = 300
 export const PANEL_WIDTH_MAX = 560
 export const panelWidth = usePersisted('panelWidth', 360)
+/** 右栏是否悬浮显示 */
+export const panelFloat = usePersisted('panelFloat', false)
+/** 悬浮窗位置与尺寸；h 未设时按内容自适应（拖过角柄后才记住高度） */
+export const floatRect = usePersisted('floatRect', { x: 60, y: 60, w: 360 } as {
+  x: number
+  y: number
+  w: number
+  h?: number
+})
 
 /** `?` 帮助浮层的显示状态（不持久化：开一次看一次） */
 export const helpShown = ref(false)

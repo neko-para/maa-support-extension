@@ -103,6 +103,8 @@ export default {
   'maa.crop.tooltip.snippet-version':
     '选择 pipeline 片段的协议版本：v1 字段平铺（MPE / 旧项目），v2 字段收进 recognition.type / param',
   'maa.crop.side.collapse': '收起侧栏',
+  'maa.crop.side.float': '悬浮显示',
+  'maa.crop.side.dock': '停靠到侧栏',
   'maa.crop.status.cursor': '光标',
   'maa.crop.status.image': '图像',
   'maa.crop.screencap': '截图',

@@ -111,6 +111,8 @@ export default {
   'maa.crop.tooltip.snippet-version':
     'Pipeline snippet version: v1 keeps fields flat on the node (MPE / legacy), v2 nests them under recognition.type / param',
   'maa.crop.side.collapse': 'Collapse sidebar',
+  'maa.crop.side.float': 'Float panel',
+  'maa.crop.side.dock': 'Dock to sidebar',
   'maa.crop.status.cursor': 'Cursor',
   'maa.crop.status.image': 'Image',
   'maa.crop.screencap': 'Screencap',

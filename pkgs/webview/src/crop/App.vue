@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { default as BrushOutlined } from '@vicons/material/es/BrushOutlined'
+import { default as CloseOutlined } from '@vicons/material/es/CloseOutlined'
 import { default as ColorizeOutlined } from '@vicons/material/es/ColorizeOutlined'
+import { default as DockOutlined } from '@vicons/material/es/DockOutlined'
 import { default as FileUploadOutlined } from '@vicons/material/es/FileUploadOutlined'
 import { default as HandymanOutlined } from '@vicons/material/es/HandymanOutlined'
 import { default as ImageSearchOutlined } from '@vicons/material/es/ImageSearchOutlined'
 import { default as KeyboardArrowLeftOutlined } from '@vicons/material/es/KeyboardArrowLeftOutlined'
 import { default as KeyboardArrowRightOutlined } from '@vicons/material/es/KeyboardArrowRightOutlined'
 import { default as PhotoCameraOutlined } from '@vicons/material/es/PhotoCameraOutlined'
+import { default as PictureInPictureAltOutlined } from '@vicons/material/es/PictureInPictureAltOutlined'
 import { default as SaveOutlined } from '@vicons/material/es/SaveOutlined'
 import { default as SettingsOutlined } from '@vicons/material/es/SettingsOutlined'
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 import { NAlert, NButton, NConfigProvider, NFlex, NIcon, NScrollbar } from 'naive-ui'
-import { computed, onUnmounted, ref } from 'vue'
+import { type Component, computed, onUnmounted, ref } from 'vue'
 
 import Tooltip from '../components/AppTooltip.vue'
 import { t } from '../utils/locale'
@@ -25,7 +28,14 @@ import * as controlSt from './states/control'
 import * as drawResultSt from './states/drawResult'
 import * as imageSt from './states/image'
 import * as modeSt from './states/mode'
-import { PANEL_WIDTH_MAX, PANEL_WIDTH_MIN, panelWidth, sidePanel } from './states/visible'
+import {
+  PANEL_WIDTH_MAX,
+  PANEL_WIDTH_MIN,
+  floatRect,
+  panelFloat,
+  panelWidth,
+  sidePanel
+} from './states/visible'
 import CalcPanel from './views/CalcPanel.vue'
 import ColorPanel from './views/ColorPanel.vue'
 import ControlView from './views/ControlView.vue'
@@ -128,6 +138,16 @@ function collapsePanel() {
 
 type PanelTarget = 'test' | 'color' | 'mask' | 'calc' | 'export' | 'settings'
 
+/** dock 与浮窗共用同一套标签：图标只在 rail/浮窗里用 */
+const panelTabs: { key: PanelTarget; label: Parameters<typeof t>[0]; icon: Component }[] = [
+  { key: 'test', label: 'maa.crop.test.title', icon: ImageSearchOutlined },
+  { key: 'color', label: 'maa.crop.color', icon: ColorizeOutlined },
+  { key: 'mask', label: 'maa.crop.tools.green-mask', icon: BrushOutlined },
+  { key: 'calc', label: 'maa.crop.tools.roi-offset', icon: HandymanOutlined },
+  { key: 'export', label: 'maa.crop.export', icon: SaveOutlined },
+  { key: 'settings', label: 'maa.crop.settings', icon: SettingsOutlined }
+]
+
 function openPanel(target: PanelTarget) {
   sidePanel.value = target
 }
@@ -157,6 +177,86 @@ function startPanelDrag(event: PointerEvent) {
   el.addEventListener('pointermove', move)
   el.addEventListener('pointerup', up)
   el.addEventListener('pointercancel', up)
+}
+
+// ---------- 悬浮窗：拖动标题栏移动，右下角拖尺寸；h 未拖过则自适应内容 ----------
+
+const FLOAT_W_MIN = 260
+const FLOAT_W_MAX = 640
+
+/** 悬浮窗样式：位置/宽度持久化；高度仅在用户拖过角柄后固定 */
+const floatStyle = computed(() => {
+  const r = floatRect.value
+  const s: Record<string, string> = { left: `${r.x}px`, top: `${r.y}px`, width: `${r.w}px` }
+  if (r.h) {
+    s.height = `${r.h}px`
+  }
+  return s
+})
+
+function clampFloatRect(r: { x: number; y: number; w: number; h?: number }) {
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  r.w = Math.min(FLOAT_W_MAX, Math.max(FLOAT_W_MIN, Math.round(r.w)))
+  // 至少留在视口内一条边（标题栏永远可抓）
+  r.x = Math.min(Math.max(r.x, 40 - r.w), vw - 40)
+  r.y = Math.min(Math.max(r.y, 0), vh - 40)
+  if (r.h) {
+    r.h = Math.min(Math.max(r.h, 160), vh - 16)
+  }
+}
+
+function startFloatDrag(event: PointerEvent) {
+  const start = { ...floatRect.value }
+  const sx = event.clientX
+  const sy = event.clientY
+  const el = event.currentTarget as HTMLElement
+  el.setPointerCapture(event.pointerId)
+  const move = (e: PointerEvent) => {
+    const r = { ...start, x: start.x + e.clientX - sx, y: start.y + e.clientY - sy }
+    clampFloatRect(r)
+    floatRect.value = r
+  }
+  const up = () => {
+    el.removeEventListener('pointermove', move)
+    el.removeEventListener('pointerup', up)
+    el.removeEventListener('pointercancel', up)
+  }
+  el.addEventListener('pointermove', move)
+  el.addEventListener('pointerup', up)
+  el.addEventListener('pointercancel', up)
+}
+
+function startFloatResize(event: PointerEvent) {
+  event.stopPropagation()
+  const start = { ...floatRect.value }
+  const sx = event.clientX
+  const sy = event.clientY
+  const el = event.currentTarget as HTMLElement
+  el.setPointerCapture(event.pointerId)
+  const move = (e: PointerEvent) => {
+    const r = {
+      ...start,
+      w: start.w + e.clientX - sx,
+      // 用户拖过角柄就记住高度；想回自适应双击角柄
+      h: (start.h ?? document.getElementById('crop-float')?.offsetHeight ?? 300) + e.clientY - sy
+    }
+    clampFloatRect(r)
+    floatRect.value = r
+  }
+  const up = () => {
+    el.removeEventListener('pointermove', move)
+    el.removeEventListener('pointerup', up)
+    el.removeEventListener('pointercancel', up)
+  }
+  el.addEventListener('pointermove', move)
+  el.addEventListener('pointerup', up)
+  el.addEventListener('pointercancel', up)
+}
+
+function resetFloatHeight() {
+  // 双击角柄：回内容自适应高度
+  floatRect.value = { ...floatRect.value, h: undefined }
 }
 </script>
 
@@ -259,7 +359,7 @@ function startPanelDrag(event: PointerEvent) {
 
           <!-- 拖拽分隔条：300–560px；双击回默认宽 -->
           <div
-            v-if="sidePanel !== 'hidden'"
+            v-if="sidePanel !== 'hidden' && !panelFloat"
             class="crop-side-resizer"
             title=""
             @pointerdown="startPanelDrag"
@@ -267,54 +367,31 @@ function startPanelDrag(event: PointerEvent) {
           ></div>
 
           <div
-            v-if="sidePanel !== 'hidden'"
+            v-if="sidePanel !== 'hidden' && !panelFloat"
             class="crop-side"
             :style="{ width: `${panelWidth}px` }"
           >
             <div class="crop-side-tabs">
               <button
+                v-for="tab in panelTabs"
+                :key="tab.key"
                 class="crop-side-tab"
-                :class="{ 'is-active': sidePanel === 'test' }"
-                @click="openPanel('test')"
+                :class="{ 'is-active': sidePanel === tab.key }"
+                @click="openPanel(tab.key)"
               >
-                {{ t('maa.crop.test.title') }}
-              </button>
-              <button
-                class="crop-side-tab"
-                :class="{ 'is-active': sidePanel === 'color' }"
-                @click="openPanel('color')"
-              >
-                {{ t('maa.crop.color') }}
-              </button>
-              <button
-                class="crop-side-tab"
-                :class="{ 'is-active': sidePanel === 'mask' }"
-                @click="openPanel('mask')"
-              >
-                {{ t('maa.crop.tools.green-mask') }}
-              </button>
-              <button
-                class="crop-side-tab"
-                :class="{ 'is-active': sidePanel === 'calc' }"
-                @click="openPanel('calc')"
-              >
-                {{ t('maa.crop.tools.roi-offset') }}
-              </button>
-              <button
-                class="crop-side-tab"
-                :class="{ 'is-active': sidePanel === 'export' }"
-                @click="openPanel('export')"
-              >
-                {{ t('maa.crop.export') }}
-              </button>
-              <button
-                class="crop-side-tab"
-                :class="{ 'is-active': sidePanel === 'settings' }"
-                @click="openPanel('settings')"
-              >
-                {{ t('maa.crop.settings') }}
+                {{ t(tab.label) }}
               </button>
               <div style="flex: 1"></div>
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <button class="crop-side-tab crop-side-collapse" @click="panelFloat = true">
+                    <n-icon
+                      ><picture-in-picture-alt-outlined></picture-in-picture-alt-outlined
+                    ></n-icon>
+                  </button>
+                </template>
+                {{ t('maa.crop.side.float') }}
+              </Tooltip>
               <Tooltip trigger="hover">
                 <template #trigger>
                   <button class="crop-side-tab crop-side-collapse" @click="collapsePanel()">
@@ -334,8 +411,66 @@ function startPanelDrag(event: PointerEvent) {
             </n-scrollbar>
           </div>
 
+          <!-- 悬浮窗：图标标签 + 拖标题栏移动；高度自适应内容（拖角柄后固定，双击角柄回自适应） -->
+          <div
+            v-if="sidePanel !== 'hidden' && panelFloat"
+            id="crop-float"
+            class="crop-float"
+            :style="floatStyle"
+          >
+            <div class="crop-float-tabs" @pointerdown="startFloatDrag">
+              <Tooltip v-for="tab in panelTabs" :key="tab.key" trigger="hover">
+                <template #trigger>
+                  <button
+                    class="crop-float-tab"
+                    :class="{ 'is-active': sidePanel === tab.key }"
+                    @pointerdown.stop
+                    @click="openPanel(tab.key)"
+                  >
+                    <n-icon><component :is="tab.icon"></component></n-icon>
+                  </button>
+                </template>
+                {{ t(tab.label) }}
+              </Tooltip>
+              <div style="flex: 1"></div>
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <button class="crop-float-tab" @pointerdown.stop @click="panelFloat = false">
+                    <n-icon><dock-outlined></dock-outlined></n-icon>
+                  </button>
+                </template>
+                {{ t('maa.crop.side.dock') }}
+              </Tooltip>
+              <Tooltip trigger="hover">
+                <template #trigger>
+                  <button class="crop-float-tab" @pointerdown.stop @click="collapsePanel()">
+                    <n-icon><close-outlined></close-outlined></n-icon>
+                  </button>
+                </template>
+                {{ t('maa.crop.side.collapse') }}
+              </Tooltip>
+            </div>
+            <n-scrollbar
+              class="crop-float-scroll"
+              :style="{ maxHeight: floatRect.h ? `${floatRect.h - 40}px` : '70vh' }"
+            >
+              <test-panel v-show="sidePanel === 'test'"></test-panel>
+              <color-panel v-show="sidePanel === 'color'"></color-panel>
+              <mask-panel v-show="sidePanel === 'mask'"></mask-panel>
+              <calc-panel v-show="sidePanel === 'calc'"></calc-panel>
+              <export-panel v-show="sidePanel === 'export'"></export-panel>
+              <settings-view v-show="sidePanel === 'settings'"></settings-view>
+            </n-scrollbar>
+            <div
+              class="crop-float-resize"
+              title=""
+              @pointerdown="startFloatResize"
+              @dblclick="resetFloatHeight"
+            ></div>
+          </div>
+
           <!-- 折叠竖条：图标即面板入口，再点当前图标收起 -->
-          <div v-else class="crop-side-rail">
+          <div v-if="sidePanel === 'hidden'" class="crop-side-rail">
             <Tooltip trigger="hover" placement="left">
               <template #trigger>
                 <button class="crop-side-rail-btn" @click="toggleRail('test')">
@@ -413,6 +548,7 @@ function startPanelDrag(event: PointerEvent) {
   flex: 1;
   min-height: 0;
   gap: 10px;
+  position: relative;
 }
 
 .crop-stage {
@@ -530,6 +666,89 @@ function startPanelDrag(event: PointerEvent) {
 
 .crop-side-rail-btn:hover {
   background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.18));
+}
+
+/* 悬浮窗：标题栏拖动移动，右下角拖尺寸，高度默认随内容 */
+.crop-float {
+  position: absolute;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--vscode-sideBar-background, var(--vscode-editor-background, #1f1f1f));
+  border: 1px solid var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent));
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.crop-float-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-bottom: 1px solid
+    var(--vscode-editorWidget-border, var(--vscode-panel-border, transparent));
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.crop-float-tabs:active {
+  cursor: grabbing;
+}
+
+.crop-float-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--vscode-foreground, inherit);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.crop-float-tab:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.18));
+}
+
+.crop-float-tab.is-active {
+  color: var(--vscode-textLink-foreground, #3794ff);
+  background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.18));
+}
+
+.crop-float-scroll {
+  min-height: 0;
+}
+
+.crop-float-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  touch-action: none;
+  background: linear-gradient(
+    135deg,
+    transparent 50%,
+    var(--vscode-descriptionForeground, gray) 50%,
+    var(--vscode-descriptionForeground, gray) 55%,
+    transparent 55%,
+    transparent 70%,
+    var(--vscode-descriptionForeground, gray) 70%,
+    var(--vscode-descriptionForeground, gray) 75%,
+    transparent 75%
+  );
+  opacity: 0.5;
+}
+
+.crop-float-resize:hover {
+  opacity: 1;
 }
 
 .crop-empty {

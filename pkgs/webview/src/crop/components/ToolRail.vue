@@ -102,13 +102,19 @@ const shortcuts = computed(() => [
 </script>
 
 <template>
-  <div class="tool-rail">
+  <div
+    class="tool-rail"
+    role="toolbar"
+    aria-orientation="vertical"
+    :aria-label="t('maa.crop.rail.pointer')"
+  >
     <Tooltip v-for="tool in tools" :key="tool.key" trigger="hover" placement="right">
       <template #trigger>
         <button
           class="rail-btn"
           :class="{ 'is-active': modeSt.mode.value === tool.mode }"
           :aria-pressed="modeSt.mode.value === tool.mode"
+          :aria-label="`${t(railLabels[tool.key])} (${kbdLabel[tool.key]})`"
           :disabled="tool.mode !== 'pointer' && !hasImage"
           @click="toggle(tool.mode)"
         >
@@ -128,6 +134,7 @@ const shortcuts = computed(() => [
               class="rail-btn"
               :class="{ 'is-active': helpShown }"
               :aria-pressed="helpShown"
+              :aria-label="`${t('maa.crop.help.title')} (?)`"
               @click="helpShown = !helpShown"
             >
               <n-icon><help-outline-outlined></help-outline-outlined></n-icon>

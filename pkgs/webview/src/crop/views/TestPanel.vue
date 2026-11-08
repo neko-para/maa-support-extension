@@ -602,7 +602,12 @@ watch(flashSection, section => {
     </n-alert>
 
     <template v-if="testResult.detail && testSummary">
-      <div class="result-line" :class="testSummary.hit ? 'is-hit' : 'is-miss'">
+      <div
+        class="result-line"
+        :class="testSummary.hit ? 'is-hit' : 'is-miss'"
+        role="status"
+        aria-live="polite"
+      >
         <n-icon size="18">
           <check-circle-outlined v-if="testSummary.hit"></check-circle-outlined>
           <cancel-outlined v-else></cancel-outlined>

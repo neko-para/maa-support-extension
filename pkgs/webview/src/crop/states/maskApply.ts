@@ -72,9 +72,6 @@ export const pending = computed(
   () => greenMaskSt.hasContent.value || autoPending.value || lassoPending.value
 )
 
-/** apply() 联动打开 green_mask 前的值，undoApply 时回退 */
-let greenMaskBeforeApply: boolean | null = null
-
 export async function apply() {
   const img = imageSt.element.value
   if (!img || !pending.value) {
@@ -104,25 +101,28 @@ export async function apply() {
   if (!(await imageSt.set(canvas.toDataURL('image/png')))) {
     return false
   }
-  // set 会重置蒙版状态，快照必须在上图之后记录
-  greenMaskSt.markApplied(previous)
+  // set 会重置蒙版状态，快照必须在上图之后压栈；
+  // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂，
+  // 联动前的值一起进快照，撤销应用时逐层回退
+  greenMaskSt.pushApplied({ image: previous, greenMaskBefore: matchSt.greenMask.value })
   // 烘焙后的新图四边已是绿色，继续预览只会把同一片绿色再标一遍
   autoMaskSt.setEnabled(false)
-  // 模板里一旦烘焙了绿幕，匹配参数必须打开 green_mask，否则涂了等于没涂；
-  // 记住联动前的值，撤销应用时一并回退
-  greenMaskBeforeApply = matchSt.greenMask.value
   matchSt.greenMask.value = true
   return true
 }
 
 export async function undoApply() {
-  const previous = greenMaskSt.appliedFrom.value
-  if (previous && (await imageSt.restoreWithoutHistory(previous))) {
-    greenMaskSt.markRestored()
+  const snapshot = greenMaskSt.popApplied()
+  if (!snapshot) {
+    return
+  }
+  if (snapshot.image && (await imageSt.restoreWithoutHistory(snapshot.image))) {
     // apply() 联动打开的 green_mask 一起回退，恢复用户在此之前的选择
-    if (greenMaskBeforeApply !== null) {
-      matchSt.greenMask.value = greenMaskBeforeApply
-      greenMaskBeforeApply = null
+    if (snapshot.greenMaskBefore !== null) {
+      matchSt.greenMask.value = snapshot.greenMaskBefore
     }
+  } else {
+    // 恢复失败时把快照放回去，层数和画布状态保持一致
+    greenMaskSt.pushApplied(snapshot)
   }
 }

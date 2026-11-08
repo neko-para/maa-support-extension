@@ -34,8 +34,21 @@ export const method = ref<MaskMethod>('manual')
 
 /** 是否至少画过一笔（用于模板匹配参数区提示与 green_mask 联动） */
 export const hasContent = ref(false)
-/** 「应用」把绿幕烘焙进图像前的快照，用于撤销应用 */
-export const appliedFrom = ref<string | null>(null)
+
+/**
+ * 「应用」把绿幕烘焙进图像前的快照栈：连续多次应用可以逐次撤销，
+ * 每条同时记住 apply 前 green_mask 的联动值。上限 5 条防整图 dataURL 堆内存。
+ */
+export interface AppliedSnapshot {
+  image: string | null
+  greenMaskBefore: boolean | null
+}
+const appliedStack = ref<AppliedSnapshot[]>([])
+const MAX_APPLIED = 5
+/** 最近一次可撤销的应用快照（旧单槽位 API 的读视图） */
+export const appliedFrom = computed(() => appliedStack.value.at(-1)?.image ?? null)
+/** 可撤销的应用层数 */
+export const appliedCount = computed(() => appliedStack.value.length)
 
 const maskCanvas = shallowRef<HTMLCanvasElement | null>(null)
 const maskCtx = shallowRef<CanvasRenderingContext2D | null>(null)
@@ -96,7 +109,7 @@ export function reset() {
   undoSteps.value = 0
   isDrawingStroke.value = false
   hasContent.value = false
-  appliedFrom.value = null
+  appliedStack.value = []
 }
 
 function saveHistory() {
@@ -180,13 +193,17 @@ export function getMaskCanvas(): HTMLCanvasElement | null {
   return maskCanvas.value
 }
 
-/** 记录应用前的图像，供「撤销应用」恢复 */
-export function markApplied(previousImage: string | null) {
-  appliedFrom.value = previousImage
+/** 压入一次应用快照，供「撤销应用」逐层恢复 */
+export function pushApplied(snapshot: AppliedSnapshot) {
+  appliedStack.value.push(snapshot)
+  if (appliedStack.value.length > MAX_APPLIED) {
+    appliedStack.value.shift()
+  }
 }
 
-export function markRestored() {
-  appliedFrom.value = null
+/** 弹出最近一次应用快照 */
+export function popApplied(): AppliedSnapshot | undefined {
+  return appliedStack.value.pop()
 }
 
 /**

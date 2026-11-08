@@ -14,7 +14,7 @@ import { default as SettingsOutlined } from '@vicons/material/es/SettingsOutline
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
 import { NAlert, NButton, NConfigProvider, NFlex, NIcon, NScrollbar } from 'naive-ui'
-import { type Component, computed, onUnmounted, ref } from 'vue'
+import { type Component, computed, onMounted, onUnmounted, ref } from 'vue'
 
 import Tooltip from '../components/AppTooltip.vue'
 import { t } from '../utils/locale'
@@ -67,20 +67,42 @@ const activeMode = computed(() => modeSt.mode.value !== 'pointer' && modeSt.mode
 
 const hasImage = computed(() => !!imageSt.data.value)
 
-/** 拖入图片：空态和已有图都能替换，失败提示走 screencapError 通道 */
-function onDrop(event: DragEvent) {
-  const file = event.dataTransfer?.files?.[0]
-  if (!file || !file.type.startsWith('image/')) {
-    return
-  }
+/** 拖入/粘贴图片：空态和已有图都能替换，失败提示走 screencapError 通道 */
+function loadImageBlob(blob: Blob) {
   const reader = new FileReader()
   reader.onload = async () => {
     if (typeof reader.result === 'string' && !(await imageSt.set(reader.result))) {
       imageSt.screencapError.value = t('maa.crop.failure.decode')
     }
   }
-  reader.readAsDataURL(file)
+  reader.readAsDataURL(blob)
 }
+
+function onDrop(event: DragEvent) {
+  const file = event.dataTransfer?.files?.[0]
+  if (file && file.type.startsWith('image/')) {
+    loadImageBlob(file)
+  }
+}
+
+// Ctrl+V 直接贴剪贴板里的图（截图工具流最高频入口）；在输入框里时不抢
+function onPaste(event: ClipboardEvent) {
+  const target = event.target as HTMLElement | null
+  if (
+    target &&
+    (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+  ) {
+    return
+  }
+  const item = [...(event.clipboardData?.items ?? [])].find(i => i.type.startsWith('image/'))
+  const file = item?.getAsFile()
+  if (file) {
+    event.preventDefault()
+    loadImageBlob(file)
+  }
+}
+onMounted(() => window.addEventListener('paste', onPaste))
+onUnmounted(() => window.removeEventListener('paste', onPaste))
 
 /** 状态栏：精确调 ROI 时需要的量化信息常驻可见 */
 const pointerInside = ref(false)

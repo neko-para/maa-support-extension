@@ -280,7 +280,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
           canSelectMany: false,
           openLabel: 'Upload',
           filters: {
-            'Png files': ['png']
+            Images: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif']
           },
           defaultUri: stateService.state.uploadDir
             ? vscode.Uri.file(stateService.state.uploadDir)

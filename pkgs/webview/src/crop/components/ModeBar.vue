@@ -62,7 +62,7 @@ const lassoDrawing = computed(() => subjectSelectSt.drawing.value)
 </script>
 
 <template>
-  <div class="modebar">
+  <div class="modebar" role="toolbar" :aria-label="modeName ?? 'ROI'">
     <!-- pointer / 框选 ROI：ROI 精确编辑 + 显式动作（「⋯」菜单里的取整/限界移到这里） -->
     <template v-if="!modeName">
       <n-flex align="center" :size="6" :wrap="false">
@@ -77,6 +77,7 @@ const lassoDrawing = computed(() => subjectSelectSt.drawing.value)
           placeholder="x"
           size="small"
           class="modebar-num"
+          title="ROI x"
           @update:value="v => setRoiField(0, v)"
         />
         <n-input-number
@@ -86,6 +87,7 @@ const lassoDrawing = computed(() => subjectSelectSt.drawing.value)
           placeholder="y"
           size="small"
           class="modebar-num"
+          title="ROI y"
           @update:value="v => setRoiField(1, v)"
         />
         <n-input-number
@@ -95,6 +97,7 @@ const lassoDrawing = computed(() => subjectSelectSt.drawing.value)
           placeholder="w"
           size="small"
           class="modebar-num"
+          title="ROI width"
           @update:value="v => setRoiField(2, v)"
         />
         <n-input-number
@@ -104,6 +107,7 @@ const lassoDrawing = computed(() => subjectSelectSt.drawing.value)
           placeholder="h"
           size="small"
           class="modebar-num"
+          title="ROI height"
           @update:value="v => setRoiField(3, v)"
         />
         <Tooltip trigger="hover">

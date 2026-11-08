@@ -271,7 +271,11 @@ const subjectMaskErrorText = computed(() => {
       </n-button>
     </div>
     <n-text v-if="greenMaskSt.appliedFrom.value" depth="3" class="hint">
-      {{ t('maa.crop.tools.mask-applied') }}
+      {{
+        greenMaskSt.appliedCount.value > 1
+          ? `${t('maa.crop.tools.mask-applied')} ×${greenMaskSt.appliedCount.value}`
+          : t('maa.crop.tools.mask-applied')
+      }}
     </n-text>
   </div>
 </template>

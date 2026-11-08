@@ -2,7 +2,6 @@
 import { NAlert, NButton, NFlex, NInput, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
-import Tooltip from '../../components/AppTooltip.vue'
 import { t } from '../../utils/locale'
 import ParamRow from '../components/ParamRow.vue'
 import SettingsSwitch from '../components/SettingsSwitch.vue'

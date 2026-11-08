@@ -5,15 +5,7 @@ import { default as HelpOutlineOutlined } from '@vicons/material/es/HelpOutlineO
 import { default as MoreHorizOutlined } from '@vicons/material/es/MoreHorizOutlined'
 import { default as PhotoCameraOutlined } from '@vicons/material/es/PhotoCameraOutlined'
 import { default as SaveOutlined } from '@vicons/material/es/SaveOutlined'
-import {
-  type DropdownOption,
-  NButton,
-  NButtonGroup,
-  NDropdown,
-  NFlex,
-  NIcon,
-  NPopover
-} from 'naive-ui'
+import { type DropdownOption, NButton, NDropdown, NFlex, NIcon, NPopover } from 'naive-ui'
 import { computed } from 'vue'
 
 import Tooltip from '../../components/AppTooltip.vue'

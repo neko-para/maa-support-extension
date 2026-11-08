@@ -100,7 +100,6 @@ export const helpShown = ref(false)
 
 /** 最近一次「跳转」目标：面板消费后滚动到位并闪烁区块头 */
 export const flashSection = ref<ToolSection | null>(null)
-let flashTimer: ReturnType<typeof setTimeout> | undefined
 
 /** 区块 → 右栏标签页：跳转即切到对应面板 */
 const sectionPanel: Record<ToolSection, SidePanel> = {
@@ -114,7 +113,6 @@ const sectionPanel: Record<ToolSection, SidePanel> = {
 export function revealSection(section: ToolSection) {
   sidePanel.value = sectionPanel[section]
   // 面板可能已经在显示，这时只靠切换不够——仍需要滚动到位 + 高亮
-  globalThis.clearTimeout(flashTimer)
   flashSection.value = section
 }
 

@@ -118,7 +118,6 @@ export async function performColorMatch() {
   }
 
   loading.value = true
-  const startedAt = performance.now()
 
   try {
     const resp = (await ipc.call({

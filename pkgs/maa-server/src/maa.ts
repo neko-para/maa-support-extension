@@ -178,10 +178,15 @@ export async function updateCtrl(runtime: ControllerRuntime) {
     return false
   }
 
+  // display_short_side / display_long_side / display_expand / display_raw 互斥，
+  // 按协议只取第一个提供的字段。display_expand 为 Unity Canvas Scaler Expand 语义的
+  // 参考分辨率 [width, height]，需 MaaFramework 绑定提供 screenshot_target_expand。
   if (runtime.display_short_side) {
     controller.screenshot_target_short_side = runtime.display_short_side
   } else if (runtime.display_long_side) {
     controller.screenshot_target_long_side = runtime.display_long_side
+  } else if (runtime.display_expand) {
+    controller.screenshot_target_expand = runtime.display_expand
   } else if (runtime.display_raw) {
     controller.screenshot_use_raw_size = true
   }

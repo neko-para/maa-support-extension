@@ -88,11 +88,24 @@
 
 - `buildControllerRuntime()` — 构建控制器运行时常量；默认读取 MaaFramework 全局常量，也可通过第三个参数显式注入 `ControllerRuntimeConstants`，供无原生绑定的浏览器预览等环境使用
 - `type: 'Linux'` 的控制器会从 interface 元数据（`linux.screencap` / `linux.input`）和用户配置组装一份客户端侧 JSON（含 `pipewire_source` / `display_no` 等 client-only 标记字段），由 maa-server 连接时解析并注入 `pw_node_id` / `eis_socket_path`；`screencap_method` / `input_method` 在 JSON 中为数字（binding 导出的常量为字符串，必须经 `Number()` 转换，否则原生创建控制器会失败）；`pipewire_source: 'Portal'` 尚未接入（详见 [docs/TODO.md](../../TODO.md) TODO-37），构建时直接返回错误字符串
+- 控制器的屏幕适配字段 `display_short_side` / `display_long_side` / `display_expand` / `display_raw` 会原样带入 controller runtime，由 maa-server 落到 MaaFramework 控制器；四者互斥
 - `buildResourceRuntime()` — 构建资源路径运行时
 - `buildOption()` — 解析选项依赖链
 - `buildTaskRuntime()` — 构建带 pipeline override 的任务运行时
 
 Select、Switch 和 Checkbox 在用户未提供显式配置时均使用各自的 `default_case`。Checkbox 默认选中的 case 会参与子选项依赖解析和 `pipeline_override` 构建。
+
+### 8. 新增 controller 字段 checklist
+
+给 `interface.json` 的 controller 增加一个字段时，按下面 5 点过一遍，避免漏层：
+
+1. **类型** — [interfaceRuntime.ts](../../../pkgs/maa-pipeline-manager/src/logic/types/interfaceRuntime.ts) 的 `ControllerRuntimeBase`：加字段声明（值类型照协议）。
+2. **构建拷贝** — [controller.ts](../../../pkgs/maa-pipeline-manager/src/logic/runtime/controller.ts) 的 `buildControllerRuntime`：把 `ctrlInfo.<field>` 放进 `baseOption`。漏了字段止步于解析结果、进不了 runtime。
+3. **绑定落地** — [maa.ts](../../../pkgs/maa-server/src/maa.ts) 的 `updateCtrl`：把 runtime 字段设到 MaaFramework 控制器。纯客户端字段（如 `permission_required`）跳过这步。
+4. **解析器（条件）** — [interface.ts](../../../pkgs/maa-pipeline-manager/src/parser/interface/interface.ts) 的 `parseController`：仅当字段是路径 / 引用 / 多语言语义（如 `attach_resource_path`、`option`）时才需要；普通标量字段不用动。
+5. **排序与文档** — [parser.ts](../../../pkgs/prettier-plugin-maafw-sort/src/parser.ts) 的 `controllerEntryKeys` 加入字段以保持排序稳定，并同步本目录与 maa-server 的 models 文档。
+
+其中 1–3 是让字段真正生效的必改项；4 视字段语义按需；5 只影响规范与文档。
 
 ## 抽象边界
 

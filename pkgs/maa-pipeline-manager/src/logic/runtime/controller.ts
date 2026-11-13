@@ -55,6 +55,7 @@ export function buildControllerRuntime(
 
     display_short_side: ctrlInfo.display_short_side,
     display_long_side: ctrlInfo.display_long_side,
+    display_expand: ctrlInfo.display_expand,
     display_raw: ctrlInfo.display_raw,
     permission_required: ctrlInfo.permission_required,
     attach_resource_path: ctrlInfo.attach_resource_path?.map(x =>

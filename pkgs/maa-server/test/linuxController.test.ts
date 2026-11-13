@@ -61,6 +61,7 @@ type FakeMaaOptions = {
 // updateCtrl 在调用时读取 globalThis.maa，因此可以注入假的 MaaFramework 绑定
 function setupFakeMaa({ instances = [], compositors = [], supported = true }: FakeMaaOptions = {}) {
   const createdConfigs: Record<string, unknown>[] = []
+  const createdControllers: LinuxController[] = []
   let findCalls = 0
 
   class LinuxController {
@@ -74,9 +75,11 @@ function setupFakeMaa({ instances = [], compositors = [], supported = true }: Fa
     }
 
     connected = true
+    screenshot_target_expand?: [number, number]
 
     constructor(config: string) {
       createdConfigs.push(JSON.parse(config) as Record<string, unknown>)
+      createdControllers.push(this)
     }
 
     add_sink(_callback: unknown) {}
@@ -102,6 +105,7 @@ function setupFakeMaa({ instances = [], compositors = [], supported = true }: Fa
 
   return {
     createdConfigs,
+    createdControllers,
     get findCalls() {
       return findCalls
     }
@@ -260,6 +264,20 @@ test('linux runtime built by the client stays numeric and is accepted by the ser
   assert.equal(fake.createdConfigs[0].screencap_method, 4)
   assert.equal(fake.createdConfigs[0].pw_node_id, 11)
   assert.equal(fake.createdConfigs[0].eis_socket_path, '/run/user/1000/gamescope-0-ei')
+})
+
+test('display_expand runtime sets screenshot_target_expand on the controller', async () => {
+  const fake = setupFakeMaa()
+
+  const runtime: ControllerRuntime = {
+    ...linuxRuntime('expand-controller', { screencap_method: 1, input_method: 1 }),
+    display_expand: [1280, 720]
+  }
+
+  const ok = await withPlatform('linux', () => updateCtrl(runtime))
+
+  assert.equal(ok, true)
+  assert.deepEqual(fake.createdControllers[0].screenshot_target_expand, [1280, 720])
 })
 
 test('linux controller fails cleanly on non-Linux platforms', async () => {

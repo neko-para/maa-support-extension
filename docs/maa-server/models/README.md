@@ -27,6 +27,8 @@ VSCode 插件进程可能无法以管理员权限运行，而某些 MaaFramework
 
 通过 MaaFramework API 管理多种控制器类型（ADB、Win32、PlayCover、Gamepad、Linux、自定义控制器等），提供统一的创建、更新接口。
 
+`updateCtrl` 按 runtime 的屏幕适配字段设置控制器截图缩放：`display_short_side` → `screenshot_target_short_side`、`display_long_side` → `screenshot_target_long_side`、`display_expand` → `screenshot_target_expand`、`display_raw` → `screenshot_use_raw_size`。四者互斥，按 short → long → expand → raw 的顺序取第一个有值的字段。
+
 Linux 控制器（需 MaaFramework ≥ 5.13.0-beta.3）：
 
 - 从客户端配置 JSON 读取 `screencap_method` / `input_method`，通过 `maa.LinuxController` 创建

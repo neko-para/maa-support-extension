@@ -120,10 +120,10 @@ export class Bundle extends EventEmitter<{
       const imageFile = file
         .replaceAll(path.sep, '/')
         .replace(this.maa ? 'template/' : 'image/', '') as ImageRelativePath
-      if (!this.layer.images.has(imageFile)) {
-        this.layer.images.add(imageFile)
-        this.dispatchImageChanged()
-      }
+      // 覆盖已有模板同样要通知：消费方（裁剪面板的快速识别会话）缓存的是解码后的图片，
+      // 只在新文件时通知会让改过的模板一直按旧内容匹配
+      this.layer.images.add(imageFile)
+      this.dispatchImageChanged()
     }
   }
 

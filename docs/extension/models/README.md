@@ -73,7 +73,7 @@ MaaFramework 的 pipeline 开发者。用户通过 VSCode 编辑 JSON/JSONC 格�
 - 模板匹配
 - ColorMatch 识别：直接使用取色采样得到的推荐范围（含 `pickColorThreshold` 扩展与 HSV 跨 0 多区间）
 - 任务识别测试：非 MAA 模式下，节点使用 `Custom` 识别时会按需启动 interface 声明的 agent 并校验识别名注册情况，失败原因回显到面板
-- 裁剪面板比 maa-server 连接活得久：每次请求都使用当前连接（必要时重新拉起 server）；释放快速识别会话只在已有连接时发送，interface/pipeline/资源变更触发的释放合并为 500ms 一次
+- 裁剪面板比 maa-server 连接活得久：每次请求都使用当前连接（必要时重新拉起 server）；快速识别会话只在已有连接时释放。interface/pipeline/资源变更事件到达即置脏，释放动作合并成 500ms 一次；裁剪工具自己保存模板、重新打开面板无法等文件监听（约 100ms）到达，保存/打开时立即置脏。变更后下一次节点识别会先等释放完成再请求，释放失败则直接报 IPC 失败而不是用旧定义识别，避免点击早于合并窗口时仍用旧定义
 - 识别结果详情查看
 - `maa.open-crop` 命令可由其他 VS Code 插件调用；可选参数 `{ image, detail }` 中，`image` 为 data URL，`detail` 为 `maa.RecoDetailWithoutDraws`。省略参数时仍打开空白裁剪工具；成功时返回 `{ opened, imageAccepted, detailAccepted }`
 - VS Code Explorer 中的 `.png` 文件可通过右键菜单调用 `maa.open-crop`，命令会读取目标文件并将图像直接载入裁剪工具

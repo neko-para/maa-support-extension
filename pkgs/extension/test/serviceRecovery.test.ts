@@ -8,6 +8,7 @@ const read = (rel: string) => fs.readFile(new URL(rel, import.meta.url), 'utf8')
 const agentSource = await read('../src/service/agent.ts')
 const serverSource = await read('../src/service/server.ts')
 const launchSource = await read('../src/service/launch.ts')
+const cropSource = await read('../src/service/webview/crop.ts')
 const rpcSource = await read('../src/service/utils/rpc.ts')
 const maaServerMaaSource = await read('../../maa-server/src/maa.ts')
 const maaServerAgentSource = await read('../../maa-server/src/agent.ts')
@@ -70,4 +71,21 @@ test('setupInstance 失败后重建 maa-server 并重试一次', () => {
 
 test('RpcManager.kill 同步清空连接，重建后可立即重连', () => {
   assert.match(rpcSource, /this\.conn = undefined/)
+})
+
+test('识别前先释放变更前的快速识别会话', () => {
+  // 变更事件到点击之间有一个合并窗口；只靠定时器释放会让本次识别仍命中旧资源缓存。
+  // 脏标记必须在 requestReco 里等释放完成后再调 performReco。
+  assert.match(cropSource, /let recoSessionDirty = false/)
+  const recoCase = cropSource.slice(cropSource.indexOf("case 'requestReco'"))
+  const releaseAt = recoCase.indexOf('await releaseRecoSession(ipc)')
+  const performAt = recoCase.indexOf('.performReco(')
+  assert.ok(releaseAt > 0, 'requestReco 没有在识别前释放旧会话')
+  assert.ok(performAt > releaseAt, '释放必须在 performReco 之前完成')
+  // 释放失败时缓存仍是旧定义：不能拿旧 pipeline/模板继续识别，直接报 IPC 失败
+  assert.match(
+    recoCase,
+    /recoSessionDirty && !\(await releaseRecoSession\(ipc\)\)/,
+    '释放失败时仍会继续识别'
+  )
 })

@@ -65,7 +65,7 @@
 
 - `FsContentLoader` / `FsContentWatcher` — 文件读写和 chokidar 监视；macOS 默认使用 polling，避免大型资源初次扫描时为每个匹配文件创建 `fs.watch` 句柄并触发 `EMFILE`。调用方可通过 `FsContentWatcherOptions` 显式覆盖 watcher 选项
 - `ContentJson<T>` — 带 debounce flush 的 JSON/JSONC 文件监视
-- `Bundle` / `BundleManager` — pipeline 资源目录管理
+- `Bundle` / `BundleManager` — pipeline 资源目录管理；模板图片（`image/*.png`）新增或覆盖都会发出 `imageChanged`，消费方缓存解码后的图片时据此失效
 - `InterfaceBundle.resolvePaths(controller, resource)` — 在不切换 active 状态的情况下计算有序资源路径，供批处理消费者规划隔离任务
 
 `IContentLoader` / `IContentWatcher` 用于在 Node.js host 内替换内容来源，例如让 VS Code 未保存文档覆盖磁盘内容；它们不抽象 `Bundle`、`InterfaceBundle` 的文件路径、事件循环和目录监视语义，因此不是通用的浏览器文件系统适配层。

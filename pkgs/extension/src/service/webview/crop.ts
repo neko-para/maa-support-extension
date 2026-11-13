@@ -41,6 +41,9 @@ export interface OpenCropResult {
 }
 
 export async function openCropPanel(ipc: IpcType, payload?: OpenCropPayload) {
+  // 面板关闭期间改过的 pipeline/模板无法在这里区分，第一次识别前统一重建会话；
+  // 正常关闭时 dispose 已释放过会话，这里只是补上释放失败/空窗期的兜底
+  recoSessionDirty = true
   const panel = new WebviewCropPanel(ipc, 'Maa Crop')
   await panel.init()
 
@@ -63,29 +66,57 @@ export async function openCropPanel(ipc: IpcType, payload?: OpenCropPayload) {
 /** 打开中的裁剪面板数量：最后一个关闭时释放快速识别缓存的 agent 会话 */
 let openCropPanels = 0
 let releaseTimer: NodeJS.Timeout | undefined
+/**
+ * 变更后 maa-server 里缓存的快速识别会话仍带着旧定义：pipeline json 与模板图片都只在
+ * 新建 Resource 时重新读取（原生侧有流水线和图片缓存），所以置脏后必须真的重建一次会话，
+ * 不能等空闲超时。
+ */
+let recoSessionDirty = false
 
 /**
- * 释放 maa-server 里快速识别缓存的会话。
+ * 释放 maa-server 里快速识别缓存的会话，等 server 回包后再返回。
  * 只在已有连接时发送：没有连接就没有会话，也不应为此拉起 server。连接在发送前断开时
  * sendRequest 会同步抛出，需要与异步拒绝一起收口。
+ * 返回 false 表示释放失败、缓存仍是旧定义，调用方不能用它做识别。
  */
-function releaseRecoSession() {
-  if (!serverService.rpc.conn) {
-    return
+async function releaseRecoSession(ipc: IpcType | null): Promise<boolean> {
+  clearTimeout(releaseTimer)
+  releaseTimer = undefined
+  if (!ipc) {
+    // 没有连接就没有会话，脏标记可以安全丢弃
+    recoSessionDirty = false
+    return true
   }
-  Promise.resolve()
-    .then(() => serverService.ipc?.releaseRecoSession())
-    .catch(err => {
-      logger.warn(`release quick reco session failed: ${err}`)
-    })
+  try {
+    await ipc.releaseRecoSession()
+    recoSessionDirty = false
+    return true
+  } catch (err) {
+    // 释放失败时保留脏标记，下一次识别前会再试一次，避免继续用旧资源
+    logger.warn(`release quick reco session failed: ${err}`)
+    return false
+  }
 }
 
-/** 编辑 pipeline 时变更事件密集到达，合并成一次释放 */
+/** 有连接时释放；没有连接就不为此拉起 server */
+function releaseCachedRecoSession() {
+  // 面板关闭时也要取消待触发的合并释放，否则它可能在重开面板后打掉刚建好的会话
+  clearTimeout(releaseTimer)
+  releaseTimer = undefined
+  if (!serverService.rpc.conn) {
+    recoSessionDirty = false
+    return
+  }
+  void releaseRecoSession(serverService.ipc)
+}
+
+/** 编辑 pipeline/模板时变更事件密集到达，合并成一次释放 */
 function scheduleReleaseRecoSession() {
+  recoSessionDirty = true
   clearTimeout(releaseTimer)
   releaseTimer = setTimeout(() => {
     releaseTimer = undefined
-    releaseRecoSession()
+    releaseCachedRecoSession()
   }, 500)
 }
 
@@ -141,9 +172,7 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
     openCropPanels = Math.max(openCropPanels - 1, 0)
     if (openCropPanels === 0) {
       // 面板全部关闭后释放快速识别会话，避免 agent 子进程一直挂着
-      clearTimeout(releaseTimer)
-      releaseTimer = undefined
-      releaseRecoSession()
+      releaseCachedRecoSession()
     }
     console.log('crop panel dispose')
   }
@@ -364,10 +393,16 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
               : `${name}.png`
           )
           await vscode.workspace.fs.writeFile(resultPath, finalImage)
+          const relativePath = this.templateRelativePath(resultPath)
+          if (relativePath) {
+            // 刚写掉的是资源里的模板：缓存会话可能已把同名图片解码进内存，立刻置脏，
+            // 保存后直接点识别也不会命中旧图（文件监听的 100ms 合并窗口还没到）
+            recoSessionDirty = true
+          }
           // 不自动 revealInExplorer：避免保存后抢走焦点，由 webview 的「打开所在文件夹」显式触发
           this.response(data.seq, {
             path: resultPath.fsPath,
-            relativePath: this.templateRelativePath(resultPath)
+            relativePath
           })
         } catch (err) {
           logger.error(`save failed, error ${err}`)
@@ -531,9 +566,18 @@ export class WebviewCropPanel extends WebviewPanelProvider<CropHostToWeb, CropWe
         let result: ToolResult | null = null
         let failed = false
         try {
-          result = await (
-            await this.currentIpc()
-          ).performReco(
+          const ipc = await this.currentIpc()
+          // 变更事件与点击可能落在同一个 500ms 合并窗口里：识别前先把旧会话释放掉，
+          // 否则本次识别仍会命中变更前的 pipeline/模板缓存。释放失败也不能继续，
+          // 用旧定义识别出的结果用户分辨不出来，直接按 IPC 失败处理
+          if (recoSessionDirty && !(await releaseRecoSession(ipc))) {
+            this.response(data.seq, {
+              detail: null,
+              failure: { message: t('maa.crop.reco.failure.ipc') }
+            })
+            break
+          }
+          result = await ipc.performReco(
             data.image.replace('data:image/png;base64,', ''),
             resources.map(u => u.fsPath),
             (await this.buildAgentSetup()) ?? undefined,

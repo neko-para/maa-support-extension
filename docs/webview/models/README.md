@@ -112,6 +112,15 @@ Webview 使用独立的响应式 locale 系统：
 
 该字典只包含 Webview UI 文案，与 host/checker 使用的 `@nekosu/maa-locale` 没有相同 key；独立边界及重新评估条件参见 [locale-system.md](../../extra/locale-system.md)。控制面板的 Linux 控制器相关文案使用 `maa.control.*` 前缀（扫描/选择 gamescope 实例与 Wayland 合成器、提示 Portal 模式未支持等）。
 
+### Tooltip
+
+三个应用的悬停提示统一走 `components/AppTooltip.vue`（`maa.webviewTooltipDisabled` 可整体关闭）：
+
+- **显示时机**: 指针在触发元素内**停住** 500ms 才显示；指针继续移动会重新计时，扫过按钮不会闪出提示。抖动小于 3px 不算移动，避免手抖永远等不到提示。可用 `delay` 属性按需调整停顿时长
+- **宽度**: 上限跟随面板宽度（约面板的 3/4，封顶 320px），长文案换行而不是把宽度顶满面板
+- **对齐**: 默认居中；居中会超出面板时改为贴住空间更大的一侧，并按该侧可用空间收紧宽度，避免提示被 webview 边缘裁掉；调用方显式指定 `placement`（如 `left`）时只收紧宽度，不改朝向
+- **触发元素**: `#trigger` 应放单个根元素（按钮、图标或包一层的 `span`），提示的位置与指针判定都以该元素为准
+
 ## 抽象边界
 
 - 所有 Webview 代码在浏览器沙箱中运行

@@ -110,7 +110,7 @@ src/
 │   ├── tools.ts            # debounce()
 │   └── base.css            # 基础样式
 └── components/             # 跨应用共享组件
-    ├── AppTooltip.vue
+    ├── AppTooltip.vue      # 统一 tooltip：停住才显示 + 宽度/对齐收敛
     └── JsonCode.vue        # Prettier 实时格式化 JSON
 
 test/                       # node --test 单测（纯函数，不依赖 DOM）
@@ -149,6 +149,15 @@ Crop 的状态模块之间存在循环导入（`image` ↔ `control` 等）。ES
 Control Panel 将低频变化但可能较大的 `interfaceJson` 与常规 `hostState` 分成 `updateInterface`、`updateState` 两种 IPC 消息。配置修改、服务状态变化等只重发 `hostState`；仅 interface 主文件或 import 变化时才重发合并后的 interface 快照。
 
 Webview 将两份 IPC 数据都视为不可变快照，并使用 `shallowRef` 保存。消息到达时替换整个 `.value` 以触发视图更新，不对 interface、任务配置等嵌套对象创建深层响应式代理。组件不得直接修改快照；所有配置变更通过 IPC 交给 extension host，等待下一份快照回传。文本型任务选项保留 500ms debounce，以合并高频输入产生的配置写入和 state 回传。
+
+## Tooltip 显示时机与定位
+
+naive-ui 的 `NTooltip` 从 `mouseenter` 起算 `delay`，指针一路扫过按钮时会在到达的同时弹出；tooltip 宽度也没有上限，长文案会把宽度顶满 webview 视口，居中定位后越出面板的部分被 iframe 边缘裁掉。`components/AppTooltip.vue` 因此自己接管这两件事：
+
+- `trigger` 固定为 `manual`，由组件内的定时器驱动 `show`：`mouseenter` 起算，`mousemove` 位移超过 3px 就重新计时，`mouseleave` 清理并隐藏。停顿时长由 `delay` 属性给出（默认 500ms）
+- 指针事件通过 `cloneVNode` 克隆 `#trigger` 的 vnode 挂到触发元素上。这里不能用包装组件：naive-ui 的定位指令要求 trigger 的 vnode 根节点是 DOM 元素，多一层组件会让指令落空（Vue 会提示 "Runtime directive used on component with non-element root node"）
+- 宽度上限按 `documentElement.clientWidth` 计算（面板宽度的 3/4，封顶 320px），用 `box-sizing: border-box` 让上限包含 popover 自身 padding；定位先试居中，居中会越界时改成贴住空间更大的一侧，并把宽度压到该侧放得下
+- 显式传 `placement`（`crop` 的 `ParamRow` 用 `left`）时保留调用方的朝向，只按该方向的可用空间收紧宽度
 
 ## Locale 状态
 

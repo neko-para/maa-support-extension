@@ -94,7 +94,7 @@ function cast<T>(val: unknown): T {
       </n-flex>
     </template>
     <n-flex vertical>
-      <template v-for="opt in allOptions" :key="opt">
+      <template v-for="opt in allOptions" :key="opt.name">
         <template v-if="interfaceJson?.option?.[opt.name]">
           <template v-if="(interfaceJson.option[opt.name]?.type ?? 'select') === 'select'">
             <task-select-option

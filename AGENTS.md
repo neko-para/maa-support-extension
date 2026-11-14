@@ -1,8 +1,16 @@
 # AGENTS.md
 
-## 文档
+## 先文档，后代码
 
-项目文档位于 [docs/](docs/)。入口：[docs/README.md](docs/README.md) — 包含项目概述、文档结构说明和所有包的导航索引。
+项目文档位于 [docs/](docs/)，入口 [docs/README.md](docs/README.md) — 包含项目概述、文档结构说明和所有包的导航索引。任何实质性操作之前，先读文档再看源码：
+
+1. 本文件：项目约定
+2. [docs/README.md](docs/README.md)：项目结构与各包职责
+3. 目标包的文档目录：`models/` → 产品定义，`tech/` → 技术架构，`specs/` → 编码规范
+4. 相关的 `docs/extra/` 跨包文档
+5. 以上读完后再阅读源代码
+
+跨包/跨模块的分析任务（如 LSP 策略、解析器设计），`docs/extra/` 中的专题文档优先于源码阅读。
 
 ## 修改代码时同步更新文档
 

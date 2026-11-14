@@ -33,7 +33,7 @@
     "@maaxyz/maa-node": "5.13.0",
     "@tsconfig/node24": "^24.0.4",
     "@types/node": "^25.3.5",
-    "esbuild": "^0.27.3",
+    "esbuild": "^0.28.2",
     "typescript": "^5.9.3"
   }
 }

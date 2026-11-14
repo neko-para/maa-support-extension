@@ -12,6 +12,7 @@
 - [x] **TODO-4** — **缺失测试基础设施**: 已建立根 `pnpm test` 递归编排和 CI 测试步骤。Node.js 包优先使用 Node.js 24 内置 `node:test`，测试位于包内 `test/**/*.test.ts` 并纳入类型检查；需要特殊运行时的包保留包级适配。首批测试覆盖 `maa-version-manager` 安装事务。约定已记录到 [common-tech.md](extra/common-tech.md#测试)。
 - [x] **TODO-5** — **Webview locale 与 @nekosu/maa-locale 代码重复**: 已确认两套 locale 是有意的运行时边界。Webview 的 164 个 UI key 与 `@nekosu/maa-locale` 的 125 个 host/checker key 无精确交集，且前者依赖 Vue `ref`/`computed` 响应式切换，后者使用适合扩展与 CLI 的模块级状态。仅 `t()` 占位符替换和 `CountBrace` 约十几行模式相同，为此增加公开包与浏览器 UI 的耦合收益不足。结论记录于 [locale-system.md](extra/locale-system.md)。
 - [x] **TODO-6** — **基础包版本更新时依赖包需手动升版**: 已新增 `pnpm version-packages`。显式包按 `major`/`minor`/`patch` 或精确稳定版本升版，所有通过运行时 `workspace:*` 依赖它的直接和传递公开包自动升 patch，并按依赖拓扑顺序输出。默认只预览，`--write` 才修改所有相关 manifest。使用方式已记录到 [build-and-publish.md](extra/build-and-publish.md#发布-npm-包nekosu-作用域)。
+- [ ] **TODO-50** — **依赖审计残留 5 条告警（上游锁版本）**: `pnpm audit` 剩 1 high + 4 moderate，都不是本项目代码能消除的，且**不使用 `pnpm.overrides`**（越界 major 升级没有上游测试背书，还会成为长期维护负担）：`zod`（`@jimp/types` 锁 `^3.23.8`，补丁要 4.6.6，只校验用户自己选的图片）、`glob`（`@npmcli/package-json` 锁 `^13`，补丁要 14.0.2，而那条 node-gyp 路径本仓库不执行）、`minimatch`（prettier 插件 / eslint 链，补丁要 11.0.1，纯开发期）、`yaml`（vite peer 图，补丁 2.8.3，只解析本仓库自己的配置）。它们随 jimp 升 zod 4、vite 生态跟进后自然消失，届时重跑 `pnpm audit` 复核；其余告警已在 chore(deps) 中处理完（2 critical / 55 high → 0 critical / 1 high）。
 
 ## @mse/extension
 

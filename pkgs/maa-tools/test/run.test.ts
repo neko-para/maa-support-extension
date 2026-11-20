@@ -7,6 +7,7 @@ import type { TestCases } from '../src/types/config'
 const {
   compareTestCases,
   describeRunReason,
+  formatRunFailures,
   formatRunSummary,
   getDefaultTestJobCount,
   groupResourcePlans
@@ -122,5 +123,106 @@ test('失败原因认得错误码就翻成人话并保留原码，认不出或�
   assert.equal(
     describeRunReason('没有匹配到测试组，请检查配置、来源和过滤条件'),
     '没有匹配到测试组，请检查配置、来源和过滤条件'
+  )
+})
+
+test('全部通过或全跳过时没有失败清单', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        { name: 'Demo', cases: [{ image: 'a.png', verdict: 'pass', platforms: [] }] },
+        { name: 'Demo', cases: [{ image: 'b.png', verdict: 'skipped', platforms: [] }] }
+      ]
+    }),
+    []
+  )
+})
+
+test('失败清单一条用例一项，列出失败检查并保留组名与图片名', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          name: 'ControllerA:ResourceA',
+          cases: [
+            {
+              image: 'example.png',
+              verdict: 'fail',
+              platforms: [
+                {
+                  controller: 'Desktop',
+                  resource: 'Local',
+                  result: {
+                    checks: [
+                      { node: 'Entry', ok: false, reason: 'should-hit' },
+                      { node: 'Passed', ok: true },
+                      {
+                        node: 'Box',
+                        ok: false,
+                        reason: 'box-mismatch',
+                        expectedBox: [1, 2, 3, 4],
+                        detail: { box: [5, 6, 7, 8] }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }),
+    [
+      '失败用例（1 条）：',
+      '  ControllerA:ResourceA  example.png',
+      '    Entry should hit but missed',
+      '    Box box mismatch. Expect [1,2,3,4], hit [5,6,7,8]'
+    ]
+  )
+})
+
+test('失败清单合并多平台重复明细，执行错误用错误原文，没有组名时退回 controller:resource', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          name: null,
+          cases: [
+            {
+              image: 'boom.png',
+              verdict: 'error',
+              reason: 'test-execution-failed',
+              platforms: [
+                {
+                  controller: 'Desktop',
+                  resource: 'Local',
+                  result: { checks: [], error: 'worker 崩了' }
+                },
+                {
+                  controller: 'Desktop',
+                  resource: 'Local',
+                  result: { checks: [], error: 'worker 崩了' }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }),
+    ['失败用例（1 条）：', '  Desktop:Local  boom.png', '    worker 崩了']
+  )
+})
+
+test('失败清单在没有检查和错误时用用例原因兜底，不打印空明细', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          name: 'Demo',
+          cases: [{ image: 'x.png', verdict: 'error', reason: 'no-tests-verified', platforms: [] }]
+        }
+      ]
+    }),
+    ['失败用例（1 条）：', '  Demo  x.png', '    no-tests-verified']
   )
 })

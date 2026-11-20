@@ -509,16 +509,21 @@ export async function runTest(cfg: FullConfig, options: TestRunOptions = {}) {
   if (result.reason) {
     console.error(describeRunReason(result.reason))
   }
-  // 配置、来源或参数在展开前就失败时没有任何文件，汇总只会是一行 0，交给原因说明即可。
+  // 配置、来源或参数在展开前就失败时没有任何文件，清单和汇总只会是一串 0，交给原因说明即可。
   if (result.files.length > 0) {
-    const summary = formatRunSummary(result)
-    if (cfg.mode === 'github') {
-      coreInfo(summary)
-    } else if (cfg.mode === 'json') {
-      console.error(summary)
-    } else {
-      console.log(summary)
+    const putLine = (line: string) => {
+      if (cfg.mode === 'github') {
+        coreInfo(line)
+      } else if (cfg.mode === 'json') {
+        console.error(line)
+      } else {
+        console.log(line)
+      }
     }
+    for (const line of formatRunFailures(result)) {
+      putLine(line)
+    }
+    putLine(formatRunSummary(result))
   }
   return result.status === 'passed'
 }
@@ -576,19 +581,99 @@ export function describeRunReason(reason: string): string {
   return text ? `${text}（${reason}）` : reason
 }
 
-function formatCheckError(image: string, check: CaseCheckResult): string {
+function formatCheckError(image: string, check: CheckLike): string {
+  return `  ${image} ${describeCheck(check)}`
+}
+
+/** 只取判定说明用到的字段；测试可以只构造这几个字段，不必造完整识别明细。 */
+type CheckLike = {
+  node: string
+  ok: boolean
+  reason?: CaseCheckResult['reason']
+  expectedBox?: unknown
+  detail?: { box?: unknown } | null
+}
+
+/** 失败检查的说明文字；就地打印和结尾清单共用，避免两处说法不一致。 */
+function describeCheck(check: CheckLike): string {
   switch (check.reason) {
     case 'missing-detail':
-      return `  ${image} ${check.node} missing detail.`
+      return `${check.node} missing detail.`
     case 'should-hit':
-      return `  ${image} ${check.node} should hit but missed`
+      return `${check.node} should hit but missed`
     case 'should-miss':
-      return `  ${image} ${check.node} should missed but hit`
+      return `${check.node} should missed but hit`
     case 'box-mismatch':
-      return `  ${image} ${check.node} box mismatch. Expect ${JSON.stringify(check.expectedBox)}, hit ${JSON.stringify(check.detail?.box)}`
+      return `${check.node} box mismatch. Expect ${JSON.stringify(check.expectedBox)}, hit ${JSON.stringify(check.detail?.box)}`
     case 'no-result':
-      return `  ${image} ${check.node} no reco result.`
+      return `${check.node} no reco result.`
     default:
-      return `  ${image} ${check.node} failed.`
+      return `${check.node} failed.`
   }
+}
+
+/** 只描述失败清单需要的事实，方便拿构造出来的结果直接测格式。 */
+export type RunFailureInput = {
+  files: readonly {
+    name?: string | null
+    cases: readonly {
+      image: string
+      verdict: string
+      reason?: string
+      platforms: readonly {
+        controller: string
+        resource: string
+        result: {
+          error?: string
+          checks: readonly CheckLike[]
+        }
+      }[]
+    }[]
+  }[]
+}
+
+/**
+ * 结尾的失败清单：一条用例一项，明细取它在各平台上的失败检查和执行错误。
+ * 就地打印那份会被进度和日志顶走，这里再列一遍方便回看。
+ */
+export function formatRunFailures(result: RunFailureInput): string[] {
+  const entries: { label: string; image: string; details: string[] }[] = []
+  for (const file of result.files) {
+    for (const testCase of file.cases) {
+      if (testCase.verdict !== 'fail' && testCase.verdict !== 'error') {
+        continue
+      }
+      const details = new Set<string>()
+      for (const platform of testCase.platforms) {
+        for (const check of platform.result.checks) {
+          if (!check.ok) {
+            details.add(describeCheck(check))
+          }
+        }
+        if (platform.result.error) {
+          details.add(platform.result.error)
+        }
+      }
+      if (details.size === 0) {
+        details.add(testCase.reason ?? '判定为失败，但没有可用明细')
+      }
+      const first = testCase.platforms[0]
+      entries.push({
+        label: file.name ?? (first ? `${first.controller}:${first.resource}` : '未知组'),
+        image: testCase.image,
+        details: [...details]
+      })
+    }
+  }
+  if (entries.length === 0) {
+    return []
+  }
+  const lines = [`失败用例（${entries.length} 条）：`]
+  for (const entry of entries) {
+    lines.push(`  ${entry.label}  ${entry.image}`)
+    for (const detail of entry.details) {
+      lines.push(`    ${detail}`)
+    }
+  }
+  return lines
 }

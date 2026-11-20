@@ -26,7 +26,11 @@ export type CliInvocation = {
 
 export const USAGE = [
   'Usage: npx @nekosu/maa-tools <init|check|test> [path to maatools.config.mts]',
-  'test 可选参数（过滤可叠加，取交集）：',
+  '命令：',
+  '  init                在当前目录生成 maatools.config.mts',
+  '  check               检查 pipeline，只出诊断，不做识别',
+  '  test                跑识别测试',
+  'test 可选参数（只对 test 生效，过滤可叠加，取交集）：',
   '  --file <path>       只跑指定测试文件（可重复）',
   '  --case <n>          只跑第 n 条用例（0 起，可重复；只能和单个 --file 一起用）',
   '  --controller <name> 只跑指定 controller 的组（可重复）',

@@ -121,6 +121,17 @@ test('--version 返回 version 命令，不需要配置文件', () => {
   assert.equal(parseCliArgs(['test', '--version'])?.cmd, 'version')
 })
 
+test('--help 和 -h 返回 help 命令，不被当成未知参数，也不需要配置文件', () => {
+  const errors: string[] = []
+  for (const argv of [['--help'], ['-h'], ['test', '--help'], ['--json', '-h'], ['help']]) {
+    const parsed = parseCliArgs(argv, error => errors.push(error))
+    assert.equal(parsed?.cmd, 'help')
+  }
+  assert.deepEqual(errors, [])
+  assert.equal(parseCliArgs(['--help'])?.config, '')
+  assert.equal(parseCliArgs([])?.cmd, 'help')
+})
+
 test('--list 是操作，可以和 --json 组合，但不能选择 --case', () => {
   for (const argv of [
     ['test', '--list', '--json'],

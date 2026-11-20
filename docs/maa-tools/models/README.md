@@ -4,7 +4,7 @@
 
 ## 包与使用者
 
-`@nekosu/maa-tools` 为 Maa pipeline 开发者提供命令行检查和识别测试，也可用于仓库的自动检查。实际版本见包的 `package.json`，或执行 `maa-tools --version`。
+`@nekosu/maa-tools` 为 Maa pipeline 开发者提供命令行检查和识别测试，也可用于仓库的自动检查。实际版本见包的 `package.json`，或执行 `maa-tools --version`；参数说明执行 `maa-tools --help`。
 
 ## Pipeline 检查
 
@@ -419,6 +419,8 @@ worker 是独立子进程，继承父进程环境变量，依赖 `LD_LIBRARY_PAT
 编辑辅助解析和未知字段检查不能代替来源的结构、类型及身份校验。
 
 `--version` 不加载配置，输出普通版本字符串，不是 JSON。库调用直接使用返回值；不要依赖终端颜色或日志文案来判断结果。
+
+`--help`（或 `-h`、`help`、不带参数）把同一份用法说明打印到标准输出并以 0 退出，不加载配置、不初始化 MaaFramework；说明是人话输出，不是 JSON。未知命令也打印这份说明，但退出码为 1。
 
 ### 即时开始与完成
 

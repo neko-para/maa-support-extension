@@ -113,6 +113,10 @@ export async function runCli(cmd: string, cfg: string | FullConfig, options: Tes
     }
     return true
   }
+  if (cmd === 'help') {
+    console.log(USAGE)
+    return true
+  }
   if (cmd !== 'test' && cmd !== 'check') {
     console.log(USAGE)
     return false

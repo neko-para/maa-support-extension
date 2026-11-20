@@ -555,3 +555,18 @@ test('--version 始终输出版本字符串，不需要配置也不输出 JSON',
   assert.match(child.stdout, /^\d+\.\d+\.\d+(?:-[\w.-]+)?\n$/)
   assert.equal(child.stderr, '')
 })
+
+test('--help、-h、help 和不带参数都打印用法并以 0 退出，未知命令仍失败', async t => {
+  const root = await fixture(t)
+  for (const args of [[], ['help'], ['--help'], ['-h'], ['test', '--help']]) {
+    const child = run(root, args)
+    assert.equal(child.status, 0, child.stderr)
+    assert.ok(child.stdout.startsWith('Usage: npx @nekosu/maa-tools'), child.stdout)
+    assert.ok(child.stdout.includes('--help, -h          打印本说明'), child.stdout)
+    assert.equal(child.stderr, '')
+  }
+  assert.deepEqual(await fs.readdir(root), [])
+  const unknown = run(root, ['nope'])
+  assert.equal(unknown.status, 1)
+  assert.ok(unknown.stdout.startsWith('Usage: npx @nekosu/maa-tools'), unknown.stdout)
+})

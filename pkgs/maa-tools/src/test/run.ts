@@ -507,9 +507,73 @@ export async function runTest(cfg: FullConfig, options: TestRunOptions = {}) {
     await fs.writeFile(file, JSON.stringify(result, null, 2))
   }
   if (result.reason) {
-    console.error(result.reason)
+    console.error(describeRunReason(result.reason))
+  }
+  // 配置、来源或参数在展开前就失败时没有任何文件，汇总只会是一行 0，交给原因说明即可。
+  if (result.files.length > 0) {
+    const summary = formatRunSummary(result)
+    if (cfg.mode === 'github') {
+      coreInfo(summary)
+    } else if (cfg.mode === 'json') {
+      console.error(summary)
+    } else {
+      console.log(summary)
+    }
   }
   return result.status === 'passed'
+}
+
+/** 只描述汇总行需要的事实，方便拿计数而不是整个报告来测。 */
+export type RunSummaryInput = {
+  files: readonly { error?: string; cases: readonly { verdict: string }[] }[]
+  durationMs: number
+}
+
+/**
+ * 文本模式结束时的一行汇总：按文件级用例结论计数，同一用例的多平台结果已经合并。
+ * 只列非零类别，缺省不想让人看到一串 0。
+ */
+export function formatRunSummary(result: RunSummaryInput): string {
+  const cases = result.files.flatMap(file => file.cases)
+  const count = (verdict: string) => cases.filter(testCase => testCase.verdict === verdict).length
+  const counts: [string, number][] = [
+    ['通过', count('pass')],
+    ['失败', count('fail')],
+    ['错误', count('error')],
+    ['跳过', count('skipped')]
+  ]
+  const brokenFiles = result.files.filter(file => file.error).length
+  const detail = [
+    ...counts.filter(([, value]) => value > 0).map(([label, value]) => `${value} ${label}`),
+    ...(brokenFiles > 0 ? [`${brokenFiles} 个文件解析失败`] : [])
+  ]
+  const head = `${cases.length} 个用例${detail.length > 0 ? `：${detail.join('，')}` : ''}`
+  const seconds = (result.durationMs / 1000).toFixed(1)
+  return `${head}（${result.files.length} 个文件，用时 ${seconds}s）`
+}
+
+/** 整批失败原因：能认出的错误码翻成人话，原码留在括号里方便检索日志。 */
+const REASON_TEXT: Record<string, string> = {
+  'no-tests-verified': '没有任何用例完成有效验证，本次不能判定通过',
+  'no-tests-matched': '没有匹配到测试用例，请检查配置与过滤条件',
+  'some-platforms-skipped': '有平台因缺图跳过，不能据此认为所有平台都通过',
+  'missing-image': '截图文件不存在，该用例被跳过',
+  'no-result': '没有返回识别结果，不能当作未命中',
+  'no-cases-selected': '筛选后没有选中任何用例',
+  'test-config-missing': '配置里缺少 test 段，没有可运行的用例',
+  'invalid-test-config': 'test 配置不合法',
+  'test-file-error': '测试文件读取或解析失败',
+  'test-source-invalid': '用例来源和所在文件对不上',
+  'invalid-case-selection': '用例下标不合法或超出文件范围',
+  'maa-setup-failed': 'MaaFramework 准备失败',
+  'resource-bundle-failed': 'interface 或资源加载失败',
+  'test-execution-failed': '识别执行阶段出错',
+  'test-verification-error': '有用例没有完成要求的验证'
+}
+
+export function describeRunReason(reason: string): string {
+  const text = REASON_TEXT[reason]
+  return text ? `${text}（${reason}）` : reason
 }
 
 function formatCheckError(image: string, check: CaseCheckResult): string {

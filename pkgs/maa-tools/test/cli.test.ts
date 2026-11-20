@@ -572,3 +572,22 @@ test('--help、-h、help 和不带参数都打印用法并以 0 退出，未知�
   assert.equal(unknown.status, 1)
   assert.ok(unknown.stdout.startsWith('Usage: npx @nekosu/maa-tools'), unknown.stdout)
 })
+
+test('文本模式跑完打印用例汇总行，整批失败原因翻成人话并保留错误码', async t => {
+  const root = await fixture(t)
+  const cases = path.join(root, 'demo.json')
+  await fs.writeFile(cases, testFileContent())
+  await fs.writeFile(
+    path.join(root, 'maatools.config.mts'),
+    `import { loadTestCases } from ${JSON.stringify(filesSource)};
+    export default {
+      cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+      test: { cases: async () => [await loadTestCases(${JSON.stringify(cases)})] }
+    };`
+  )
+  const child = run(root, ['test'])
+  assert.equal(child.status, 1, child.stderr)
+  assert.match(child.stdout, /1 个用例：1 跳过（1 个文件，用时 [\d.]+s）\n?$/)
+  assert.match(child.stderr, /没有任何用例完成有效验证，本次不能判定通过（no-tests-verified）/)
+  assert.ok((await fs.readdir(root)).includes('maatoolsErrorDetails.json'))
+})

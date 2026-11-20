@@ -26,7 +26,11 @@ export type CliInvocation = {
 
 export const USAGE = [
   'Usage: npx @nekosu/maa-tools <init|check|test> [path to maatools.config.mts]',
-  'test 可选参数（过滤可叠加，取交集）：',
+  '命令：',
+  '  init                在当前目录生成 maatools.config.mts',
+  '  check               检查 pipeline，只出诊断，不做识别',
+  '  test                跑识别测试',
+  'test 可选参数（只对 test 生效，过滤可叠加，取交集）：',
   '  --file <path>       只跑指定测试文件（可重复）',
   '  --case <n>          只跑第 n 条用例（0 起，可重复；只能和单个 --file 一起用）',
   '  --controller <name> 只跑指定 controller 的组（可重复）',
@@ -34,7 +38,9 @@ export const USAGE = [
   '  --json              输出测试结果 JSON；和 --list 一起用时输出收集清单 JSON',
   '  --jsonl             stdout 逐行输出进度 JSON，最后一行为 run-result，日志走 stderr',
   '  --list              只收集用例，默认输出人类列表；可加 --json，不初始化 MaaFW',
-  '  --version           打印版本号'
+  '通用参数：',
+  '  --version           打印版本号',
+  '  --help, -h          打印本说明（不带参数或写 help 效果相同）'
 ].join('\n')
 
 /** 解析参数；出错时调用 reportError 并返回 null，机器错误 JSON 由命令入口统一输出。 */
@@ -83,6 +89,9 @@ export function parseCliArgs(
       options.list = true
     } else if (arg === '--version') {
       return { cmd: 'version', config: '', options }
+    } else if (arg === '--help' || arg === '-h') {
+      // 和 --version 一样立即生效：用户要的是说明，后面的参数是否合法都不再追究。
+      return { cmd: 'help', config: '', options }
     } else if (arg.startsWith('-')) {
       return fail(`未知参数：${arg}`)
     } else if (positional.length < 2) {

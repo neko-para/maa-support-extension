@@ -1,3 +1,10 @@
+- 1.4.0
+
+Print a trailing summary in text mode: unusable files, failed cases and a per-category count line
+Translate known error codes into a readable reason, keeping the original code in parentheses
+Support --help, -h, help and a bare invocation without loading config
+Upgrade jiti to 2.7.0
+
 - 1.3.0
 
 Support testing Custom recognitions through `test.agent` AgentServer subprocesses

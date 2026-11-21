@@ -427,29 +427,29 @@ worker 是独立子进程，继承父进程环境变量，依赖 `LD_LIBRARY_PAT
 
 收集清单和运行报告的 `errorCode` 用于程序判断，`reason` 提供具体说明。下表列出框架定义的代码；1.x 内保持已列代码的名称和含义。`errorCode` 是开放字符串，可以增加新值；调用方遇到未知值时显示 `reason` 并保留原始代码，按报告的 `status` 处理结果。
 
-| `errorCode`               | 含义与触发条件                                       |
-| ------------------------- | ---------------------------------------------------- |
-| `invalid-cli-arguments`   | 命令参数无法解析，或输出、收集与选择参数组合不合法   |
-| `config-load-failed`      | 配置文件无法加载                                     |
-| `invalid-config`          | 配置文件没有导出配置对象                             |
-| `cli-failed`              | 命令入口发生未分类异常                               |
-| `test-config-missing`     | 配置中缺少 `test`                                    |
-| `invalid-test-config`     | 测试组结构或执行配置不合法                           |
-| `test-cases-load-failed`  | 执行 `test.cases` 函数或读取其定义时抛出异常         |
-| `test-expansion-failed`   | 建立执行计划时发生未分类异常                         |
-| `test-source-invalid`     | 用例来源缺失、格式无效，或无法对应实际文件及原始下标 |
-| `test-collection-failed`  | 收集测试文件与用例时发生未分类异常                   |
-| `invalid-case-selection`  | 用例下标不合法、越界，或未限定为单个文件             |
-| `target-selection-failed` | 建立文件或用例选择目标时发生未分类异常               |
-| `maa-setup-failed`        | MaaFramework 准备或加载失败                          |
-| `resource-bundle-failed`  | interface bundle 或资源规划加载失败                  |
-| `test-execution-failed`   | 识别执行阶段发生异常                                 |
-| `test-agent-invalid`      | `test.agent` 配置结构不合法                          |
+| `errorCode`               | 含义与触发条件                                          |
+| ------------------------- | ------------------------------------------------------- |
+| `invalid-cli-arguments`   | 命令参数无法解析，或输出、收集与选择参数组合不合法      |
+| `config-load-failed`      | 配置文件无法加载                                        |
+| `invalid-config`          | 配置文件没有导出配置对象                                |
+| `cli-failed`              | 命令入口发生未分类异常                                  |
+| `test-config-missing`     | 配置中缺少 `test`                                       |
+| `invalid-test-config`     | 测试组结构或执行配置不合法                              |
+| `test-cases-load-failed`  | 执行 `test.cases` 函数或读取其定义时抛出异常            |
+| `test-expansion-failed`   | 建立执行计划时发生未分类异常                            |
+| `test-source-invalid`     | 用例来源缺失、格式无效，或无法对应实际文件及原始下标    |
+| `test-collection-failed`  | 收集测试文件与用例时发生未分类异常                      |
+| `invalid-case-selection`  | 用例下标不合法、越界，或未限定为单个文件                |
+| `target-selection-failed` | 建立文件或用例选择目标时发生未分类异常                  |
+| `maa-setup-failed`        | MaaFramework 准备或加载失败                             |
+| `resource-bundle-failed`  | interface bundle 或资源规划加载失败                     |
+| `test-execution-failed`   | 识别执行阶段发生异常                                    |
+| `test-agent-invalid`      | `test.agent` 配置结构不合法                             |
 | `test-agent-failed`       | agent 无法启动/连接、中途退出或未注册所需的 Custom 识别 |
-| `test-file-error`         | 测试文件读取、解析或结构校验失败                     |
-| `test-verification-error` | 文件、用例或平台未完成要求的验证                     |
-| `no-tests-verified`       | 没有实际完成的有效节点检查，无法判定通过             |
-| `no-tests-matched`        | 配置和筛选条件没有匹配项，报告状态为 `empty`         |
+| `test-file-error`         | 测试文件读取、解析或结构校验失败                        |
+| `test-verification-error` | 文件、用例或平台未完成要求的验证                        |
+| `no-tests-verified`       | 没有实际完成的有效节点检查，无法判定通过                |
+| `no-tests-matched`        | 配置和筛选条件没有匹配项，报告状态为 `empty`            |
 
 断言不满足时，运行状态为 `failed`，通过检查明细说明原因。文件和用例的 `reason` 还可表示 `no-cases-selected`（筛选后未选择用例）、`missing-image`（缺图跳过）、`some-platforms-skipped`（文件已通过但存在未验证平台）、`no-result`（缺少要求的结果），或包含具体错误文字；这些说明不属于顶层 `errorCode` 词表。
 

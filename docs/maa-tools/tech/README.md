@@ -8,33 +8,33 @@
 
 下表逐一列出包内源码，路径相对 `pkgs/maa-tools/src/`。收集和运行共用文件读取、配置展开与选择规则；识别工作进程和结果判定分别维护。
 
-| 文件                                                               | 用途                                                                                     |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| [index.ts](../../../pkgs/maa-tools/src/index.ts)                   | 主包公开入口，导出检查、收集、运行、CLI、配置加载、测试文件加载函数及相关类型            |
-| [cli.ts](../../../pkgs/maa-tools/src/cli.ts)                       | 加载配置，分派检查、收集和运行，输出文本、JSON 文档或逐行进度，处理命令错误              |
-| [cli-args.ts](../../../pkgs/maa-tools/src/cli-args.ts)             | 解析命令、配置路径和过滤参数，提供帮助，拒绝非法下标与参数组合                           |
-| [pm.ts](../../../pkgs/maa-tools/src/pm.ts)                         | 提供 `@nekosu/maa-tools/pm` 入口，转导出 pipeline-manager 的接口                         |
-| [types/config.ts](../../../pkgs/maa-tools/src/types/config.ts)     | 定义公共配置、检查设置、已展开测试组和单条用例的来源类型                                 |
-| [utils/config.ts](../../../pkgs/maa-tools/src/utils/config.ts)     | 用 jiti 加载 TypeScript 配置文件，返回配置对象                                           |
-| [utils/paths.ts](../../../pkgs/maa-tools/src/utils/paths.ts)       | 生成来源路径比较键；Windows 忽略大小写，其他系统区分；显示数据由调用方保留原样           |
-| [utils/bundle.ts](../../../pkgs/maa-tools/src/utils/bundle.ts)     | 加载 interface bundle，提供单次检查共用的文件内容缓存                                    |
-| [utils/maa.ts](../../../pkgs/maa-tools/src/utils/maa.ts)           | 准备框架版本并返回实际版本号、加载原生模块并设置日志目录；提供图片缓冲区转换和识别用空图片控制器 |
-| [check/index.ts](../../../pkgs/maa-tools/src/check/index.ts)       | 组织资源组合检查、控制并发，执行 pipeline 诊断和原生资源加载校验并输出结果               |
-| [check/location.ts](../../../pkgs/maa-tools/src/check/location.ts) | 用 `calculateLocation` 把诊断字符偏移转换为行、列位置                                    |
-| [test/files.ts](../../../pkgs/maa-tools/src/test/files.ts)         | 读取并校验允许注释的测试 JSON，保留源码范围、注入 origin，记录本次读取的文件             |
-| [test/selection.ts](../../../pkgs/maa-tools/src/test/selection.ts) | 构造与合并文件/下标目标，固定完整待检查节点，按平台和来源筛选用例并整理选择元数据        |
-| [test/plan.ts](../../../pkgs/maa-tools/src/test/plan.ts)           | 执行 `test.cases`，校验展开组与实际来源文件及原始下标，固定节点并选择范围                |
-| [test/collect.ts](../../../pkgs/maa-tools/src/test/collect.ts)     | 调用同一展开过程，生成收集清单及来源错误，不初始化框架                                   |
+| 文件                                                               | 用途                                                                                                            |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| [index.ts](../../../pkgs/maa-tools/src/index.ts)                   | 主包公开入口，导出检查、收集、运行、CLI、配置加载、测试文件加载函数及相关类型                                   |
+| [cli.ts](../../../pkgs/maa-tools/src/cli.ts)                       | 加载配置，分派检查、收集和运行，输出文本、JSON 文档或逐行进度，处理命令错误                                     |
+| [cli-args.ts](../../../pkgs/maa-tools/src/cli-args.ts)             | 解析命令、配置路径和过滤参数，提供帮助，拒绝非法下标与参数组合                                                  |
+| [pm.ts](../../../pkgs/maa-tools/src/pm.ts)                         | 提供 `@nekosu/maa-tools/pm` 入口，转导出 pipeline-manager 的接口                                                |
+| [types/config.ts](../../../pkgs/maa-tools/src/types/config.ts)     | 定义公共配置、检查设置、已展开测试组和单条用例的来源类型                                                        |
+| [utils/config.ts](../../../pkgs/maa-tools/src/utils/config.ts)     | 用 jiti 加载 TypeScript 配置文件，返回配置对象                                                                  |
+| [utils/paths.ts](../../../pkgs/maa-tools/src/utils/paths.ts)       | 生成来源路径比较键；Windows 忽略大小写，其他系统区分；显示数据由调用方保留原样                                  |
+| [utils/bundle.ts](../../../pkgs/maa-tools/src/utils/bundle.ts)     | 加载 interface bundle，提供单次检查共用的文件内容缓存                                                           |
+| [utils/maa.ts](../../../pkgs/maa-tools/src/utils/maa.ts)           | 准备框架版本并返回实际版本号、加载原生模块并设置日志目录；提供图片缓冲区转换和识别用空图片控制器                |
+| [check/index.ts](../../../pkgs/maa-tools/src/check/index.ts)       | 组织资源组合检查、控制并发，执行 pipeline 诊断和原生资源加载校验并输出结果                                      |
+| [check/location.ts](../../../pkgs/maa-tools/src/check/location.ts) | 用 `calculateLocation` 把诊断字符偏移转换为行、列位置                                                           |
+| [test/files.ts](../../../pkgs/maa-tools/src/test/files.ts)         | 读取并校验允许注释的测试 JSON，保留源码范围、注入 origin，记录本次读取的文件                                    |
+| [test/selection.ts](../../../pkgs/maa-tools/src/test/selection.ts) | 构造与合并文件/下标目标，固定完整待检查节点，按平台和来源筛选用例并整理选择元数据                               |
+| [test/plan.ts](../../../pkgs/maa-tools/src/test/plan.ts)           | 执行 `test.cases`，校验展开组与实际来源文件及原始下标，固定节点并选择范围                                       |
+| [test/collect.ts](../../../pkgs/maa-tools/src/test/collect.ts)     | 调用同一展开过程，生成收集清单及来源错误，不初始化框架                                                          |
 | [test/run.ts](../../../pkgs/maa-tools/src/test/run.ts)             | 安排识别任务、计划顺序、并发数与资源分组，解析并传递 agent 配置，管理工作进程和日志；提供详细报告与布尔运行接口 |
-| [test/images.ts](../../../pkgs/maa-tools/src/test/images.ts)       | 解析截图路径，把去重截图和完整节点分成识别任务，分摊同图耗时                             |
-| [test/agents.ts](../../../pkgs/maa-tools/src/test/agents.ts)       | 解析 `test.agent` 与 interface agent、生成 PI 环境变量、汇总待测节点的 Custom 识别需求并构造缺失/未注册报错 |
-| [test/worker.ts](../../../pkgs/maa-tools/src/test/worker.ts)       | 在子进程加载指定框架和资源，按需启动并连接 agent，用截图执行识别，返回原始结果与真实任务耗时 |
-| [test/evaluate.ts](../../../pkgs/maa-tools/src/test/evaluate.ts)   | 按完整节点、预期命中和识别框判定单条用例，构造组结果                                     |
-| [test/report.ts](../../../pkgs/maa-tools/src/test/report.ts)       | 将平台结果唯一汇总到文件，检查来源归属、选择覆盖并形成整批结论                           |
-| [test/progress.ts](../../../pkgs/maa-tools/src/test/progress.ts)   | 等待实际计划中的各平台和节点完成，调用判定与汇总，按序发布开始、完成和范围快照           |
-| [test/log-dir.ts](../../../pkgs/maa-tools/src/test/log-dir.ts)     | 分配日志轮次、跟踪活动运行、回收失效标记并清理已结束日志                                 |
-| [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告、进度事件与 JSONL 记录的结构                            |
-| [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径与 agent/节点配置提供环境变量类型         |
+| [test/images.ts](../../../pkgs/maa-tools/src/test/images.ts)       | 解析截图路径，把去重截图和完整节点分成识别任务，分摊同图耗时                                                    |
+| [test/agents.ts](../../../pkgs/maa-tools/src/test/agents.ts)       | 解析 `test.agent` 与 interface agent、生成 PI 环境变量、汇总待测节点的 Custom 识别需求并构造缺失/未注册报错     |
+| [test/worker.ts](../../../pkgs/maa-tools/src/test/worker.ts)       | 在子进程加载指定框架和资源，按需启动并连接 agent，用截图执行识别，返回原始结果与真实任务耗时                    |
+| [test/evaluate.ts](../../../pkgs/maa-tools/src/test/evaluate.ts)   | 按完整节点、预期命中和识别框判定单条用例，构造组结果                                                            |
+| [test/report.ts](../../../pkgs/maa-tools/src/test/report.ts)       | 将平台结果唯一汇总到文件，检查来源归属、选择覆盖并形成整批结论                                                  |
+| [test/progress.ts](../../../pkgs/maa-tools/src/test/progress.ts)   | 等待实际计划中的各平台和节点完成，调用判定与汇总，按序发布开始、完成和范围快照                                  |
+| [test/log-dir.ts](../../../pkgs/maa-tools/src/test/log-dir.ts)     | 分配日志轮次、跟踪活动运行、回收失效标记并清理已结束日志                                                        |
+| [test/types.ts](../../../pkgs/maa-tools/src/test/types.ts)         | 定义收集清单、识别任务、运行报告、进度事件与 JSONL 记录的结构                                                   |
+| [test/env.d.ts](../../../pkgs/maa-tools/src/test/env.d.ts)         | 为工作进程需要的框架模块路径、日志目录、资源路径与 agent/节点配置提供环境变量类型                               |
 
 主包导出 `runCheck`、`runTest`、`runTestDetailed`、`collectTests`、配置与文件加载等公共接口。内部辅助函数按所属用途维护，包入口显式导出公共接口。
 
@@ -170,36 +170,36 @@ CLI 在 `--jsonl` 下使用 `TestRunLine` 描述每行输出，包括 `onEvent` 
 
 下表路径相对包目录 `pkgs/maa-tools/`：
 
-| 文件                                                           | 用途                                                                           |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 文件                                                           | 用途                                                                                                                         |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | [package.json](../../../pkgs/maa-tools/package.json)           | 定义命令入口、主包和 `pm` 子入口、依赖；`lint` 做类型检查，`test` 运行源码测试、`test:integration` 手动跑真实 MaaFW 集成测试 |
-| [bin/maa-tools](../../../pkgs/maa-tools/bin/maa-tools)         | 可执行命令入口，调用构建后主包的 `runCliFromArgs`，设置退出码并等待标准流排空  |
-| [tsdown.config.mts](../../../pkgs/maa-tools/tsdown.config.mts) | 构建主包、`pm` 和识别工作进程三个入口，生成模块、类型声明和源码映射            |
-| [tsconfig.json](../../../pkgs/maa-tools/tsconfig.json)         | 配置模块解析、MaaFramework/Node 类型及源码和测试的检查范围                     |
+| [bin/maa-tools](../../../pkgs/maa-tools/bin/maa-tools)         | 可执行命令入口，调用构建后主包的 `runCliFromArgs`，设置退出码并等待标准流排空                                                |
+| [tsdown.config.mts](../../../pkgs/maa-tools/tsdown.config.mts) | 构建主包、`pm` 和识别工作进程三个入口，生成模块、类型声明和源码映射                                                          |
+| [tsconfig.json](../../../pkgs/maa-tools/tsconfig.json)         | 配置模块解析、MaaFramework/Node 类型及源码和测试的检查范围                                                                   |
 
 测试文件按功能组织：
 
-| 文件（相对包目录）                                                           | 验证内容                                                                            |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [test/assertions.ts](../../../pkgs/maa-tools/test/assertions.ts)             | `assertPublicResult()` 检查公共输出的字段边界，供清单、报告、快照与错误输出测试复用 |
-| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)       | 参数顺序、重复选项、原始下标和不支持的参数组合                                      |
-| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置                      |
-| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行                                |
-| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围                          |
-| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份                          |
-| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误                         |
-| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定                                |
-| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标                                |
-| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                              |
-| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                 | 计划排序、默认并发数及有序资源路径分组                                              |
-| [test/agents.test.ts](../../../pkgs/maa-tools/test/agents.test.ts)           | agent 配置解析、PI 环境变量、Custom 识别需求递归汇总与报错文案                      |
-| [test/agent-handshake.test.ts](../../../pkgs/maa-tools/test/agent-handshake.test.ts) | 握手期子进程退出快速失败、connect 仍在途时的延迟销毁                            |
-| [test/worker-agent.integration.ts](../../../pkgs/maa-tools/test/worker-agent.integration.ts) | 真实进程池 + 真实 MaaFW 的 fake agent 集成测试（需 dist 与本机框架缓存，手动运行） |
-| [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
-| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts) | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
-| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |
-| [test/run-runtime.test.ts](../../../pkgs/maa-tools/test/run-runtime.test.ts) | 真实文件通过执行边界替身验证清理错误与原结论、并发配置、检查与测试日志隔离          |
-| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐                     |
+| 文件（相对包目录）                                                                           | 验证内容                                                                            |
+| -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [test/assertions.ts](../../../pkgs/maa-tools/test/assertions.ts)                             | `assertPublicResult()` 检查公共输出的字段边界，供清单、报告、快照与错误输出测试复用 |
+| [test/cli-args.test.ts](../../../pkgs/maa-tools/test/cli-args.test.ts)                       | 参数顺序、重复选项、原始下标和不支持的参数组合                                      |
+| [test/cli.test.ts](../../../pkgs/maa-tools/test/cli.test.ts)                                 | 配置加载、文本列表与 JSON 清单、命令错误、退出码和日志输出位置                      |
+| [test/cli-stream.test.ts](../../../pkgs/maa-tools/test/cli-stream.test.ts)                   | 逐行进度、唯一最终报告、错误结束记录和包含中文的大行                                |
+| [test/files.test.ts](../../../pkgs/maa-tools/test/files.test.ts)                             | 注释 JSON 的解析与校验、名称和节点归一、原始下标与源码范围                          |
+| [test/selection.test.ts](../../../pkgs/maa-tools/test/selection.test.ts)                     | 文件及用例范围、目标合并、错误下标、完整负例节点和来源身份                          |
+| [test/collect.test.ts](../../../pkgs/maa-tools/test/collect.test.ts)                         | 实际配置决定收集范围，保留坏文件、loader 来源和明确收集错误                         |
+| [test/evaluate.test.ts](../../../pkgs/maa-tools/test/evaluate.test.ts)                       | 命中、负例、识别框、缺结果、同图任务与耗时分摊的判定                                |
+| [test/report.test.ts](../../../pkgs/maa-tools/test/report.test.ts)                           | 跨平台与文件汇总、计划覆盖、空选择、坏文件和重复目标                                |
+| [test/progress.test.ts](../../../pkgs/maa-tools/test/progress.test.ts)                       | 图片与平台完成顺序、范围快照、回调异常及与最终报告一致                              |
+| [test/run.test.ts](../../../pkgs/maa-tools/test/run.test.ts)                                 | 计划排序、默认并发数及有序资源路径分组                                              |
+| [test/agents.test.ts](../../../pkgs/maa-tools/test/agents.test.ts)                           | agent 配置解析、PI 环境变量、Custom 识别需求递归汇总与报错文案                      |
+| [test/agent-handshake.test.ts](../../../pkgs/maa-tools/test/agent-handshake.test.ts)         | 握手期子进程退出快速失败、connect 仍在途时的延迟销毁                                |
+| [test/worker-agent.integration.ts](../../../pkgs/maa-tools/test/worker-agent.integration.ts) | 真实进程池 + 真实 MaaFW 的 fake agent 集成测试（需 dist 与本机框架缓存，手动运行）  |
+| [test/run-result.test.ts](../../../pkgs/maa-tools/test/run-result.test.ts)                   | 基于真实测试文件的详细运行与布尔接口、来源拒绝和完整错误报告保存                    |
+| [test/early-error.test.ts](../../../pkgs/maa-tools/test/early-error.test.ts)                 | 初始化前的错误仍完整保留重复目标的选择和完成事实                                    |
+| [test/log-dir.test.ts](../../../pkgs/maa-tools/test/log-dir.test.ts)                         | 日志轮次编号、保留数量、并发活动保护及异常遗留标记回收                              |
+| [test/run-runtime.test.ts](../../../pkgs/maa-tools/test/run-runtime.test.ts)                 | 真实文件通过执行边界替身验证清理错误与原结论、并发配置、检查与测试日志隔离          |
+| [test/path-key.test.ts](../../../pkgs/maa-tools/test/path-key.test.ts)                       | Windows 路径大小写匹配、非 Windows 区分大小写以及各阶段来源对齐                     |
 
 包发布由仓库的 [Release 工作流](../../../.github/workflows/release.yml) 管理：`main` 构建通过后，读取包的 `package.json` 版本，npm 已存在则跳过，否则发布该版本。普通功能分支只构建和验证。
 

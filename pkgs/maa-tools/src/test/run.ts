@@ -605,6 +605,21 @@ export type RunFailureOptions = {
   readSource?: (file: string) => string | null
 }
 
+/** 单平台时用它当组名；多平台交给明细前缀，执行过却没有明细时退回首个平台。 */
+function fallbackLabel(
+  testCase: RunCaseLike,
+  perPlatform: readonly { label: string }[]
+): string | undefined {
+  if (perPlatform.length > 1) {
+    return undefined
+  }
+  if (perPlatform.length === 1) {
+    return perPlatform[0].label
+  }
+  const platform = testCase.platforms[0]
+  return platform ? `${platform.controller}:${platform.resource}` : undefined
+}
+
 /**
  * 结尾的失败清单：一条用例一项，明细取各平台未通过的检查和执行错误。
  * 没跑过的用例不算失败，占位平台也不进明细；读得回原文时附上文件与行号。
@@ -652,7 +667,7 @@ export function formatRunFailures(
       }
       const line = lineOf(file.file, testCase.start)
       entries.push({
-        label: file.name ?? (perPlatform.length === 1 ? perPlatform[0].label : undefined),
+        label: file.name ?? fallbackLabel(testCase, perPlatform),
         image: testCase.image,
         location: line === undefined ? undefined : `${displayPath(file.file)}:${line}`,
         details
@@ -706,36 +721,30 @@ export function formatRunSummary(result: RunSummaryInput): string {
   return `${head}（${result.files.length} 个文件，${tail}）`
 }
 
-/** 整批失败原因：能认出的错误码翻成人话，原码留在括号里方便检索日志。 */
+/**
+ * 整批失败原因的人话表。键既可能是顶层 `errorCode`，也可能是顶层 `reason` 里的码；
+ * 只收 runTest 真能看到的那些（用例级 reason 与 --list / 参数错误不会走到这里）。
+ */
 const REASON_TEXT = new Map<string, string>([
   ['no-tests-verified', '没有任何用例完成有效验证，本次不能判定通过'],
-  ['no-tests-matched', '没有匹配到测试用例，请检查配置与过滤条件'],
-  ['some-platforms-skipped', '有平台因缺图跳过，不能据此认为所有平台都通过'],
-  ['missing-image', '截图文件不存在，该用例被跳过'],
   ['no-result', '没有返回识别结果，不能当作未命中'],
-  ['no-cases-selected', '筛选后没有选中任何用例'],
   ['test-config-missing', '配置里缺少 test 段，没有可运行的用例'],
   ['invalid-test-config', 'test 配置不合法'],
   ['test-file-error', '测试文件读取或解析失败'],
-  ['test-source-invalid', '用例来源和所在文件对不上'],
   ['invalid-case-selection', '用例下标不合法或超出文件范围'],
   ['maa-setup-failed', 'MaaFramework 准备失败'],
   ['resource-bundle-failed', 'interface 或资源加载失败'],
   ['test-execution-failed', '识别执行阶段出错'],
   ['test-expansion-failed', '建立执行计划时出错'],
   ['test-cases-load-failed', '执行 test.cases 或读取其定义时出错'],
-  ['test-collection-failed', '收集测试文件与用例时出错'],
   ['test-agent-invalid', 'test.agent 配置不合法'],
   ['test-agent-failed', 'agent 启动、连接或识别调用失败'],
-  ['test-verification-error', '有用例没有完成要求的验证'],
-  ['cli-failed', '命令入口发生未分类异常'],
-  ['invalid-cli-arguments', '命令参数无法解析'],
-  ['config-load-failed', '配置文件无法加载'],
-  ['invalid-config', '配置文件没有导出配置对象']
+  ['test-verification-error', '有用例没有完成要求的验证']
 ])
 
 /**
- * 整批原因的人话版本：以错误码为键，reason 只在它是已知码或已经是中文说明时才用。
+ * 整批原因的人话版本：优先用 errorCode 查表，reason 是已知码时按 reason 翻，
+ * reason 是中文说明时保留原文并补码，是英文原文时附在译文后面。
  * 查表用 Map，避免 reason 恰好叫 constructor 时命中原型链。
  */
 export function describeRunReason(errorCode?: string, reason?: string): string {
@@ -748,7 +757,10 @@ export function describeRunReason(errorCode?: string, reason?: string): string {
   }
   const codeText = errorCode ? REASON_TEXT.get(errorCode) : undefined
   if (codeText && errorCode) {
-    return `${codeText}（${errorCode}）`
+    // 英文原文常带具体线索（节点、路径），附在译文后面，别整句丢掉。
+    return reason && reason !== errorCode
+      ? `${codeText}（${errorCode}）：${reason}`
+      : `${codeText}（${errorCode}）`
   }
   return reason ?? errorCode ?? ''
 }

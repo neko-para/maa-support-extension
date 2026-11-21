@@ -182,11 +182,15 @@ test('不可用文件单独成段，带相对路径与原始原因', () => {
   assert.deepEqual(
     formatUnusableFiles({
       files: [
-        { file: `${process.cwd()}/tests/broken.json`, error: 'JSON 解析失败：偏移 2', cases: [] },
+        {
+          file: path.join(process.cwd(), 'tests', 'broken.json'),
+          error: 'JSON 解析失败：偏移 2',
+          cases: []
+        },
         { file: '/x/ok.json', cases: [] }
       ]
     }),
-    ['不可用文件（1 个）：', '  tests/broken.json  JSON 解析失败：偏移 2']
+    ['不可用文件（1 个）：', `  ${path.join('tests', 'broken.json')}  JSON 解析失败：偏移 2`]
   )
   assert.deepEqual(formatUnusableFiles({ files: [] }), [])
 })
@@ -316,6 +320,28 @@ test('失败清单按用例偏移换算行号，读不到原文时不写位置',
   ])
 })
 
+test('执行过但没有明细的用例仍写出平台，不留下空行首', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          file: '/x/a.json',
+          name: null,
+          cases: [
+            runCase({
+              verdict: 'error',
+              platforms: [ranPlatform('Desktop', 'Local')],
+              reason: 'no-result'
+            })
+          ]
+        }
+      ],
+      durationMs: 0
+    }),
+    ['失败用例（1 条）：', '  Desktop:Local  a.png', '    no-result']
+  )
+})
+
 test('失败清单保留执行错误原文，没有明细时用用例原因兜底', () => {
   assert.deepEqual(
     formatRunFailures({
@@ -350,18 +376,22 @@ test('失败清单保留执行错误原文，没有明细时用用例原因兜�
   )
 })
 
-test('整批原因以错误码翻人话，reason 只在是已知码或中文说明时使用', () => {
+test('整批原因以错误码翻人话，英文原文附在译文后，中文说明保留原文', () => {
   assert.equal(
     describeRunReason(undefined, 'no-tests-verified'),
     '没有任何用例完成有效验证，本次不能判定通过（no-tests-verified）'
   )
   assert.equal(
     describeRunReason('resource-bundle-failed', 'failed to load resource bundle'),
-    'interface 或资源加载失败（resource-bundle-failed）'
+    'interface 或资源加载失败（resource-bundle-failed）：failed to load resource bundle'
   )
   assert.equal(
     describeRunReason('test-config-missing', 'test config missing'),
-    '配置里缺少 test 段，没有可运行的用例（test-config-missing）'
+    '配置里缺少 test 段，没有可运行的用例（test-config-missing）：test config missing'
+  )
+  assert.equal(
+    describeRunReason('test-verification-error', 'no nodes to check'),
+    '有用例没有完成要求的验证（test-verification-error）：no nodes to check'
   )
   assert.equal(
     describeRunReason(

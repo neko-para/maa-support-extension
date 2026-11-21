@@ -238,7 +238,7 @@ ControllerA:ResourceA
 100.00% 12 / 12
 ```
 
-计数表示已处理、总共计划处理的“图片—节点”识别项，不是用例数，也不是通过数；同组截图复用后只计实际安排的识别任务。100% 表示这些识别项处理完毕，断言仍可能失败。没有实际识别任务时不会显示这行进度。整批错误原因和异常信息也写到 stderr；原因翻译以报告里的 `errorCode` 为键，翻成一句中文说明并把原码留在括号里，例如 `interface 或资源加载失败（resource-bundle-failed）`。`reason` 本身就是已知错误码时按 `reason` 翻，已经是中文说明时保留原文并补上错误码。
+计数表示已处理、总共计划处理的“图片—节点”识别项，不是用例数，也不是通过数；同组截图复用后只计实际安排的识别任务。100% 表示这些识别项处理完毕，断言仍可能失败。没有实际识别任务时不会显示这行进度。整批错误原因和异常信息也写到 stderr；原因翻译以报告里的 `errorCode` 为键，翻成一句中文说明并把原码留在括号里，例如 `interface 或资源加载失败（resource-bundle-failed）：failed to load resource bundle`。`reason` 本身就是已知错误码时按 `reason` 翻，已经是中文说明时保留原文并补上错误码。
 
 配置 `mode: 'github'` 时，缺图提示使用 GitHub Actions 的 warning 注解；在 GitHub Actions 中未设置 mode 时会自动采用此模式。需要结构化结果时，显式使用 `--json` 或 `--jsonl`。
 

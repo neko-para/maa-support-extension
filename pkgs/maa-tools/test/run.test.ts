@@ -1,13 +1,54 @@
 import { createJiti } from 'jiti'
 import assert from 'node:assert/strict'
+import * as path from 'node:path'
 import test from 'node:test'
 
+import type { CheckFailureReason } from '../src/test/types'
 import type { TestCases } from '../src/types/config'
 
-const { compareTestCases, getDefaultTestJobCount, groupResourcePlans } = await createJiti(
-  import.meta.url,
-  { fsCache: false }
-).import<typeof import('../src/test/run')>('../src/test/run.ts')
+const {
+  compareTestCases,
+  describeRunReason,
+  formatRunFailures,
+  formatRunSummary,
+  formatUnusableFiles,
+  getDefaultTestJobCount,
+  groupResourcePlans
+} = await createJiti(import.meta.url, { fsCache: false }).import<typeof import('../src/test/run')>(
+  '../src/test/run.ts'
+)
+
+type RunCaseLike = import('../src/test/run').RunCaseLike
+
+/** 造一条用例；platforms 为空表示没跑过的占位槽位。 */
+function runCase(overrides: Partial<RunCaseLike> = {}): RunCaseLike {
+  return { image: 'a.png', verdict: 'pass', platforms: [], ...overrides }
+}
+
+/** 造一个真跑过的平台结果；imagePath 非空即代表执行过。 */
+function ranPlatform(
+  controller: string,
+  resource: string,
+  overrides: {
+    error?: string
+    checks?: { node: string; ok: boolean; reason?: CheckFailureReason }[]
+  } = {}
+) {
+  return {
+    controller,
+    resource,
+    result: {
+      imagePath: `/img/${controller}-${resource}.png`,
+      checks: overrides.checks ?? [],
+      ...(overrides.error ? { error: overrides.error } : {})
+    }
+  }
+}
+
+/** 造一个占位平台：整批失败时补出来的槽位，没有真实图片路径。 */
+function placeholderPlatform(controller: string, resource: string, error: string) {
+  return { controller, resource, result: { imagePath: '', error, checks: [] } }
+}
 
 function testCases(controller: string, resource: string): TestCases {
   return {
@@ -73,4 +114,293 @@ test('resource path arrays cannot collide through delimiter placement', () => {
   ])
 
   assert.equal(groups.length, 2)
+})
+
+test('计数行只数真跑过的用例，未执行与坏文件另计', () => {
+  assert.equal(
+    formatRunSummary({
+      files: [
+        {
+          file: '/x/a.json',
+          cases: [
+            runCase({ verdict: 'pass', platforms: [ranPlatform('Desktop', 'Local')] }),
+            runCase({ verdict: 'fail', platforms: [ranPlatform('Desktop', 'Local')] }),
+            runCase({ verdict: 'skipped', platforms: [ranPlatform('Desktop', 'Local')] }),
+            runCase({ image: 'b.png', verdict: 'error', platforms: [] })
+          ]
+        },
+        { file: '/x/broken.json', error: 'JSON 解析失败', cases: [] }
+      ],
+      durationMs: 3210
+    }),
+    '3 个用例：1 通过，1 失败，1 跳过，1 个文件有错误（2 个文件，用时 3.2s，另有 1 个未执行）'
+  )
+})
+
+test('一条都没跑时只报未执行条数，没有用例也没有坏文件时不打印计数行', () => {
+  assert.equal(
+    formatRunSummary({
+      files: [
+        {
+          file: '/x/a.json',
+          cases: [
+            runCase({ verdict: 'error', platforms: [] }),
+            runCase({ verdict: 'error', platforms: [] })
+          ]
+        }
+      ],
+      durationMs: 8
+    }),
+    '2 个用例未执行'
+  )
+  assert.equal(formatRunSummary({ files: [], durationMs: 8 }), '')
+  assert.equal(formatRunSummary({ files: [{ file: '/x/a.json', cases: [] }], durationMs: 8 }), '')
+})
+
+test('占位平台不算执行过，真实跑过的跳过用例仍计入', () => {
+  assert.equal(
+    formatRunSummary({
+      files: [
+        {
+          file: '/x/a.json',
+          cases: [
+            runCase({
+              verdict: 'error',
+              platforms: [placeholderPlatform('D', 'L', 'bundle 失败')]
+            }),
+            runCase({ verdict: 'skipped', platforms: [ranPlatform('D', 'L')] })
+          ]
+        }
+      ],
+      durationMs: 100
+    }),
+    '1 个用例：1 跳过（1 个文件，用时 0.1s，另有 1 个未执行）'
+  )
+})
+
+test('不可用文件单独成段，带相对路径与原始原因', () => {
+  assert.deepEqual(
+    formatUnusableFiles({
+      files: [
+        {
+          file: path.join(process.cwd(), 'tests', 'broken.json'),
+          error: 'JSON 解析失败：偏移 2',
+          cases: []
+        },
+        { file: '/x/ok.json', cases: [] }
+      ]
+    }),
+    ['不可用文件（1 个）：', `  ${path.join('tests', 'broken.json')}  JSON 解析失败：偏移 2`]
+  )
+  assert.deepEqual(formatUnusableFiles({ files: [] }), [])
+})
+
+test('失败清单只列真跑过的失败用例，占位槽位不算失败', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          file: '/x/a.json',
+          name: 'Demo',
+          cases: [
+            runCase({ verdict: 'pass', platforms: [ranPlatform('Desktop', 'Local')] }),
+            runCase({
+              verdict: 'error',
+              platforms: [placeholderPlatform('Desktop', 'Local', 'failed to load resource bundle')]
+            })
+          ]
+        }
+      ],
+      durationMs: 0
+    }),
+    []
+  )
+})
+
+test('失败清单列出失败检查，单平台明细不加前缀', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          file: '/x/a.json',
+          name: 'ControllerA:ResourceA',
+          cases: [
+            runCase({
+              verdict: 'fail',
+              platforms: [
+                ranPlatform('Desktop', 'Local', {
+                  checks: [
+                    { node: 'Entry', ok: false, reason: 'should-hit' },
+                    { node: 'Passed', ok: true }
+                  ]
+                })
+              ]
+            })
+          ]
+        }
+      ],
+      durationMs: 0
+    }),
+    ['失败用例（1 条）：', '  ControllerA:ResourceA  a.png', '    Entry should hit but missed']
+  )
+})
+
+test('多平台失败时逐平台列出明细，没有组名时不把平台写进行首', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          file: '/x/a.json',
+          name: null,
+          cases: [
+            runCase({
+              verdict: 'fail',
+              platforms: [
+                ranPlatform('Desktop', 'Local', {
+                  checks: [{ node: 'A', ok: false, reason: 'no-result' }]
+                }),
+                ranPlatform('Win32', 'Global', {
+                  checks: [{ node: 'B', ok: false, reason: 'no-result' }]
+                })
+              ]
+            })
+          ]
+        }
+      ],
+      durationMs: 0
+    }),
+    [
+      '失败用例（1 条）：',
+      '  a.png',
+      '    Desktop:Local  A no reco result.',
+      '    Win32:Global  B no reco result.'
+    ]
+  )
+})
+
+test('失败清单按用例偏移换算行号，读不到原文时不写位置', () => {
+  const source = [
+    '{',
+    '  "configs": { "controller": "Desktop", "resource": "Local" },',
+    '  "cases": [',
+    '    { "image": "a.png", "hits": [] }',
+    '  ]',
+    '}'
+  ].join('\n')
+  const start = source.indexOf('{ "image"')
+  const result = {
+    files: [
+      {
+        file: path.join(process.cwd(), 'demo.json'),
+        name: 'Demo',
+        cases: [
+          runCase({
+            verdict: 'fail',
+            start,
+            platforms: [
+              ranPlatform('Desktop', 'Local', {
+                checks: [{ node: 'Entry', ok: false, reason: 'should-hit' }]
+              })
+            ]
+          })
+        ]
+      }
+    ],
+    durationMs: 0
+  }
+  assert.deepEqual(formatRunFailures(result, { readSource: () => source }), [
+    '失败用例（1 条）：',
+    '  Demo  a.png  demo.json:4',
+    '    Entry should hit but missed'
+  ])
+  assert.deepEqual(formatRunFailures(result, { readSource: () => null }), [
+    '失败用例（1 条）：',
+    '  Demo  a.png',
+    '    Entry should hit but missed'
+  ])
+})
+
+test('执行过但没有明细的用例仍写出平台，不留下空行首', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          file: '/x/a.json',
+          name: null,
+          cases: [
+            runCase({
+              verdict: 'error',
+              platforms: [ranPlatform('Desktop', 'Local')],
+              reason: 'no-result'
+            })
+          ]
+        }
+      ],
+      durationMs: 0
+    }),
+    ['失败用例（1 条）：', '  Desktop:Local  a.png', '    no-result']
+  )
+})
+
+test('失败清单保留执行错误原文，没有明细时用用例原因兜底', () => {
+  assert.deepEqual(
+    formatRunFailures({
+      files: [
+        {
+          file: '/x/a.json',
+          name: 'Demo',
+          cases: [
+            runCase({
+              image: 'boom.png',
+              verdict: 'error',
+              platforms: [ranPlatform('Desktop', 'Local', { error: 'worker 崩了' })]
+            }),
+            runCase({
+              image: 'quiet.png',
+              verdict: 'error',
+              reason: 'no-tests-verified',
+              platforms: [ranPlatform('Desktop', 'Local')]
+            })
+          ]
+        }
+      ],
+      durationMs: 0
+    }),
+    [
+      '失败用例（2 条）：',
+      '  Demo  boom.png',
+      '    worker 崩了',
+      '  Demo  quiet.png',
+      '    no-tests-verified'
+    ]
+  )
+})
+
+test('整批原因以错误码翻人话，英文原文附在译文后，中文说明保留原文', () => {
+  assert.equal(
+    describeRunReason(undefined, 'no-tests-verified'),
+    '没有任何用例完成有效验证，本次不能判定通过（no-tests-verified）'
+  )
+  assert.equal(
+    describeRunReason('resource-bundle-failed', 'failed to load resource bundle'),
+    'interface 或资源加载失败（resource-bundle-failed）：failed to load resource bundle'
+  )
+  assert.equal(
+    describeRunReason('test-config-missing', 'test config missing'),
+    '配置里缺少 test 段，没有可运行的用例（test-config-missing）：test config missing'
+  )
+  assert.equal(
+    describeRunReason('test-verification-error', 'no nodes to check'),
+    '有用例没有完成要求的验证（test-verification-error）：no nodes to check'
+  )
+  assert.equal(
+    describeRunReason(
+      'test-source-invalid',
+      '用例 origin 无法对应实际测试文件与原始下标：/x.json [99]'
+    ),
+    '用例 origin 无法对应实际测试文件与原始下标：/x.json [99]（test-source-invalid）'
+  )
+  assert.equal(describeRunReason(undefined, 'MaaFW setup failed'), 'MaaFW setup failed')
+  assert.equal(describeRunReason(undefined, 'constructor'), 'constructor')
+  assert.equal(describeRunReason(undefined, undefined), '')
 })

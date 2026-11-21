@@ -572,3 +572,72 @@ test('--help、-h、help 和不带参数都打印用法并以 0 退出，未知�
   assert.equal(unknown.status, 1)
   assert.ok(unknown.stdout.startsWith('Usage: npx @nekosu/maa-tools'), unknown.stdout)
 })
+
+test('文本模式在计数行前先列失败用例，执行错误带原因且明细来自同一份报告', async t => {
+  const root = await fixture(t)
+  const cases = path.join(root, 'demo.json')
+  await fs.writeFile(path.join(root, 'ok.png'), 'not a real image, 判定这一层不用解码')
+  await fs.writeFile(
+    cases,
+    [
+      '{',
+      '  "configs": { "name": "same display name", "controller": "Desktop", "resource": "Local" },',
+      '  "cases": [',
+      '    { "image": "ok.png", "hits": [] }',
+      '  ]',
+      '}'
+    ].join('\n')
+  )
+  await fs.writeFile(
+    path.join(root, 'maatools.config.mts'),
+    `import { loadTestCases } from ${JSON.stringify(filesSource)};
+    export default {
+      cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+      test: { cases: async () => [await loadTestCases(${JSON.stringify(cases)})] }
+    };`
+  )
+  const child = run(root, ['test'])
+  assert.equal(child.status, 1, child.stderr)
+  const lines = child.stdout.trimEnd().split('\n')
+  assert.deepEqual(lines.slice(0, 5), [
+    'same display name',
+    '  ok.png no nodes to check',
+    '失败用例（1 条）：',
+    '  same display name  ok.png  demo.json:4',
+    '    no nodes to check'
+  ])
+  assert.match(lines.at(-1) ?? '', /^1 个用例：1 错误（1 个文件，用时 [\d.]+s）$/)
+})
+
+test('展开前就失败的用例不算失败，只报未执行条数', async t => {
+  const root = await fixture(t)
+  const cases = path.join(root, 'demo.json')
+  await fs.writeFile(cases, testFileContent(2))
+  await fs.writeFile(
+    path.join(root, 'maatools.config.mts'),
+    `export default { cwd: ${JSON.stringify(root)}, interfacePath: 'unused' };`
+  )
+  const child = run(root, ['test', '--file', cases])
+  assert.equal(child.status, 1, child.stderr)
+  assert.equal(child.stdout, '2 个用例未执行\n', child.stderr)
+  assert.match(child.stderr, /配置里缺少 test 段，没有可运行的用例（test-config-missing）/)
+})
+
+test('文本模式跑完打印用例汇总行，整批失败原因翻成人话并保留错误码', async t => {
+  const root = await fixture(t)
+  const cases = path.join(root, 'demo.json')
+  await fs.writeFile(cases, testFileContent())
+  await fs.writeFile(
+    path.join(root, 'maatools.config.mts'),
+    `import { loadTestCases } from ${JSON.stringify(filesSource)};
+    export default {
+      cwd: ${JSON.stringify(root)}, interfacePath: 'unused',
+      test: { cases: async () => [await loadTestCases(${JSON.stringify(cases)})] }
+    };`
+  )
+  const child = run(root, ['test'])
+  assert.equal(child.status, 1, child.stderr)
+  assert.match(child.stdout, /1 个用例：1 跳过（1 个文件，用时 [\d.]+s）\n?$/)
+  assert.match(child.stderr, /没有任何用例完成有效验证，本次不能判定通过（no-tests-verified）/)
+  assert.ok((await fs.readdir(root)).includes('maatoolsErrorDetails.json'))
+})

@@ -1,6 +1,6 @@
 import { info as coreInfo, warning as coreWarning } from '@actions/core'
 import chalk from 'chalk'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
@@ -28,6 +28,7 @@ import { buildTestRunResult } from './report'
 import { filesForTargets } from './selection'
 import type {
   CaseCheckResult,
+  CaseVerdict,
   ListedFile,
   PrepareOutcome,
   RecoJob,
@@ -186,15 +187,7 @@ export async function runTestDetailed(
     return done('invalid-test-config', 'test.job 必须是大于等于 1 的安全整数')
   }
 
-  const putLog = (log: string) => {
-    if (cfg.mode === 'github') {
-      coreInfo(log)
-    } else if (cfg.mode === 'json') {
-      console.error(log)
-    } else {
-      console.log(log)
-    }
-  }
+  const putLog = (log: string) => putLine(cfg, log)
   const printedGroups = new Set<number>()
   const logCase = (plan: GroupRunPlan, result: TestCaseRunResult) => {
     const failedChecks = result.checks.filter(check => !check.ok)
@@ -209,7 +202,7 @@ export async function runTestDetailed(
       putLog(formatCheckError(result.image, check))
     }
     if (result.error && failedChecks.length === 0) {
-      putLog(`  ${result.image} ${result.error}.`)
+      putLog(`  ${result.image} ${result.error}`)
     }
   }
   const logGroup = (plan: GroupRunPlan) => {
@@ -495,6 +488,17 @@ export async function runTestDetailed(
   }
 }
 
+/** 文本输出和日志统一走这里：github 进注解，json 模式退到 stderr，其余写 stdout。 */
+function putLine(cfg: Pick<FullConfig, 'mode'>, line: string) {
+  if (cfg.mode === 'github') {
+    coreInfo(line)
+  } else if (cfg.mode === 'json') {
+    console.error(line)
+  } else {
+    console.log(line)
+  }
+}
+
 /** 命令行的人类输出入口；失败文件保存同一份完整结果，不再另算失败数组。 */
 export async function runTest(cfg: FullConfig, options: TestRunOptions = {}) {
   const result = await runTestDetailed(cfg, options)
@@ -507,24 +511,278 @@ export async function runTest(cfg: FullConfig, options: TestRunOptions = {}) {
     await fs.writeFile(file, JSON.stringify(result, null, 2))
   }
   if (result.reason) {
-    console.error(result.reason)
+    console.error(describeRunReason(result.errorCode, result.reason))
+  }
+  // 展开前就失败时没有文件可讲，交给原因说明；有文件才列不可用文件、失败清单和计数。
+  if (result.files.length > 0) {
+    for (const line of formatUnusableFiles(result)) {
+      putLine(cfg, line)
+    }
+    for (const line of formatRunFailures(result)) {
+      putLine(cfg, line)
+    }
+    const summary = formatRunSummary(result)
+    if (summary) {
+      putLine(cfg, summary)
+    }
   }
   return result.status === 'passed'
 }
 
-function formatCheckError(image: string, check: CaseCheckResult): string {
+/** 只取判定说明用到的字段；测试可以只构造这几个字段，不必造完整识别明细。 */
+type CheckLike = {
+  node: string
+  ok: boolean
+  reason?: CaseCheckResult['reason']
+  expectedBox?: unknown
+  detail?: { box?: unknown } | null
+}
+
+type PlatformLike = {
+  controller: string
+  resource: string
+  result: {
+    imagePath: string
+    error?: string
+    checks: readonly CheckLike[]
+  }
+}
+
+/** 结尾清单与计数只依赖这些字段，测试可以手搓结果，不必跑真实识别。 */
+export type RunCaseLike = {
+  image: string
+  verdict: CaseVerdict
+  reason?: string
+  /** 用例对象在测试文件里的字符偏移，用来换算行号；手搓结果可以不填。 */
+  start?: number
+  platforms: readonly PlatformLike[]
+}
+
+export type RunResultLike = {
+  files: readonly {
+    file: string
+    name?: string | null
+    error?: string
+    cases: readonly RunCaseLike[]
+  }[]
+  durationMs: number
+}
+
+/**
+ * 用例是否真跑过：占位平台的 imagePath 一律为空（progress.finish 与 report 补位都这么置），
+ * 真实执行过的用例即使因缺图被跳过也带着解析后的图片路径。
+ */
+function wasExecuted(testCase: RunCaseLike): boolean {
+  return testCase.platforms.some(platform => platform.result.imagePath !== '')
+}
+
+function displayPath(file: string): string {
+  return path.relative(process.cwd(), file) || file
+}
+
+/** 读不出来的测试文件单独成段，否则用户只看到一句“N 个文件有错误”。 */
+export function formatUnusableFiles(result: Pick<RunResultLike, 'files'>): string[] {
+  const broken = result.files.filter(file => file.error)
+  if (broken.length === 0) {
+    return []
+  }
+  return [
+    `不可用文件（${broken.length} 个）：`,
+    ...broken.map(file => `  ${displayPath(file.file)}  ${file.error}`)
+  ]
+}
+
+/** 读测试文件原文用来换算行号；默认读磁盘，测试可以喂假数据。 */
+function defaultReadSource(file: string): string | null {
+  try {
+    return readFileSync(file, 'utf8')
+  } catch {
+    return null
+  }
+}
+
+export type RunFailureOptions = {
+  readSource?: (file: string) => string | null
+}
+
+/** 单平台时用它当组名；多平台交给明细前缀，执行过却没有明细时退回首个平台。 */
+function fallbackLabel(
+  testCase: RunCaseLike,
+  perPlatform: readonly { label: string }[]
+): string | undefined {
+  if (perPlatform.length > 1) {
+    return undefined
+  }
+  if (perPlatform.length === 1) {
+    return perPlatform[0].label
+  }
+  const platform = testCase.platforms[0]
+  return platform ? `${platform.controller}:${platform.resource}` : undefined
+}
+
+/**
+ * 结尾的失败清单：一条用例一项，明细取各平台未通过的检查和执行错误。
+ * 没跑过的用例不算失败，占位平台也不进明细；读得回原文时附上文件与行号。
+ */
+export function formatRunFailures(
+  result: RunResultLike,
+  options: RunFailureOptions = {}
+): string[] {
+  const readSource = options.readSource ?? defaultReadSource
+  const sources = new Map<string, string | null>()
+  const lineOf = (file: string, offset?: number) => {
+    if (offset === undefined) {
+      return undefined
+    }
+    if (!sources.has(file)) {
+      sources.set(file, readSource(file))
+    }
+    const source = sources.get(file)
+    return source ? source.slice(0, offset).split('\n').length : undefined
+  }
+  const entries: { label?: string; image: string; location?: string; details: string[] }[] = []
+  for (const file of result.files) {
+    for (const testCase of file.cases) {
+      if (testCase.verdict !== 'fail' && testCase.verdict !== 'error') {
+        continue
+      }
+      if (!wasExecuted(testCase)) {
+        continue
+      }
+      const perPlatform = testCase.platforms
+        .filter(platform => platform.result.imagePath !== '')
+        .map(platform => ({
+          label: `${platform.controller}:${platform.resource}`,
+          details: [
+            ...platform.result.checks.filter(check => !check.ok).map(describeCheck),
+            ...(platform.result.error ? [platform.result.error] : [])
+          ]
+        }))
+        .filter(item => item.details.length > 0)
+      const details = perPlatform.flatMap(item =>
+        item.details.map(detail => (perPlatform.length > 1 ? `${item.label}  ${detail}` : detail))
+      )
+      if (details.length === 0) {
+        details.push(testCase.reason ?? '判定为失败，但没有可用明细')
+      }
+      const line = lineOf(file.file, testCase.start)
+      entries.push({
+        label: file.name ?? fallbackLabel(testCase, perPlatform),
+        image: testCase.image,
+        location: line === undefined ? undefined : `${displayPath(file.file)}:${line}`,
+        details
+      })
+    }
+  }
+  if (entries.length === 0) {
+    return []
+  }
+  const lines = [`失败用例（${entries.length} 条）：`]
+  for (const entry of entries) {
+    const head = `  ${entry.label ? `${entry.label}  ` : ''}${entry.image}`
+    lines.push(entry.location ? `${head}  ${entry.location}` : head)
+    for (const detail of entry.details) {
+      lines.push(`    ${detail}`)
+    }
+  }
+  return lines
+}
+
+/** 只描述计数行需要的事实，方便拿计数而不是整个报告来测。 */
+export type RunSummaryInput = Pick<RunResultLike, 'files' | 'durationMs'>
+
+/**
+ * 文本模式结束时的计数行：只数真跑过的用例，占位槽位另报“未执行”。
+ * 一条都没跑时只报未执行条数，避免出现“0 个用例”这种废话。
+ */
+export function formatRunSummary(result: RunSummaryInput): string {
+  const cases = result.files.flatMap(file => file.cases)
+  const executed = cases.filter(wasExecuted)
+  const notExecuted = cases.length - executed.length
+  if (executed.length === 0) {
+    return notExecuted > 0 ? `${notExecuted} 个用例未执行` : ''
+  }
+  const count = (verdict: CaseVerdict) =>
+    executed.filter(testCase => testCase.verdict === verdict).length
+  const counts: [string, number][] = [
+    ['通过', count('pass')],
+    ['失败', count('fail')],
+    ['错误', count('error')],
+    ['跳过', count('skipped')]
+  ]
+  const brokenFiles = result.files.filter(file => file.error).length
+  const detail = [
+    ...counts.filter(([, value]) => value > 0).map(([label, value]) => `${value} ${label}`),
+    ...(brokenFiles > 0 ? [`${brokenFiles} 个文件有错误`] : [])
+  ]
+  const head = `${executed.length} 个用例${detail.length > 0 ? `：${detail.join('，')}` : ''}`
+  const seconds = (result.durationMs / 1000).toFixed(1)
+  const tail = `用时 ${seconds}s${notExecuted > 0 ? `，另有 ${notExecuted} 个未执行` : ''}`
+  return `${head}（${result.files.length} 个文件，${tail}）`
+}
+
+/**
+ * 整批失败原因的人话表。键既可能是顶层 `errorCode`，也可能是顶层 `reason` 里的码；
+ * 只收 runTest 真能看到的那些（用例级 reason 与 --list / 参数错误不会走到这里）。
+ */
+const REASON_TEXT = new Map<string, string>([
+  ['no-tests-verified', '没有任何用例完成有效验证，本次不能判定通过'],
+  ['no-result', '没有返回识别结果，不能当作未命中'],
+  ['test-config-missing', '配置里缺少 test 段，没有可运行的用例'],
+  ['invalid-test-config', 'test 配置不合法'],
+  ['test-file-error', '测试文件读取或解析失败'],
+  ['invalid-case-selection', '用例下标不合法或超出文件范围'],
+  ['maa-setup-failed', 'MaaFramework 准备失败'],
+  ['resource-bundle-failed', 'interface 或资源加载失败'],
+  ['test-execution-failed', '识别执行阶段出错'],
+  ['test-expansion-failed', '建立执行计划时出错'],
+  ['test-cases-load-failed', '执行 test.cases 或读取其定义时出错'],
+  ['test-agent-invalid', 'test.agent 配置不合法'],
+  ['test-agent-failed', 'agent 启动、连接或识别调用失败'],
+  ['test-verification-error', '有用例没有完成要求的验证']
+])
+
+/**
+ * 整批原因的人话版本：优先用 errorCode 查表，reason 是已知码时按 reason 翻，
+ * reason 是中文说明时保留原文并补码，是英文原文时附在译文后面。
+ * 查表用 Map，避免 reason 恰好叫 constructor 时命中原型链。
+ */
+export function describeRunReason(errorCode?: string, reason?: string): string {
+  const reasonText = reason ? REASON_TEXT.get(reason) : undefined
+  if (reason && reasonText) {
+    return `${reasonText}（${reason}）`
+  }
+  if (reason && /[\u4e00-\u9fff]/.test(reason)) {
+    return errorCode && errorCode !== reason ? `${reason}（${errorCode}）` : reason
+  }
+  const codeText = errorCode ? REASON_TEXT.get(errorCode) : undefined
+  if (codeText && errorCode) {
+    // 英文原文常带具体线索（节点、路径），附在译文后面，别整句丢掉。
+    return reason && reason !== errorCode
+      ? `${codeText}（${errorCode}）：${reason}`
+      : `${codeText}（${errorCode}）`
+  }
+  return reason ?? errorCode ?? ''
+}
+
+function formatCheckError(image: string, check: CheckLike): string {
+  return `  ${image} ${describeCheck(check)}`
+}
+
+/** 失败检查的说明文字；就地打印和结尾清单共用，避免两处说法不一致。 */
+function describeCheck(check: CheckLike): string {
   switch (check.reason) {
     case 'missing-detail':
-      return `  ${image} ${check.node} missing detail.`
+      return `${check.node} missing detail.`
     case 'should-hit':
-      return `  ${image} ${check.node} should hit but missed`
+      return `${check.node} should hit but missed`
     case 'should-miss':
-      return `  ${image} ${check.node} should missed but hit`
+      return `${check.node} should missed but hit`
     case 'box-mismatch':
-      return `  ${image} ${check.node} box mismatch. Expect ${JSON.stringify(check.expectedBox)}, hit ${JSON.stringify(check.detail?.box)}`
+      return `${check.node} box mismatch. Expect ${JSON.stringify(check.expectedBox)}, hit ${JSON.stringify(check.detail?.box)}`
     case 'no-result':
-      return `  ${image} ${check.node} no reco result.`
+      return `${check.node} no reco result.`
     default:
-      return `  ${image} ${check.node} failed.`
+      return `${check.node} failed.`
   }
 }

@@ -42,10 +42,6 @@ const colorMethods = computed(() => [
   { label: 'HSV', value: 40 },
   { label: t('maa.crop.tools.gray'), value: 6 }
 ])
-const recommendMethods = computed(() => [
-  { label: t('maa.crop.pick.recommend-minmax'), value: 'minmax' },
-  { label: t('maa.crop.pick.recommend-meanstd'), value: 'meanstd' }
-])
 
 function togglePickPoint() {
   if (pickSt.picking.value) {
@@ -181,18 +177,6 @@ function copyColorSnippet() {
             :options="colorMethods"
             size="small"
             style="width: 110px"
-          />
-        </param-row>
-        <param-row
-          :label="t('maa.crop.pick.recommend')"
-          :tooltip="t('maa.crop.tooltip.recommend-method')"
-        >
-          <n-select
-            v-model:value="pickSt.recommendMethod.value"
-            :options="recommendMethods"
-            :consistent-menu-width="false"
-            size="small"
-            style="width: 160px"
           />
         </param-row>
         <param-row

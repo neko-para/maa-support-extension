@@ -224,9 +224,6 @@ export default {
   'maa.crop.pick.src-region': '区域',
   'maa.crop.pick.manual': '手动',
   'maa.crop.pick.reset-range': '恢复推荐',
-  'maa.crop.pick.recommend': '推荐算法',
-  'maa.crop.pick.recommend-minmax': '最小 / 最大值',
-  'maa.crop.pick.recommend-meanstd': '均值 ± 标准差',
   'maa.crop.pick.tolerance': '外扩容差',
   'maa.crop.pick.test': '用此范围测试',
   'maa.crop.tools.green-mask': '涂绿',
@@ -302,8 +299,6 @@ export default {
   'maa.crop.tooltip.copy-upper': '复制上限（已按容差外扩）',
   'maa.crop.tooltip.remove-sample': '点击移除',
   'maa.crop.tooltip.color-method': 'ColorMatch 的 method：RGB = 4，HSV = 40，灰度 = 6',
-  'maa.crop.tooltip.recommend-method':
-    '最小 / 最大值：刚好覆盖所有采样点；均值 ± 标准差：去掉偏离较大的采样点',
   'maa.crop.tooltip.pick-color-threshold':
     '在推荐范围的上下界各外扩这么多；复制、预览与颜色匹配都使用外扩后的范围',
   'maa.crop.tooltip.color-preview': '在画布上标出落在颜色范围内的像素',

@@ -93,23 +93,6 @@ function circularHueRange(hues: number[]): [number, number] {
   return [sorted[(gapEnd + 1) % sorted.length]!, sorted[gapEnd]!]
 }
 
-function circularHueMean(hues: number[]): number {
-  let cosSum = 0
-  let sinSum = 0
-  for (const h of hues) {
-    const rad = (h * Math.PI) / 90
-    cosSum += Math.cos(rad)
-    sinSum += Math.sin(rad)
-  }
-  const mean = (Math.atan2(sinSum, cosSum) * 90) / Math.PI
-  return mean < 0 ? mean + 180 : mean
-}
-
-function hueDist(a: number, b: number): number {
-  const d = Math.abs(a - b)
-  return Math.min(d, 180 - d)
-}
-
 export type ColorMethod = 4 | 40 | 6
 
 export const colorMethod = ref<ColorMethod>(4)
@@ -259,10 +242,7 @@ export function copyHsv() {
   }
 }
 
-export type RecommendMethod = 'minmax' | 'meanstd'
-
-export const recommendMethod = ref<RecommendMethod>('minmax')
-
+/** 推荐区间：每通道取采样点的最小 / 最大值，不做统计收缩——采样点必须全部落在区间内 */
 export const recommendedColors = computed(() => {
   if (samplePoints.value.length === 0) {
     return null
@@ -271,76 +251,29 @@ export const recommendedColors = computed(() => {
   const method = colorMethod.value
   const converted = samplePoints.value.map(p => convertColor(p.color, method))
   const channels = converted[0]!.length
-  const isHsv = method === 40
 
-  if (recommendMethod.value === 'minmax') {
-    const min: number[] = Array(channels).fill(255)
-    const max: number[] = Array(channels).fill(0)
+  const min: number[] = Array(channels).fill(255)
+  const max: number[] = Array(channels).fill(0)
 
-    for (const c of converted) {
-      for (let i = 0; i < channels; i++) {
-        min[i] = Math.min(min[i]!, c[i]!)
-        max[i] = Math.max(max[i]!, c[i]!)
-      }
+  for (const c of converted) {
+    for (let i = 0; i < channels; i++) {
+      min[i] = Math.min(min[i]!, c[i]!)
+      max[i] = Math.max(max[i]!, c[i]!)
     }
-
-    // HSV hue is circular (0-180). When samples straddle the red boundary
-    // (e.g. 178, 179, 0, 2), naive min/max gives [0, 179] covering all hues.
-    // Find the tight cluster instead: lower > upper signals a wrap-around
-    // range to OpenCV, matching hues >= lower OR <= upper.
-    if (isHsv && max[0]! - min[0]! > 90) {
-      const hues = converted.map(c => c[0]!)
-      const [cl, cu] = circularHueRange(hues)
-      min[0] = cl
-      max[0] = cu
-    }
-
-    return { lower: min, upper: max }
-  } else {
-    let lower: number[]
-    let upper: number[]
-
-    if (isHsv) {
-      const hues = converted.map(c => c[0]!)
-      const cMean = circularHueMean(hues)
-      const dists = hues.map(h => hueDist(h, cMean))
-      const hStd = Math.ceil(Math.sqrt(dists.reduce((s, d) => s + d * d, 0) / dists.length)) || 1
-
-      let hLower = Math.round(cMean) - hStd
-      let hUpper = Math.round(cMean) + hStd
-      if (hLower < 0) hLower += 180
-      if (hUpper >= 180) hUpper -= 180
-
-      const sMeans = converted.map(c => c[1]!)
-      const vMeans = converted.map(c => c[2]!)
-      const sMean = Math.round(sMeans.reduce((a, b) => a + b, 0) / sMeans.length)
-      const vMean = Math.round(vMeans.reduce((a, b) => a + b, 0) / vMeans.length)
-      const sVariance = sMeans.reduce((a, b) => a + (b - sMean) ** 2, 0) / sMeans.length
-      const vVariance = vMeans.reduce((a, b) => a + (b - vMean) ** 2, 0) / vMeans.length
-      const sStd = Math.ceil(Math.sqrt(sVariance)) || 1
-      const vStd = Math.ceil(Math.sqrt(vVariance)) || 1
-
-      lower = [hLower, Math.max(sMean - sStd, 0), Math.max(vMean - vStd, 0)]
-      upper = [hUpper, Math.min(sMean + sStd, 255), Math.min(vMean + vStd, 255)]
-    } else {
-      const sum = Array(channels).fill(0) as number[]
-      for (const c of converted) {
-        for (let i = 0; i < channels; i++) sum[i] += c[i]!
-      }
-      const mean = sum.map(s => Math.round(s / converted.length))
-
-      const varianceSum = Array(channels).fill(0) as number[]
-      for (const c of converted) {
-        for (let i = 0; i < channels; i++) varianceSum[i] += (c[i]! - mean[i]!) ** 2
-      }
-      const std: number[] = varianceSum.map(v => Math.ceil(Math.sqrt(v / converted.length)))
-
-      lower = mean.map((m, i) => Math.max(m - std[i]!, 0))
-      upper = mean.map((m, i) => Math.min(m + std[i]!, channelMax(i, method)))
-    }
-
-    return { lower, upper }
   }
+
+  // HSV hue is circular (0-180). When samples straddle the red boundary
+  // (e.g. 178, 179, 0, 2), naive min/max gives [0, 179] covering all hues.
+  // Find the tight cluster instead: lower > upper signals a wrap-around
+  // range to OpenCV, matching hues >= lower OR <= upper.
+  if (method === 40 && max[0]! - min[0]! > 90) {
+    const hues = converted.map(c => c[0]!)
+    const [cl, cu] = circularHueRange(hues)
+    min[0] = cl
+    max[0] = cu
+  }
+
+  return { lower: min, upper: max }
 })
 
 export type NumericRanges = { lower: number[][]; upper: number[][] }

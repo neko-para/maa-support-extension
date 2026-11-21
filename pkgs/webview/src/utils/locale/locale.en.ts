@@ -236,9 +236,6 @@ export default {
   'maa.crop.pick.src-region': 'Region',
   'maa.crop.pick.manual': 'Manual',
   'maa.crop.pick.reset-range': 'Reset to suggested',
-  'maa.crop.pick.recommend': 'Suggestion',
-  'maa.crop.pick.recommend-minmax': 'Min / Max',
-  'maa.crop.pick.recommend-meanstd': 'Mean ± Std',
   'maa.crop.pick.tolerance': 'Expand by',
   'maa.crop.pick.test': 'Test this range',
   'maa.crop.tools.green-mask': 'Green Mask',
@@ -325,8 +322,6 @@ export default {
   'maa.crop.tooltip.copy-upper': 'Copy the upper bound (expanded by tolerance)',
   'maa.crop.tooltip.remove-sample': 'click to remove',
   'maa.crop.tooltip.color-method': 'ColorMatch method: RGB = 4, HSV = 40, Gray = 6',
-  'maa.crop.tooltip.recommend-method':
-    'Min / Max covers every sample exactly; Mean ± Std drops outlying samples',
   'maa.crop.tooltip.pick-color-threshold':
     'Widens both bounds of the suggested range by this much; copy, preview and ColorMatch all use the widened range',
   'maa.crop.tooltip.color-preview': 'Highlight pixels that fall inside the color range',

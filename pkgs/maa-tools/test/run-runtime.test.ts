@@ -5,6 +5,7 @@ import { Module, createRequire, syncBuiltinESMExports } from 'node:module'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import test, { type TestContext } from 'node:test'
+import { fileURLToPath } from 'node:url'
 
 import type { RecoJob, RecoJobOutcome } from '../src/test/types.ts'
 import type { FullConfig } from '../src/types/config.ts'
@@ -12,6 +13,22 @@ import { assertPublicResult } from './assertions.ts'
 
 const require = createRequire(import.meta.url)
 const runtime = createJiti(import.meta.url, { fsCache: false })
+const SRC_ROOT = (path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src') + path.sep)
+  .replaceAll('\\', '/')
+  .toLowerCase()
+
+/**
+ * jiti 2.7 起，被 require 过的模块会留在 native require.cache 里，删单个入口不再
+ * 连带刷新它 import 的下层模块。这里在每次 fixture 前清掉 src 下的缓存，保证
+ * 每个用例都拿到全新的模块图（mock 会在随后重新注入）。
+ */
+function resetSrcModuleCache() {
+  for (const key of Object.keys(require.cache)) {
+    if (key.replaceAll('\\', '/').toLowerCase().startsWith(SRC_ROOT)) {
+      delete require.cache[key]
+    }
+  }
+}
 
 type PoolOptions = {
   maxWorkers: number
@@ -24,6 +41,7 @@ async function fixture(t: TestContext) {
   t.mock.method(console, 'log', () => {})
   t.mock.method(console, 'error', () => {})
   t.mock.method(process.stderr, 'write', () => true)
+  resetSrcModuleCache()
   const state = {
     hit: true,
     setupCalls: 0,

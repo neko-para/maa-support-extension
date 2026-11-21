@@ -134,7 +134,9 @@ jobs:
 
       - name: Publish
         run: |
-          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath assets/maa-support-extension/*.vsix
+          vsix=$(find assets -type f -name '*.vsix' | head -n 1)
+          test -n "$vsix"
+          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath "$vsix"
 
   prerelease:
     if: startsWith(github.ref, 'refs/tags/p')
@@ -156,7 +158,9 @@ jobs:
 
       - name: Publish
         run: |
-          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath assets/maa-support-extension/*.vsix --pre-release
+          vsix=$(find assets -type f -name '*.vsix' | head -n 1)
+          test -n "$vsix"
+          vsce publish -p ${{ secrets.VSCE_TOKEN }} --packagePath "$vsix" --pre-release
 
   publish-open-vsx:
     if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/p')
@@ -176,4 +180,6 @@ jobs:
 
       - name: Publish to Open VSX
         run: |
-          npx --yes ovsx publish assets/maa-support-extension/*.vsix --trusted-publishing
+          vsix=$(find assets -type f -name '*.vsix' | head -n 1)
+          test -n "$vsix"
+          npx --yes ovsx publish "$vsix" --trusted-publishing

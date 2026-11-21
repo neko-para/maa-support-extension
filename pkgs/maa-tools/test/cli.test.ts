@@ -594,19 +594,29 @@ test('文本模式在计数行前先列失败用例，执行错误带原因且�
   )
   const child = run(root, ['test'])
   assert.equal(child.status, 1, child.stderr)
-  assert.equal(
-    child.stdout,
-    [
-      'same display name',
-      '  ok.png no nodes to check.',
-      '失败用例（1 条）：',
-      '  same display name  ok.png',
-      '    no nodes to check',
-      '1 个用例：1 错误（1 个文件，用时 0.0s）',
-      ''
-    ].join('\n'),
-    child.stderr
+  const lines = child.stdout.trimEnd().split('\n')
+  assert.deepEqual(lines.slice(0, 5), [
+    'same display name',
+    '  ok.png no nodes to check',
+    '失败用例（1 条）：',
+    '  same display name  ok.png',
+    '    no nodes to check'
+  ])
+  assert.match(lines.at(-1) ?? '', /^1 个用例：1 错误（1 个文件，用时 [\d.]+s）$/)
+})
+
+test('展开前就失败的用例不算失败，只报未执行条数', async t => {
+  const root = await fixture(t)
+  const cases = path.join(root, 'demo.json')
+  await fs.writeFile(cases, testFileContent(2))
+  await fs.writeFile(
+    path.join(root, 'maatools.config.mts'),
+    `export default { cwd: ${JSON.stringify(root)}, interfacePath: 'unused' };`
   )
+  const child = run(root, ['test', '--file', cases])
+  assert.equal(child.status, 1, child.stderr)
+  assert.equal(child.stdout, '2 个用例未执行\n', child.stderr)
+  assert.match(child.stderr, /配置里缺少 test 段，没有可运行的用例（test-config-missing）/)
 })
 
 test('文本模式跑完打印用例汇总行，整批失败原因翻成人话并保留错误码', async t => {

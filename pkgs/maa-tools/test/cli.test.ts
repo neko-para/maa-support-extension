@@ -579,10 +579,14 @@ test('文本模式在计数行前先列失败用例，执行错误带原因且�
   await fs.writeFile(path.join(root, 'ok.png'), 'not a real image, 判定这一层不用解码')
   await fs.writeFile(
     cases,
-    JSON.stringify({
-      configs: { name: 'same display name', controller: 'Desktop', resource: 'Local' },
-      cases: [{ image: 'ok.png', hits: [] }]
-    })
+    [
+      '{',
+      '  "configs": { "name": "same display name", "controller": "Desktop", "resource": "Local" },',
+      '  "cases": [',
+      '    { "image": "ok.png", "hits": [] }',
+      '  ]',
+      '}'
+    ].join('\n')
   )
   await fs.writeFile(
     path.join(root, 'maatools.config.mts'),
@@ -599,7 +603,7 @@ test('文本模式在计数行前先列失败用例，执行错误带原因且�
     'same display name',
     '  ok.png no nodes to check',
     '失败用例（1 条）：',
-    '  same display name  ok.png',
+    '  same display name  ok.png  demo.json:4',
     '    no nodes to check'
   ])
   assert.match(lines.at(-1) ?? '', /^1 个用例：1 错误（1 个文件，用时 [\d.]+s）$/)

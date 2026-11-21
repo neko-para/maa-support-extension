@@ -1,5 +1,6 @@
 import { createJiti } from 'jiti'
 import assert from 'node:assert/strict'
+import * as path from 'node:path'
 import test from 'node:test'
 
 import type { CheckFailureReason } from '../src/test/types'
@@ -271,6 +272,48 @@ test('多平台失败时逐平台列出明细，没有组名时不把平台写�
       '    Win32:Global  B no reco result.'
     ]
   )
+})
+
+test('失败清单按用例偏移换算行号，读不到原文时不写位置', () => {
+  const source = [
+    '{',
+    '  "configs": { "controller": "Desktop", "resource": "Local" },',
+    '  "cases": [',
+    '    { "image": "a.png", "hits": [] }',
+    '  ]',
+    '}'
+  ].join('\n')
+  const start = source.indexOf('{ "image"')
+  const result = {
+    files: [
+      {
+        file: path.join(process.cwd(), 'demo.json'),
+        name: 'Demo',
+        cases: [
+          runCase({
+            verdict: 'fail',
+            start,
+            platforms: [
+              ranPlatform('Desktop', 'Local', {
+                checks: [{ node: 'Entry', ok: false, reason: 'should-hit' }]
+              })
+            ]
+          })
+        ]
+      }
+    ],
+    durationMs: 0
+  }
+  assert.deepEqual(formatRunFailures(result, { readSource: () => source }), [
+    '失败用例（1 条）：',
+    '  Demo  a.png  demo.json:4',
+    '    Entry should hit but missed'
+  ])
+  assert.deepEqual(formatRunFailures(result, { readSource: () => null }), [
+    '失败用例（1 条）：',
+    '  Demo  a.png',
+    '    Entry should hit but missed'
+  ])
 })
 
 test('失败清单保留执行错误原文，没有明细时用用例原因兜底', () => {

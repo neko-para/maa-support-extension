@@ -172,12 +172,12 @@ ControllerB:ResourceA
 
 ```text
 失败用例（1 条）：
-  ControllerA:ResourceA  example.png
+  ControllerA:ResourceA  example.png  tests/example/test_example.json:12
     Entry should hit but missed
     Box box mismatch. Expect [100,100,200,200], hit [90,90,20,20]
 ```
 
-行首组名取文件里声明的 `configs.name`（报告只保留这个）。文件没声明时，单个平台有明细就用它的 `controller:resource`；多个平台都有明细时不写组名，改为在每条明细前加平台前缀：
+行首组名取文件里声明的 `configs.name`（报告只保留这个）；末尾的 `文件:行号` 是用例对象在测试文件里开始的行（从 1 开始，路径相对当前工作目录），读不回原文时不打印。文件没声明时，单个平台有明细就用它的 `controller:resource`；多个平台都有明细时不写组名，改为在每条明细前加平台前缀：
 
 ```text
 失败用例（1 条）：

@@ -1,6 +1,6 @@
 import { info as coreInfo, warning as coreWarning } from '@actions/core'
 import chalk from 'chalk'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
@@ -553,6 +553,8 @@ export type RunCaseLike = {
   image: string
   verdict: CaseVerdict
   reason?: string
+  /** 用例对象在测试文件里的字符偏移，用来换算行号；手搓结果可以不填。 */
+  start?: number
   platforms: readonly PlatformLike[]
 }
 
@@ -590,12 +592,40 @@ export function formatUnusableFiles(result: Pick<RunResultLike, 'files'>): strin
   ]
 }
 
+/** 读测试文件原文用来换算行号；默认读磁盘，测试可以喂假数据。 */
+function defaultReadSource(file: string): string | null {
+  try {
+    return readFileSync(file, 'utf8')
+  } catch {
+    return null
+  }
+}
+
+export type RunFailureOptions = {
+  readSource?: (file: string) => string | null
+}
+
 /**
  * 结尾的失败清单：一条用例一项，明细取各平台未通过的检查和执行错误。
- * 没跑过的用例不算失败，占位平台也不进明细。
+ * 没跑过的用例不算失败，占位平台也不进明细；读得回原文时附上文件与行号。
  */
-export function formatRunFailures(result: RunResultLike): string[] {
-  const entries: { label?: string; image: string; details: string[] }[] = []
+export function formatRunFailures(
+  result: RunResultLike,
+  options: RunFailureOptions = {}
+): string[] {
+  const readSource = options.readSource ?? defaultReadSource
+  const sources = new Map<string, string | null>()
+  const lineOf = (file: string, offset?: number) => {
+    if (offset === undefined) {
+      return undefined
+    }
+    if (!sources.has(file)) {
+      sources.set(file, readSource(file))
+    }
+    const source = sources.get(file)
+    return source ? source.slice(0, offset).split('\n').length : undefined
+  }
+  const entries: { label?: string; image: string; location?: string; details: string[] }[] = []
   for (const file of result.files) {
     for (const testCase of file.cases) {
       if (testCase.verdict !== 'fail' && testCase.verdict !== 'error') {
@@ -620,9 +650,11 @@ export function formatRunFailures(result: RunResultLike): string[] {
       if (details.length === 0) {
         details.push(testCase.reason ?? '判定为失败，但没有可用明细')
       }
+      const line = lineOf(file.file, testCase.start)
       entries.push({
         label: file.name ?? (perPlatform.length === 1 ? perPlatform[0].label : undefined),
         image: testCase.image,
+        location: line === undefined ? undefined : `${displayPath(file.file)}:${line}`,
         details
       })
     }
@@ -632,7 +664,8 @@ export function formatRunFailures(result: RunResultLike): string[] {
   }
   const lines = [`失败用例（${entries.length} 条）：`]
   for (const entry of entries) {
-    lines.push(`  ${entry.label ? `${entry.label}  ` : ''}${entry.image}`)
+    const head = `  ${entry.label ? `${entry.label}  ` : ''}${entry.image}`
+    lines.push(entry.location ? `${head}  ${entry.location}` : head)
     for (const detail of entry.details) {
       lines.push(`    ${detail}`)
     }
